@@ -7,7 +7,7 @@ name: BDD UI Examples
 # (see todo/ci-hardening.md). Flip `pull_request` on once green.
 on:
   workflow_dispatch:
-  # pull_request:
+  pull_request:
 
 jobs:
   bdd:
