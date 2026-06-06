@@ -1,0 +1,6 @@
+# Page: clients
+title: Clients
+elements:
+  - kind: crud
+    spot: body
+    table: clients

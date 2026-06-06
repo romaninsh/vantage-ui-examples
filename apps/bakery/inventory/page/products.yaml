@@ -1,0 +1,6 @@
+# Page: products
+title: Products
+elements:
+  - kind: crud
+    spot: body
+    table: products

@@ -1,0 +1,2 @@
+# Bakery-specific scenarios go here as `*.feature` files. The shared startup
+# check in test-framework/features/common/ already runs against this app.

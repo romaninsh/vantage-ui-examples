@@ -1,0 +1,50 @@
+# Agent rules for vantage-ui-examples
+
+Concise guidelines for working in this repo. (A fuller agent skill will come
+later; see todo/agent-skill.md.)
+
+## What this repo is
+A public, **black-box** example catalog + BDD UI test suite for the
+closed-source `vantage-ui` app.
+- The ONLY way to control the app is its MCP API. Never link or vendor
+  vantage-ui source code. Do NOT add gpui or `TestAppContext` here — those are
+  vantage-ui's in-process tools and cannot drive the published binary.
+- Tests launch the real published binary (path from `$VANTAGE_UI_BIN`) and
+  drive it over MCP (`http://127.0.0.1:14488/mcp`). Today the app exposes only
+  the `list_logs` tool; richer interaction is blocked on new MCP tools (see
+  todo/scenario-features.md).
+
+## Layout contract
+- `test-framework/` — the reusable engine (`src/{world,launcher,mcp_client}.rs`,
+  in the lib) plus the `vantage-ui-test` driver binary and the shared steps
+  (`src/steps/`, in the binary). Shared `*.feature` live in
+  `test-framework/features/common/`.
+- `apps/<name>/` — one self-contained example app: `inventory/` (the YAML
+  catalog), `tests/` (app-specific `*.feature`), `README.md`, optional `docs/`.
+- Shared steps and common features live in the framework — never copy them per
+  app.
+
+## Adding an app
+1. Create `apps/<name>/inventory/` with `datasource/ table/ page/ menu/` YAML.
+2. Keep it **offline-clean**: launching must log no ERROR. Prefer a CSV
+   datasource (it opens no connection at startup) or a committed, seeded SQLite
+   file. A datasource pointing at an unreachable DB logs an ERROR and fails the
+   startup test.
+3. Add a `README.md`. The shared startup check runs automatically; add
+   `tests/*.feature` only for app-specific behavior.
+
+## Adding a scenario
+- Reuse existing steps; add a new step only when none fits. Keep gherkin
+  declarative — put logic in step functions, not the feature text.
+- Tag not-yet-runnable scenarios `@wip`; the driver filters them out.
+
+## Running & quality
+- `cargo run -p test-framework -- apps/<name>` (single) or `-- --all`.
+- Set `$VANTAGE_UI_BIN`, or build `../vantage-ui` with `cargo build --release`.
+- Keep `cargo fmt` and `cargo clippy` clean.
+- Pin `rmcp` to the exact version vantage-ui's server uses (wire compat).
+- Don't depend on wall-clock timing — poll the MCP logs for readiness.
+
+## Scope discipline
+Capture out-of-scope-but-needed work in `todo/*.md`; don't silently expand
+scope or park unscoped work in code comments.

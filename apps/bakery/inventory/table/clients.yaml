@@ -1,0 +1,13 @@
+# Table: clients — backed by data/clients.csv
+datasource: bakery
+title: Clients
+columns:
+  - name: id
+    type: string
+    flags: [id]
+  - name: name
+    type: string
+    flags: [mandatory, title, searchable]
+  - name: email
+    type: string
+    flags: [mandatory, searchable]

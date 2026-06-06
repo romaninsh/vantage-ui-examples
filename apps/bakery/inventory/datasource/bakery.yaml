@@ -1,0 +1,10 @@
+# Datasource: bakery
+#
+# CSV-backed and fully offline — each file under `path` (relative to the
+# inventory root) becomes one table. The data lives next to the inventory at
+# `apps/bakery/data/`, so the path steps up out of inventory/. A CSV
+# datasource opens no connection at startup, so this example loads cleanly
+# with no network or database.
+
+type: csv
+path: ../data

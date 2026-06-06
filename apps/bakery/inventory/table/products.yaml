@@ -1,0 +1,13 @@
+# Table: products — backed by data/products.csv
+datasource: bakery
+title: Products
+columns:
+  - name: id
+    type: string
+    flags: [id]
+  - name: name
+    type: string
+    flags: [mandatory, title, searchable]
+  - name: price
+    type: float
+    flags: [mandatory]

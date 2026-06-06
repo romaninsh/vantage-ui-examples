@@ -1,0 +1,11 @@
+# Menu: left — the sidebar for the bakery app.
+title: Hill Valley Bakery
+items:
+  - section: Bakery
+    children:
+      - page: products
+        label: Products
+        icon: Inbox
+      - page: clients
+        label: Clients
+        icon: User
