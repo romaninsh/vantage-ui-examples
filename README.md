@@ -1,5 +1,8 @@
 # vantage-ui-examples
 
+[![BDD (nightly)](https://github.com/romaninsh/vantage-ui-examples/actions/workflows/bdd-nightly.yaml/badge.svg)](https://github.com/romaninsh/vantage-ui-examples/actions/workflows/bdd-nightly.yaml)
+[![BDD (stable)](https://github.com/romaninsh/vantage-ui-examples/actions/workflows/bdd-stable.yaml/badge.svg)](https://github.com/romaninsh/vantage-ui-examples/actions/workflows/bdd-stable.yaml)
+
 Example apps and a black-box BDD UI test suite for **Vantage UI** — the
 API-driven low-code admin app.
 
