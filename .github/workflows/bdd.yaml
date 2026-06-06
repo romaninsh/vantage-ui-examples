@@ -2,16 +2,18 @@ name: BDD UI Examples
 
 # Launches the published Vantage UI binary and drives it over MCP.
 # Runs on macOS because the published binary is a macOS (aarch64) DMG.
-#
-# Kept manual + non-required until GUI-on-CI is proven stable
-# (see todo/ci-hardening.md). Flip `pull_request` on once green.
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to test (e.g. 0.12.0, latest)"
+        required: false
+        default: "latest"
   # pull_request:
 
 jobs:
   bdd:
-    runs-on: macos-14 # Apple silicon — matches the aarch64 DMG
+    runs-on: macos-14
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -20,32 +22,8 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Download and extract the Vantage UI binary
-        run: |
-          set -euo pipefail
-          # main/latest.json is published public-read by the vantage-ui
-          # nightly workflow as {"version","url","sha256"} (region eu-west-2).
-          MANIFEST="https://vantage-releases.s3.eu-west-2.amazonaws.com/main/latest.json"
-          curl -fsSL "$MANIFEST" -o latest.json
-          cat latest.json
-          URL=$(python3 -c 'import json;print(json.load(open("latest.json"))["url"])')
-          SHA=$(python3 -c 'import json;print(json.load(open("latest.json"))["sha256"])')
-
-          echo "Downloading $URL"
-          curl -fsSL "$URL" -o vantage.dmg
-          echo "${SHA}  vantage.dmg" | shasum -a 256 -c -
-
-          MNT=$(hdiutil attach vantage.dmg -nobrowse -readonly | grep -Eo '/Volumes/.*$' | tail -1)
-          echo "Mounted at: $MNT"
-          cp -R "$MNT/Vantage Admin.app" "$RUNNER_TEMP/Vantage Admin.app"
-          hdiutil detach "$MNT"
-
-          BIN="$RUNNER_TEMP/Vantage Admin.app/Contents/MacOS/vantage-ui"
-          xattr -dr com.apple.quarantine "$RUNNER_TEMP/Vantage Admin.app" || true
-          chmod +x "$BIN"
-          echo "VANTAGE_UI_BIN=$BIN" >> "$GITHUB_ENV"
-
       - name: Run BDD suite against all apps
         run: cargo run -p test-framework -- --all
         env:
+          VANTAGE_UI_VERSION: ${{ github.event.inputs.version || 'latest' }}
           RUST_BACKTRACE: 1
