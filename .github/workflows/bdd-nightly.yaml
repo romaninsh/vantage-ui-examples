@@ -2,9 +2,13 @@ name: BDD (nightly)
 
 # Thin wrapper around bdd.yaml for the nightly (main) channel, so it has
 # its own status badge. vantage-ui's nightly workflow dispatches this
-# after publishing each main build.
+# after publishing each main build. Also runs on every PR so suite
+# changes are validated against the current nightly binary before merge
+# (stable stays dispatch-only — no need to test it twice per change).
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
 
 jobs:
   bdd:
