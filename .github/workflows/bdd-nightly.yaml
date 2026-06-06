@@ -1,0 +1,14 @@
+name: BDD (nightly)
+
+# Thin wrapper around bdd.yaml for the nightly (main) channel, so it has
+# its own status badge. vantage-ui's nightly workflow dispatches this
+# after publishing each main build.
+on:
+  workflow_dispatch:
+
+jobs:
+  bdd:
+    uses: ./.github/workflows/bdd.yaml
+    with:
+      channel: main
+      version: latest

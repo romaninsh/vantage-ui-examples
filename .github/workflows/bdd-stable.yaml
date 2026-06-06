@@ -1,0 +1,14 @@
+name: BDD (stable)
+
+# Thin wrapper around bdd.yaml for the stable channel, so it has its own
+# status badge. vantage-ui's release workflow dispatches this after
+# publishing each stable release.
+on:
+  workflow_dispatch:
+
+jobs:
+  bdd:
+    uses: ./.github/workflows/bdd.yaml
+    with:
+      channel: stable
+      version: latest
