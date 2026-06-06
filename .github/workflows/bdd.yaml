@@ -2,18 +2,38 @@ name: BDD UI Examples
 
 # Launches the published Vantage UI binary and drives it over MCP.
 # Runs on macOS because the published binary is a macOS (aarch64) DMG.
+#
+# Reusable: the bdd-nightly / bdd-stable wrappers call this with a
+# channel so each gets its own status badge. Can also be run manually
+# (workflow_dispatch) against an ad-hoc channel/version. The binary is
+# downloaded + cached by the test-framework launcher from
+# $VANTAGE_UI_CHANNEL / $VANTAGE_UI_VERSION.
 on:
+  workflow_call:
+    inputs:
+      channel:
+        description: "Release channel: stable or main (nightly)."
+        type: string
+        default: "stable"
+      version:
+        description: "Version to test (e.g. 0.12.0, latest)."
+        type: string
+        default: "latest"
   workflow_dispatch:
     inputs:
+      channel:
+        description: "Release channel: stable or main (nightly)."
+        type: choice
+        options: [stable, main]
+        default: "stable"
       version:
-        description: "Version to test (e.g. 0.12.0, latest)"
+        description: "Version to test (e.g. 0.12.0, latest)."
         required: false
         default: "latest"
-  # pull_request:
 
 jobs:
   bdd:
-    runs-on: macos-14
+    runs-on: macos-14 # Apple silicon — matches the aarch64 DMG
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -25,5 +45,6 @@ jobs:
       - name: Run BDD suite against all apps
         run: cargo run -p test-framework -- --all
         env:
-          VANTAGE_UI_VERSION: ${{ github.event.inputs.version || 'latest' }}
+          VANTAGE_UI_VERSION: ${{ inputs.version }}
+          VANTAGE_UI_CHANNEL: ${{ inputs.channel }}
           RUST_BACKTRACE: 1

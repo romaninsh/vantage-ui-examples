@@ -5,7 +5,8 @@
 //!
 //! 1. `$VANTAGE_UI_BIN` — explicit path, no download.
 //! 2. `$VANTAGE_UI_VERSION` — download from S3 if not cached (e.g. `0.12.0`
-//!    or `latest`). Cached under `~/.cache/vantage-ui/`.
+//!    or `latest`), from the `$VANTAGE_UI_CHANNEL` channel ("stable" default,
+//!    "main" for nightly). Cached under `~/.cache/vantage-ui/`.
 //! 3. Fallback: `../vantage-ui/target/release/vantage-ui`.
 
 use std::path::{Path, PathBuf};
@@ -17,8 +18,14 @@ use tokio::process::{Child, Command};
 /// Fixed loopback port for the app's embedded MCP server.
 pub const MCP_PORT: u16 = 14488;
 
-/// S3 base URL for stable releases.
-const S3_BASE: &str = "https://vantage-releases.s3.eu-west-2.amazonaws.com/stable";
+/// S3 base URL for release artifacts (the channel is appended).
+const S3_BASE: &str = "https://vantage-releases.s3.eu-west-2.amazonaws.com";
+
+/// Release channel to pull from: "stable" (default) or "main" (nightly).
+/// The nightly BDD workflow sets this to "main".
+fn channel() -> String {
+    std::env::var("VANTAGE_UI_CHANNEL").unwrap_or_else(|_| "stable".to_string())
+}
 
 /// Local cache directory for extracted binaries.
 const CACHE_DIR: &str = ".cache/vantage-ui";
@@ -66,24 +73,31 @@ pub fn resolve_binary() -> Result<PathBuf> {
 /// `ver` can be a specific version like `"0.12.0"` or `"latest"`.
 fn resolve_from_s3(ver: &str) -> Result<PathBuf> {
     let cache = cache_dir();
-    let version = if ver == "latest" {
-        fetch_latest_version()?
-    } else {
-        ver.to_string()
-    };
-    let bin_path = cache
-        .join(&version)
-        .join("Vantage Admin.app/Contents/MacOS/vantage-ui");
+    let chan = channel();
 
-    if bin_path.exists() {
-        eprintln!("binary cache hit: {}", bin_path.display());
-        return Ok(bin_path);
+    // For "latest" read the channel manifest, which carries the exact DMG url
+    // (so it survives artifact renames). For a pinned version, reconstruct the
+    // conventional url.
+    let (version, dmg_url) = if ver == "latest" {
+        fetch_latest(&chan)?
+    } else {
+        (
+            ver.to_string(),
+            format!("{S3_BASE}/{chan}/{ver}/Vantage-{ver}-aarch64.dmg"),
+        )
+    };
+
+    let version_dir = cache.join(&chan).join(&version);
+
+    // Cache hit: a `*.app` already extracted under the version dir.
+    if let Some(bin) = find_app_binary(&version_dir) {
+        eprintln!("binary cache hit: {}", bin.display());
+        return Ok(bin);
     }
 
-    eprintln!("downloading vantage-ui {} from S3…", version);
-    let dmg_url = format!("{S3_BASE}/{version}/Vantage-Admin-{version}-aarch64.dmg");
-    let dmg_path = cache.join(&version).join("download.dmg");
-    std::fs::create_dir_all(dmg_path.parent().unwrap())?;
+    eprintln!("downloading vantage-ui {version} ({chan}) from {dmg_url}…");
+    let dmg_path = version_dir.join("download.dmg");
+    std::fs::create_dir_all(&version_dir)?;
 
     // Download.
     let status = std::process::Command::new("curl")
@@ -95,7 +109,7 @@ fn resolve_from_s3(ver: &str) -> Result<PathBuf> {
         bail!("curl failed for {dmg_url}");
     }
 
-    // Mount + extract.
+    // Mount.
     let output = std::process::Command::new("hdiutil")
         .args([
             "attach",
@@ -119,25 +133,38 @@ fn resolve_from_s3(ver: &str) -> Result<PathBuf> {
         .context("parse hdiutil output")?
         .to_string();
 
-    let app_src = format!("{}/Vantage Admin.app", mount);
-    let app_dst = cache.join(&version).join("Vantage Admin.app");
-    // Remove old app bundle if exists.
-    let _ = std::fs::remove_dir_all(&app_dst);
-    std::fs::create_dir_all(app_dst.parent().unwrap())?;
-    copy_dir_recursive(&app_src, &app_dst)?;
+    // The bundle name varies across releases ("Vantage.app", older
+    // "Vantage Admin.app"), so locate it rather than hardcoding.
+    let app_src =
+        find_app_bundle(Path::new(&mount)).with_context(|| format!("no .app bundle in {mount}"))?;
+    copy_dir_recursive(&app_src.to_string_lossy(), &version_dir)?;
 
     let _ = std::process::Command::new("hdiutil")
         .args(["detach", &mount])
         .status();
     let _ = std::fs::remove_file(&dmg_path);
 
-    eprintln!("cached: {}", bin_path.display());
-    Ok(bin_path)
+    find_app_binary(&version_dir).context("vantage-ui binary missing after extraction")
 }
 
-/// Fetch the latest stable version from `stable/latest.json`.
-fn fetch_latest_version() -> Result<String> {
-    let url = format!("{S3_BASE}/latest.json");
+/// Find a `*.app` bundle directly inside `dir`.
+fn find_app_bundle(dir: &Path) -> Option<PathBuf> {
+    std::fs::read_dir(dir)
+        .ok()?
+        .flatten()
+        .map(|e| e.path())
+        .find(|p| p.extension().map(|x| x == "app").unwrap_or(false))
+}
+
+/// Find the vantage-ui binary inside any `*.app` under `dir`.
+fn find_app_binary(dir: &Path) -> Option<PathBuf> {
+    let bin = find_app_bundle(dir)?.join("Contents/MacOS/vantage-ui");
+    bin.exists().then_some(bin)
+}
+
+/// Read `<channel>/latest.json` -> (version, dmg url).
+fn fetch_latest(chan: &str) -> Result<(String, String)> {
+    let url = format!("{S3_BASE}/{chan}/latest.json");
     let output = std::process::Command::new("curl")
         .args(["-fsSL", &url])
         .output()
@@ -147,10 +174,15 @@ fn fetch_latest_version() -> Result<String> {
     }
     let json: serde_json::Value =
         serde_json::from_slice(&output.stdout).context("parse latest.json")?;
-    json["version"]
+    let version = json["version"]
         .as_str()
-        .map(String::from)
-        .context("latest.json missing 'version' field")
+        .context("latest.json missing 'version' field")?
+        .to_string();
+    let dmg = json["url"]
+        .as_str()
+        .context("latest.json missing 'url' field")?
+        .to_string();
+    Ok((version, dmg))
 }
 
 fn cache_dir() -> PathBuf {
