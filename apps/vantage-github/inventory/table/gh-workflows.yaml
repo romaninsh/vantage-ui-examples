@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./table-schema-1.json
-datasource: gh
+datasource: gh-stats
 title: Build Pipelines
 columns:
   - name: id
@@ -10,14 +10,50 @@ columns:
     flags: [title, searchable]
   - name: state
     type: string
+  # Filled in lazily by the `analyze` detail pass; carried into the `runs`
+  # drill-down conditions by the `runs` reference script below.
+  - name: total_crates
+    type: int
+  - name: cache_restore_steps
+    type: string
+    flags: [hidden]
+  - name: compile_steps
+    type: string
+    flags: [hidden]
 references:
   runs:
     table: gh-workflow-runs
     kind: has_many
-    foreign_key: workflow_id
+    # Scripted reference: read the (enriched) workflow row and narrow the runs
+    # target by the workflow id plus the derived step parameters, so the runs
+    # detail pass can compute per-run cache stats without re-deriving them.
+    rhai: |
+      table("gh-workflow-runs")
+        .add_condition_eq("workflow_id", row.id)
+        .add_condition_eq("cache_restore_steps", row.cache_restore_steps)
+        .add_condition_eq("compile_steps", row.compile_steps)
+        .add_condition_eq("total_crates", row.total_crates)
 cmd:
+  # List pass: cheap — one call lists every workflow.
   rhai: |
-    let args = ["workflow", "list", "--repo", "romaninsh/vantage", "--json", "name,id,state"];
-    let out = run(args);
+    let out = run(["workflows", "romaninsh/vantage"]);
     if out.exit_code != 0 { throw out.stderr; }
     parse_json(out.stdout)
+  # Detail pass: expensive — `analyze` scans the longest successful run to
+  # derive the cache-restore / compilation step numbers and crate count. The
+  # step arrays are joined to CSV strings so they ride as scalar conditions and
+  # feed the `stats` CLI directly. Degrades to empty steps when analyze can't
+  # find a usable run (so the row still hydrates; the runs drill just yields no
+  # stats).
+  detail: |
+    let crs = "";
+    let cs = "";
+    let tc = 0;
+    let out = run(["analyze", id.to_string(), "romaninsh/vantage"]);
+    if out.exit_code == 0 {
+      let a = parse_json(out.stdout);
+      tc = a.total_crates;
+      for s in a.cache_restore_steps { if crs != "" { crs += "," } crs += s.to_string(); }
+      for s in a.compilation_steps { if cs != "" { cs += "," } cs += s.to_string(); }
+    }
+    [#{ "total_crates": tc, "cache_restore_steps": crs, "compile_steps": cs }]
