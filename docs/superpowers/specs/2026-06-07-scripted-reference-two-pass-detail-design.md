@@ -67,38 +67,47 @@ is unit-tested at the Vista level:
 app for *every* backend, and cmd's `get_ref` (`vantage-cmd/src/vista/source.rs`)
 is FK-only and off the drill path.
 
-**The change:** make `traverse` prefer the source Vista's own reference resolver.
+**The change (B2): evaluate the reference script in the app's drill-down, using
+the resolver that already lives there.** The reusable primitive
+`eval_ref_script(engine, code, row)` is backend-agnostic; the only thing it needs
+is a `TargetResolver` to turn `table("…")` into a Vista. `entity.rs:open_detail`
+*already* holds such a resolver (`ResolverContext::load_target_vista`). So the
+drill-down branches on script presence:
 
-> `VistaCatalog::traverse(relation, parent_row, source_vista)`: if `source_vista`
-> carries a `build_script` for this relation, delegate to
-> `source_vista.get_ref(relation.name, parent_row)` (which runs the script with
-> the row in scope). Otherwise fall back to the current `build_vista + FK narrow`.
+> In `open_detail`, when the relation carries an `rhai` script, build a Rhai
+> engine, `register_conventional_onto(&mut engine, resolver)` with
+> `resolver = |name| rc.load_target_vista(name)`, and
+> `eval_ref_script(&engine, script, parent_row)` to get the narrowed target
+> Vista. Otherwise use the existing `catalog.traverse(&to_factory_relation, …)`
+> FK path.
 
-The gate is self-selecting: a `build_script` is only ever threaded onto a Vista's
-*own-driver* references, so a genuine cross-persistence relation has no script on
-the source and falls through to FK narrow. No datasource-equality check needed —
-script presence *is* the "same-persistence relation exists" signal. The parent
-row is passed through `get_ref(relation, row)`, which already takes it.
+The gate is script presence on the relation — exactly the "scripted reference
+exists" signal. The parent row is passed straight into `eval_ref_script`, which
+already takes it.
+
+Why B2 over delegating through `Vista::get_ref` (the "B1" form): `get_ref`-based
+delegation requires each backend's vista to carry a resolver so the script's
+`table("…")` can be built. SurrealDB's vista does (threaded via
+`factory.with_resolver`); the **cmd vista has none**, so B1 would mean threading
+a resolver plus reference-extras plus a scripted `get_ref` branch into cmd. B2
+puts the eval where the resolver already is — the app's drill-down layer, which
+already evaluates rhai for other hooks — so it is strictly less code, touches
+**zero** cmd code, works uniformly for every backend, and wires up
+surreal-scripted-refs-in-the-app in the same place.
 
 Concrete work:
 
-- **vantage-cmd `Vista::get_ref`** (`src/vista/source.rs`): add the scripted
-  branch mirroring surreal's `get_ref_via_script` — if the reference has a
-  `build_script`, build a conventional engine whose `TargetResolver` builds cmd
-  targets on the same datasource, run `eval_ref_script(engine, script, row)`;
-  else the current FK path. Advertise `can_build_ref_via_script` in capabilities.
-- **vantage-cmd reference extras**: a `CmdReferenceExtras { cmd: { rhai } }`
-  mirroring `SurrealReferenceExtras`, so inventory `ReferenceFull.rhai` lowers
-  onto the cmd Vista's `Reference.build_script` in the cmd `vista_loader` path.
-- **vantage-vista-factory `VistaCatalog::traverse`**: take the source Vista and
-  do the delegate-or-narrow branch. (`Relation` keeps NO rhai field; the factory
-  does not duplicate eval logic.)
-- **vantage-ui `entity.rs:open_detail`**: pass `parent_dio.master()` (already in
-  hand) as the source Vista into `traverse`.
+- **vantage-ui `UiRelation`** (`crates/backend/src/connect.rs`): add
+  `rhai: Option<String>`.
+- **vantage-ui `derive_relations`** (`crates/backend/src/connect/relations.rs`):
+  copy `ReferenceFull.rhai` (and the sugar/has_many forms' absence of it) into
+  `UiRelation.rhai`.
+- **vantage-ui `entity.rs:open_detail`**: the script-vs-FK branch above. The FK
+  fall-back path (`to_factory_relation` + `catalog.traverse`) is unchanged.
 
-Benefit: one concept ("scripted reference" lives in `Vista::get_ref` per
-backend); `traverse` is just "prefer the Vista's resolver, fall back to FK." Also
-wires up surreal scripted refs in the app for free.
+The factory `Relation` and `VistaCatalog::traverse` are **not** changed; cmd is
+**not** touched for this feature. (`traverse_from`, which already delegates to
+`Vista::get_ref` for same-persistence, stays as-is and unused by this path.)
 
 ### Feature 2 — the detail pass receives the existing row
 
@@ -202,15 +211,12 @@ Framework, test-first:
 
 - **vantage-vista**: `get_vista_value_with_row` default impl ignores `row`
   (delegates to `get_vista_value`).
-- **vantage-cmd**: `get_ref` with a `build_script` runs the script and narrows
-  the target by reading multiple parent-row fields; `get_ref` without a script
-  keeps FK behavior. Detail path with an injected `row` exposes `row.*` to the
-  detail script.
-- **vantage-vista-factory**: `traverse` delegates to a source Vista that has a
-  `build_script` for the relation; falls back to FK narrow when it does not.
-- **vantage-ui**: inventory `ReferenceFull.rhai` threads into cmd reference
-  extras → `Reference.build_script`; drill-down gating predicate
-  (status + guard).
+- **vantage-cmd**: the detail path with an injected `row` exposes `row.*` to the
+  detail script; the row-less path still works (default trait impl).
+- **vantage-ui**: `derive_relations` copies `ReferenceFull.rhai` into
+  `UiRelation.rhai`; `open_detail` runs the script branch (narrows the target by
+  reading multiple parent-row fields) when `rhai` is set and the FK branch when
+  it is not; drill-down gating predicate (status + guard).
 
 Production test: run the app against `romaninsh/vantage`, drill workflow → runs,
 confirm `stats` receives the derived steps and rows hydrate without UI freeze.
