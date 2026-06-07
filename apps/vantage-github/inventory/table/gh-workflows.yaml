@@ -16,10 +16,10 @@ columns:
     type: int
   - name: cache_restore_steps
     type: string
-    flags: [hidden]
+  - name: cache_store_steps
+    type: string
   - name: compile_steps
     type: string
-    flags: [hidden]
 references:
   runs:
     table: gh-workflow-runs
@@ -47,6 +47,7 @@ cmd:
   # stats).
   detail: |
     let crs = "";
+    let css = "";
     let cs = "";
     let tc = 0;
     let out = run(["analyze", id.to_string(), "romaninsh/vantage"]);
@@ -54,6 +55,7 @@ cmd:
       let a = parse_json(out.stdout);
       tc = a.total_crates;
       for s in a.cache_restore_steps { if crs != "" { crs += "," } crs += s.to_string(); }
+      for s in a.cache_store_steps { if css != "" { css += "," } css += s.to_string(); }
       for s in a.compilation_steps { if cs != "" { cs += "," } cs += s.to_string(); }
     }
-    [#{ "total_crates": tc, "cache_restore_steps": crs, "compile_steps": cs }]
+    [#{ "total_crates": tc, "cache_restore_steps": crs, "cache_store_steps": css, "compile_steps": cs }]
