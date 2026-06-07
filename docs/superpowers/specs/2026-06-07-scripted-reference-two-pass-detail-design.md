@@ -1,0 +1,228 @@
+# Scripted references feeding a two-pass detail pass
+
+Date: 2026-06-07
+Status: approved design, pre-implementation
+
+## Context
+
+Two-pass (progressive) loading already exists end-to-end (see
+`~/.claude/plans/context-ref-file-...-snoopy-origami.md`, Phases 1–3, committed):
+
+- **vantage-cmd** can declare a `list` script (cheap rows) and a `detail` script
+  (expensive per-id hydration); the rhai engine/AST is compiled once per spec.
+- **vantage-diorama** has the two-pass Lens (`on_list_page` + `on_load_detail`),
+  persisted `RowStatus` (`Incomplete`/`Fresh`/`Complete`), per-query index keyed
+  by `Vista::index_key`, sequential no-total paging, and a BDD suite.
+- **vantage-ui** wires it: a `cmd` table with a `detail` script opts into the
+  two-pass `build_dio` path (`crates/backend/src/lens.rs`).
+
+The driving production example is the GitHub Actions cache-efficiency monitor
+(`apps/vantage-github`). Listing a workflow's runs is cheap; extracting per-run
+cache/compile stats is expensive (a jobs API call + a full log download + parse).
+The expensive `stats` call needs **per-workflow parameters** — the build's
+cache-restore step numbers, compile step numbers, and total crate count — which
+are themselves expensive to derive (the `analyze` action scans the longest
+successful run).
+
+The goal of THIS spec: drill from a workflow into its runs such that the
+expensive per-run `stats` call receives those workflow-level parameters, derived
+once (lazily) and carried down the drill-down — without ever blocking the UI.
+
+## Accepted limitations (agreed with the user)
+
+1. **No drill-down into an un-enriched row.** A workflow row is drillable only
+   after its detail pass (`analyze`) has finished. A workflow with zero
+   compilation steps is never drillable. We *gate* the drill-down rather than
+   degrade the child query. We need this gating capability regardless.
+2. The reference rhai adds conditions on the **target** table (the
+   `table("…").add_condition_eq(…)` build form), not on `self`.
+3. The list pass has the conditions in scope and paints them onto its rows as
+   "fake" columns; the **enriching (detail) pass receives the existing row**, so
+   it can read those fields — previously it received only the `id`.
+
+## Design
+
+Three framework features plus example wiring. Features 1 and 2 are independent;
+Feature 3 is a UI affordance.
+
+### Feature 1 — scripted references fire on a drill-down (Design B)
+
+**Finding (investigated):** the scripted-reference machinery already exists and
+is unit-tested at the Vista level:
+
+- `vantage-vista`: `register_conventional_onto` (vocab: `table`, `with_id`,
+  `add_condition_eq`, `add_order`, `add_search`, `set_page_size`, `get_ref`),
+  `eval_ref_script(engine, code, row)` (parent row exposed as `row`,
+  `table(name)` resolved via a `TargetResolver`), scalar-only `dynamic_to_cbor`.
+- `vantage-vista`: `Reference.build_script: Option<String>`.
+- `vantage-surrealdb`: `Vista::get_ref` already evaluates `build_script` via
+  `get_ref_via_script` → `eval_ref_script` with the parent row.
+- `vantage-ui` inventory: `ReferenceFull.rhai: Option<String>` already parsed and
+  threaded into the surreal reference extras.
+
+**The gap:** vantage-ui's drill-down (`crates/backend/src/connect/entity.rs`
+`open_detail`, the only drill path) resolves *every* relation through
+`VistaCatalog::traverse → Relation::narrow` (foreign-key eq only). It never calls
+`Vista::get_ref`. So the scripted-reference feature is effectively unwired in the
+app for *every* backend, and cmd's `get_ref` (`vantage-cmd/src/vista/source.rs`)
+is FK-only and off the drill path.
+
+**The change:** make `traverse` prefer the source Vista's own reference resolver.
+
+> `VistaCatalog::traverse(relation, parent_row, source_vista)`: if `source_vista`
+> carries a `build_script` for this relation, delegate to
+> `source_vista.get_ref(relation.name, parent_row)` (which runs the script with
+> the row in scope). Otherwise fall back to the current `build_vista + FK narrow`.
+
+The gate is self-selecting: a `build_script` is only ever threaded onto a Vista's
+*own-driver* references, so a genuine cross-persistence relation has no script on
+the source and falls through to FK narrow. No datasource-equality check needed —
+script presence *is* the "same-persistence relation exists" signal. The parent
+row is passed through `get_ref(relation, row)`, which already takes it.
+
+Concrete work:
+
+- **vantage-cmd `Vista::get_ref`** (`src/vista/source.rs`): add the scripted
+  branch mirroring surreal's `get_ref_via_script` — if the reference has a
+  `build_script`, build a conventional engine whose `TargetResolver` builds cmd
+  targets on the same datasource, run `eval_ref_script(engine, script, row)`;
+  else the current FK path. Advertise `can_build_ref_via_script` in capabilities.
+- **vantage-cmd reference extras**: a `CmdReferenceExtras { cmd: { rhai } }`
+  mirroring `SurrealReferenceExtras`, so inventory `ReferenceFull.rhai` lowers
+  onto the cmd Vista's `Reference.build_script` in the cmd `vista_loader` path.
+- **vantage-vista-factory `VistaCatalog::traverse`**: take the source Vista and
+  do the delegate-or-narrow branch. (`Relation` keeps NO rhai field; the factory
+  does not duplicate eval logic.)
+- **vantage-ui `entity.rs:open_detail`**: pass `parent_dio.master()` (already in
+  hand) as the source Vista into `traverse`.
+
+Benefit: one concept ("scripted reference" lives in `Vista::get_ref` per
+backend); `traverse` is just "prefer the Vista's resolver, fall back to FK." Also
+wires up surreal scripted refs in the app for free.
+
+### Feature 2 — the detail pass receives the existing row
+
+Today the detail pass hydrates by `id` only: `lens.rs on_load_detail` calls
+`master().get_value(&id)`, and cmd's `get_table_value` runs the detail script
+with `conditions: Vec::new()` and only `id` in scope
+(`vantage-cmd/src/table_source.rs:213`).
+
+The list pass now writes useful fields onto each `Incomplete` row (Feature wiring
+below). The detail script must be able to read them. So the enriching call
+forwards the existing cached record into the detail script as `row`.
+
+Concrete work (backwards-compatible via a default trait impl — non-cmd drivers
+unaffected):
+
+- **vantage-vista**: add `Vista::get_value_with_row(id, row)` (facade) backed by
+  a `VistaSource::get_vista_value_with_row(vista, id, row)` trait method whose
+  **default implementation ignores `row` and calls `get_vista_value(vista, id)`**.
+- **vantage-cmd**: override `get_vista_value_with_row` to inject the supplied
+  record into the detail `QueryContext` (new `QueryContext.row: Option<Record>`);
+  the `CompiledScript` pushes it into scope as `row`. The existing
+  `get_table_value(id)` path stays for non-row callers.
+- **vantage-diorama `lens.rs build_two_pass_lens`**: `on_load_detail` reads the
+  cached `Incomplete` record (`dio.cache().get_value(&id)`) and calls
+  `master().get_value_with_row(&id, existing)`. The `DioLoadDetailCallback`
+  signature is unchanged (no churn to tested Phase-2 code).
+
+### Feature 3 — drill-down gating (vantage-ui)
+
+A reference drill-down is offered only when both hold for the parent row:
+
+- the parent row's `RowStatus` is `Fresh`/`Complete` (its detail pass finished),
+  and
+- an optional rhai **guard** on the reference, evaluated against the row, returns
+  true (default: always true). For the gh `runs` reference the guard is
+  `row.compile_steps != ""` (deploy-only workflows with no compile steps are not
+  drillable).
+
+Concrete work: locate the drill-down enablement site in vantage-ui (the
+row-action / reference affordance), gate it on parent `RowStatus` plus an
+optional `guard` rhai expression carried on the reference. The implementation
+plan will pin the exact site; the schema gains an optional reference `guard`.
+
+## Example wiring (apps/vantage-github)
+
+Repoint the `gh-stats` datasource to `./scripts/gh-rust-caching-stats`; drop the
+now-unused raw `gh` datasource and `gh-stats.py`. **No Python change** — the
+`gh-rust-caching-stats` script keeps its current `stats <run_id>
+--cache-restore-steps A,B --compile-steps C,D --total-crates N` contract.
+
+- **`gh-workflows.yaml`** — becomes two-pass on the `gh-stats` datasource:
+  - `cmd.rhai` (list) = `workflows romaninsh/vantage` → `{id, name, state}`.
+  - `cmd.detail` = `analyze <id> romaninsh/vantage`; the detail rhai joins
+    `analyze`'s step arrays into CSV strings (`"4,8"`) so they ride as scalar
+    conditions and feed the `stats` CLI directly, and emits `total_crates`.
+  - columns gain `total_crates`.
+  - reference `runs` gains `rhai`:
+    ```rhai
+    table("gh-workflow-runs")
+        .add_condition_eq("workflow_id",         row.id)
+        .add_condition_eq("cache_restore_steps", row.cache_restore_steps)
+        .add_condition_eq("compile_steps",       row.compile_steps)
+        .add_condition_eq("total_crates",        row.total_crates)
+    ```
+  - reference `runs` gains `guard: row.compile_steps != ""`.
+
+- **`gh-workflow-runs.yaml`** — two-pass on `gh-stats`:
+  - hidden columns `cache_restore_steps`, `compile_steps`, `total_crates`
+    (declared so the schema knows them; never populated by the list script, so
+    the client-side safety net leaves rows alone).
+  - `cmd.rhai` (list) = `runs <workflow_id>` — reads the `workflow_id` condition
+    for the call, and paints `cache_restore_steps`/`compile_steps`/`total_crates`
+    from the conditions onto every emitted row.
+  - `cmd.detail` = `stats <run_id> --cache-restore-steps <row.cache_restore_steps>
+    --compile-steps <row.compile_steps> --total-crates <row.total_crates>` —
+    reads the painted fields from the injected `row`, returns `cache_size`,
+    `cache_match`, `build_time`, `crates_compiled`.
+
+## End-to-end data flow
+
+```
+gh-workflows (two-pass, gh-stats)
+  list:   workflows romaninsh/vantage          → {id,name,state}        (cheap)
+  detail: analyze <id> romaninsh/vantage       → total_crates,
+          (lazy, viewport)                        cache_restore_steps,
+                                                  compile_steps (CSV)    (expensive)
+        │  user clicks a Fresh row with compile_steps != ""  (gated)
+        ▼  reference "runs" rhai (eval_ref_script, row in scope):
+           table("gh-workflow-runs").add_condition_eq("workflow_id", row.id)…
+        ▼
+gh-workflow-runs (two-pass, gh-stats)
+  list:   runs <workflow_id>                    → run rows, with hidden
+          (paints fake columns from conditions)    step columns painted   (cheap)
+  detail: stats <run_id> --cache-restore-steps … → cache_size, cache_match,
+          (lazy, viewport; reads injected row)     build_time, crates_compiled (expensive)
+```
+
+## Testing (TDD)
+
+Framework, test-first:
+
+- **vantage-vista**: `get_vista_value_with_row` default impl ignores `row`
+  (delegates to `get_vista_value`).
+- **vantage-cmd**: `get_ref` with a `build_script` runs the script and narrows
+  the target by reading multiple parent-row fields; `get_ref` without a script
+  keeps FK behavior. Detail path with an injected `row` exposes `row.*` to the
+  detail script.
+- **vantage-vista-factory**: `traverse` delegates to a source Vista that has a
+  `build_script` for the relation; falls back to FK narrow when it does not.
+- **vantage-ui**: inventory `ReferenceFull.rhai` threads into cmd reference
+  extras → `Reference.build_script`; drill-down gating predicate
+  (status + guard).
+
+Production test: run the app against `romaninsh/vantage`, drill workflow → runs,
+confirm `stats` receives the derived steps and rows hydrate without UI freeze.
+
+Constraint: tests assert invocation/ordering/logic only — no simulated slowness,
+no clock advance.
+
+## Out of scope / follow-ups
+
+- Persisting the per-query index across restart (only the detail table + status
+  persist today).
+- Forwarding list-pass conditions/sort server-side beyond what the gh scripts
+  need (the list windows locally; see `lens.rs`).
+- Removing the temporary `[patch.crates-io]` block in vantage-ui once these land
+  on crates.io.
