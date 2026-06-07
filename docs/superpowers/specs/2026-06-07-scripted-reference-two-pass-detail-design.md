@@ -135,21 +135,22 @@ unaffected):
   `master().get_value_with_row(&id, existing)`. The `DioLoadDetailCallback`
   signature is unchanged (no churn to tested Phase-2 code).
 
-### Feature 3 — drill-down gating (vantage-ui)
+### Feature 3 — drill-down gating (DEFERRED to a page-level guard)
 
-A reference drill-down is offered only when both hold for the parent row:
+Intent unchanged: don't offer a drill-down into a row that isn't enriched yet
+(`RowStatus` not `Fresh`) or that fails a value predicate (e.g.
+`row.compile_steps != ""` for the gh `runs` reference, so deploy-only workflows
+aren't drillable).
 
-- the parent row's `RowStatus` is `Fresh`/`Complete` (its detail pass finished),
-  and
-- an optional rhai **guard** on the reference, evaluated against the row, returns
-  true (default: always true). For the gh `runs` reference the guard is
-  `row.compile_steps != ""` (deploy-only workflows with no compile steps are not
-  drillable).
-
-Concrete work: locate the drill-down enablement site in vantage-ui (the
-row-action / reference affordance), gate it on parent `RowStatus` plus an
-optional `guard` rhai expression carried on the reference. The implementation
-plan will pin the exact site; the schema gains an optional reference `guard`.
+**Decision (during implementation):** the guard does **not** belong on the
+reference — it belongs on the **page** (the same layer that already carries
+row-action `when:` predicates and evaluates them via
+`vantage_actions::evaluate_predicate`). So no `guard` field is added to
+`ReferenceFull` / `UiRelation`, and no gating is wired into the backend
+drill-down. This is split out as separate, page-level work and is **not** part of
+this implementation. Features 1 and 2 (the working data flow) ship without it;
+until the page guard lands, drilling an un-enriched row simply yields a target
+whose detail rows can't read step values yet.
 
 ## Example wiring (apps/vantage-github)
 
