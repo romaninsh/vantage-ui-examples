@@ -1,0 +1,552 @@
+#!/usr/bin/env python3
+"""Generic GitHub Actions cache/compile stats helper.
+
+Wraps `gh` CLI. Actions:
+  workflows [repo]                       List workflows as YAML.
+  analyze <workflow_id> [repo]           Find cache-restore + compile steps from recent runs.
+  runs <workflow_id> [repo] [--page N]   List runs (paginated).
+  stats <run_id> [repo] [--cache-step S] [--compile-steps A,B]  Get cache stats for one run.
+
+Repo defaults to romaninsh/vantage-ui.
+"""
+
+import json
+import re
+import subprocess
+import sys
+
+
+
+DEFAULT_REPO = "romaninsh/vantage-ui"
+
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def gh(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["gh", *args], capture_output=True, text=True)
+
+
+def strip_ansi(text: str) -> str:
+    return ANSI_RE.sub("", text)
+
+
+# ---------------------------------------------------------------------------
+# Action: workflows
+# ---------------------------------------------------------------------------
+def cmd_workflows(repo: str, all_wf: bool = False) -> int:
+    args = [
+        "workflow", "list",
+        "--repo", repo,
+        "--json", "id,name,state,path",
+        "--limit", "500",
+    ]
+    if all_wf:
+        args.append("--all")
+    r = gh(*args)
+    if r.returncode != 0:
+        sys.stderr.write(r.stderr)
+        return r.returncode
+    json.dump(json.loads(r.stdout), sys.stdout, indent=2)
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Action: analyze
+# ---------------------------------------------------------------------------
+from datetime import datetime, timedelta, timezone
+
+ANALYZE_RUN_LIMIT = 30      # successful runs to consider as candidates
+
+LOG_TS_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z")
+
+
+def parse_iso(s: str) -> datetime:
+    return datetime.fromisoformat(s.replace("Z", "+00:00"))
+
+
+def _scan_run_steps(run_id: str, repo: str):
+    """Download one run's jobs + log and detect cache/compile steps.
+
+    Returns (cache_restore_steps:set, cache_store_steps:set,
+    compile_steps:set, total_crates:int), or None if the log is
+    unavailable (e.g. HTTP 410 expired) so the caller can skip the run."""
+    jr = gh("api", f"repos/{repo}/actions/runs/{run_id}/jobs")
+    if jr.returncode != 0:
+        sys.stderr.write(jr.stderr)
+        return None
+    jobs = json.loads(jr.stdout)["jobs"]
+
+    log_r = gh("run", "view", str(run_id), "--repo", repo, "--log")
+    if log_r.returncode != 0:
+        # Expired logs (410) or other fetch failure: skip this run.
+        sys.stderr.write(log_r.stderr)
+        return None
+
+    # Build step time ranges from jobs API: [(step_number, start, end), ...]
+    step_intervals = []
+    for job in jobs:
+        for step in job["steps"]:
+            if step["conclusion"] in ("skipped", "cancelled"):
+                continue
+            started = step.get("started_at")
+            completed = step.get("completed_at")
+            if started and completed:
+                s_end = parse_iso(completed) + timedelta(seconds=1)
+                step_intervals.append((step["number"], parse_iso(started), s_end))
+
+    cache_restore_steps = set()
+    cache_store_steps = set()
+    compile_steps = set()
+    total_crates = 0
+
+    for raw_line in log_r.stdout.splitlines():
+        parts = raw_line.split("\t", 2)
+        if len(parts) < 3:
+            continue
+        ts_and_content = parts[2].strip()
+
+        # Timestamp is at the start: 2026-06-07T09:12:43.9801698Z ...
+        m = LOG_TS_RE.match(ts_and_content)
+        if not m:
+            continue
+        try:
+            ts = parse_iso(m.group(0))
+        except ValueError:
+            continue
+        content = strip_ansi(ts_and_content[m.end():].strip())
+
+        if re.search(r"\bCompiling\b", content):
+            for snum, s_start, s_end in step_intervals:
+                if s_start <= ts <= s_end:
+                    compile_steps.add(snum)
+                    break
+            total_crates += 1
+            continue
+
+        is_cache_restore = "Restored from cache key" in content or "Cache Size:" in content
+        is_cache_store = "... Saving cache ..." in content
+        if not is_cache_restore and not is_cache_store:
+            continue
+
+        for snum, s_start, s_end in step_intervals:
+            if s_start <= ts <= s_end:
+                if is_cache_restore:
+                    cache_restore_steps.add(snum)
+                if is_cache_store:
+                    cache_store_steps.add(snum)
+                break
+
+    return cache_restore_steps, cache_store_steps, compile_steps, total_crates
+
+
+def cmd_analyze(workflow_id: str, repo: str) -> int:
+    """Derive cache/compile steps by sampling runs across the duration range.
+
+    A single run rarely shows BOTH cache phases: a fully-cached run restores
+    but logs "Cache up-to-date." (no save), while a cold run saves but has
+    nothing to restore. To catch both — and a representative full crate count —
+    we sample three runs spread across the duration range: the shortest
+    (warmest — carries the cache restore), the longest (coldest — carries the
+    cache save and the fullest crate count), and the median. UNION-ing across
+    this spread catches both phases even when runs are bimodal (fast warm vs
+    slow cold), which a cluster of similar-length runs would miss. We take the
+    max crate count across the samples."""
+    r = gh(
+        "run", "list",
+        "--repo", repo,
+        "--workflow", str(workflow_id),
+        "--limit", str(ANALYZE_RUN_LIMIT),
+        "--json", "databaseId,number,conclusion,createdAt,updatedAt",
+    )
+    if r.returncode != 0:
+        sys.stderr.write(r.stderr)
+        return r.returncode
+
+    successful = [run for run in json.loads(r.stdout) if run["conclusion"] == "success"]
+    if not successful:
+        sys.stderr.write("no successful runs found\n")
+        return 1
+
+    for run in successful:
+        run["_dur"] = (parse_iso(run["updatedAt"]) - parse_iso(run["createdAt"])).total_seconds()
+    successful.sort(key=lambda x: x["_dur"])
+
+    shortest = successful[0]
+    longest = successful[-1]
+    median = successful[len(successful) // 2]
+
+    # Dedup while keeping longest first (its crate count is the fullest build).
+    picks = []
+    for run in (longest, median, shortest):
+        if all(run["databaseId"] != p["databaseId"] for p in picks):
+            picks.append(run)
+
+    cache_restore_steps = set()
+    cache_store_steps = set()
+    compile_steps = set()
+    total_crates = 0
+    representative = None     # run that yielded the most crates (fullest build)
+    scanned = 0
+
+    for run in picks:
+        detail = _scan_run_steps(run["databaseId"], repo)
+        if detail is None:
+            continue  # log unavailable (410 etc.) — skip this sample
+        scanned += 1
+        r_steps, s_steps, c_steps, tc = detail
+        cache_restore_steps |= r_steps
+        cache_store_steps |= s_steps
+        compile_steps |= c_steps
+        if tc > total_crates or representative is None:
+            total_crates = max(total_crates, tc)
+            representative = run
+        sys.stderr.write(
+            f"scanned run #{run['number']} ({run['_dur']:.0f}s): "
+            f"restore={sorted(r_steps)} store={sorted(s_steps)} "
+            f"compile={sorted(c_steps)} crates={tc}\n"
+        )
+
+    if representative is None:
+        sys.stderr.write("no usable run logs (all expired or empty)\n")
+        return 1
+
+    result = {
+        "workflow_id": int(workflow_id),
+        "run_id": representative["databaseId"],
+        "run_number": representative["number"],
+        "runs_scanned": scanned,
+        "total_crates": total_crates,
+        "cache_restore_steps": sorted(cache_restore_steps),
+        "cache_store_steps": sorted(cache_store_steps),
+        "compilation_steps": sorted(compile_steps),
+    }
+    json.dump(result, sys.stdout, indent=2)
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Action: runs
+# ---------------------------------------------------------------------------
+def cmd_runs(workflow_id: str, repo: str, page: int = 1, per_page: int = 25,
+            branch: str | None = None, not_branch: str | None = None) -> int:
+    args = [
+        "api",
+        f"repos/{repo}/actions/workflows/{workflow_id}/runs",
+        "--method", "GET",
+        "-f", f"per_page={per_page}",
+        "-f", f"page={page}",
+    ]
+    if branch:
+        args += ["-f", f"branch={branch}"]
+    r = gh(*args)
+    if r.returncode != 0:
+        sys.stderr.write(r.stderr)
+        return r.returncode
+    data = json.loads(r.stdout)
+    runs = []
+    for run in data.get("workflow_runs", []):
+        if not_branch and run["head_branch"] == not_branch:
+            continue
+        hc = run.get("head_commit", {})
+        msg = hc.get("message", "")
+        first_line = msg.split("\n")[0]
+        pr_match = re.search(r"\(#(\d+)\)\s*$", first_line)
+        runs.append({
+            "run_id": run["id"],
+            "run_number": run["run_number"],
+            "workflow_id": int(workflow_id),
+            "status": run["status"],
+            "conclusion": run["conclusion"] or "",
+            "event": run["event"],
+            "display_title": run.get("display_title", ""),
+            "head_branch": run["head_branch"],
+            "head_sha": run.get("head_sha", "")[:8],
+            "commit_message": first_line,
+            "pr_number": int(pr_match.group(1)) if pr_match else None,
+            "commit_author": hc.get("author", {}).get("name", ""),
+            "triggering_actor": run.get("triggering_actor", {}).get("login", ""),
+            "pull_requests": len(run.get("pull_requests", [])),
+            "created_at": run["created_at"],
+            "updated_at": run["updated_at"],
+        })
+    json.dump(runs, sys.stdout, indent=2)
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Action: stats
+# ---------------------------------------------------------------------------
+def _split_cache_key(key: str) -> tuple:
+    parts = key.split("-")
+    if len(parts) >= 2:
+        return parts[-2], parts[-1]
+    return "", ""
+
+
+def cmd_stats(run_id: str, repo: str,
+              cache_restore_steps: list | None = None,
+              compile_steps: list | None = None,
+              total_crates: int = 0) -> int:
+    # Fetch jobs for step time ranges
+    jr = gh("api", f"repos/{repo}/actions/runs/{run_id}/jobs")
+    if jr.returncode != 0:
+        sys.stderr.write(jr.stderr)
+        return jr.returncode
+    jobs = json.loads(jr.stdout)["jobs"]
+    step_intervals = []
+    for job in jobs:
+        conclusion = job.get("conclusion", "")
+        for step in job["steps"]:
+            started = step.get("started_at")
+            completed = step.get("completed_at")
+            if started and completed:
+                # Log timestamps can slightly exceed step end time
+                s_end = parse_iso(completed) + timedelta(seconds=1)
+                step_intervals.append((
+                    step["number"],
+                    parse_iso(started),
+                    s_end,
+                ))
+
+    # Fetch full log
+    log_r = gh("run", "view", str(run_id), "--repo", repo, "--log")
+    if log_r.returncode != 0:
+        sys.stderr.write(log_r.stderr)
+        return log_r.returncode
+
+    # Parse log
+    cache_size = ""
+    cache_match = ""
+    cache_key = ""
+    env_hash = ""
+    lock_hash = ""
+    build_time = ""
+    crates_compiled = 0
+
+    for raw_line in log_r.stdout.splitlines():
+        parts = raw_line.split("\t", 2)
+        if len(parts) < 3:
+            continue
+        ts_and_content = parts[2].strip()
+
+        # If step hints given, check timestamp is in a relevant step range
+        if step_intervals:
+            m = LOG_TS_RE.match(ts_and_content)
+            if not m:
+                continue
+            try:
+                ts = parse_iso(m.group(0))
+            except ValueError:
+                continue
+            # Check if ts falls in any relevant step
+            in_relevant = False
+            for snum, s_start, s_end in step_intervals:
+                if snum in (cache_restore_steps or []) and s_start <= ts <= s_end:
+                    in_relevant = True
+                    break
+                if snum in (compile_steps or []) and s_start <= ts <= s_end:
+                    in_relevant = True
+                    break
+            if not in_relevant:
+                continue
+            content = strip_ansi(ts_and_content[m.end():].strip())
+        else:
+            content = strip_ansi(ts_and_content)
+
+        if "Cache Size: " in content:
+            after = content.split("Cache Size: ", 1)[1]
+            cache_size = after.split(" (", 1)[0].strip()
+
+        if "Restored from cache key" in content:
+            m2 = re.search(r'Restored from cache key "([^"]+)"', content)
+            if m2:
+                cache_key = m2.group(1)
+                env_hash, lock_hash = _split_cache_key(cache_key)
+            if "full match: " in content:
+                cache_match = "full" if "full match: true" in content else "partial"
+
+        if "`dev` profile" in content or "`release` profile" in content:
+            if " in " in content and "Finished" in content:
+                build_time = content.rsplit(" in ", 1)[1].strip()
+
+        if re.search(r"\bCompiling\b", content):
+            crates_compiled += 1
+
+    cache_effective_pct = (
+        round((1 - crates_compiled / total_crates) * 100)
+        if total_crates > 0 and crates_compiled > 0 else None
+    )
+
+    result = {
+        "run_id": int(run_id),
+        "conclusion": conclusion,
+        "cache_size": cache_size,
+        "cache_match": cache_match,
+        "cache_key": cache_key,
+        "env_hash": env_hash,
+        "lock_hash": lock_hash,
+        "compile_time": build_time,
+        "compiled_crates": crates_compiled,
+        "cache_effective_pct": cache_effective_pct,
+    }
+    json.dump(result, sys.stdout, indent=2)
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Action: pr-diff
+# ---------------------------------------------------------------------------
+def cmd_pr_diff(pr_number: int | None, branch: str | None, repo: str) -> int:
+    if not pr_number and not branch:
+        sys.stderr.write("pr-diff requires --pr <number> or --branch <name>\n")
+        return 2
+
+    # If branch given, find the PR
+    if branch and not pr_number:
+        owner = repo.split("/")[0]
+        r = gh("api", f"repos/{repo}/pulls?head={owner}:{branch}&state=all", "--jq", ".[0].number")
+        if r.returncode != 0 or not r.stdout.strip():
+            sys.stderr.write(f"no PR found for branch {branch}\n")
+            return 1
+        pr_number = int(r.stdout.strip())
+
+    r = gh("api", f"repos/{repo}/pulls/{pr_number}")
+    if r.returncode != 0:
+        sys.stderr.write(r.stderr)
+        return r.returncode
+    pr = json.loads(r.stdout)
+
+    result = {
+        "pr_number": pr["number"],
+        "title": pr["title"],
+        "state": pr["state"],
+        "user": pr.get("user", {}).get("login", ""),
+        "additions": pr["additions"],
+        "deletions": pr["deletions"],
+        "changed_files": pr["changed_files"],
+        "merged": pr.get("merged", False),
+        "base_branch": pr["base"]["ref"],
+        "head_branch": pr["head"]["ref"],
+    }
+    json.dump(result, sys.stdout, indent=2)
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Main dispatch
+# ---------------------------------------------------------------------------
+def usage() -> int:
+    sys.stderr.write(
+        "usage: gh-rust-caching-stats <action> [args...]\n"
+        "  workflows [repo]\n"
+        "  analyze <workflow_id> [repo]\n"
+        "  runs <workflow_id> [repo] [--page N]\n"
+        "  stats <run_id> [repo] [--cache-step S] [--compile-steps A,B]\n"
+    )
+    return 2
+
+
+def main(argv: list) -> int:
+    if not argv:
+        return usage()
+
+    action = argv[0]
+    rest = argv[1:]
+
+    if action == "workflows":
+        repo = DEFAULT_REPO
+        all_wf = False
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--all":
+                all_wf = True
+            else:
+                repo = rest[i]
+            i += 1
+        return cmd_workflows(repo, all_wf)
+
+    if action == "analyze":
+        if not rest:
+            sys.stderr.write("analyze requires <workflow_id>\n")
+            return 2
+        workflow_id = rest[0]
+        repo = rest[1] if len(rest) > 1 else DEFAULT_REPO
+        return cmd_analyze(workflow_id, repo)
+
+    if action == "runs":
+        if not rest:
+            sys.stderr.write("runs requires <workflow_id>\n")
+            return 2
+        workflow_id = rest[0]
+        repo = DEFAULT_REPO
+        page = 1
+        branch = None
+        not_branch = None
+        i = 1
+        while i < len(rest):
+            if rest[i] == "--page" and i + 1 < len(rest):
+                page = int(rest[i + 1])
+                i += 2
+            elif rest[i] == "--branch" and i + 1 < len(rest):
+                branch = rest[i + 1]
+                i += 2
+            elif rest[i] == "--not-branch" and i + 1 < len(rest):
+                not_branch = rest[i + 1]
+                i += 2
+            elif rest[i] == "--per-page" and i + 1 < len(rest):
+                i += 2
+            else:
+                repo = rest[i]
+                i += 1
+        return cmd_runs(workflow_id, repo, page, branch=branch, not_branch=not_branch)
+
+    if action == "stats":
+        if not rest:
+            sys.stderr.write("stats requires <run_id>\n")
+            return 2
+        run_id = rest[0]
+        repo = DEFAULT_REPO
+        cache_restore_steps = None
+        compile_steps = None
+        total_crates = 0
+        i = 1
+        while i < len(rest):
+            if rest[i] == "--cache-restore-steps" and i + 1 < len(rest):
+                cache_restore_steps = [int(x) for x in rest[i + 1].split(",")]
+                i += 2
+            elif rest[i] == "--compile-steps" and i + 1 < len(rest):
+                compile_steps = [int(x) for x in rest[i + 1].split(",")]
+                i += 2
+            elif rest[i] == "--total-crates" and i + 1 < len(rest):
+                total_crates = int(rest[i + 1])
+                i += 2
+            else:
+                repo = rest[i]
+                i += 1
+        if not cache_restore_steps or not compile_steps:
+            sys.stderr.write("stats requires --cache-restore-steps AND --compile-steps\n")
+            return 2
+        return cmd_stats(run_id, repo, cache_restore_steps, compile_steps, total_crates)
+
+    if action == "pr-diff":
+        repo = DEFAULT_REPO
+        pr_number = None
+        branch = None
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--pr" and i + 1 < len(rest):
+                pr_number = int(rest[i + 1])
+                i += 2
+            elif rest[i] == "--branch" and i + 1 < len(rest):
+                branch = rest[i + 1]
+                i += 2
+            else:
+                repo = rest[i]
+                i += 1
+        return cmd_pr_diff(pr_number, branch, repo)
+
+    return usage()
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
