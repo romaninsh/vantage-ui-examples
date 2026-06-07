@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: payloads — customer payloads carried by launches.
+# `reused` flags payloads that have flown more than once (rare).
+#
+# Display hints live on `page/payloads.yaml::elements[].params.columns`.
+
+datasource: spacex
+title: Payloads
+
+has_many:
+  - { table: launches, foreign_key: payload_id }
+
+columns:
+  - { name: id, type: string, flags: [id, title, searchable] }
+  - { name: payload_type, type: string, flags: [title] }
+  - { name: nationality, type: string }
+  - { name: manufacturer, type: string }
+  - { name: customers, type: string }
+  - { name: orbit, type: string }
+  - { name: payload_mass_kg, type: float }
+  - { name: reused, type: bool }

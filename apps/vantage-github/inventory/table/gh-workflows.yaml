@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: gh
+title: Build Pipelines
+columns:
+  - name: id
+    type: int
+    flags: [id]
+  - name: name
+    type: string
+    flags: [title, searchable]
+  - name: state
+    type: string
+references:
+  runs:
+    table: gh-workflow-runs
+    kind: has_many
+    foreign_key: workflow_id
+cmd:
+  rhai: |
+    let args = ["workflow", "list", "--repo", "romaninsh/vantage", "--json", "name,id,state"];
+    let out = run(args);
+    if out.exit_code != 0 { throw out.stderr; }
+    parse_json(out.stdout)

@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+
+# Datasource: spacex
+#
+# Public read-only GraphQL fixture. The community mirror at
+# `spacex-api.fly.dev` follows the original SpaceX-Land schema —
+# flat-argument filters (`launches(find: { mission_name: "..." })`),
+# equality only. Endpoint availability is best-effort; community
+# mirrors come and go. If listings stop returning data, the mirror
+# is probably down — try a different endpoint.
+#
+# Schema overview (10 entities):
+#
+#   - launches    — every Falcon launch (id, mission_name, success, …)
+#   - rockets     — Falcon 1 / 9 / Heavy / Starship rocket designs
+#   - capsules    — Dragon capsules (reuse count, status, type)
+#   - cores       — Falcon 9 / Heavy first-stage boosters
+#   - dragons     — Dragon and Dragon 2 spacecraft variants
+#   - missions    — Programs grouping launches (Iridium NEXT, …)
+#   - payloads    — Customer payloads carried by launches
+#   - ships       — Recovery / drone-ship vessels
+#   - landpads    — Ground and drone-ship landing platforms
+#   - launchpads  — Launch complexes (LC-39A, SLC-40, …)
+
+description: "SpaceX — public read-only GraphQL fixture (community mirror)."
+type: graphql
+url: "https://spacex-api.fly.dev/graphql"
+dialect: generic

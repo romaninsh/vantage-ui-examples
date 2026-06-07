@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: cores — Falcon 9 / Heavy first-stage boosters (e.g. B1058).
+# `rtls_*` and `asds_*` separate return-to-launch-site landings from
+# autonomous spaceport drone-ship recoveries; `water_landing` is the
+# ocean-soft-landing test mode used on early flights.
+#
+# Display hints (column width, color, labels, link target, etc.)
+# live on `page/cores.yaml::elements[].params.columns`.
+
+datasource: spacex
+title: Cores
+
+has_many:
+  - { table: launches, foreign_key: core_id }
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: status, type: string, flags: [title] }
+  - { name: block, type: int }
+  - { name: reuse_count, type: int }
+  - { name: rtls_attempts, type: int }
+  - { name: rtls_landings, type: int }
+  - { name: asds_attempts, type: int }
+  - { name: asds_landings, type: int }
+  - { name: water_landing, type: bool }
+  - { name: original_launch, type: datetime }

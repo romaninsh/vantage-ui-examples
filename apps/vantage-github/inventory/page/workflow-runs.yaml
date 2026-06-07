@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: "Workflow Runs"
+args:
+  workflow_id:
+    type: int
+    required: true
+elements:
+  - kind: tableview
+    spot: body
+    table: gh-workflow-runs

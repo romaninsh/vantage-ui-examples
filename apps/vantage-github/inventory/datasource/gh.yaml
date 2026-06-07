@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+type: cmd
+description: "GitHub CLI"
+command: gh

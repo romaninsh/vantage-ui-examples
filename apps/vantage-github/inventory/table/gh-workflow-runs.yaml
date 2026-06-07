@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: gh-stats
+title: Workflow Runs
+columns:
+  - name: database_id
+    type: int
+    flags: [id]
+  - name: workflow_id
+    type: int
+    flags: [hidden]
+  - name: run_number
+    type: int
+  - name: head_branch
+    type: string
+    flags: [title]
+  - name: conclusion
+    type: string
+  - name: started_at
+    type: datetime
+  - name: cache_size
+    type: string
+  - name: cache_match
+    type: string
+  - name: build_time
+    type: string
+  - name: crates_compiled
+    type: int
+cmd:
+  # Stats extraction lives in ./scripts/gh-stats.py (ANSI-aware, debuggable
+  # standalone). This script just forwards the workflow id and returns the
+  # JSON rows the helper prints.
+  rhai: |
+    let workflow_id = 0;
+    for c in conditions {
+      if c.field == "workflow_id" { workflow_id = c.value; }
+    }
+    if workflow_id == 0 { return []; }
+
+    let out = run(["runs", workflow_id.to_string()]);
+    if out.exit_code != 0 { throw out.stderr; }
+    parse_json(out.stdout)

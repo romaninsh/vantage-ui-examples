@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: missions — programmes grouping launches by customer.
+# Iridium NEXT, Starlink, etc. Each launch's `mission_id` column is a
+# list of IDs pointing here.
+#
+# Display hints live on `page/missions.yaml::elements[].params.columns`.
+
+datasource: spacex
+title: Missions
+
+has_many:
+  - { table: launches, foreign_key: mission_id }
+  - { table: payloads, foreign_key: mission_id }
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: manufacturers, type: string }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: twitter, type: string }
+  - { name: website, type: string }
+  - { name: wikipedia, type: string }

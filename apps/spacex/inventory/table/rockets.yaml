@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: rockets — Falcon 1 / 9 / Heavy / Starship designs.
+#
+# `cost_per_launch` is BigInt on the wire; we widen it into our `int`
+# slot which is `i64`-backed so the full value fits cleanly.
+# Note from upstream: the `rockets` root field does NOT accept a
+# `find` argument server-side, so column filtering in the grid will
+# error. List + sort + paginate is fine.
+#
+# Display hints live on `page/rockets.yaml::elements[].params.columns`.
+
+datasource: spacex
+title: Rockets
+
+has_many:
+  - { table: launches, foreign_key: rocket_id }
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: type, type: string, flags: [title] }
+  - { name: company, type: string }
+  - { name: country, type: string }
+  - { name: active, type: bool }
+  - { name: stages, type: int }
+  - { name: boosters, type: int }
+  - { name: cost_per_launch, type: int }
+  - { name: success_rate_pct, type: int }
+  - { name: first_flight, type: datetime }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: wikipedia, type: string }

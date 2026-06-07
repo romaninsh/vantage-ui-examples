@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: dragons — Dragon and Dragon 2 spacecraft variants.
+#
+# `first_flight` arrives on the wire as a free-form string (e.g.
+# "2010-12-08") rather than a date — kept as `string` for accuracy.
+#
+# Display hints live on `page/dragons.yaml::elements[].params.columns`.
+
+datasource: spacex
+title: Dragons
+
+has_many:
+  - { table: launches, foreign_key: dragon_id }
+  - { table: capsules, foreign_key: dragon_type }
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: type, type: string, flags: [title] }
+  - { name: active, type: bool }
+  - { name: first_flight, type: string }
+  - { name: crew_capacity, type: int }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: wikipedia, type: string }

@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: dragons — list view over `table/dragons.yaml`.
+
+title: Dragons
+
+elements:
+  - kind: tableview
+    spot: body
+    table: dragons
+    params:
+      columns:
+        id: { pin: true, width: 110, label: ID }
+        name: { pin: true, width: 200, label: Name }
+        type: { width: 140, label: Type }
+        active:
+          width: 110
+          label: Active
+          color:
+            success: ["true"]
+            red: ["false"]
+          labels:
+            "true": Active
+            "false": Retired
+        first_flight: { width: 140, label: First flight }
+        crew_capacity: { width: 110, label: Crew }
+        description: { width: 540, label: Description }
+        wikipedia: { width: 240, label: Wikipedia }

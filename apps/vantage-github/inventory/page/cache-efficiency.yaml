@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Cache Efficiency
+elements:
+  - kind: tableview
+    spot: body
+    table: gh-workflows
+    row_actions:
+      - label: View Runs
+        primary: true
+        navigate: workflow-runs
+        args:
+          workflow_id: row.id

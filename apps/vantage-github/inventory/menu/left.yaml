@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+title: Vantage GitHub
+items:
+  - page: cache-efficiency
+    label: Cache Efficiency
+    icon: Activity
