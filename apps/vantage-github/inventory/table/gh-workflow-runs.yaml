@@ -60,11 +60,17 @@ cmd:
     rows
   # Detail pass: expensive — `stats` downloads + parses the run's log (one call,
   # no jobs API). It reads the crate count off the (painted) row to compute the
-  # cache-effectiveness percentage.
+  # cache-effectiveness percentage. total_crates may be unit () if the parent
+  # workflow row hadn't finished enriching at drill time — guard so the run row
+  # still hydrates (cache size/match populate; only the effective % is missing).
   detail: |
+    let tc = 0;
+    if type_of(row.total_crates) == "i64" { tc = row.total_crates; }
     let out = run([
       "stats", id.to_string(), "romaninsh/vantage",
-      "--total-crates", row.total_crates.to_string()
+      "--total-crates", tc.to_string()
     ]);
     if out.exit_code != 0 { return [#{}]; }
-    parse_json(out.stdout)
+    // `stats` prints a single JSON object; wrap it in an array because the cmd
+    // detail eval requires an array of rows (it then takes the first).
+    [parse_json(out.stdout)]

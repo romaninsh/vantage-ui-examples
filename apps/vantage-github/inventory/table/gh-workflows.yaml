@@ -19,12 +19,17 @@ references:
   runs:
     table: gh-workflow-runs
     kind: has_many
-    # Scripted reference: read the (enriched) workflow row and narrow the runs
-    # target by workflow id plus the derived crate count.
+    # Scripted reference: narrow the runs target by workflow id, and carry the
+    # derived crate count when it's available. total_crates is only present once
+    # the workflow row has been enriched by its own detail pass — drilling before
+    # that leaves it unit (), so we add the condition only when it's a real int.
+    # The runs detail pass falls back to no effective-% when the count is absent.
     rhai: |
-      table("gh-workflow-runs")
-        .add_condition_eq("workflow_id", row.id)
-        .add_condition_eq("total_crates", row.total_crates)
+      let runs = table("gh-workflow-runs").add_condition_eq("workflow_id", row.id);
+      if type_of(row.total_crates) == "i64" {
+        runs = runs.add_condition_eq("total_crates", row.total_crates);
+      }
+      runs
 cmd:
   # List pass: cheap — one call lists every workflow.
   rhai: |
