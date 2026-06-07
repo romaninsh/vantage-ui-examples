@@ -17,15 +17,9 @@ columns:
     type: string
   - name: created_at
     type: datetime
-  # Carry columns: painted by the list pass from the drill-down conditions so
-  # each run row carries the workflow's step parameters; the `stats` detail pass
-  # reads them off the row. Hidden — they receive no value of their own.
-  - name: cache_restore_steps
-    type: string
-    flags: [hidden]
-  - name: compile_steps
-    type: string
-    flags: [hidden]
+  # Carry column: painted by the list pass from the drill-down condition so each
+  # run row carries the workflow's full crate count; the `stats` detail pass
+  # reads it off the row. Hidden — it receives no value of its own.
   - name: total_crates
     type: int
     flags: [hidden]
@@ -42,19 +36,15 @@ columns:
     type: int
 cmd:
   # List pass: cheap — one `runs` call lists the workflow's runs. Reads the
-  # workflow id from the drill-down conditions, and paints the step parameters
-  # (also conditions) onto every row so the detail pass can read them. total_crates
-  # is painted as an int to match the int-valued condition (the cmd client-side
-  # Eq safety net would otherwise drop every row on a type mismatch).
+  # workflow id from the drill-down conditions, and paints the crate count (also
+  # a condition) onto every row so the detail pass can read it. total_crates is
+  # painted as an int to match the int-valued condition (the cmd client-side Eq
+  # safety net would otherwise drop every row on a type mismatch).
   rhai: |
     let workflow_id = "";
-    let crs = "";
-    let cs = "";
     let tc = 0;
     for c in conditions {
       if c.field == "workflow_id" { workflow_id = c.value.to_string(); }
-      if c.field == "cache_restore_steps" { crs = c.value.to_string(); }
-      if c.field == "compile_steps" { cs = c.value.to_string(); }
       if c.field == "total_crates" { tc = c.value; }
     }
     if workflow_id == "" { return []; }
@@ -65,22 +55,15 @@ cmd:
     // Mutate by index: a Rhai `for r in rows` loop binds a COPY of each map, so
     // `r.field = ...` would not write back. Indexing mutates in place.
     for i in 0..rows.len() {
-      rows[i].cache_restore_steps = crs;
-      rows[i].compile_steps = cs;
       rows[i].total_crates = tc;
     }
     rows
-  # Detail pass: expensive — `stats` downloads + parses the run's log. Reads the
-  # step parameters off the (painted) row. `stats` requires both step lists, so
-  # when either is empty we skip it and leave the run row without cache columns.
+  # Detail pass: expensive — `stats` downloads + parses the run's log (one call,
+  # no jobs API). It reads the crate count off the (painted) row to compute the
+  # cache-effectiveness percentage.
   detail: |
-    if row.cache_restore_steps == "" || row.compile_steps == "" {
-      return [#{}];
-    }
     let out = run([
       "stats", id.to_string(), "romaninsh/vantage",
-      "--cache-restore-steps", row.cache_restore_steps,
-      "--compile-steps", row.compile_steps,
       "--total-crates", row.total_crates.to_string()
     ]);
     if out.exit_code != 0 { return [#{}]; }

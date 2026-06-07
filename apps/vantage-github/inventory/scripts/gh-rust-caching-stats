@@ -3,11 +3,17 @@
 
 Wraps `gh` CLI. Actions:
   workflows [repo]                       List workflows as YAML.
-  analyze <workflow_id> [repo]           Find cache-restore + compile steps from recent runs.
+  analyze <workflow_id> [repo]           Estimate the full crate count from recent runs.
   runs <workflow_id> [repo] [--page N]   List runs (paginated).
-  stats <run_id> [repo] [--cache-step S] [--compile-steps A,B]  Get cache stats for one run.
+  stats <run_id> [repo] [--total-crates N]  Get cache stats for one run.
 
 Repo defaults to romaninsh/vantage-ui.
+
+Cache/compile signals are detected by unique log markers (Cache Size, Restored
+from cache key, Saving cache, Compiling) — no jobs API, no step numbers, no
+timestamps. The only cross-run parameter is total_crates, the fullest (cold)
+build's crate count, which `stats` divides into per-run compiles for the
+cache-effectiveness percentage.
 """
 
 import json
@@ -53,104 +59,50 @@ def cmd_workflows(repo: str, all_wf: bool = False) -> int:
 # ---------------------------------------------------------------------------
 # Action: analyze
 # ---------------------------------------------------------------------------
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 ANALYZE_RUN_LIMIT = 30      # successful runs to consider as candidates
-
-LOG_TS_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z")
 
 
 def parse_iso(s: str) -> datetime:
     return datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
-def _scan_run_steps(run_id: str, repo: str):
-    """Download one run's jobs + log and detect cache/compile steps.
+def iter_log_lines(stdout: str):
+    """Yield the ANSI-stripped content of each `gh run view --log` line.
 
-    Returns (cache_restore_steps:set, cache_store_steps:set,
-    compile_steps:set, total_crates:int), or None if the log is
-    unavailable (e.g. HTTP 410 expired) so the caller can skip the run."""
-    jr = gh("api", f"repos/{repo}/actions/runs/{run_id}/jobs")
-    if jr.returncode != 0:
-        sys.stderr.write(jr.stderr)
-        return None
-    jobs = json.loads(jr.stdout)["jobs"]
-
-    log_r = gh("run", "view", str(run_id), "--repo", repo, "--log")
-    if log_r.returncode != 0:
-        # Expired logs (410) or other fetch failure: skip this run.
-        sys.stderr.write(log_r.stderr)
-        return None
-
-    # Build step time ranges from jobs API: [(step_number, start, end), ...]
-    step_intervals = []
-    for job in jobs:
-        for step in job["steps"]:
-            if step["conclusion"] in ("skipped", "cancelled"):
-                continue
-            started = step.get("started_at")
-            completed = step.get("completed_at")
-            if started and completed:
-                s_end = parse_iso(completed) + timedelta(seconds=1)
-                step_intervals.append((step["number"], parse_iso(started), s_end))
-
-    cache_restore_steps = set()
-    cache_store_steps = set()
-    compile_steps = set()
-    total_crates = 0
-
-    for raw_line in log_r.stdout.splitlines():
+    Each line is `job \\t step-name \\t timestamp content`; we only need the
+    content payload, where the unique cache/compile markers live."""
+    for raw_line in stdout.splitlines():
         parts = raw_line.split("\t", 2)
         if len(parts) < 3:
             continue
-        ts_and_content = parts[2].strip()
+        yield strip_ansi(parts[2])
 
-        # Timestamp is at the start: 2026-06-07T09:12:43.9801698Z ...
-        m = LOG_TS_RE.match(ts_and_content)
-        if not m:
-            continue
-        try:
-            ts = parse_iso(m.group(0))
-        except ValueError:
-            continue
-        content = strip_ansi(ts_and_content[m.end():].strip())
 
-        if re.search(r"\bCompiling\b", content):
-            for snum, s_start, s_end in step_intervals:
-                if s_start <= ts <= s_end:
-                    compile_steps.add(snum)
-                    break
-            total_crates += 1
-            continue
+def _count_crates(run_id: str, repo: str):
+    """Download one run's log and count `Compiling` lines (its crate count).
 
-        is_cache_restore = "Restored from cache key" in content or "Cache Size:" in content
-        is_cache_store = "... Saving cache ..." in content
-        if not is_cache_restore and not is_cache_store:
-            continue
-
-        for snum, s_start, s_end in step_intervals:
-            if s_start <= ts <= s_end:
-                if is_cache_restore:
-                    cache_restore_steps.add(snum)
-                if is_cache_store:
-                    cache_store_steps.add(snum)
-                break
-
-    return cache_restore_steps, cache_store_steps, compile_steps, total_crates
+    Returns the count, or None if the log is unavailable (e.g. HTTP 410
+    expired) so the caller can skip the run. No jobs API call — the log is
+    the only thing we need."""
+    log_r = gh("run", "view", str(run_id), "--repo", repo, "--log")
+    if log_r.returncode != 0:
+        sys.stderr.write(log_r.stderr)
+        return None
+    return sum(1 for content in iter_log_lines(log_r.stdout)
+               if re.search(r"\bCompiling\b", content))
 
 
 def cmd_analyze(workflow_id: str, repo: str) -> int:
-    """Derive cache/compile steps by sampling runs across the duration range.
+    """Estimate the full crate count by sampling runs across the duration range.
 
-    A single run rarely shows BOTH cache phases: a fully-cached run restores
-    but logs "Cache up-to-date." (no save), while a cold run saves but has
-    nothing to restore. To catch both — and a representative full crate count —
-    we sample three runs spread across the duration range: the shortest
-    (warmest — carries the cache restore), the longest (coldest — carries the
-    cache save and the fullest crate count), and the median. UNION-ing across
-    this spread catches both phases even when runs are bimodal (fast warm vs
-    slow cold), which a cluster of similar-length runs would miss. We take the
-    max crate count across the samples."""
+    `stats` computes cache_effective_pct as 1 - compiled/total_crates, so
+    total_crates must be the fullest (cold) build's crate count. The cold build
+    is the long-running one, so we sample three runs spread across the duration
+    range — shortest, median, longest — and take the MAX `Compiling` count.
+    Sampling the spread (not just the longest) guards against a duration
+    outlier and against any one log being expired (410)."""
     r = gh(
         "run", "list",
         "--repo", repo,
@@ -181,29 +133,20 @@ def cmd_analyze(workflow_id: str, repo: str) -> int:
         if all(run["databaseId"] != p["databaseId"] for p in picks):
             picks.append(run)
 
-    cache_restore_steps = set()
-    cache_store_steps = set()
-    compile_steps = set()
     total_crates = 0
     representative = None     # run that yielded the most crates (fullest build)
     scanned = 0
 
     for run in picks:
-        detail = _scan_run_steps(run["databaseId"], repo)
-        if detail is None:
+        crates = _count_crates(run["databaseId"], repo)
+        if crates is None:
             continue  # log unavailable (410 etc.) — skip this sample
         scanned += 1
-        r_steps, s_steps, c_steps, tc = detail
-        cache_restore_steps |= r_steps
-        cache_store_steps |= s_steps
-        compile_steps |= c_steps
-        if tc > total_crates or representative is None:
-            total_crates = max(total_crates, tc)
+        if crates > total_crates or representative is None:
+            total_crates = max(total_crates, crates)
             representative = run
         sys.stderr.write(
-            f"scanned run #{run['number']} ({run['_dur']:.0f}s): "
-            f"restore={sorted(r_steps)} store={sorted(s_steps)} "
-            f"compile={sorted(c_steps)} crates={tc}\n"
+            f"scanned run #{run['number']} ({run['_dur']:.0f}s): crates={crates}\n"
         )
 
     if representative is None:
@@ -216,9 +159,6 @@ def cmd_analyze(workflow_id: str, repo: str) -> int:
         "run_number": representative["number"],
         "runs_scanned": scanned,
         "total_crates": total_crates,
-        "cache_restore_steps": sorted(cache_restore_steps),
-        "cache_store_steps": sorted(cache_store_steps),
-        "compilation_steps": sorted(compile_steps),
     }
     json.dump(result, sys.stdout, indent=2)
     return 0
@@ -283,38 +223,13 @@ def _split_cache_key(key: str) -> tuple:
     return "", ""
 
 
-def cmd_stats(run_id: str, repo: str,
-              cache_restore_steps: list | None = None,
-              compile_steps: list | None = None,
-              total_crates: int = 0) -> int:
-    # Fetch jobs for step time ranges
-    jr = gh("api", f"repos/{repo}/actions/runs/{run_id}/jobs")
-    if jr.returncode != 0:
-        sys.stderr.write(jr.stderr)
-        return jr.returncode
-    jobs = json.loads(jr.stdout)["jobs"]
-    step_intervals = []
-    for job in jobs:
-        conclusion = job.get("conclusion", "")
-        for step in job["steps"]:
-            started = step.get("started_at")
-            completed = step.get("completed_at")
-            if started and completed:
-                # Log timestamps can slightly exceed step end time
-                s_end = parse_iso(completed) + timedelta(seconds=1)
-                step_intervals.append((
-                    step["number"],
-                    parse_iso(started),
-                    s_end,
-                ))
-
-    # Fetch full log
+def cmd_stats(run_id: str, repo: str, total_crates: int = 0) -> int:
+    # The log carries every signal; no jobs API / step filtering needed.
     log_r = gh("run", "view", str(run_id), "--repo", repo, "--log")
     if log_r.returncode != 0:
         sys.stderr.write(log_r.stderr)
         return log_r.returncode
 
-    # Parse log
     cache_size = ""
     cache_match = ""
     cache_key = ""
@@ -323,37 +238,9 @@ def cmd_stats(run_id: str, repo: str,
     build_time = ""
     crates_compiled = 0
 
-    for raw_line in log_r.stdout.splitlines():
-        parts = raw_line.split("\t", 2)
-        if len(parts) < 3:
-            continue
-        ts_and_content = parts[2].strip()
-
-        # If step hints given, check timestamp is in a relevant step range
-        if step_intervals:
-            m = LOG_TS_RE.match(ts_and_content)
-            if not m:
-                continue
-            try:
-                ts = parse_iso(m.group(0))
-            except ValueError:
-                continue
-            # Check if ts falls in any relevant step
-            in_relevant = False
-            for snum, s_start, s_end in step_intervals:
-                if snum in (cache_restore_steps or []) and s_start <= ts <= s_end:
-                    in_relevant = True
-                    break
-                if snum in (compile_steps or []) and s_start <= ts <= s_end:
-                    in_relevant = True
-                    break
-            if not in_relevant:
-                continue
-            content = strip_ansi(ts_and_content[m.end():].strip())
-        else:
-            content = strip_ansi(ts_and_content)
-
-        if "Cache Size: " in content:
+    for content in iter_log_lines(log_r.stdout):
+        # First "Cache Size:" is the restore (it precedes any save in the log).
+        if not cache_size and "Cache Size: " in content:
             after = content.split("Cache Size: ", 1)[1]
             cache_size = after.split(" (", 1)[0].strip()
 
@@ -379,7 +266,6 @@ def cmd_stats(run_id: str, repo: str,
 
     result = {
         "run_id": int(run_id),
-        "conclusion": conclusion,
         "cache_size": cache_size,
         "cache_match": cache_match,
         "cache_key": cache_key,
@@ -441,7 +327,7 @@ def usage() -> int:
         "  workflows [repo]\n"
         "  analyze <workflow_id> [repo]\n"
         "  runs <workflow_id> [repo] [--page N]\n"
-        "  stats <run_id> [repo] [--cache-step S] [--compile-steps A,B]\n"
+        "  stats <run_id> [repo] [--total-crates N]\n"
     )
     return 2
 
@@ -506,27 +392,16 @@ def main(argv: list) -> int:
             return 2
         run_id = rest[0]
         repo = DEFAULT_REPO
-        cache_restore_steps = None
-        compile_steps = None
         total_crates = 0
         i = 1
         while i < len(rest):
-            if rest[i] == "--cache-restore-steps" and i + 1 < len(rest):
-                cache_restore_steps = [int(x) for x in rest[i + 1].split(",")]
-                i += 2
-            elif rest[i] == "--compile-steps" and i + 1 < len(rest):
-                compile_steps = [int(x) for x in rest[i + 1].split(",")]
-                i += 2
-            elif rest[i] == "--total-crates" and i + 1 < len(rest):
+            if rest[i] == "--total-crates" and i + 1 < len(rest):
                 total_crates = int(rest[i + 1])
                 i += 2
             else:
                 repo = rest[i]
                 i += 1
-        if not cache_restore_steps or not compile_steps:
-            sys.stderr.write("stats requires --cache-restore-steps AND --compile-steps\n")
-            return 2
-        return cmd_stats(run_id, repo, cache_restore_steps, compile_steps, total_crates)
+        return cmd_stats(run_id, repo, total_crates)
 
     if action == "pr-diff":
         repo = DEFAULT_REPO
