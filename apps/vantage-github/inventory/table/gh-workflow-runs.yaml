@@ -2,7 +2,7 @@
 datasource: gh-stats
 title: Workflow Runs
 columns:
-  - name: database_id
+  - name: run_id
     type: int
     flags: [id]
   - name: workflow_id
@@ -15,27 +15,71 @@ columns:
     flags: [title]
   - name: conclusion
     type: string
-  - name: started_at
+  - name: created_at
     type: datetime
+  # Carry columns: painted by the list pass from the drill-down conditions so
+  # each run row carries the workflow's step parameters; the `stats` detail pass
+  # reads them off the row. Hidden — they receive no value of their own.
+  - name: cache_restore_steps
+    type: string
+    flags: [hidden]
+  - name: compile_steps
+    type: string
+    flags: [hidden]
+  - name: total_crates
+    type: int
+    flags: [hidden]
+  # Filled in lazily by the `stats` detail pass.
   - name: cache_size
     type: string
   - name: cache_match
     type: string
-  - name: build_time
+  - name: compile_time
     type: string
-  - name: crates_compiled
+  - name: compiled_crates
+    type: int
+  - name: cache_effective_pct
     type: int
 cmd:
-  # Stats extraction lives in ./scripts/gh-stats.py (ANSI-aware, debuggable
-  # standalone). This script just forwards the workflow id and returns the
-  # JSON rows the helper prints.
+  # List pass: cheap — one `runs` call lists the workflow's runs. Reads the
+  # workflow id from the drill-down conditions, and paints the step parameters
+  # (also conditions) onto every row so the detail pass can read them. total_crates
+  # is painted as an int to match the int-valued condition (the cmd client-side
+  # Eq safety net would otherwise drop every row on a type mismatch).
   rhai: |
-    let workflow_id = 0;
+    let workflow_id = "";
+    let crs = "";
+    let cs = "";
+    let tc = 0;
     for c in conditions {
-      if c.field == "workflow_id" { workflow_id = c.value; }
+      if c.field == "workflow_id" { workflow_id = c.value.to_string(); }
+      if c.field == "cache_restore_steps" { crs = c.value.to_string(); }
+      if c.field == "compile_steps" { cs = c.value.to_string(); }
+      if c.field == "total_crates" { tc = c.value; }
     }
-    if workflow_id == 0 { return []; }
+    if workflow_id == "" { return []; }
 
-    let out = run(["runs", workflow_id.to_string()]);
+    let out = run(["runs", workflow_id, "romaninsh/vantage"]);
     if out.exit_code != 0 { throw out.stderr; }
+    let rows = parse_json(out.stdout);
+    for r in rows {
+      r.cache_restore_steps = crs;
+      r.compile_steps = cs;
+      r.total_crates = tc;
+    }
+    rows
+  # Detail pass: expensive — `stats` downloads + parses the run's log. Reads the
+  # step parameters off the (painted) row. `stats` requires both step lists, so
+  # when either is empty we skip it and leave the run row without cache columns.
+  detail: |
+    if row.cache_restore_steps == "" || row.compile_steps == "" {
+      return [#{}];
+    }
+    let out = run([
+      "stats", id.to_string(), "romaninsh/vantage",
+      "--cache-restore-steps", row.cache_restore_steps,
+      "--compile-steps", row.compile_steps,
+      "--total-crates", row.total_crates.to_string()
+    ]);
+    if out.exit_code != 0 { return [#{}]; }
     parse_json(out.stdout)
