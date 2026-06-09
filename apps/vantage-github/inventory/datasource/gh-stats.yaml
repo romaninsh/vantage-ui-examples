@@ -1,4 +1,4 @@
 # yaml-language-server: $schema=./datasource-schema-1.json
 type: cmd
-description: "GitHub stats helper (wraps gh, parses run logs)"
+description: "GitHub workflow/run/step helper (wraps gh; also scaffolds per-workflow runs tables)"
 command: ./scripts/gh-rust-caching-stats

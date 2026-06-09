@@ -1,39 +1,45 @@
 #!/usr/bin/env python3
-"""Generic GitHub Actions cache/compile stats helper.
+"""GitHub Actions workflow/run/step helper for the vantage-github example.
 
-Wraps `gh` CLI. Actions:
-  workflows [repo]                       List workflows as YAML.
-  analyze <workflow_id> [repo]           Estimate the full crate count from recent runs.
-  runs <workflow_id> [repo] [--page N]   List runs (paginated).
-  stats <run_id> [repo] [--total-crates N]  Get cache stats for one run.
+Wraps the `gh` CLI. Actions:
+  workflows [repo]                       List build workflows (pipelines) as JSON.
+  runs <workflow_id> [repo] [--page N] [--success]
+                                         List a workflow's runs (paginated).
+  workflow-steps <workflow_id> [repo]    Canonical step list, taken from the
+                                         workflow's latest successful run.
+  run-steps <run_id> [repo]              Per-step durations (seconds) for one run,
+                                         keyed by the same slug `scaffold-runs` uses
+                                         for the table's column names.
+  scaffold-runs <workflow_id> [repo] --name <label> --inventory <dir>
+                                         Discover a workflow's steps and GENERATE a
+                                         dedicated runs table + page whose columns are
+                                         those steps, then register the page in
+                                         menu/left.yaml. The running viewer hot-reloads
+                                         the new files into the sidebar.
 
-Repo defaults to romaninsh/vantage-ui.
-
-Cache/compile signals are detected by unique log markers (Cache Size, Restored
-from cache key, Saving cache, Compiling) — no jobs API, no step numbers, no
-timestamps. The only cross-run parameter is total_crates, the fullest (cold)
-build's crate count, which `stats` divides into per-run compiles for the
-cache-effectiveness percentage.
+Repo defaults to romaninsh/vantage-ui. Step data comes from
+`gh run view <run_id> --json jobs` (jobs[].steps[] with name + start/complete
+timestamps); a step's duration is completedAt - startedAt.
 """
 
+import glob
 import json
+import os
 import re
 import subprocess
 import sys
-
-
+import tempfile
+from datetime import datetime
 
 DEFAULT_REPO = "romaninsh/vantage-ui"
-
-ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 
 def gh(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["gh", *args], capture_output=True, text=True)
 
 
-def strip_ansi(text: str) -> str:
-    return ANSI_RE.sub("", text)
+def parse_iso(s: str) -> datetime:
+    return datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
 # ---------------------------------------------------------------------------
@@ -57,118 +63,11 @@ def cmd_workflows(repo: str, all_wf: bool = False) -> int:
 
 
 # ---------------------------------------------------------------------------
-# Action: analyze
-# ---------------------------------------------------------------------------
-from datetime import datetime
-
-ANALYZE_RUN_LIMIT = 30      # successful runs to consider as candidates
-
-
-def parse_iso(s: str) -> datetime:
-    return datetime.fromisoformat(s.replace("Z", "+00:00"))
-
-
-def iter_log_lines(stdout: str):
-    """Yield the ANSI-stripped content of each `gh run view --log` line.
-
-    Each line is `job \\t step-name \\t timestamp content`; we only need the
-    content payload, where the unique cache/compile markers live."""
-    for raw_line in stdout.splitlines():
-        parts = raw_line.split("\t", 2)
-        if len(parts) < 3:
-            continue
-        yield strip_ansi(parts[2])
-
-
-def _count_crates(run_id: str, repo: str):
-    """Download one run's log and count `Compiling` lines (its crate count).
-
-    Returns the count, or None if the log is unavailable (e.g. HTTP 410
-    expired) so the caller can skip the run. No jobs API call — the log is
-    the only thing we need."""
-    log_r = gh("run", "view", str(run_id), "--repo", repo, "--log")
-    if log_r.returncode != 0:
-        sys.stderr.write(log_r.stderr)
-        return None
-    return sum(1 for content in iter_log_lines(log_r.stdout)
-               if re.search(r"\bCompiling\b", content))
-
-
-def cmd_analyze(workflow_id: str, repo: str) -> int:
-    """Estimate the full crate count by sampling runs across the duration range.
-
-    `stats` computes cache_effective_pct as 1 - compiled/total_crates, so
-    total_crates must be the fullest (cold) build's crate count. The cold build
-    is the long-running one, so we sample three runs spread across the duration
-    range — shortest, median, longest — and take the MAX `Compiling` count.
-    Sampling the spread (not just the longest) guards against a duration
-    outlier and against any one log being expired (410)."""
-    r = gh(
-        "run", "list",
-        "--repo", repo,
-        "--workflow", str(workflow_id),
-        "--limit", str(ANALYZE_RUN_LIMIT),
-        "--json", "databaseId,number,conclusion,createdAt,updatedAt",
-    )
-    if r.returncode != 0:
-        sys.stderr.write(r.stderr)
-        return r.returncode
-
-    successful = [run for run in json.loads(r.stdout) if run["conclusion"] == "success"]
-    if not successful:
-        sys.stderr.write("no successful runs found\n")
-        return 1
-
-    for run in successful:
-        run["_dur"] = (parse_iso(run["updatedAt"]) - parse_iso(run["createdAt"])).total_seconds()
-    successful.sort(key=lambda x: x["_dur"])
-
-    shortest = successful[0]
-    longest = successful[-1]
-    median = successful[len(successful) // 2]
-
-    # Dedup while keeping longest first (its crate count is the fullest build).
-    picks = []
-    for run in (longest, median, shortest):
-        if all(run["databaseId"] != p["databaseId"] for p in picks):
-            picks.append(run)
-
-    total_crates = 0
-    representative = None     # run that yielded the most crates (fullest build)
-    scanned = 0
-
-    for run in picks:
-        crates = _count_crates(run["databaseId"], repo)
-        if crates is None:
-            continue  # log unavailable (410 etc.) — skip this sample
-        scanned += 1
-        if crates > total_crates or representative is None:
-            total_crates = max(total_crates, crates)
-            representative = run
-        sys.stderr.write(
-            f"scanned run #{run['number']} ({run['_dur']:.0f}s): crates={crates}\n"
-        )
-
-    if representative is None:
-        sys.stderr.write("no usable run logs (all expired or empty)\n")
-        return 1
-
-    result = {
-        "workflow_id": int(workflow_id),
-        "run_id": representative["databaseId"],
-        "run_number": representative["number"],
-        "runs_scanned": scanned,
-        "total_crates": total_crates,
-    }
-    json.dump(result, sys.stdout, indent=2)
-    return 0
-
-
-# ---------------------------------------------------------------------------
 # Action: runs
 # ---------------------------------------------------------------------------
 def cmd_runs(workflow_id: str, repo: str, page: int = 1, per_page: int = 25,
-            branch: str | None = None, not_branch: str | None = None) -> int:
+             branch: str | None = None, not_branch: str | None = None,
+             success_only: bool = False) -> int:
     args = [
         "api",
         f"repos/{repo}/actions/workflows/{workflow_id}/runs",
@@ -186,6 +85,10 @@ def cmd_runs(workflow_id: str, repo: str, page: int = 1, per_page: int = 25,
     runs = []
     for run in data.get("workflow_runs", []):
         if not_branch and run["head_branch"] == not_branch:
+            continue
+        # Generated per-workflow tables list successful runs only — they're the
+        # ones guaranteed to have executed every step (the table's column set).
+        if success_only and (run.get("conclusion") or "") != "success":
             continue
         hc = run.get("head_commit", {})
         msg = hc.get("message", "")
@@ -214,107 +117,379 @@ def cmd_runs(workflow_id: str, repo: str, page: int = 1, per_page: int = 25,
 
 
 # ---------------------------------------------------------------------------
-# Action: stats
+# Steps: shared helpers
 # ---------------------------------------------------------------------------
-def _split_cache_key(key: str) -> tuple:
-    parts = key.split("-")
-    if len(parts) >= 2:
-        return parts[-2], parts[-1]
-    return "", ""
+def slugify(name: str) -> str:
+    """A safe, stable column/key name for a step. Keyed by the step NAME (not
+    its number) because step numbers shift between runs while names are stable —
+    that's what lets a column line up across every run row."""
+    s = re.sub(r"[^a-z0-9]+", "_", name.strip().lower()).strip("_")
+    if not s:
+        s = "step"
+    if s[0].isdigit():
+        s = "s_" + s
+    return s
 
 
-def cmd_stats(run_id: str, repo: str, total_crates: int = 0) -> int:
-    # The log carries every signal; no jobs API / step filtering needed.
-    log_r = gh("run", "view", str(run_id), "--repo", repo, "--log")
-    if log_r.returncode != 0:
-        sys.stderr.write(log_r.stderr)
-        return log_r.returncode
-
-    cache_size = ""
-    cache_match = ""
-    cache_key = ""
-    env_hash = ""
-    lock_hash = ""
-    build_time = ""
-    crates_compiled = 0
-
-    for content in iter_log_lines(log_r.stdout):
-        # First "Cache Size:" is the restore (it precedes any save in the log).
-        if not cache_size and "Cache Size: " in content:
-            after = content.split("Cache Size: ", 1)[1]
-            cache_size = after.split(" (", 1)[0].strip()
-
-        if "Restored from cache key" in content:
-            m2 = re.search(r'Restored from cache key "([^"]+)"', content)
-            if m2:
-                cache_key = m2.group(1)
-                env_hash, lock_hash = _split_cache_key(cache_key)
-            if "full match: " in content:
-                cache_match = "full" if "full match: true" in content else "partial"
-
-        if "`dev` profile" in content or "`release` profile" in content:
-            if " in " in content and "Finished" in content:
-                build_time = content.rsplit(" in ", 1)[1].strip()
-
-        if re.search(r"\bCompiling\b", content):
-            crates_compiled += 1
-
-    cache_effective_pct = (
-        round((1 - crates_compiled / total_crates) * 100)
-        if total_crates > 0 and crates_compiled > 0 else None
+def _latest_successful_run(workflow_id: str, repo: str):
+    r = gh(
+        "run", "list",
+        "--repo", repo,
+        "--workflow", str(workflow_id),
+        "--status", "success",
+        "--limit", "1",
+        "--json", "databaseId,number,headBranch,createdAt",
     )
+    if r.returncode != 0:
+        return None, (r.stderr.strip() or "gh run list failed")
+    arr = json.loads(r.stdout)
+    if not arr:
+        return None, "no successful runs found"
+    return arr[0], None
 
+
+def _run_jobs(run_id: str, repo: str):
+    r = gh("run", "view", str(run_id), "--repo", repo, "--json", "jobs")
+    if r.returncode != 0:
+        return None, (r.stderr.strip() or "gh run view failed")
+    return json.loads(r.stdout).get("jobs", []), None
+
+
+def _enumerate_steps(jobs: list) -> list:
+    """Flatten jobs[].steps[] into an ordered list of step descriptors, each with
+    a unique slug. Matrix runs (>1 job) namespace the slug by job so two jobs'
+    same-named steps don't collide."""
+    multi = len(jobs) > 1
+    seen: dict = {}
+    out = []
+    for job in jobs:
+        job_name = job.get("name", "job")
+        jslug = slugify(job_name)
+        for st in job.get("steps", []):
+            name = st.get("name", "")
+            slug = f"{jslug}__{slugify(name)}" if multi else slugify(name)
+            n = seen.get(slug, 0) + 1
+            seen[slug] = n
+            if n > 1:
+                slug = f"{slug}_{n}"
+            out.append({
+                "name": name,
+                "slug": slug,
+                "job": job_name,
+                "started": st.get("startedAt"),
+                "completed": st.get("completedAt"),
+                "conclusion": st.get("conclusion"),
+            })
+    return out
+
+
+def _duration_secs(start, end):
+    if not start or not end:
+        return None
+    try:
+        return int(round((parse_iso(end) - parse_iso(start)).total_seconds()))
+    except Exception:
+        return None
+
+
+def _discover_steps(workflow_id: str, repo: str):
+    """Return (steps, run, error) for the workflow's latest successful run."""
+    run, err = _latest_successful_run(workflow_id, repo)
+    if run is None:
+        return [], None, err
+    jobs, err = _run_jobs(run["databaseId"], repo)
+    if jobs is None:
+        return [], run, err
+    return _enumerate_steps(jobs), run, None
+
+
+# ---------------------------------------------------------------------------
+# Action: workflow-steps  (augments the workflows table)
+# ---------------------------------------------------------------------------
+def cmd_workflow_steps(workflow_id: str, repo: str) -> int:
+    steps, run, err = _discover_steps(workflow_id, repo)
+    if err:
+        # Degrade gracefully — the workflows table's steps cell just stays empty.
+        sys.stderr.write(err + "\n")
     result = {
-        "run_id": int(run_id),
-        "cache_size": cache_size,
-        "cache_match": cache_match,
-        "cache_key": cache_key,
-        "env_hash": env_hash,
-        "lock_hash": lock_hash,
-        "compile_time": build_time,
-        "compiled_crates": crates_compiled,
-        "cache_effective_pct": cache_effective_pct,
+        "workflow_id": int(workflow_id),
+        "run_id": run["databaseId"] if run else None,
+        "run_number": run.get("number") if run else None,
+        "step_count": len(steps),
+        "steps": [{"name": s["name"], "slug": s["slug"]} for s in steps],
     }
     json.dump(result, sys.stdout, indent=2)
     return 0
 
 
 # ---------------------------------------------------------------------------
-# Action: pr-diff
+# Action: run-steps  (per-run detail pass for a generated runs table)
 # ---------------------------------------------------------------------------
-def cmd_pr_diff(pr_number: int | None, branch: str | None, repo: str) -> int:
-    if not pr_number and not branch:
-        sys.stderr.write("pr-diff requires --pr <number> or --branch <name>\n")
-        return 2
+def cmd_run_steps(run_id: str, repo: str) -> int:
+    jobs, err = _run_jobs(run_id, repo)
+    if jobs is None:
+        sys.stderr.write(err + "\n")
+        return 1
+    out = {}
+    for s in _enumerate_steps(jobs):
+        secs = _duration_secs(s["started"], s["completed"])
+        if secs is not None:
+            out[s["slug"]] = secs
+    json.dump(out, sys.stdout, indent=2)
+    return 0
 
-    # If branch given, find the PR
-    if branch and not pr_number:
-        owner = repo.split("/")[0]
-        r = gh("api", f"repos/{repo}/pulls?head={owner}:{branch}&state=all", "--jq", ".[0].number")
-        if r.returncode != 0 or not r.stdout.strip():
-            sys.stderr.write(f"no PR found for branch {branch}\n")
-            return 1
-        pr_number = int(r.stdout.strip())
 
-    r = gh("api", f"repos/{repo}/pulls/{pr_number}")
-    if r.returncode != 0:
-        sys.stderr.write(r.stderr)
-        return r.returncode
-    pr = json.loads(r.stdout)
+# ---------------------------------------------------------------------------
+# Action: scaffold-runs — generate a per-workflow runs table + page + menu entry
+# ---------------------------------------------------------------------------
+def _yaml_dq(s: str) -> str:
+    """Escape a string for a YAML double-quoted scalar."""
+    return s.replace("\\", "\\\\").replace('"', '\\"')
 
-    result = {
-        "pr_number": pr["number"],
-        "title": pr["title"],
-        "state": pr["state"],
-        "user": pr.get("user", {}).get("login", ""),
-        "additions": pr["additions"],
-        "deletions": pr["deletions"],
-        "changed_files": pr["changed_files"],
-        "merged": pr.get("merged", False),
-        "base_branch": pr["base"]["ref"],
-        "head_branch": pr["head"]["ref"],
-    }
-    json.dump(result, sys.stdout, indent=2)
+
+def _atomic_write(path: str, content: str) -> None:
+    """Write via temp + rename so the viewer's file watcher never reads a
+    half-written YAML — a partial parse would surface as a transient error and
+    leave the leaf stuck at its previous serial."""
+    d = os.path.dirname(path) or "."
+    os.makedirs(d, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=d, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(content)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def _gen_table_yaml(name: str, workflow_id: str, repo: str, steps: list) -> str:
+    out = [
+        "# yaml-language-server: $schema=./table-schema-1.json",
+        "# GENERATED by `gh-rust-caching-stats scaffold-runs` — do not hand-edit.",
+        f"# Workflow {workflow_id} ({name}) on {repo}. The columns after",
+        "# created_at are this workflow's steps (from its latest successful run);",
+        "# each cell is that step's duration in seconds for the run on that row.",
+        "datasource: gh-stats",
+        f'title: "{_yaml_dq(name)} runs"',
+        "columns:",
+        "  - name: run_id",
+        "    type: int",
+        "    flags: [id]",
+        "  - name: run_number",
+        "    type: int",
+        "  - name: head_branch",
+        "    type: string",
+        "    flags: [title]",
+        "  - name: conclusion",
+        "    type: string",
+        "  - name: created_at",
+        "    type: datetime",
+    ]
+    for s in steps:
+        out.append(f"  # step: {s['name']}")
+        out.append(f"  - name: {s['slug']}")
+        out.append("    type: int")
+    out += [
+        "cmd:",
+        "  # List pass: this workflow's successful runs (one cheap call). The",
+        "  # workflow id + repo are baked in — this table is workflow-specific,",
+        "  # so it needs no drill-down conditions.",
+        "  rhai: |",
+        f'    let out = run(["runs", "{workflow_id}", "{repo}", "--success"]);',
+        "    if out.exit_code != 0 { throw out.stderr; }",
+        "    parse_json(out.stdout)",
+        "  # Detail pass: per-run step durations, keyed by the step slugs above.",
+        "  detail: |",
+        f'    let out = run(["run-steps", id.to_string(), "{repo}"]);',
+        "    if out.exit_code != 0 { return [#{}]; }",
+        "    [parse_json(out.stdout)]",
+        "",
+    ]
+    return "\n".join(out)
+
+
+def _gen_page_yaml(name: str, slug: str, workflow_id: str, step_slugs: list) -> str:
+    # `step-slugs` is read back by the dashboard rebuilder to know this
+    # table's stacked-area layers without re-parsing the table YAML.
+    return (
+        "# yaml-language-server: $schema=./page-schema-1.json\n"
+        "# GENERATED by `gh-rust-caching-stats scaffold-runs` — do not hand-edit.\n"
+        f"# Workflow {workflow_id} ({name}).\n"
+        f"# menu-label: {name}\n"
+        f"# step-slugs: {','.join(step_slugs)}\n"
+        f'title: "{_yaml_dq(name)} runs"\n'
+        "elements:\n"
+        "  - kind: tableview\n"
+        "    spot: body\n"
+        f"    table: runs-{slug}\n"
+    )
+
+
+def _read_page_meta(page_path: str):
+    """Return (menu_label, [step_slugs]) from a generated runs page's header
+    comments. Both are written by `_gen_page_yaml`."""
+    label, slugs = None, []
+    try:
+        with open(page_path) as f:
+            for line in f:
+                if line.startswith("# menu-label:"):
+                    label = line.split(":", 1)[1].strip()
+                elif line.startswith("# step-slugs:"):
+                    slugs = [s for s in line.split(":", 1)[1].strip().split(",") if s]
+                elif line.strip() and not line.startswith("#"):
+                    break
+    except OSError:
+        pass
+    return label, slugs
+
+
+def _rebuild_dashboard(inventory: str) -> bool:
+    """Regenerate page/dashboard.yaml from every generated runs page: one
+    stacked-area chart per workflow (x = run number, layers = step seconds,
+    no axis labels). Idempotent — rebuilt wholesale each call. Returns whether
+    a dashboard exists afterwards."""
+    page_dir = os.path.join(inventory, "page")
+    dash_path = os.path.join(page_dir, "dashboard.yaml")
+
+    entries = []
+    for p in sorted(glob.glob(os.path.join(page_dir, "runs-*.yaml"))):
+        stem = os.path.splitext(os.path.basename(p))[0]  # runs-<slug> == table key
+        label, slugs = _read_page_meta(p)
+        if slugs:
+            entries.append((stem, label or stem, slugs))
+
+    if not entries:
+        if os.path.exists(dash_path):
+            os.remove(dash_path)
+        return False
+
+    out = [
+        "# yaml-language-server: $schema=./page-schema-1.json",
+        "# GENERATED by `gh-rust-caching-stats scaffold-runs` — do not hand-edit.",
+        "# One stacked-area chart per generated runs table:",
+        "#   x = run number (one point per run), layers = steps (seconds),",
+        "#   stacked to the total runtime. No axis labels — these are dense tiles.",
+        "title: Dashboard",
+        "layout: grid",
+        "columns: 2",
+        "elements:",
+    ]
+    for stem, label, slugs in entries:
+        out.append("  - kind: chart")
+        out.append("    spot: body")
+        out.append(f"    table: {stem}")
+        out.append("    chart_type: stacked_area")
+        out.append("    x: run_number")
+        out.append("    labels: false")
+        out.append(f'    title: "{_yaml_dq(label)}"')
+        out.append("    series:")
+        for sl in slugs:
+            out.append(f"      - {sl}")
+    _atomic_write(dash_path, "\n".join(out) + "\n")
+    return True
+
+
+MENU_BEGIN = "# >>> scaffold-runs: generated workflow-run menu (do not edit) >>>"
+MENU_END = "# <<< scaffold-runs <<<"
+
+DEFAULT_MENU = (
+    "# yaml-language-server: $schema=./menu-schema-1.json\n"
+    "title: Vantage GitHub\n"
+    "items:\n"
+    "  - page: cache-efficiency\n"
+    "    label: Cache Efficiency\n"
+    "    icon: HardDrive\n"
+)
+
+
+def _menu_label(page_path: str, fallback: str) -> str:
+    try:
+        with open(page_path) as f:
+            for line in f:
+                if line.startswith("# menu-label:"):
+                    return line.split(":", 1)[1].strip()
+                if line.strip() and not line.startswith("#"):
+                    break
+    except OSError:
+        pass
+    return fallback
+
+
+def _rebuild_menu(inventory: str) -> None:
+    """Regenerate the 'Workflow Runs' menu section from every page/runs-*.yaml
+    present. Idempotent and self-healing: re-running (or deleting a runs page)
+    just reproduces the correct section. The static items above are untouched."""
+    menu_path = os.path.join(inventory, "menu", "left.yaml")
+    page_dir = os.path.join(inventory, "page")
+
+    children = []
+    for p in sorted(glob.glob(os.path.join(page_dir, "runs-*.yaml"))):
+        stem = os.path.splitext(os.path.basename(p))[0]  # runs-<slug>
+        children.append((stem, _menu_label(p, stem)))
+
+    block_lines = [MENU_BEGIN]
+    if os.path.exists(os.path.join(inventory, "page", "dashboard.yaml")):
+        block_lines.append("  - page: dashboard")
+        block_lines.append("    label: Dashboard")
+        block_lines.append("    icon: LayoutDashboard")
+    if children:
+        block_lines.append("  - section: Workflow Runs")
+        block_lines.append("    children:")
+        for stem, label in children:
+            block_lines.append(f"      - page: {stem}")
+            block_lines.append(f'        label: "{_yaml_dq(label)}"')
+            block_lines.append("        icon: Play")
+    block_lines.append(MENU_END)
+    block = "\n".join(block_lines)
+
+    text = open(menu_path).read() if os.path.exists(menu_path) else DEFAULT_MENU
+
+    # Strip any previously-generated block, then re-append the fresh one.
+    text = re.sub(
+        re.escape(MENU_BEGIN) + r".*?" + re.escape(MENU_END) + r"\n?",
+        "", text, flags=re.DOTALL,
+    ).rstrip() + "\n"
+
+    _atomic_write(menu_path, text + block + "\n")
+
+
+def cmd_scaffold_runs(workflow_id: str, repo: str, name: str, inventory: str) -> int:
+    if not name:
+        name = str(workflow_id)
+    print(f"==> discovering steps for workflow {workflow_id} ({name}) on {repo}")
+    steps, run, err = _discover_steps(workflow_id, repo)
+    if err or not steps:
+        sys.stderr.write(
+            f"cannot scaffold: {err or 'latest successful run has no steps'}\n"
+        )
+        return 1
+    print(f"    latest successful run #{run.get('number')} ({run['databaseId']}) "
+          f"→ {len(steps)} steps:")
+    for s in steps:
+        print(f"      • {s['name']}  →  {s['slug']}")
+
+    slug = slugify(name)
+    table_path = os.path.join(inventory, "table", f"runs-{slug}.yaml")
+    page_path = os.path.join(inventory, "page", f"runs-{slug}.yaml")
+
+    step_slugs = [s["slug"] for s in steps]
+    _atomic_write(table_path, _gen_table_yaml(name, workflow_id, repo, steps))
+    print(f"==> wrote {table_path}")
+    _atomic_write(page_path, _gen_page_yaml(name, slug, workflow_id, step_slugs))
+    print(f"==> wrote {page_path}")
+    # Dashboard first so the menu rebuild sees that dashboard.yaml exists.
+    _rebuild_dashboard(inventory)
+    print(f"==> rebuilt {os.path.join(inventory, 'page', 'dashboard.yaml')} "
+          "(one stacked-area chart per workflow)")
+    _rebuild_menu(inventory)
+    print(f"==> updated {os.path.join(inventory, 'menu', 'left.yaml')} "
+          "(Dashboard + section 'Workflow Runs')")
+    print(f'\nDone. The viewer hot-reloads new inventory files — look for "{name}" '
+          'under "Workflow Runs", and the stacked-runtime chart on "Dashboard".')
     return 0
 
 
@@ -325,9 +500,10 @@ def usage() -> int:
     sys.stderr.write(
         "usage: gh-rust-caching-stats <action> [args...]\n"
         "  workflows [repo]\n"
-        "  analyze <workflow_id> [repo]\n"
-        "  runs <workflow_id> [repo] [--page N]\n"
-        "  stats <run_id> [repo] [--total-crates N]\n"
+        "  runs <workflow_id> [repo] [--page N] [--success]\n"
+        "  workflow-steps <workflow_id> [repo]\n"
+        "  run-steps <run_id> [repo]\n"
+        "  scaffold-runs <workflow_id> [repo] --name <label> --inventory <dir>\n"
     )
     return 2
 
@@ -342,22 +518,12 @@ def main(argv: list) -> int:
     if action == "workflows":
         repo = DEFAULT_REPO
         all_wf = False
-        i = 0
-        while i < len(rest):
-            if rest[i] == "--all":
+        for a in rest:
+            if a == "--all":
                 all_wf = True
             else:
-                repo = rest[i]
-            i += 1
+                repo = a
         return cmd_workflows(repo, all_wf)
-
-    if action == "analyze":
-        if not rest:
-            sys.stderr.write("analyze requires <workflow_id>\n")
-            return 2
-        workflow_id = rest[0]
-        repo = rest[1] if len(rest) > 1 else DEFAULT_REPO
-        return cmd_analyze(workflow_id, repo)
 
     if action == "runs":
         if not rest:
@@ -366,59 +532,61 @@ def main(argv: list) -> int:
         workflow_id = rest[0]
         repo = DEFAULT_REPO
         page = 1
+        per_page = 25
         branch = None
         not_branch = None
+        success_only = False
         i = 1
         while i < len(rest):
             if rest[i] == "--page" and i + 1 < len(rest):
-                page = int(rest[i + 1])
-                i += 2
-            elif rest[i] == "--branch" and i + 1 < len(rest):
-                branch = rest[i + 1]
-                i += 2
-            elif rest[i] == "--not-branch" and i + 1 < len(rest):
-                not_branch = rest[i + 1]
-                i += 2
+                page = int(rest[i + 1]); i += 2
             elif rest[i] == "--per-page" and i + 1 < len(rest):
-                i += 2
+                per_page = int(rest[i + 1]); i += 2
+            elif rest[i] == "--branch" and i + 1 < len(rest):
+                branch = rest[i + 1]; i += 2
+            elif rest[i] == "--not-branch" and i + 1 < len(rest):
+                not_branch = rest[i + 1]; i += 2
+            elif rest[i] == "--success":
+                success_only = True; i += 1
             else:
-                repo = rest[i]
-                i += 1
-        return cmd_runs(workflow_id, repo, page, branch=branch, not_branch=not_branch)
+                repo = rest[i]; i += 1
+        return cmd_runs(workflow_id, repo, page, per_page,
+                        branch=branch, not_branch=not_branch,
+                        success_only=success_only)
 
-    if action == "stats":
+    if action == "workflow-steps":
         if not rest:
-            sys.stderr.write("stats requires <run_id>\n")
+            sys.stderr.write("workflow-steps requires <workflow_id>\n")
+            return 2
+        workflow_id = rest[0]
+        repo = rest[1] if len(rest) > 1 else DEFAULT_REPO
+        return cmd_workflow_steps(workflow_id, repo)
+
+    if action == "run-steps":
+        if not rest:
+            sys.stderr.write("run-steps requires <run_id>\n")
             return 2
         run_id = rest[0]
+        repo = rest[1] if len(rest) > 1 else DEFAULT_REPO
+        return cmd_run_steps(run_id, repo)
+
+    if action == "scaffold-runs":
+        if not rest:
+            sys.stderr.write("scaffold-runs requires <workflow_id>\n")
+            return 2
+        workflow_id = rest[0]
         repo = DEFAULT_REPO
-        total_crates = 0
+        name = ""
+        inventory = "."
         i = 1
         while i < len(rest):
-            if rest[i] == "--total-crates" and i + 1 < len(rest):
-                total_crates = int(rest[i + 1])
-                i += 2
+            if rest[i] == "--name" and i + 1 < len(rest):
+                name = rest[i + 1]; i += 2
+            elif rest[i] == "--inventory" and i + 1 < len(rest):
+                inventory = rest[i + 1]; i += 2
             else:
-                repo = rest[i]
-                i += 1
-        return cmd_stats(run_id, repo, total_crates)
-
-    if action == "pr-diff":
-        repo = DEFAULT_REPO
-        pr_number = None
-        branch = None
-        i = 0
-        while i < len(rest):
-            if rest[i] == "--pr" and i + 1 < len(rest):
-                pr_number = int(rest[i + 1])
-                i += 2
-            elif rest[i] == "--branch" and i + 1 < len(rest):
-                branch = rest[i + 1]
-                i += 2
-            else:
-                repo = rest[i]
-                i += 1
-        return cmd_pr_diff(pr_number, branch, repo)
+                repo = rest[i]; i += 1
+        return cmd_scaffold_runs(workflow_id, repo, name, inventory)
 
     return usage()
 

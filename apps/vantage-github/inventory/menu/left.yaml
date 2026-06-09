@@ -3,4 +3,23 @@ title: Vantage GitHub
 items:
   - page: cache-efficiency
     label: Cache Efficiency
-    icon: Activity
+    icon: HardDrive
+# >>> scaffold-runs: generated workflow-run menu (do not edit) >>>
+  - page: dashboard
+    label: Dashboard
+    icon: LayoutDashboard
+  - section: Workflow Runs
+    children:
+      - page: runs-aws_backend_tests
+        label: "AWS Backend Tests"
+        icon: Play
+      - page: runs-main_workspace_v0_3_core
+        label: "Main Workspace (v0.3 Core)"
+        icon: Play
+      - page: runs-mongodb_tests
+        label: "MongoDB Tests"
+        icon: Play
+      - page: runs-vantage_sql
+        label: "vantage-sql"
+        icon: Play
+# <<< scaffold-runs <<<
