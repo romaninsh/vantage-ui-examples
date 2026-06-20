@@ -6,7 +6,10 @@
 //! `serve` (the flaky REST API + launch simulator) arrives in phase 2.
 
 mod db;
+mod flaky;
 mod model;
+mod nest;
+mod rest;
 mod seed;
 
 use anyhow::Result;
@@ -40,6 +43,18 @@ enum Cmd {
         /// Optional `field=value` filter (substring match).
         filter: Option<String>,
     },
+    /// Serve the deliberately-flaky LL2-compatible REST API.
+    Serve {
+        #[arg(long, default_value_t = 8080)]
+        port: u16,
+        /// Probability (0..1) a request is answered with 503.
+        #[arg(long, default_value_t = 0.10)]
+        error_rate: f64,
+        #[arg(long, default_value_t = 150)]
+        latency_min: u64,
+        #[arg(long, default_value_t = 1200)]
+        latency_max: u64,
+    },
 }
 
 #[tokio::main]
@@ -56,6 +71,29 @@ async fn main() -> Result<()> {
             seed::seed(&database).await?;
         }
         Cmd::Query { table, filter } => query(&database, &table, filter.as_deref()).await?,
+        Cmd::Serve {
+            port,
+            error_rate,
+            latency_min,
+            latency_max,
+        } => {
+            let state = rest::AppState {
+                db: database.clone(),
+                flaky: flaky::FlakyConfig {
+                    error_rate,
+                    latency_min_ms: latency_min,
+                    latency_max_ms: latency_max,
+                },
+            };
+            let app = rest::router(state);
+            let addr = format!("0.0.0.0:{port}");
+            let listener = tokio::net::TcpListener::bind(&addr).await?;
+            println!(
+                "launch-control serving on http://127.0.0.1:{port}  \
+                 (error_rate={error_rate}, latency={latency_min}-{latency_max}ms)"
+            );
+            axum::serve(listener, app).await?;
+        }
     }
     Ok(())
 }
