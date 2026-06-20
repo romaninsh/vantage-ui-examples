@@ -2,6 +2,7 @@ use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
+use crate::model::aggregates;
 use crate::model::{Landing, LauncherStatus};
 
 /// A physical booster (a "core"), identified by serial number. Accumulates many
@@ -31,5 +32,8 @@ impl Launcher {
             .with_column_of::<Option<String>>("last_updated")
             .with_one("status", "status_id", LauncherStatus::table)
             .with_many("landings", "launcher_id", Landing::table)
+            .with_expression("total_landing_count", aggregates::landing_count)
+            .with_expression("successful_landings", aggregates::successful_landings)
+            .with_expression("failed_landings", aggregates::failed_landings)
     }
 }

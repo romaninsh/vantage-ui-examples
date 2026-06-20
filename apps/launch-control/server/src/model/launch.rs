@@ -1,4 +1,5 @@
 use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use vantage_sql::sqlite_expr;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
@@ -62,5 +63,24 @@ impl Launch {
             .with_many("payload_flights", "launch_id", PayloadFlight::table)
             .with_many("landings", "launch_id", Landing::table)
             .with_many("launch_crew", "launch_id", LaunchCrew::table)
+            // Computed aggregates (phase 3) — LL2 stores these denormalized; we don't.
+            .with_expression("payload_count", |t| {
+                t.get_subquery_as::<PayloadFlight>("payload_flights")
+                    .unwrap()
+                    .get_count_query()
+            })
+            .with_expression("crew_count", |t| {
+                t.get_subquery_as::<LaunchCrew>("launch_crew")
+                    .unwrap()
+                    .get_count_query()
+            })
+            // Two-hop rollup: sum payload mass across this launch's payload flights.
+            .with_expression("total_payload_mass", |_t| {
+                sqlite_expr!(
+                    "(SELECT COALESCE(SUM(p.mass), 0) FROM payload_flights pf \
+                     JOIN payloads p ON p.id = pf.payload_id \
+                     WHERE pf.launch_id = launches.id)"
+                )
+            })
     }
 }

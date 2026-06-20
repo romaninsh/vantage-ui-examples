@@ -2,6 +2,7 @@ use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
+use crate::model::aggregates;
 use crate::model::Landing;
 
 /// A landing location (ground pad or drone ship). Receives many landings.
@@ -31,5 +32,8 @@ impl Landpad {
             .with_column_of::<Option<f64>>("longitude")
             .with_column_of::<Option<String>>("last_updated")
             .with_many("landings", "landing_location_id", Landing::table)
+            .with_expression("total_landing_count", aggregates::landing_count)
+            .with_expression("successful_landings", aggregates::successful_landings)
+            .with_expression("failed_landings", aggregates::failed_landings)
     }
 }

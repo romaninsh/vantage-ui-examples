@@ -2,6 +2,7 @@ use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
+use crate::model::aggregates;
 use crate::model::{AgencyType, Launch};
 
 /// A launch service provider / manufacturer. Has many launches (as the LSP).
@@ -34,5 +35,9 @@ impl Agency {
             .with_column_of::<Option<String>>("last_updated")
             .with_one("type", "type_id", AgencyType::table)
             .with_many("launches", "lsp_id", Launch::table)
+            .with_expression("total_launch_count", aggregates::launch_count)
+            .with_expression("successful_launches", aggregates::successful_launches)
+            .with_expression("failed_launches", aggregates::failed_launches)
+            .with_expression("pending_launches", aggregates::pending_launches)
     }
 }

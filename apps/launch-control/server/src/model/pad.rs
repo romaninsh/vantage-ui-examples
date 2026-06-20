@@ -2,6 +2,7 @@ use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
+use crate::model::aggregates;
 use crate::model::{Launch, Location};
 
 /// A launch pad. Sits at a location; hosts many launches.
@@ -32,5 +33,6 @@ impl Pad {
             .with_column_of::<Option<String>>("last_updated")
             .with_one("location", "location_id", Location::table)
             .with_many("launches", "pad_id", Launch::table)
+            .with_expression("total_launch_count", aggregates::launch_count)
     }
 }

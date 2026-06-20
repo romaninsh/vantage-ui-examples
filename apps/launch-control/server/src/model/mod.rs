@@ -1,8 +1,9 @@
 //! Vantage table models — one entity per file, bakery_model3-style. Each
 //! `Type::table(db)` builds a `Table<SqliteDB, Type>` with its raw columns and
-//! relations. Computed aggregate expressions are added in phase 3.
+//! relations, plus computed aggregate expressions (see [`aggregates`]).
 
 mod agency;
+mod aggregates;
 mod astronaut;
 mod landing;
 mod landpad;

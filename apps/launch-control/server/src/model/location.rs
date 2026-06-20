@@ -1,4 +1,5 @@
 use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use vantage_sql::sqlite_expr;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
@@ -33,5 +34,13 @@ impl Location {
             .with_column_of::<Option<f64>>("longitude")
             .with_column_of::<Option<String>>("last_updated")
             .with_many("pads", "location_id", Pad::table)
+            // Two-hop rollup: launches whose pad sits at this location.
+            .with_expression("total_launch_count", |_t| {
+                sqlite_expr!(
+                    "(SELECT COUNT(*) FROM launches l \
+                     JOIN pads pd ON pd.id = l.pad_id \
+                     WHERE pd.location_id = locations.id)"
+                )
+            })
     }
 }
