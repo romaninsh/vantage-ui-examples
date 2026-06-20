@@ -11,6 +11,7 @@ mod model;
 mod nest;
 mod rest;
 mod seed;
+mod sim;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -54,6 +55,12 @@ enum Cmd {
         latency_min: u64,
         #[arg(long, default_value_t = 1200)]
         latency_max: u64,
+        /// Seconds per launch-replay step (a full replay is ~3.5 steps).
+        #[arg(long, default_value_t = 30)]
+        sim_step: u64,
+        /// Disable the background launch-replay simulator.
+        #[arg(long)]
+        no_sim: bool,
     },
 }
 
@@ -76,7 +83,16 @@ async fn main() -> Result<()> {
             error_rate,
             latency_min,
             latency_max,
+            sim_step,
+            no_sim,
         } => {
+            if !no_sim {
+                let sim_db = database.clone();
+                tokio::spawn(sim::run(
+                    sim_db,
+                    std::time::Duration::from_secs(sim_step),
+                ));
+            }
             let state = rest::AppState {
                 db: database.clone(),
                 flaky: flaky::FlakyConfig {
@@ -90,7 +106,9 @@ async fn main() -> Result<()> {
             let listener = tokio::net::TcpListener::bind(&addr).await?;
             println!(
                 "launch-control serving on http://127.0.0.1:{port}  \
-                 (error_rate={error_rate}, latency={latency_min}-{latency_max}ms)"
+                 (error_rate={error_rate}, latency={latency_min}-{latency_max}ms, \
+                 sim={})",
+                if no_sim { "off" } else { "on" }
             );
             axum::serve(listener, app).await?;
         }
