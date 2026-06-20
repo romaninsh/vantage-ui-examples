@@ -1,0 +1,23 @@
+# Table: pads — physical launch pads. `location.*` is the belongs-to spaceport;
+# `total_launch_count` is recomputed server-side. `launches` drills via `pad`.
+
+datasource: local
+title: Pads
+table: "pads/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: country, type: string }
+  - { name: location.id, type: string, flags: [hidden], references: locations }
+  - { name: location.name, type: string }
+  - { name: active, type: bool }
+  - { name: latitude, type: float }
+  - { name: longitude, type: float }
+  - { name: total_launch_count, type: int }
+
+references:
+  launches:
+    table: launches
+    kind: has_many
+    foreign_key: pad

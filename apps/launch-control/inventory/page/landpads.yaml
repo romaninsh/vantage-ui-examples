@@ -1,0 +1,8 @@
+# Page: landpads — list with a binder (selecting a row reveals its relation tabs).
+title: Landpads
+layout: binder
+
+elements:
+  - kind: tableview
+    spot: body
+    table: landpads

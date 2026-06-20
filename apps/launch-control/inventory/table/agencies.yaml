@@ -1,0 +1,27 @@
+# Table: agencies — launch providers / manufacturers. The launch stat columns
+# (total / successful / failed / pending) are recomputed server-side from our
+# launch data. `launches` drills into the launches grid narrowed by `lsp__id`.
+
+datasource: local
+title: Agencies
+table: "agencies/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: abbrev, type: string }
+  - { name: type.name, type: string, flags: [label] }
+  - { name: country, type: string }
+  - { name: founding_year, type: int }
+  - { name: administrator, type: string }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: total_launch_count, type: int }
+  - { name: successful_launches, type: int }
+  - { name: failed_launches, type: int }
+  - { name: pending_launches, type: int }
+
+references:
+  launches:
+    table: launches
+    kind: has_many
+    foreign_key: lsp__id

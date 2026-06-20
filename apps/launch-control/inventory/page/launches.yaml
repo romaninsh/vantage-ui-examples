@@ -1,0 +1,42 @@
+# Page: launches — THE screen. A `binder`: launches grid on top; selecting a
+# launch fills the bottom with auto-derived tabs — a Details form plus one grid
+# per relation (payloads / crew / landings). From there you keep drilling:
+# a landing → its landpad, the details form's provider / rocket / pad → location.
+#
+# The page polls `last_updated` cheaply via `refresh_probe`; only when the live
+# simulator changes a launch does it do a full refresh — and diorama never blanks
+# the grid on one of the server's injected 503s.
+
+title: Launches
+layout: binder
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launches
+    params:
+      default_sort: { column: net, direction: desc }
+      refresh_interval: 5
+      refresh_probe: |
+        let r = page_table().add_order("last_updated", "desc").list();
+        if r.len() == 0 { "" } else { r[0].name + "@" + r[0].last_updated }
+      columns:
+        name:
+        status.name:
+          color:
+            green: ["Go for Launch", "Launch Successful"]
+            yellow: ["Launch in Flight", "To Be Confirmed", "To Be Determined", "On Hold"]
+            red: ["Launch Failure", "Launch was a Partial Failure"]
+        webcast_live:
+          label: Live
+        net:
+        launch_service_provider.name:
+          label: Provider
+        rocket_configuration.name:
+          label: Rocket
+        pad.name:
+          label: Pad
+        payload_count:
+        crew_count:
+        total_payload_mass:
+        last_updated:

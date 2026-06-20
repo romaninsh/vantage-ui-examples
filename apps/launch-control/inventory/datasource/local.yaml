@@ -1,0 +1,25 @@
+# Datasource: local — the bundled launch-control server (see ../../server).
+#
+# An LL2-compatible REST/JSON API, but self-hosted and deliberately slow + flaky.
+# Collections are enveloped as `{ "count": N, "next": …, "results": [ … ] }` and
+# page with `?limit=&offset=` (0-based offset). `total_key: count` lets every
+# grid size its scrollbar to the full result set and load rows lazily on scroll.
+#
+# Unlike the public LL2 dev API, this server *honors every filter param*
+# (`launch__id`, `lsp__id`, `pad`, …), so the whole app needs ONE datasource
+# with server-side (`query`) filtering — no client-filter fallback. Run the
+# server first:  cargo run -p launch-control-server -- serve
+
+description: "launch-control — self-hosted, flaky Launch Library 2 server."
+type: api-client
+url: "http://127.0.0.1:8080"
+response_key: results
+total_key: count
+pagination:
+  page_param: offset
+  limit_param: limit
+  offset_based: true
+filter_strategy: query
+# The server injects latency + random 503s; diorama's non-blanking refresh keeps
+# grids stable through them. Logging each request is handy while building.
+debug: true

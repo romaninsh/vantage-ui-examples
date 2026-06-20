@@ -1,0 +1,8 @@
+# Page: agencies — list with a binder (selecting a row reveals its relation tabs).
+title: Agencies
+layout: binder
+
+elements:
+  - kind: tableview
+    spot: body
+    table: agencies

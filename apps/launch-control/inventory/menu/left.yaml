@@ -1,0 +1,51 @@
+# Menu: left — launch-control sidebar. The launches board is the headline screen;
+# everything else is reachable by drilling from it, but listed here too.
+
+title: Launch Control
+
+items:
+  - page: launches
+    label: Launch board
+    icon: ArrowUp
+
+  - section: Flights
+    children:
+      - page: payloads
+        label: Payloads
+        icon: Inbox
+      - page: payload_flights
+        label: Payload flights
+        icon: Inbox
+      - page: launch_crew
+        label: Crew
+        icon: User
+      - page: astronauts
+        label: Astronauts
+        icon: User
+
+  - section: Hardware
+    children:
+      - page: launcher_configurations
+        label: Rocket designs
+        icon: Cpu
+      - page: launchers
+        label: Boosters
+        icon: HardDrive
+      - page: landings
+        label: Landings
+        icon: ArrowDown
+      - page: landpads
+        label: Landpads
+        icon: Frame
+
+  - section: Providers & places
+    children:
+      - page: agencies
+        label: Agencies
+        icon: Building2
+      - page: pads
+        label: Pads
+        icon: Frame
+      - page: locations
+        label: Locations
+        icon: Map

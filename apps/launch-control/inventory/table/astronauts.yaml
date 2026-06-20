@@ -1,0 +1,22 @@
+# Table: astronauts — crew. The career counts (flights / landings / spacewalks)
+# are intrinsic LL2 fields describing the person, kept verbatim. `status.*`,
+# `type.*` and `agency.*` are belongs-to. Drilled into from launch_crew.
+
+datasource: local
+title: Astronauts
+table: "astronauts/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: status.name, type: string, flags: [label] }
+  - { name: type.name, type: string }
+  - { name: agency.id, type: string, flags: [hidden], references: agencies }
+  - { name: agency.name, type: string }
+  - { name: nationality, type: string }
+  - { name: in_space, type: bool }
+  - { name: age, type: int }
+  - { name: flights_count, type: int }
+  - { name: landings_count, type: int }
+  - { name: spacewalks_count, type: int }
+  - { name: bio, type: string, flags: [searchable] }

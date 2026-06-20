@@ -1,0 +1,33 @@
+# Table: launcher_configurations — rocket designs (e.g. "Falcon 9 Block 5").
+# `manufacturer.*` is the belongs-to agency; the launch stats are recomputed
+# server-side. `launches` drills via `rocket__configuration__id`.
+
+datasource: local
+title: Launcher configurations
+table: "launcher_configurations/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: full_name, type: string }
+  - { name: family, type: string }
+  - { name: variant, type: string }
+  - { name: manufacturer.id, type: string, flags: [hidden], references: agencies }
+  - { name: manufacturer.name, type: string }
+  - { name: active, type: bool }
+  - { name: reusable, type: bool }
+  - { name: length, type: float }
+  - { name: diameter, type: float }
+  - { name: launch_mass, type: float }
+  - { name: leo_capacity, type: float }
+  - { name: gto_capacity, type: float }
+  - { name: total_launch_count, type: int }
+  - { name: successful_launches, type: int }
+  - { name: failed_launches, type: int }
+  - { name: pending_launches, type: int }
+
+references:
+  launches:
+    table: launches
+    kind: has_many
+    foreign_key: rocket__configuration__id

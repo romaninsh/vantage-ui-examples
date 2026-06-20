@@ -1,0 +1,16 @@
+# Table: launch_crew — the launch↔astronaut join. The drill target of
+# launches → "crew": each crew member assigned to a launch and their role.
+# `astronaut.id` drills into the astronaut record.
+
+datasource: local
+title: Crew
+table: "launch_crew/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: launch.id, type: string, flags: [hidden], references: launches }
+  - { name: launch.name, type: string }
+  - { name: astronaut.id, type: string, flags: [hidden], references: astronauts }
+  - { name: astronaut.name, type: string, flags: [title, searchable] }
+  - { name: astronaut.nationality, type: string }
+  - { name: role, type: string, flags: [label] }

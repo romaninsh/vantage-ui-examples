@@ -1,0 +1,7 @@
+# Page: launch_crew — list view (a drill target).
+title: Launch Crew
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launch_crew

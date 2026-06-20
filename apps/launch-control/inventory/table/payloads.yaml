@@ -1,0 +1,21 @@
+# Table: payloads — satellites / probes / cargo. `type.*` and `manufacturer.*`
+# are belongs-to. `flights` drills into the payload_flights join via `payload__id`.
+
+datasource: local
+title: Payloads
+table: "payloads/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: type.name, type: string, flags: [label] }
+  - { name: manufacturer.id, type: string, flags: [hidden], references: agencies }
+  - { name: manufacturer.name, type: string }
+  - { name: mass, type: float }
+  - { name: description, type: string, flags: [searchable] }
+
+references:
+  flights:
+    table: payload_flights
+    kind: has_many
+    foreign_key: payload__id

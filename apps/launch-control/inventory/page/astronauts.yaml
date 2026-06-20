@@ -1,0 +1,7 @@
+# Page: astronauts — list view (a drill target).
+title: Astronauts
+
+elements:
+  - kind: tableview
+    spot: body
+    table: astronauts

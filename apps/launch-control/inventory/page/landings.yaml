@@ -1,0 +1,7 @@
+# Page: landings — list view (a drill target).
+title: Landings
+
+elements:
+  - kind: tableview
+    spot: body
+    table: landings

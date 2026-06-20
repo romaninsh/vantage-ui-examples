@@ -1,0 +1,7 @@
+# Page: payload_flights — list view (a drill target).
+title: Payload Flights
+
+elements:
+  - kind: tableview
+    spot: body
+    table: payload_flights

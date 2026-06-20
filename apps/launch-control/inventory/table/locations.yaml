@@ -1,0 +1,24 @@
+# Table: locations — spaceports. `total_launch_count` is a two-hop rollup
+# (launches whose pad sits here), recomputed server-side. `pads` drills into the
+# pads at this location via `location__id`.
+
+datasource: local
+title: Locations
+table: "locations/"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: country, type: string }
+  - { name: celestial_body_name, type: string }
+  - { name: active, type: bool }
+  - { name: timezone_name, type: string }
+  - { name: latitude, type: float }
+  - { name: longitude, type: float }
+  - { name: total_launch_count, type: int }
+
+references:
+  pads:
+    table: pads
+    kind: has_many
+    foreign_key: location__id

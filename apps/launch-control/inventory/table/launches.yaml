@@ -1,0 +1,73 @@
+# Table: launches — the hub, and the master of the binder screen.
+#
+# Fetched `?mode=detailed` so the belongs-to objects (status, provider, rocket,
+# mission, pad → location) come back nested; their leaves are surfaced as dotted
+# columns. The hidden `*.id` columns carry `references:` so a cell is a drill
+# link into that record's page.
+#
+# `payload_count` / `crew_count` / `total_payload_mass` are computed server-side
+# (vantage aggregate expressions) — not stored. `status.name` is flagged `label`
+# so it renders as a colored status tag on the title; the live simulator advances
+# it Go → In Flight → outcome, and `last_updated` ticks the page's refresh probe.
+#
+# The `references:` relations become the binder's detail tabs (payloads / crew /
+# landings grids), each filtered by a query param the server honors.
+
+datasource: local
+title: Launches
+table: "launches/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: status.name, type: string, flags: [label] }
+  - { name: webcast_live, type: bool }
+  - { name: net, type: datetime }
+  - { name: net_precision.name, type: string }
+  - { name: probability, type: int }
+  - { name: window_start, type: datetime }
+  - { name: window_end, type: datetime }
+  - { name: failreason, type: string }
+  - {
+      name: launch_service_provider.id,
+      type: string,
+      flags: [hidden],
+      references: agencies,
+    }
+  - { name: launch_service_provider.name, type: string }
+  - { name: launch_service_provider.type.name, type: string }
+  - {
+      name: rocket_configuration.id,
+      type: string,
+      flags: [hidden],
+      references: launcher_configurations,
+    }
+  - { name: rocket_configuration.name, type: string }
+  - { name: rocket_configuration.full_name, type: string }
+  - { name: rocket_configuration.family, type: string }
+  - { name: mission.name, type: string }
+  - { name: mission.mission_type, type: string }
+  - { name: mission.description, type: string, flags: [searchable] }
+  - { name: mission.orbit.name, type: string }
+  - { name: pad.id, type: string, flags: [hidden], references: pads }
+  - { name: pad.name, type: string }
+  - { name: pad.location.id, type: string, flags: [hidden], references: locations }
+  - { name: pad.location.name, type: string }
+  - { name: payload_count, type: int }
+  - { name: total_payload_mass, type: float }
+  - { name: crew_count, type: int }
+  - { name: last_updated, type: datetime }
+
+references:
+  payloads:
+    table: payload_flights
+    kind: has_many
+    foreign_key: launch__id
+  crew:
+    table: launch_crew
+    kind: has_many
+    foreign_key: launch__id
+  landings:
+    table: landings
+    kind: has_many
+    foreign_key: launch__id
