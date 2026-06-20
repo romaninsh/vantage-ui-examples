@@ -9,9 +9,9 @@ table: "payload_flights/?mode=detailed"
 
 columns:
   - { name: id, type: string, flags: [id] }
-  - { name: launch.id, type: string, flags: [hidden], references: launches }
+  - { name: launch_id, type: string, flags: [hidden], references: launches }
   - { name: launch.name, type: string }
-  - { name: payload.id, type: string, flags: [hidden], references: payloads }
+  - { name: payload_id, type: string, flags: [hidden], references: payloads }
   - { name: payload.name, type: string, flags: [title, searchable] }
   - { name: payload.type.name, type: string, flags: [label] }
   - { name: payload.mass, type: float }

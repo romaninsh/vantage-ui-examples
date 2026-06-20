@@ -8,12 +8,12 @@ table: "landings/?mode=detailed"
 
 columns:
   - { name: id, type: string, flags: [id] }
-  - { name: launch.id, type: string, flags: [hidden], references: launches }
+  - { name: launch_id, type: string, flags: [hidden], references: launches }
   - { name: launch.name, type: string, flags: [title] }
-  - { name: launcher.id, type: string, flags: [hidden], references: launchers }
+  - { name: launcher_id, type: string, flags: [hidden], references: launchers }
   - { name: launcher.serial_number, type: string }
   - {
-      name: landing_location.id,
+      name: landing_location_id,
       type: string,
       flags: [hidden],
       references: landpads,

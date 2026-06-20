@@ -32,16 +32,14 @@ columns:
   - { name: window_start, type: datetime }
   - { name: window_end, type: datetime }
   - { name: failreason, type: string }
-  - {
-      name: launch_service_provider.id,
-      type: string,
-      flags: [hidden],
-      references: agencies,
-    }
+  # belongs-to references are declared on the FLAT FK columns (always present at
+  # the response's top level), not the nested `.id` leaves — the REST backend
+  # keeps nested objects nested, so a dotted `narrow_via` can't be read back.
+  - { name: lsp_id, type: string, flags: [hidden], references: agencies }
   - { name: launch_service_provider.name, type: string }
   - { name: launch_service_provider.type.name, type: string }
   - {
-      name: rocket_configuration.id,
+      name: rocket_configuration_id,
       type: string,
       flags: [hidden],
       references: launcher_configurations,
@@ -53,9 +51,8 @@ columns:
   - { name: mission.mission_type, type: string }
   - { name: mission.description, type: string, flags: [searchable] }
   - { name: mission.orbit.name, type: string }
-  - { name: pad.id, type: string, flags: [hidden], references: pads }
+  - { name: pad_id, type: string, flags: [hidden], references: pads }
   - { name: pad.name, type: string }
-  - { name: pad.location.id, type: string, flags: [hidden], references: locations }
   - { name: pad.location.name, type: string }
   - { name: payload_count, type: int }
   - { name: total_payload_mass, type: float }

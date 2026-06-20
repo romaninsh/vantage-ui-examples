@@ -12,7 +12,7 @@ columns:
   - { name: full_name, type: string }
   - { name: family, type: string }
   - { name: variant, type: string }
-  - { name: manufacturer.id, type: string, flags: [hidden], references: agencies }
+  - { name: manufacturer_id, type: string, flags: [hidden], references: agencies }
   - { name: manufacturer.name, type: string }
   - { name: active, type: bool }
   - { name: reusable, type: bool }

@@ -9,7 +9,7 @@ columns:
   - { name: id, type: string, flags: [id] }
   - { name: name, type: string, flags: [title, searchable] }
   - { name: type.name, type: string, flags: [label] }
-  - { name: manufacturer.id, type: string, flags: [hidden], references: agencies }
+  - { name: manufacturer_id, type: string, flags: [hidden], references: agencies }
   - { name: manufacturer.name, type: string }
   - { name: mass, type: float }
   - { name: description, type: string, flags: [searchable] }

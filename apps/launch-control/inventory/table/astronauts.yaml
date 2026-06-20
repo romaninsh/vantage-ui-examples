@@ -11,7 +11,7 @@ columns:
   - { name: name, type: string, flags: [title, searchable] }
   - { name: status.name, type: string, flags: [label] }
   - { name: type.name, type: string }
-  - { name: agency.id, type: string, flags: [hidden], references: agencies }
+  - { name: agency_id, type: string, flags: [hidden], references: agencies }
   - { name: agency.name, type: string }
   - { name: nationality, type: string }
   - { name: in_space, type: bool }

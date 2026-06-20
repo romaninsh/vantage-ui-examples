@@ -9,7 +9,7 @@ columns:
   - { name: id, type: string, flags: [id] }
   - { name: name, type: string, flags: [title, searchable] }
   - { name: country, type: string }
-  - { name: location.id, type: string, flags: [hidden], references: locations }
+  - { name: location_id, type: string, flags: [hidden], references: locations }
   - { name: location.name, type: string }
   - { name: active, type: bool }
   - { name: latitude, type: float }
