@@ -15,9 +15,8 @@ elements:
     spot: body
     table: launches
     params:
-      # Sort by last_updated so the launch the simulator is currently driving
-      # (freshest timestamp) rises to the top — live activity on top.
-      default_sort: { column: last_updated, direction: desc }
+      # Ordering is done server-side in table/launches.yaml (the api-client
+      # treats columns as non-orderable, so a client-side default_sort no-ops).
       refresh_interval: 5
       # Cheap change probe: fold over the rows for count + newest `last_updated`
       # (the simulator bumps it on every step). We can't `add_order` here — the
