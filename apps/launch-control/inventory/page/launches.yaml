@@ -17,9 +17,19 @@ elements:
     params:
       default_sort: { column: net, direction: desc }
       refresh_interval: 5
+      # Cheap change probe: fold over the rows for count + newest `last_updated`
+      # (the simulator bumps it on every step). We can't `add_order` here — the
+      # generic api-client backend doesn't mark columns orderable, since a remote
+      # API may not accept `?ordering=` on an arbitrary field. The whole result
+      # set fits one page, so the fold sees every launch.
       refresh_probe: |
-        let r = page_table().add_order("last_updated", "desc").list();
-        if r.len() == 0 { "" } else { r[0].name + "@" + r[0].last_updated }
+        let rows = page_table().list();
+        let latest = "";
+        for r in rows {
+            let u = r.last_updated;
+            if u != () && u > latest { latest = u; }
+        }
+        "" + rows.len() + "@" + latest
       columns:
         name:
         status.name:
