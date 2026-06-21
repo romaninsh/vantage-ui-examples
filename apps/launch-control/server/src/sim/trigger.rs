@@ -73,6 +73,8 @@ pub async fn create_launch(
         let Some(cfg) = cfg else {
             return Err(bad(format!("unknown rocket_configuration_id `{cfg_id}`")));
         };
+        // Approximation: LSP and rocket manufacturer are not the same in general,
+        // but `manufacturer_id` is the only agency link the model exposes, so we use it.
         if cfg.manufacturer_id.as_deref() != Some(input.lsp_id.as_str()) {
             return Err(bad(format!(
                 "rocket configuration `{cfg_id}` does not belong to agency `{}`",
@@ -93,6 +95,8 @@ pub async fn create_launch(
         last_updated: Some(ll2_now(base)),
         ..Default::default()
     };
+    // vantage's `insert` is INSERT-OR-REPLACE: an astronomically unlikely seed
+    // collision would silently overwrite an existing `sim-…` launch rather than error.
     Launch::table(db.clone())
         .insert(launch_id.clone(), &launch)
         .await

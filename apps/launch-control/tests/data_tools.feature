@@ -3,7 +3,7 @@ Feature: launch-control loads pre-seeded data through the bundled server
   launch-control points its single datasource at the bundled launch-control
   server (../server), an LL2-shaped REST API over a SQLite DB seeded from the
   committed fixtures. The harness builds, seeds, and serves it deterministically
-  (--no-sim --error-rate 0), so these counts are exact and every read is stable.
+  (--error-rate 0), so these counts are exact and every read is stable.
   Each "holds:" line is the actual Rhai an agent would run, written as a
   self-asserting expression that must be true — and the app must log no errors
   throughout.
