@@ -1,0 +1,198 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+
+# Menu: left — Space project sidebar, grouped by domain into nested subsections.
+# (icon names from the bundled Lucide set / menu-schema IconRef enum).
+
+title: Space
+
+items:
+  - section: Flights
+    children:
+      - section: Launches
+        children:
+          - page: launches
+            label: All launches
+            icon: ArrowUp
+          - page: launches_upcoming
+            label: Upcoming launches
+            icon: ArrowUp
+          - page: launches_previous
+            label: Previous launches
+            icon: ArrowDown
+      - section: Events
+        children:
+          - page: events
+            label: All events
+            icon: Calendar
+          - page: events_upcoming
+            label: Upcoming events
+            icon: Calendar
+          - page: events_previous
+            label: Previous events
+            icon: ArrowDown
+      - section: Payloads & patches
+        children:
+          - page: payloads
+            label: Payloads
+            icon: Inbox
+          - page: payload_flights
+            label: Payload flights
+            icon: Inbox
+          - page: mission_patches
+            label: Mission patches
+            icon: Star
+      - page: updates
+        label: Updates
+        icon: Bell
+
+  - section: Hardware
+    children:
+      - section: Launcher designs
+        children:
+          - page: launcher_configurations
+            label: Launcher configurations
+            icon: Cpu
+          - page: launcher_configuration_families
+            label: Launcher families
+            icon: Network
+      - section: Boosters
+        children:
+          - page: launchers
+            label: Launchers
+            icon: HardDrive
+          - page: landings
+            label: Landings
+            icon: ArrowDown
+      - section: Spacecraft
+        children:
+          - page: spacecraft_configurations
+            label: Spacecraft configurations
+            icon: Bot
+          - page: spacecraft_configuration_families
+            label: Spacecraft families
+            icon: Network
+          - page: spacecraft
+            label: Spacecraft
+            icon: Bot
+          - page: spacecraft_flights
+            label: Spacecraft flights
+            icon: ArrowUp
+
+  - section: Providers
+    children:
+      - page: agencies
+        label: Agencies
+        icon: Building2
+      - page: astronauts
+        label: Astronauts
+        icon: User
+      - page: programs
+        label: Programs
+        icon: Network
+
+  - section: Places
+    children:
+      - page: celestial_bodies
+        label: Celestial bodies
+        icon: Globe
+      - section: Locations & pads
+        children:
+          - page: locations
+            label: Locations
+            icon: Map
+          - page: pads
+            label: Pads
+            icon: Frame
+      - section: Space stations
+        children:
+          - page: space_stations
+            label: Space stations
+            icon: Globe
+          - page: docking_events
+            label: Docking events
+            icon: Replace
+          - page: expeditions
+            label: Expeditions
+            icon: User
+          - page: spacewalks
+            label: Spacewalks
+            icon: ExternalLink
+
+  - section: Starship
+    children:
+      - page: starship_vehicles
+        label: Starship fleet
+        icon: Star
+
+  - section: Reference data
+    children:
+      - section: Agencies & people
+        children:
+          - page: config_agency_types
+            label: Agency types
+          - page: config_astronaut_roles
+            label: Astronaut roles
+          - page: config_astronaut_statuses
+            label: Astronaut statuses
+          - page: config_astronaut_types
+            label: Astronaut types
+      - section: Places & orbits
+        children:
+          - page: config_celestial_body_types
+            label: Celestial body types
+          - page: config_countries
+            label: Countries
+          - page: config_orbits
+            label: Orbits
+          - page: config_docking_locations
+            label: Docking locations
+          - page: config_landing_locations
+            label: Landing locations
+      - section: Launches & missions
+        children:
+          - page: config_launch_statuses
+            label: Launch statuses
+          - page: config_launcher_statuses
+            label: Launcher statuses
+          - page: config_mission_types
+            label: Mission types
+          - page: config_net_precisions
+            label: NET precisions
+          - page: config_first_stage_types
+            label: First stage types
+      - section: Spacecraft & stations
+        children:
+          - page: config_spacecraft_statuses
+            label: Spacecraft statuses
+          - page: config_spacecraft_configuration_types
+            label: Spacecraft configuration types
+          - page: config_space_station_statuses
+            label: Space station statuses
+          - page: config_program_types
+            label: Program types
+          - page: config_payload_types
+            label: Payload types
+      - section: Landings & events
+        children:
+          - page: config_landing_types
+            label: Landing types
+          - page: config_event_types
+            label: Event types
+          - page: config_timeline_event_types
+            label: Timeline event types
+          - page: config_road_closure_statuses
+            label: Road closure statuses
+          - page: config_notice_types
+            label: Notice types
+      - section: Media & URLs
+        children:
+          - page: config_image_licenses
+            label: Image licenses
+          - page: config_image_variant_types
+            label: Image variant types
+          - page: config_infourl_types
+            label: Info URL types
+          - page: config_vidurl_types
+            label: Vid URL types
+          - page: config_languages
+            label: Languages

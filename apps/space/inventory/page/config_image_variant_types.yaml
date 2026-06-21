@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_image_variant_types — list view.
+
+title: image variant types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_image_variant_types
+    params: {}

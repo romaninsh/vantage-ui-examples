@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_orbits — list view.
+
+title: oruits
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_orbits
+    params: {}

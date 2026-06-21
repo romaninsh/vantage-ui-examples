@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_event_types — lookup table for event_types.
+
+datasource: ll2
+title: event_types
+table: "config/event_types/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+
+references:
+  events:
+    table: events
+    kind: has_many
+    foreign_key: type

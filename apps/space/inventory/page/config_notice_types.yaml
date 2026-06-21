@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_notice_types — list view.
+
+title: notice types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_notice_types
+    params: {}

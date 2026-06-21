@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: space_stations — crewed orbital outposts (ISS, Salyut, Tiangong, …).
+# `status.name` and `type.name` are nested leaves; `orbit` is a flat string.
+
+datasource: ll2
+title: Space stations
+table: "space_stations/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: status.name, type: string }
+  - { name: type.name, type: string }
+  - { name: orbit, type: string }
+  - { name: founded, type: string }
+  - { name: deorbited, type: string }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: height, type: float }
+  - { name: width, type: float }
+  - { name: mass, type: float }
+  - { name: volume, type: float }
+  - { name: onboard_crew, type: int }
+  - { name: docked_vehicles, type: int }
+
+references:
+  dockings:
+    table: docking_events
+    kind: has_many
+    foreign_key: space_station_target__id
+  expeditions:
+    table: expeditions
+    kind: has_many
+    foreign_key: space_station

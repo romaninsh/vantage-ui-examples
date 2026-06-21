@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_net_precisions — list view.
+
+title: net precisions
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_net_precisions
+    params: {}

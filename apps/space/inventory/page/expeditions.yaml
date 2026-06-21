@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: expeditions — list view. Right-click a space station → "Open
+# expeditions" narrows by space_station.
+
+title: Expeditions
+
+elements:
+  - kind: tableview
+    spot: body
+    table: expeditions
+    params:
+      default_sort: { column: start, direction: desc }

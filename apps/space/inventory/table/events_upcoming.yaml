@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: events_upcoming — events with date >= now (read-only view over
+# the `events/upcoming/` endpoint).
+
+datasource: ll2
+title: Upcoming events
+table: "events/upcoming/"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: type.name, type: string }
+  - { name: location, type: string }
+  - { name: date, type: datetime }
+  - { name: date_precision, type: string }
+  - { name: duration, type: string }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: webcast_live, type: bool }

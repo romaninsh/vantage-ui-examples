@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: spacewalks — EVAs (extravehicular activities). Each belongs to a
+# spacestation and/or expedition. `duration` is ISO 8601.
+
+datasource: ll2
+title: Spacewalks
+table: "spacewalks/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: start, type: datetime }
+  - { name: end, type: datetime }
+  - { name: duration, type: string }
+  - { name: location, type: string }
+  - {
+      name: spacestation.id,
+      type: int,
+      flags: [hidden],
+      references: space_stations,
+    }
+  - { name: spacestation.name, type: string }
+  - { name: expedition.id, type: int, flags: [hidden] }
+  - { name: expedition.name, type: string }

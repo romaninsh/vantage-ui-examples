@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_road_closure_statuses — lookup table for road_closure_statuses.
+
+datasource: ll2
+title: road_closure_statuses
+table: "config/road_closure_statuses/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }

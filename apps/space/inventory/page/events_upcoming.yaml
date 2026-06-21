@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: events_upcoming — upcoming events, soonest first.
+
+title: Upcoming events
+
+elements:
+  - kind: tableview
+    spot: body
+    table: events_upcoming
+    params:
+      default_sort: { column: date, direction: asc }

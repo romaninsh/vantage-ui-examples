@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_launcher_statuses — lookup table for launcher_statuses.
+
+datasource: ll2
+title: Launcher statuses
+table: "config/launcher_statuses/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }

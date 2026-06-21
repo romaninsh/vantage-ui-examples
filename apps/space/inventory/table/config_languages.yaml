@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_languages — language reference data.
+
+datasource: ll2
+title: Languages
+table: "config/languages/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: code, type: string }

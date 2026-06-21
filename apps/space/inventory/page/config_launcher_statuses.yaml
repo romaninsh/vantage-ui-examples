@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_launcher_statuses — list view.
+
+title: launcher statuses
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_launcher_statuses
+    params: {}

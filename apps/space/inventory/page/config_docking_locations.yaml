@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_docking_locations — list view.
+
+title: docking locations
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_docking_locations
+    params: {}

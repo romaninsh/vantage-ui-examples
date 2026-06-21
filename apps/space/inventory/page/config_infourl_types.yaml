@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_infourl_types — list view.
+
+title: infourl types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_infourl_types
+    params: {}

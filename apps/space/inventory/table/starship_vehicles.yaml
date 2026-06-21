@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: starship_vehicles — the `vehicles` array from the
+# `dashboard/starship/` singleton. Each row is a Starship/Super Heavy
+# prototype booster with its flight and status history.
+#
+# NOTE: the endpoint returns a single JSON object (not a paginated
+# collection), so `response_key: vehicles` selects the array we want and we
+# omit pagination/total_key (there is no `count` or `next`).
+
+datasource: ll2_starship
+title: Starship vehicles
+table: ""
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: serial_number, type: string, flags: [title, searchable] }
+  - { name: status.name, type: string }
+  - { name: flight_proven, type: bool }
+  - { name: flights, type: int }
+  - { name: successful_landings, type: int }
+  - { name: attempted_landings, type: int }
+  - { name: launcher_config.name, type: string }
+  - { name: details, type: string, flags: [searchable] }
+  - { name: first_launch_date, type: datetime }
+  - { name: last_launch_date, type: datetime }

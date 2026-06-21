@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: launchers — list view over `table/launchers.yaml`.
+
+title: Launchers
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launchers
+    params:
+      default_sort: { column: flights, direction: desc }

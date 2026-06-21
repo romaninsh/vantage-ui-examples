@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_astronaut_roles — astronaut role reference data.
+
+datasource: ll2
+title: Astronaut roles
+table: "config/astronaut_roles/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: role, type: string, flags: [title, searchable] }
+  - { name: priority, type: int }

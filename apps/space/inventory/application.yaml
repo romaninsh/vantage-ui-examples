@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./application-schema-1.json
+
+# Project-wide settings. Dark, space-appropriate palette: "Spaceduck" is a
+# muted deep-blue/teal dark theme that fits a spaceflight explorer. The
+# title-bar sun/moon toggle switches between the light and dark slots.
+
+theme:
+  light: Catppuccin Latte
+  dark: Spaceduck

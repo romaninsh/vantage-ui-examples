@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: astronauts — list view (standalone, no drill-down).
+
+title: Astronauts
+
+elements:
+  - kind: tableview
+    spot: body
+    table: astronauts
+    params: {}

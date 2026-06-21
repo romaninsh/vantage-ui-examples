@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: launcher_configuration_families — list view.
+
+title: Launcher families
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launcher_configuration_families
+    params:
+      default_sort: { column: name, direction: asc }

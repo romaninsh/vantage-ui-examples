@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_celestial_body_types — lookup table for celestial_body_types.
+
+datasource: ll2
+title: celestial_body_types
+table: "config/celestial_body_types/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }

@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: landings — list view.
+
+title: Landings
+
+elements:
+  - kind: tableview
+    spot: body
+    table: landings
+    params:
+      default_sort: { column: id, direction: desc }

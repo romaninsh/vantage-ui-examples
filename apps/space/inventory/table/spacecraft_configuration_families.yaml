@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: spacecraft_configuration_families — spacecraft family groupings
+# (Cygnus, Dragon, Soyuz, …).
+
+datasource: ll2
+title: Spacecraft families
+table: "spacecraft_configuration_families/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: manufacturer.name, type: string }
+  - { name: parent.name, type: string }
+  - { name: maiden_flight, type: string }

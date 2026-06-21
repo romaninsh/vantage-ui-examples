@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_agency_types — lookup table for agency_types.
+
+datasource: ll2
+title: agency_types
+table: "config/agency_types/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }

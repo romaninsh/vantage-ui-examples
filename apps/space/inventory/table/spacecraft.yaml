@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: spacecraft — crewed/cargo vehicles (Soyuz, Dragon, Starliner, …).
+# `status.name` and `spacecraft_config.name` are nested leaves (mode=detailed).
+
+datasource: ll2
+title: Spacecraft
+table: "spacecraft/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: serial_number, type: string }
+  - { name: spacecraft_config.name, type: string }
+  - { name: spacecraft_config.type.name, type: string }
+  - { name: status.name, type: string }
+  - { name: is_placeholder, type: bool }
+  - { name: in_space, type: bool }
+  - { name: time_in_space, type: string }
+  - { name: time_docked, type: string }
+  - { name: flights_count, type: int }
+  - { name: mission_ends_count, type: int }
+  - { name: fastest_turnaround, type: string }
+  - { name: description, type: string, flags: [searchable] }
+
+references:
+  flights:
+    table: spacecraft_flights
+    kind: has_many
+    foreign_key: spacecraft.id
+  launches:
+    table: launches
+    kind: has_many
+    foreign_key: rocket__spacecraftflight__spacecraft__id

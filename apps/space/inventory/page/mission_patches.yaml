@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: mission_patches — list view.
+
+title: Mission patches
+
+elements:
+  - kind: tableview
+    spot: body
+    table: mission_patches
+    params:
+      default_sort: { column: priority, direction: asc }

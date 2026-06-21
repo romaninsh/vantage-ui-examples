@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: spacecraft_flights — one row per spacecraft-flight instance (a
+# capsule/vehicle flying on a specific launch). This is the join between
+# `spacecraft` (the physical vehicle) and `launches` (the mission).
+#
+# Uses the `ll2c` (client-filter) datasource: the dev API ignores
+# `spacecraft__id` and `launch__id` query params (verified), so drill-downs
+# narrow in memory on the row's nested `spacecraft.id` / `launch.id`.
+
+datasource: ll2c
+title: Spacecraft flights
+table: "spacecraft_flights/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: spacecraft.id, type: int }
+  - { name: spacecraft.name, type: string, flags: [title, searchable] }
+  - { name: launch.id, type: string, references: launches }
+  - { name: launch.name, type: string }
+  - { name: destination, type: string }
+  - { name: mission_end, type: datetime }
+  - { name: duration, type: string }
+  - { name: turn_around_time, type: string }

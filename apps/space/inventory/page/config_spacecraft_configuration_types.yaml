@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_spacecraft_configuration_types — list view.
+
+title: spacecraft configuration types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_spacecraft_configuration_types
+    params: {}

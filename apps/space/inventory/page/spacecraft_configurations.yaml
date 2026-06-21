@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: spacecraft_configurations — list view.
+
+title: Spacecraft configurations
+
+elements:
+  - kind: tableview
+    spot: body
+    table: spacecraft_configurations
+    params:
+      default_sort: { column: name, direction: asc }

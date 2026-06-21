@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: payload_flights — the drill target of launches → "Open payloads".
+
+title: Payload flights
+
+elements:
+  - kind: tableview
+    spot: body
+    table: payload_flights
+    params: {}

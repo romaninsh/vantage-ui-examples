@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: launches_upcoming — launches with net >= now (a read-only view over
+# the `launches/upcoming/` endpoint). Same column set as the main launches
+# table so the grid looks familiar.
+
+datasource: ll2
+title: Upcoming launches
+table: "launches/upcoming/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: status.name, type: string }
+  - { name: net, type: datetime }
+  - { name: net_precision.name, type: string }
+  - { name: window_start, type: datetime }
+  - { name: window_end, type: datetime }
+  - { name: launch_designator, type: string }
+  - { name: probability, type: int }
+  - { name: webcast_live, type: bool }
+  - { name: failreason, type: string }
+  - { name: hashtag, type: string }
+  - { name: weather_concerns, type: string }
+  - { name: launch_service_provider.name, type: string }
+  - { name: rocket.configuration.name, type: string }
+  - { name: rocket.configuration.full_name, type: string }
+  - { name: mission.name, type: string }
+  - { name: mission.type, type: string }
+  - { name: mission.description, type: string, flags: [searchable] }
+  - { name: mission.orbit.name, type: string }
+  - { name: pad.name, type: string }
+  - { name: pad.location.name, type: string }
+  - { name: orbital_launch_attempt_count, type: int }
+  - { name: location_launch_attempt_count, type: int }
+  - { name: pad_launch_attempt_count, type: int }
+  - { name: agency_launch_attempt_count, type: int }
+  - { name: orbital_launch_attempt_count_year, type: int }
+  - { name: location_launch_attempt_count_year, type: int }
+  - { name: pad_launch_attempt_count_year, type: int }
+  - { name: agency_launch_attempt_count_year, type: int }
+  - { name: pad_turnaround, type: string }

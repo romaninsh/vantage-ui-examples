@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: programs — list view (standalone, no drill-down).
+
+title: Programs
+
+elements:
+  - kind: tableview
+    spot: body
+    table: programs
+    params: {}

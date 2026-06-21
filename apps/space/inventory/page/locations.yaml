@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: locations — list view. Right-click → "Open pads" auto-derived
+# from the table's has_many (?location__id=<id>). Two-hop: location → pads → launches.
+
+title: Locations
+
+elements:
+  - kind: tableview
+    spot: body
+    table: locations
+    params: {}

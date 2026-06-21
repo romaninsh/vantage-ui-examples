@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: landings — booster/spacecraft landing events. Rows don't carry their
+# own name; we surface landing_location.name as the title and the launcher's
+# serial_number for context. The dev API ignores landing filters (verified),
+# so no server-side drill relation is wired here.
+
+datasource: ll2
+title: Landings
+table: "landings/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: landing_location.name, type: string, flags: [title, searchable] }
+  - { name: type.name, type: string }
+  - { name: success, type: bool }
+  - { name: attempt, type: bool }
+  - { name: firststage.launcher.serial_number, type: string }
+  - { name: firststage.launcher.id, type: int, references: launchers }
+  - { name: description, type: string }

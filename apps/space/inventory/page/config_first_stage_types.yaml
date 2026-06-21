@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_first_stage_types — list view.
+
+title: first stage types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_first_stage_types
+    params: {}

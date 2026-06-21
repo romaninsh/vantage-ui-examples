@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+
+# Datasource: ll2c — same Launch Library 2 dev API as `ll2`, but with
+# `filter_strategy: client`. The join endpoints (`payload_flights`,
+# `spacecraft_flights`) carry a `launch` object but the dev API *ignores*
+# the `launch__id` query param (verified: nonsense id still returns the full
+# count). So we fetch the whole collection (all pages) and let Vantage filter
+# in memory on the row's nested `launch.id`.
+#
+# Note: client filtering scans every row, so it pages the ENTIRE collection
+# on each drill-down. Fine for small joins; for a large one, prefer a
+# server-side (query) relation with a filter param the API actually honors.
+#
+# Keep server-side, query-param relations (launches/agencies/pads/…) on `ll2`.
+
+description: "Launch Library 2 (dev) — client-filtered (for launch-ignoring join endpoints)."
+type: api-client
+url: "https://lldev.thespacedevs.com/2.3.0"
+response_key: results
+pagination:
+  page_param: offset
+  limit_param: limit
+  offset_based: true
+filter_strategy: client
+# Log each request's URL + row count to `list_logs` — so client-filtered
+# drill-downs (launch → payloads) are visible while building. Remove later.
+debug: true

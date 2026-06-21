@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: docking_events — spacecraft docking events at space stations.
+# Title uses the target station's name (rows don't carry their own).
+#
+# The `space_stations` table has a has_many here via
+# `space_station_target__id` — verified discriminating (ISS id=4 → 13 of 18).
+
+datasource: ll2
+title: Docking events
+table: "docking_events/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - {
+      name: space_station_target.id,
+      type: int,
+      flags: [hidden],
+      references: space_stations,
+    }
+  - {
+      name: space_station_target.name,
+      type: string,
+      flags: [title, searchable],
+    }
+  - { name: docking_location.name, type: string }
+  - { name: docking, type: datetime }
+  - { name: departure, type: datetime }
+  - { name: flight_vehicle_chaser.name, type: string }

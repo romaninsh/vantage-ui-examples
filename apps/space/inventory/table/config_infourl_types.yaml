@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_infourl_types — lookup table for infourl_types.
+
+datasource: ll2
+title: infourl_types
+table: "config/infourl_types/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }

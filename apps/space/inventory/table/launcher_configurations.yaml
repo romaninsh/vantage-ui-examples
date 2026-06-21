@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: launcher_configurations — rocket designs (Falcon 9, Long March 2D, …).
+#
+# NOTE (data surprise for Neo): in the LL2 2.3.0 dev API `families` arrives as
+# an *array of objects* (each with its own nested manufacturer/agency tree),
+# not the scalar string the standing spec assumed. `type: json` is rejected by
+# this build (not in ColumnType), so it is declared `type: string` — it does
+# not render as a clean readable scalar. See AGENT_SMITH_NOTES.md.
+#
+# The `launches` relation drills into launches via `?rocket__configuration__id=<id>`
+# — verified discriminating (id 164 → 222 launches).
+
+datasource: ll2
+title: Launcher configurations
+table: "launcher_configurations/"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: full_name, type: string }
+  - { name: families, type: string }
+  - { name: variant, type: string }
+  - { name: alias, type: string }
+  - {
+      name: manufacturer.id,
+      type: string,
+      flags: [hidden],
+      references: agencies,
+    }
+  - { name: manufacturer.name, type: string }
+  - { name: active, type: bool }
+  - { name: is_placeholder, type: bool }
+  - { name: reusable, type: bool }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: min_stage, type: int }
+  - { name: max_stage, type: int }
+  - { name: length, type: float }
+  - { name: diameter, type: float }
+  - { name: maiden_flight, type: string }
+  - { name: launch_cost, type: string }
+  - { name: launch_mass, type: float }
+  - { name: leo_capacity, type: float }
+  - { name: gto_capacity, type: float }
+  - { name: geo_capacity, type: float }
+  - { name: sso_capacity, type: float }
+  - { name: to_thrust, type: float }
+  - { name: apogee, type: float }
+  - { name: total_launch_count, type: int }
+  - { name: consecutive_successful_launches, type: int }
+  - { name: successful_launches, type: int }
+  - { name: failed_launches, type: int }
+  - { name: pending_launches, type: int }
+  - { name: attempted_landings, type: int }
+  - { name: successful_landings, type: int }
+  - { name: failed_landings, type: int }
+  - { name: consecutive_successful_landings, type: int }
+
+references:
+  launches:
+    table: launches
+    kind: has_many
+    foreign_key: rocket__configuration__id

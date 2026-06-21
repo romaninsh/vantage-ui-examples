@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_countries — list view.
+
+title: countries
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_countries
+    params: {}

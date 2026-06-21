@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_net_precisions — lookup table for net_precisions.
+
+datasource: ll2
+title: net_precisions
+table: "config/net_precisions/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: abbrev, type: string }
+  - { name: description, type: string }

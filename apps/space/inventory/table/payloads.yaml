@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: payloads — satellites/landers/probes carried to space. Browsable
+# catalogue; nested type/manufacturer/operator surfaced as dotted leaves
+# (mode=detailed includes them). The launch↔payload link is the
+# `payload_flights` join (see launches → "payloads" drill-down).
+
+datasource: ll2
+title: Payloads
+table: "payloads/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: type.name, type: string }
+  - { name: manufacturer.name, type: string }
+  - { name: operator.name, type: string }
+  - { name: mass, type: float }
+  - { name: cost, type: string }
+  - { name: description, type: string, flags: [searchable] }
+
+references:
+  flights:
+    table: payload_flights
+    kind: has_many
+    foreign_key: payload.id

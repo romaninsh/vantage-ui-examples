@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_countries — country reference data.
+
+datasource: ll2
+title: Countries
+table: "config/countries/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: alpha_2_code, type: string }
+  - { name: alpha_3_code, type: string }
+  - { name: nationality_name, type: string }
+  - { name: nationality_name_composed, type: string }

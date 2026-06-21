@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_spacecraft_statuses — list view.
+
+title: spacecraft statuses
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_spacecraft_statuses
+    params: {}

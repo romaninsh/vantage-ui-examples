@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_docking_locations — docking port reference data.
+
+datasource: ll2
+title: Docking locations
+table: "config/docking_locations/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: spacestation.name, type: string }
+
+references:
+  dockings:
+    table: docking_events
+    kind: has_many
+    foreign_key: docking_location__id

@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: agencies — launch providers and manufacturers.
+#
+# `type.name` is a nested leaf (the agency type object: Commercial,
+# Government, …). The `launches` relation drills into the launches grid
+# narrowed by `?lsp__id=<this agency id>` — verified discriminating
+# (id 121 → 230 of 537 launches).
+
+datasource: ll2
+title: Agencies
+table: "agencies/"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: abbrev, type: string }
+  - { name: type.name, type: string }
+  - { name: featured, type: bool }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: administrator, type: string }
+  - { name: founding_year, type: int }
+  - { name: total_launch_count, type: int }
+  - { name: consecutive_successful_launches, type: int }
+  - { name: successful_launches, type: int }
+  - { name: failed_launches, type: int }
+  - { name: pending_launches, type: int }
+  - { name: consecutive_successful_landings, type: int }
+  - { name: successful_landings, type: int }
+  - { name: failed_landings, type: int }
+  - { name: attempted_landings, type: int }
+  - { name: successful_landings_spacecraft, type: int }
+  - { name: failed_landings_spacecraft, type: int }
+  - { name: attempted_landings_spacecraft, type: int }
+  - { name: successful_landings_payload, type: int }
+  - { name: failed_landings_payload, type: int }
+  - { name: attempted_landings_payload, type: int }
+
+references:
+  launches:
+    table: launches
+    kind: has_many
+    foreign_key: lsp__id

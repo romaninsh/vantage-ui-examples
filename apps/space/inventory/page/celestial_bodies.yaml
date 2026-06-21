@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: celestial_bodies — list view. Right-click → "Open launches" drills by
+# celestial body (mission__orbit__celestial_body__id).
+
+title: Celestial bodies
+
+elements:
+  - kind: tableview
+    spot: body
+    table: celestial_bodies
+    params:
+      default_sort: { column: name, direction: asc }
