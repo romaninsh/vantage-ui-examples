@@ -27,7 +27,7 @@ pub struct TimedEvent {
 }
 
 /// Everything a phase needs to plan. Resolved once at trigger time.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MissionContext {
     pub launch_id: String,
     pub lsp_id: String,

@@ -4,12 +4,14 @@
 
 pub mod countdown;
 pub mod engine;
+pub mod trigger;
 
 #[cfg(test)]
 mod testutil;
 
 pub use countdown::CountdownPhase;
 pub use engine::{MissionContext, Pace, Phase, TimedEvent, new_launch_id, run_mission};
+pub use trigger::{CreateLaunch, Created, TriggerError, create_launch, mission_phases};
 
 #[cfg(test)]
 mod tests {
