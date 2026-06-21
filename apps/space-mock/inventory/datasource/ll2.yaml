@@ -1,0 +1,13 @@
+# Datasource ll2 — query-filter REST, pointed at the fake LL2 server. Envelope
+# {count,results}, offset/limit paging, total_key for lazy loading.
+
+description: "Mock Launch Library 2 (query filtered)."
+type: api-client
+url: "http://127.0.0.1:14599"
+response_key: results
+total_key: count
+pagination:
+  page_param: offset
+  limit_param: limit
+  offset_based: true
+filter_strategy: query

@@ -12,7 +12,7 @@ datasource: spacex
 title: Cores
 
 has_many:
-  - { table: launches, foreign_key: core_id }
+  - { table: launches, foreign_key: core_serial }
 
 columns:
   - { name: id, type: string, flags: [id] }

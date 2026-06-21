@@ -1,0 +1,18 @@
+# Table launches — the hub. Drilled into by agencies via ?lsp__id=.
+
+datasource: ll2
+title: Launches
+table: "launches/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: status.name, type: string }
+  - { name: launch_service_provider.id, type: string, flags: [hidden], references: agencies }
+  - { name: launch_service_provider.name, type: string }
+
+references:
+  payloads:
+    table: payload_flights
+    kind: has_many
+    foreign_key: launch.id

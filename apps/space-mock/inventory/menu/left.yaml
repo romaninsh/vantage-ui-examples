@@ -1,0 +1,19 @@
+# launches is listed first so the app opens it on startup — building its
+# entity publishes the data-tools resolver (and registers its Dio for cache
+# mode). Keep payloads here but it is never auto-opened.
+
+title: Space (mock)
+
+items:
+  - page: launches
+    label: Launches
+    icon: ArrowUp
+  - page: agencies
+    label: Agencies
+    icon: Globe
+  - page: payloads
+    label: Payloads
+    icon: Inbox
+  - page: payload_flights
+    label: Payload flights
+    icon: Star

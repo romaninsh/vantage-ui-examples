@@ -28,6 +28,24 @@ struct ListLogsResponse {
     entries: Vec<LogEntry>,
 }
 
+/// One catalog model as returned by `list_models`. Mirrors `ModelDto` in
+/// `vantage-ui/crates/app/src/mcp/tools.rs`.
+#[derive(Debug, Clone, Deserialize)]
+pub struct DataModel {
+    pub name: String,
+    pub datasource: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct ListModelsResponse {
+    models: Vec<DataModel>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RunDataScriptResponse {
+    result: serde_json::Value,
+}
+
 /// A connected MCP peer. Constructing it performs the `initialize`
 /// handshake, so a successful [`McpClient::connect`] proves the server is
 /// bound and reachable.
@@ -78,5 +96,55 @@ impl McpClient {
         let parsed: ListLogsResponse =
             serde_json::from_value(value).context("decode ListLogsResponse")?;
         Ok(parsed.entries)
+    }
+
+    /// Call `list_models` — the catalog's models with their datasource.
+    pub async fn list_models(&self) -> Result<Vec<DataModel>> {
+        let params = CallToolRequestParams::new("list_models");
+        let result = self
+            .peer
+            .call_tool(params)
+            .await
+            .context("call_tool list_models failed")?;
+        let value = result
+            .structured_content
+            .ok_or_else(|| anyhow!("list_models returned no structured content"))?;
+        let parsed: ListModelsResponse =
+            serde_json::from_value(value).context("decode ListModelsResponse")?;
+        Ok(parsed.models)
+    }
+
+    /// Call `run_data_script` and return the script's result value. `mode` is
+    /// `"direct"` or `"cache"`. A tool/runtime error (disabled access, unknown
+    /// model, Rhai failure) surfaces as `Err` — the caller can assert on it.
+    pub async fn run_data_script(
+        &self,
+        script: &str,
+        mode: &str,
+        limit: Option<u32>,
+    ) -> Result<serde_json::Value> {
+        let mut args = serde_json::Map::new();
+        args.insert("script".into(), serde_json::Value::String(script.into()));
+        args.insert("mode".into(), serde_json::Value::String(mode.into()));
+        if let Some(l) = limit {
+            args.insert("limit".into(), l.into());
+        }
+
+        let mut params = CallToolRequestParams::new("run_data_script");
+        params.arguments = Some(args);
+        // A JSON-RPC error response (our McpError path) becomes `Err` here,
+        // carrying the message — exactly what the "fails with" steps assert on.
+        let result = self
+            .peer
+            .call_tool(params)
+            .await
+            .context("run_data_script")?;
+
+        let value = result
+            .structured_content
+            .ok_or_else(|| anyhow!("run_data_script returned no structured content"))?;
+        let parsed: RunDataScriptResponse =
+            serde_json::from_value(value).context("decode RunDataScriptResponse")?;
+        Ok(parsed.result)
     }
 }

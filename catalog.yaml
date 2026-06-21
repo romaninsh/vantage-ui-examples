@@ -1,0 +1,54 @@
+# Vantage UI example apps — authoritative catalog.
+#
+# The website (vantage-ui.com) loads this file at build time to render the
+# examples grid and the `vantage://` one-click install links. vantage-web2
+# keeps a committed fallback copy at static/examples-catalog.yaml; keep the two
+# in sync.
+#
+# status:      "available" (folder exists, archive published) | "coming" (planned)
+# min_version: lowest Vantage UI version that can open the example. The app
+#              displays this and disables Install on older builds. Bump it when
+#              an example starts relying on a newer feature.
+apps:
+  - slug: bakery
+    title: "Bakery franchise"
+    persona: "Internal-tools teams"
+    persona_url: "/solutions/internal-tools-teams/"
+    status: "available"
+    min_version: "0.14.0"
+    icon: "storefront"
+    blurb: "A back-office admin for a bakery franchise — products, clients and orders, with dashboards and an order-status workflow."
+    repo_path: "apps/bakery/inventory"
+    screenshot: "images/vantage-ui-app.png"
+    demonstrates:
+      - "CRUD grids with form and confirmation dialogs"
+      - "Charts and a dashboard built from query-sourced tables"
+      - "Right-click order-status workflow"
+
+  - slug: spacex
+    title: "SpaceX GraphQL explorer"
+    persona: "Web & mobile backends"
+    persona_url: "/solutions/developers/"
+    status: "coming"
+    min_version: "0.14.0"
+    icon: "rocket_launch"
+    blurb: "Explore a public GraphQL API through the console — launches, rockets and capsules as browsable, drillable tables."
+    repo_path: "apps/spacex/inventory"
+    screenshot: ""
+    demonstrates:
+      - "A read-only GraphQL datasource"
+      - "Master/detail drill-down across related records"
+
+  - slug: aws-console
+    title: "AWS control console"
+    persona: "Internal tools (SRE)"
+    persona_url: "/solutions/internal-tools-teams/"
+    status: "coming"
+    min_version: "0.15.0"
+    icon: "cloud"
+    blurb: "Build the AWS console you actually need — surface only the resources you operate, by wrapping the aws CLI as tables."
+    repo_path: "apps/aws-console/inventory"
+    screenshot: ""
+    demonstrates:
+      - "Command-line (CLI) data sources"
+      - "Infrastructure browsed and drilled like database tables"

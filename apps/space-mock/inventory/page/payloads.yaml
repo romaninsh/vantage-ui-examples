@@ -1,0 +1,7 @@
+title: Payloads
+
+elements:
+  - kind: tableview
+    spot: body
+    table: payloads
+    params: {}

@@ -1,0 +1,13 @@
+# Table payload_flights — launch↔payload join on the client-filter datasource.
+# Narrowed in memory on the nested launch.id (the drill-down from launches).
+
+datasource: ll2c
+title: Payload flights
+table: "payload_flights/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: launch.id, type: string, references: launches }
+  - { name: payload.name, type: string, flags: [title, searchable] }
+  - { name: destination, type: string }
+  - { name: amount, type: int }

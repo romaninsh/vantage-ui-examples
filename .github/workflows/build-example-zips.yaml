@@ -1,0 +1,43 @@
+name: Build example archives
+
+# Builds one `<slug>.zip` per example app and publishes them as assets on a
+# rolling `examples-latest` release. These are the archives the `vantage://`
+# one-click installer downloads; the website (vantage-ui.com) serves them from
+# /examples/ by syncing this release at site-build time.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/**"
+      - "catalog.yaml"
+      - "scripts/build-example-zips.sh"
+      - ".github/workflows/build-example-zips.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build archives
+        run: scripts/build-example-zips.sh dist
+
+      - name: Upload archives as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-zips
+          path: dist/*.zip
+
+      - name: Publish to rolling release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: examples-latest
+          name: Example archives (latest)
+          body: "Per-example `.zip` archives for the vantage:// one-click installer. Rebuilt on every push to main."
+          files: dist/*.zip

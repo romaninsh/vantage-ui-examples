@@ -1,0 +1,7 @@
+# space-mock — a deterministic copy of the `space` data model wired to the
+# in-process fake REST server (see test-framework/src/fake_rest.rs). Used only
+# by the black-box BDD suite; not a user-facing example.
+
+theme:
+  light: Catppuccin Latte
+  dark: Catppuccin Mocha

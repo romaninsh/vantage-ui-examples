@@ -10,7 +10,7 @@ datasource: spacex
 title: Capsules
 
 has_many:
-  - { table: launches, foreign_key: capsule_id }
+  - { table: launches, foreign_key: cap_serial }
   - { table: missions, foreign_key: capsule_id }
 
 columns:

@@ -1,0 +1,7 @@
+title: Agencies
+
+elements:
+  - kind: tableview
+    spot: body
+    table: agencies
+    params: {}

@@ -30,8 +30,8 @@ columns:
   - { name: mission_name, type: string, flags: [title, searchable] }
   - { name: launch_year, type: string }
   - { name: launch_date_utc, type: datetime }
-  - { name: launch_success, type: bool }
-  - { name: upcoming, type: bool }
-  - { name: is_tentative, type: bool }
+  - { name: launch_success, type: bool, flags: [label] }
+  - { name: upcoming, type: bool, flags: [label] }
+  - { name: is_tentative, type: bool, flags: [label] }
   - { name: mission_id, type: string }
   - { name: details, type: string, flags: [searchable] }
