@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_landing_locations — list view.
+
+title: landing locations
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_landing_locations
+    params: {}

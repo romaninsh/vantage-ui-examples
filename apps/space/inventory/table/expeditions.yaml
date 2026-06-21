@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: expeditions — crewed missions to space stations (ISS expeditions,
+# Shenzhou, Soyuz visits). Each row belongs to a spacestation.
+#
+# The `space_stations` table has a has_many here via `space_station=<id>`
+# — verified discriminating (ISS id=4 → 80 of 164).
+
+datasource: ll2
+title: Expeditions
+table: "expeditions/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - {
+      name: spacestation.id,
+      type: int,
+      flags: [hidden],
+      references: space_stations,
+    }
+  - { name: spacestation.name, type: string }
+  - { name: start, type: datetime }
+  - { name: end, type: datetime }

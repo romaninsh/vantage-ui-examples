@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_program_types — list view.
+
+title: program types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_program_types
+    params: {}

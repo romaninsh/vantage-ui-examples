@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: launches — list view over `table/launches.yaml`. The drill *target*
+# of the spoke tables (agencies/launcher_configurations/pads), so it declares no
+# row actions itself — the filtered tab is opened from those tables' has_many.
+
+title: Launches
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launches
+    params:
+      default_sort: { column: net, direction: desc }

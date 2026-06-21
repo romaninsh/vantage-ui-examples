@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_vidurl_types — lookup table for vidurl_types.
+
+datasource: ll2
+title: vidurl_types
+table: "config/vidurl_types/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }

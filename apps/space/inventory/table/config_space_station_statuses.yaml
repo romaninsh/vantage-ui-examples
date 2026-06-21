@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_space_station_statuses — lookup table for space_station_statuses.
+
+datasource: ll2
+title: space_station_statuses
+table: "config/space_station_statuses/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }

@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_timeline_event_types — timeline event type reference data.
+
+datasource: ll2
+title: Timeline event types
+table: "config/timeline_event_types/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: abbrev, type: string, flags: [title, searchable] }
+  - { name: description, type: string }

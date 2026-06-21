@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: launchers — individual rocket stages/boosters (one row per serial
+# number, e.g. "Booster B1058"). Distinct from `launcher_configurations`
+# which is the *design*; this is the physical hardware.
+#
+# The dev API ignores `launcher__id` on the launches endpoint (verified), so
+# no server-side drill relation to launches is wired here. Each launcher row
+# still carries its own flight/landing counts from the launcher record itself.
+
+datasource: ll2
+title: Launchers
+table: "launchers/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: serial_number, type: string, flags: [title, searchable] }
+  - { name: status.name, type: string }
+  - { name: flight_proven, type: bool }
+  - { name: is_placeholder, type: bool }
+  - { name: details, type: string, flags: [searchable] }
+  - { name: flights, type: int }
+  - { name: successful_landings, type: int }
+  - { name: attempted_landings, type: int }
+  - { name: last_launch_date, type: datetime }
+  - { name: first_launch_date, type: datetime }
+  - { name: fastest_turnaround, type: string }

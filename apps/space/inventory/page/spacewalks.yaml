@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: spacewalks — list view. Sorted by start date, most recent first.
+
+title: Spacewalks
+
+elements:
+  - kind: tableview
+    spot: body
+    table: spacewalks
+    params:
+      default_sort: { column: start, direction: desc }

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_languages — list view.
+
+title: languages
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_languages
+    params: {}

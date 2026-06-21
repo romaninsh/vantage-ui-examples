@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_vidurl_types — list view.
+
+title: vidurl types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_vidurl_types
+    params: {}

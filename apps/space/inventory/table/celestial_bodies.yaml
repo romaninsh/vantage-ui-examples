@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: celestial_bodies — planets, moons, the Sun, etc. that missions target.
+#
+# The `launches` relation drills into launches narrowed by
+# `?mission__orbit__celestial_body__id=<this body id>` — verified
+# discriminating (id 1 / Earth → 530 of 537).
+
+datasource: ll2
+title: Celestial bodies
+table: "celestial_bodies/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: type.name, type: string }
+  - { name: diameter, type: float }
+  - { name: mass, type: float }
+  - { name: gravity, type: float }
+  - { name: length_of_day, type: string }
+  - { name: atmosphere, type: bool }
+  - { name: description, type: string, flags: [searchable] }
+
+references:
+  launches:
+    table: launches
+    kind: has_many
+    foreign_key: mission__orbit__celestial_body__id

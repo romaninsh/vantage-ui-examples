@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: spacecraft — crewed/cargo vehicles. Right-click → "Open flights".
+
+title: Spacecraft
+
+elements:
+  - kind: tableview
+    spot: body
+    table: spacecraft
+    params: {}

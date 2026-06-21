@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: launches_previous — past launches, most recent first.
+
+title: Previous launches
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launches_previous
+    params:
+      default_sort: { column: net, direction: desc }

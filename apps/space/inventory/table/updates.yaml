@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: updates — timeline/editorial notes attached to launches/events.
+# `profile_image` is the avatar of the contributor who wrote the update.
+
+datasource: ll2
+title: Updates
+table: "updates/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: comment, type: string, flags: [title, searchable] }
+  - { name: created_by, type: string }
+  - { name: created_on, type: datetime }
+  - { name: profile_image, type: string }

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_celestial_body_types — list view.
+
+title: celestial uody types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_celestial_body_types
+    params: {}

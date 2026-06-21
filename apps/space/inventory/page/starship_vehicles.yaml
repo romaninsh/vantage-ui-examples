@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: starship_vehicles — Starship/Super Heavy prototype fleet, sorted by
+# most recent flight.
+
+title: Starship fleet
+
+elements:
+  - kind: tableview
+    spot: body
+    table: starship_vehicles
+    params:
+      default_sort: { column: last_launch_date, direction: desc }

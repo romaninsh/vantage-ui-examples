@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: payload_flights — the launch↔payload join (one row per payload flown
+# on a launch). This is the drill target of launches → "payloads": from a
+# launch you see each payload it carried, its destination and amount.
+#
+# Uses the `ll2c` (client-filter) datasource: the dev API ignores the
+# `launch__id` query param, so the launches relation narrows in memory on the
+# row's `launch.id` instead. `mode=detailed` is needed for the nested
+# `payload`/`launch` objects.
+
+datasource: ll2c
+title: Payload flights
+table: "payload_flights/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: launch.id, type: string, references: launches }
+  - { name: launch.name, type: string }
+  - { name: payload.name, type: string, flags: [title, searchable] }
+  - { name: payload.type.name, type: string }
+  - { name: destination, type: string }
+  - { name: amount, type: int }

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_astronaut_types — list view.
+
+title: astronaut types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_astronaut_types
+    params: {}

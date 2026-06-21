@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: events — list view (standalone). Sorted by date, most recent first.
+
+title: Events
+
+elements:
+  - kind: tableview
+    spot: body
+    table: events
+    params:
+      default_sort: { column: date, direction: desc }

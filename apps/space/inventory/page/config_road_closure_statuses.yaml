@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_road_closure_statuses — list view.
+
+title: road closure statuses
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_road_closure_statuses
+    params: {}

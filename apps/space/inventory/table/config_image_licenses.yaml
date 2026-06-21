@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_image_licenses — image license reference data.
+
+datasource: ll2
+title: Image licenses
+table: "config/image_licenses/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: priority, type: int }
+  - { name: link, type: string }

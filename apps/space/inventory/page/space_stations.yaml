@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: space_stations — crewed orbital outposts. Right-click → "Open dockings".
+
+title: Space stations
+
+elements:
+  - kind: tableview
+    spot: body
+    table: space_stations
+    params: {}

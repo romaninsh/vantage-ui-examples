@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_astronaut_types — lookup table for astronaut_types.
+
+datasource: ll2
+title: astronaut_types
+table: "config/astronaut_types/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }

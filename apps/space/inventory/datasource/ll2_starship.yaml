@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+
+# Datasource: ll2_starship — same Launch Library 2 dev API, but pointed at
+# the Starship dashboard singleton. The response is one object whose `vehicles`
+# key holds the array of Starship/Super Heavy prototypes; `response_key`
+# selects it and there is no pagination envelope on this endpoint.
+
+description: "Launch Library 2 (dev) — Starship dashboard singleton."
+type: api-client
+url: "https://lldev.thespacedevs.com/2.3.0/dashboard/starship/"
+response_key: vehicles
+filter_strategy: client

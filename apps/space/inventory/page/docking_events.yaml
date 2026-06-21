@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: docking_events — list view. Right-click a space station → "Open
+# dockings" narrows by space_station_target__id.
+
+title: Docking events
+
+elements:
+  - kind: tableview
+    spot: body
+    table: docking_events
+    params:
+      default_sort: { column: docking, direction: desc }

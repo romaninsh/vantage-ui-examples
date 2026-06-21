@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_landing_locations — landing site reference data.
+
+datasource: ll2
+title: Landing locations
+table: "config/landing_locations/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: abbrev, type: string }
+  - { name: active, type: bool }
+  - { name: description, type: string }
+  - { name: latitude, type: float }
+  - { name: longitude, type: float }
+  - { name: successful_landings, type: int }
+  - { name: attempted_landings, type: int }
+  - { name: failed_landings, type: int }
+  - { name: celestial_body.name, type: string }

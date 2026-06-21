@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+
+# Datasource: ll2 — The Space Devs' Launch Library 2, development tier.
+#
+# A paginated REST/JSON API: collections come back enveloped as
+# `{ "count": N, "next": …, "results": [ … ] }` and page with
+# `?limit=&offset=` (offset is a 0-based item count). The dev host
+# (`lldev`) is free, unauthenticated, and unthrottled — meant for
+# integration work like this. See `.agents/skills/vantage-persistence-rest/`.
+#
+# `total_key: count` reads the envelope's grand total, so every grid
+# loads rows lazily as you scroll (sizing its scrollbar to the full
+# result set) instead of stopping at the server's default first page.
+
+description: "Launch Library 2 (dev) — spaceflight REST API."
+type: api-client
+url: "https://lldev.thespacedevs.com/2.3.0"
+response_key: results
+total_key: count
+pagination:
+  page_param: offset
+  limit_param: limit
+  offset_based: true
+filter_strategy: query
+# Log each request's URL + returned row count to `list_logs` — handy while
+# building this example; remove once the endpoints are settled.
+debug: true

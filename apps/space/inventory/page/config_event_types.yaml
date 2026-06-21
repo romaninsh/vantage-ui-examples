@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_event_types — list view.
+
+title: event types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_event_types
+    params: {}

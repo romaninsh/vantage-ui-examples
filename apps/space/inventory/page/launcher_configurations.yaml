@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: launcher_configurations — list view. Right-click → "Open launches"
+# auto-derived from the table's has_many (?rocket__configuration__id=<id>).
+
+title: Launcher configurations
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launcher_configurations
+    params: {}

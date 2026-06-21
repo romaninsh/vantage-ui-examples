@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: payloads — browsable catalogue of satellites/landers/probes.
+
+title: Payloads
+
+elements:
+  - kind: tableview
+    spot: body
+    table: payloads
+    params: {}

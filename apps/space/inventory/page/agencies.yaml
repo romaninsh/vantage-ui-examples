@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: agencies — list view. Right-click a row → "Open launches"
+# is auto-derived from the table's has_many (?lsp__id=<id>).
+
+title: Agencies
+
+elements:
+  - kind: tableview
+    spot: body
+    table: agencies
+    params: {}

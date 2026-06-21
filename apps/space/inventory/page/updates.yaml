@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: updates — editorial timeline feed.
+
+title: Updates
+
+elements:
+  - kind: tableview
+    spot: body
+    table: updates
+    params:
+      default_sort: { column: created_on, direction: desc }

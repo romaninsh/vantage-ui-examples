@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: spacecraft_configurations — spacecraft *designs* (e.g. "Crew Dragon",
+# "Soyuz"). The `spacecraft` table holds the physical vehicles.
+#
+# The dev API ignores `spacecraft_config__id` on the spacecraft endpoint
+# (verified), so no server-side drill relation is wired here.
+
+datasource: ll2
+title: Spacecraft configurations
+table: "spacecraft_configurations/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: type.name, type: string }
+  - { name: agency.id, type: int, flags: [hidden], references: agencies }
+  - { name: agency.name, type: string }
+  - { name: in_use, type: bool }

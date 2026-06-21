@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_mission_types — list view.
+
+title: mission types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_mission_types
+    params: {}

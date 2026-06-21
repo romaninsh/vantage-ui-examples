@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: launcher_configuration_families — rocket family groupings (Atlas,
+# Falcon, Long March, Angara, …). `manufacturer` is an array; we surface the
+# first item's name as a dotted leaf for display.
+
+datasource: ll2
+title: Launcher families
+table: "launcher_configuration_families/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: parent.name, type: string }

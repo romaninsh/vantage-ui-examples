@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: events — milestones (dockings, tests, …). Standalone for the first
+# cut (no verified drill-down). `type.name` is a nested leaf; `location` here
+# is already a flat string.
+
+datasource: ll2
+title: Events
+table: "events/"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: type.name, type: string }
+  - { name: location, type: string }
+  - { name: date, type: datetime }
+  - { name: date_precision, type: string }
+  - { name: duration, type: string }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: webcast_live, type: bool }

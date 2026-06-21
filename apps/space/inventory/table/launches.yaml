@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: launches — every tracked launch (the hub of this app).
+#
+# `table:` is the endpoint path under the datasource url, with a trailing
+# slash (LL2 redirects `/launches` → `/launches/`). Nested response fields
+# are surfaced with dotted column names — `status.name` reaches
+# `results[].status.name`.
+#
+# The belongs-to columns (`launch_service_provider.name`, `rocket.configuration.name`,
+# `pad.name`) only appear in richer response modes, so this endpoint is fetched
+# with `?mode=detailed`. The query param coexists with the relation filter params
+# the spoke tables append (e.g. `?mode=detailed&lsp__id=121`).
+
+datasource: ll2
+title: Launches
+table: "launches/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: status.name, type: string }
+  - { name: net, type: datetime }
+  - { name: net_precision.name, type: string }
+  - { name: window_start, type: datetime }
+  - { name: window_end, type: datetime }
+  - { name: launch_designator, type: string }
+  - { name: probability, type: int }
+  - { name: webcast_live, type: bool }
+  - { name: failreason, type: string }
+  - { name: hashtag, type: string }
+  - { name: weather_concerns, type: string }
+  - {
+      name: launch_service_provider.id,
+      type: string,
+      flags: [hidden],
+      references: agencies,
+    }
+  - { name: launch_service_provider.name, type: string }
+  - { name: rocket.configuration.name, type: string }
+  - { name: rocket.configuration.full_name, type: string }
+  - { name: mission.name, type: string }
+  - { name: mission.type, type: string }
+  - { name: mission.description, type: string, flags: [searchable] }
+  - { name: mission.orbit.name, type: string }
+  - { name: pad.id, type: string, flags: [hidden], references: pads }
+  - { name: pad.name, type: string }
+  - { name: pad.location.name, type: string }
+  - { name: orbital_launch_attempt_count, type: int }
+  - { name: location_launch_attempt_count, type: int }
+  - { name: pad_launch_attempt_count, type: int }
+  - { name: agency_launch_attempt_count, type: int }
+  - { name: orbital_launch_attempt_count_year, type: int }
+  - { name: location_launch_attempt_count_year, type: int }
+  - { name: pad_launch_attempt_count_year, type: int }
+  - { name: agency_launch_attempt_count_year, type: int }
+  - { name: pad_turnaround, type: string }
+
+references:
+  payloads:
+    table: payload_flights
+    kind: has_many
+    foreign_key: launch.id
+  spacecraft_flights:
+    table: spacecraft_flights
+    kind: has_many
+    foreign_key: launch.id

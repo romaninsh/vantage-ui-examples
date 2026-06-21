@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_first_stage_types — lookup table for first_stage_types.
+
+datasource: ll2
+title: first_stage_types
+table: "config/first_stage_types/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }

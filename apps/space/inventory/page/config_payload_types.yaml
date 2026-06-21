@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_payload_types — list view.
+
+title: payload types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_payload_types
+    params: {}

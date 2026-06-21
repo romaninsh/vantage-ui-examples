@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: config_orbits — orbit reference data.
+
+datasource: ll2
+title: Orbits
+table: "config/orbits/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: abbrev, type: string }
+  - { name: celestial_body.name, type: string }

@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: launches_upcoming — upcoming launches, sorted by T-0 ascending
+# (next launch first).
+
+title: Upcoming launches
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launches_upcoming
+    params:
+      default_sort: { column: net, direction: asc }

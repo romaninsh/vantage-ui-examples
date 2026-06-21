@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: events_previous — past events, most recent first.
+
+title: Previous events
+
+elements:
+  - kind: tableview
+    spot: body
+    table: events_previous
+    params:
+      default_sort: { column: date, direction: desc }

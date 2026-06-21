@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: programs — programmes (Artemis, Commercial Crew, …). Standalone:
+# the dev `launches?program=` filter is ignored, so no `has_many`.
+
+datasource: ll2
+title: Programs
+table: "programs/"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: type.name, type: string }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: start_date, type: datetime }
+  - { name: end_date, type: datetime }
+  - { name: info_url, type: string }
+  - { name: wiki_url, type: string }
+
+references:
+  launches:
+    table: launches
+    kind: has_many
+    foreign_key: program

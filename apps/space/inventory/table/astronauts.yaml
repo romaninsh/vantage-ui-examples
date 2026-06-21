@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: astronauts — people. Standalone (no drill-down): the dev endpoint
+# ignores the agency filter and returns all rows, so no `has_many` is declared.
+#
+# `status.name`, `agency.name`, `type.name` are nested leaves.
+# NOTE (data surprise for Neo): `nationality` arrives as an *array of country
+# objects* in the 2.3.0 dev API, not the scalar string the spec assumed.
+# `type: json` is rejected by this build, so it is declared `type: string`.
+# See AGENT_SMITH_NOTES.md.
+
+datasource: ll2
+title: Astronauts
+table: "astronauts/"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: status.name, type: string }
+  - { name: type.name, type: string }
+  - { name: agency.id, type: string, flags: [hidden], references: agencies }
+  - { name: agency.name, type: string }
+  - { name: nationality, type: string }
+  - { name: in_space, type: bool }
+  - { name: time_in_space, type: string }
+  - { name: eva_time, type: string }
+  - { name: age, type: int }
+  - { name: date_of_birth, type: string }
+  - { name: date_of_death, type: string }
+  - { name: first_flight, type: datetime }
+  - { name: last_flight, type: datetime }
+  - { name: flights_count, type: int }
+  - { name: landings_count, type: int }
+  - { name: spacewalks_count, type: int }
+  - { name: bio, type: string, flags: [searchable] }

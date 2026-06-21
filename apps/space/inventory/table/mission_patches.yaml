@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: mission_patches — patch artwork associated with a launch / program
+# / agency. Pure browse table — no discriminating filter for relations.
+
+datasource: ll2
+title: Mission patches
+table: "mission_patches/"
+
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: agency.id, type: int, flags: [hidden], references: agencies }
+  - { name: agency.name, type: string }
+  - { name: priority, type: int }
+  - { name: image_url, type: string }

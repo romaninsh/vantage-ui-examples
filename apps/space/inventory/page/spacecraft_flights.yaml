@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: spacecraft_flights — list view. Right-clicking a spacecraft row →
+# "Open flights" narrows this list in memory (has_many on spacecraft table).
+
+title: Spacecraft flights
+
+elements:
+  - kind: tableview
+    spot: body
+    table: spacecraft_flights
+    params:
+      default_sort: { column: mission_end, direction: desc }

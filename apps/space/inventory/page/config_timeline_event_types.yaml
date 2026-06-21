@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: config_timeline_event_types — list view.
+
+title: timeline event types
+
+elements:
+  - kind: tableview
+    spot: body
+    table: config_timeline_event_types
+    params: {}
