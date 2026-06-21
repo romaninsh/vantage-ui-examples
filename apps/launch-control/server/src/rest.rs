@@ -102,10 +102,12 @@ async fn list(
         if is_reserved(key) {
             continue;
         }
-        let column = to_column(key);
-        if vista.get_column(&column).is_some() {
-            let _ = vista.add_condition_eq(column, Cbor::Text(value.clone()));
-        }
+        // `add_condition_eq` resolves both stored columns and computed
+        // (`with_expression`) columns such as `has_rockets`, and errors
+        // harmlessly for unknown names — so we no longer pre-guard on
+        // `get_column` (which only knows stored columns and would skip
+        // expression filters).
+        let _ = vista.add_condition_eq(to_column(key), Cbor::Text(value.clone()));
     }
     if let Some(text) = params.get("search") {
         let _ = vista.add_search(text.clone());
