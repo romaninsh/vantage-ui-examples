@@ -11,6 +11,7 @@ mod model;
 mod nest;
 mod rest;
 mod seed;
+mod sim;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use indexmap::IndexMap;
