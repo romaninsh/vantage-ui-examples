@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# Fires the create request at the bundled launch-control server. Called from the
+# launches-page toolbar after new_launch collects the fields.
+# Returns immediately; the row then updates in place via the page's
+# refresh_interval / refresh_probe polling.
+kind: http_request
+description: |
+  Creates a launch on the launch-control server and starts a live T-1min
+  countdown simulation. Returns immediately; the row then updates in place.
+params:
+  lsp_id:                  { type: string, label: "Provider" }
+  pad_id:                  { type: string, label: "Pad" }
+  rocket_configuration_id: { type: string, label: "Rocket configuration" }
+  name:                    { type: string, label: "Mission name" }
+http:
+  method: POST
+  url: "${LAUNCH_CONTROL_URL}/sim/launches"
+  headers:
+    Content-Type: "application/json"
+  body:
+    lsp_id: lsp_id
+    pad_id: pad_id
+    rocket_configuration_id: rocket_configuration_id
+    name: name

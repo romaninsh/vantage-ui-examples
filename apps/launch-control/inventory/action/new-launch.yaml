@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# Toolbar action on the launches page: collect the basics for a simulated
+# launch. rocket_configuration_id is intended as a dependent dropdown
+# (choices filtered by lsp_id / manufacturer_id), but vantage-ui does not
+# yet support choice-filtering between fields — tracked as Task 6. For now,
+# all rocket configurations are shown; the server rejects a mismatch with 400.
+kind: form
+dialog:
+  title: "New simulated launch"
+  description: "Pick the provider, pad and rocket; the server schedules T-1min and fills in the rest live."
+  confirm_label: "Launch simulation"
+form:
+  fields:
+    - name: lsp_id
+      type: string
+      label: "Launch provider"
+      options: "table(\"agencies\").list()"
+      option_value: id
+      option_label: name
+    - name: pad_id
+      type: string
+      label: "Pad"
+      options: "table(\"pads\").list()"
+      option_value: id
+      option_label: name
+    - name: rocket_configuration_id
+      type: string
+      label: "Rocket configuration"
+      required: false
+      options: "table(\"launcher_configurations\").list()"
+      option_value: id
+      option_label: name
+    - name: name
+      type: string
+      label: "Mission name"
+      required: false
