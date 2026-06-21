@@ -19,7 +19,7 @@ use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Response},
-    routing::get,
+    routing::{get, post},
 };
 use ciborium::Value as Cbor;
 use serde_json::{Value, json};
@@ -40,14 +40,51 @@ pub struct AppState {
 }
 
 pub fn router(state: AppState) -> Router {
-    Router::new()
+    // Read API: flaky (random latency + 503s) — the demo's whole point.
+    let api = Router::new()
         .route("/{table}/", get(list))
         .route("/{table}", get(list))
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),
             crate::flaky::middleware,
-        ))
-        .with_state(state)
+        ));
+
+    // Trigger: must be reliable, so it is NOT behind the flaky middleware.
+    let sim = Router::new().route("/sim/launches", post(create_sim_launch));
+
+    Router::new().merge(sim).merge(api).with_state(state)
+}
+
+/// Create a launch from the user's basics, return it, and start a real-time
+/// background mission. Engine knobs (seed/pace) are internal — never from HTTP.
+async fn create_sim_launch(
+    State(state): State<AppState>,
+    Json(input): Json<crate::sim::CreateLaunch>,
+) -> Result<(StatusCode, Json<Value>), ApiError> {
+    let seed: u64 = rand::random();
+    let base = chrono::Utc::now();
+
+    let created = crate::sim::create_launch(&state.db, input, seed, base)
+        .await
+        .map_err(ApiError::from_trigger)?;
+
+    let id = created.ctx.launch_id.clone();
+    let db = state.db.clone();
+    let ctx = created.ctx.clone();
+    let seed = created.seed;
+    tokio::spawn(async move {
+        if let Err(e) =
+            crate::sim::run_mission(db, ctx, seed, crate::sim::mission_phases(), crate::sim::Pace::RealTime)
+                .await
+        {
+            eprintln!("sim: mission failed: {e:#}");
+        }
+    });
+
+    Ok((
+        StatusCode::CREATED,
+        Json(json!({ "id": id, "status": "unscheduled" })),
+    ))
 }
 
 async fn list(
@@ -164,5 +201,90 @@ impl IntoResponse for ApiError {
 impl From<vantage_core::VantageError> for ApiError {
     fn from(e: vantage_core::VantageError) -> Self {
         ApiError(StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    }
+}
+
+impl ApiError {
+    fn from_trigger(e: crate::sim::TriggerError) -> Self {
+        match e {
+            crate::sim::TriggerError::BadRequest(m) => ApiError(StatusCode::BAD_REQUEST, m),
+            crate::sim::TriggerError::Internal(err) => {
+                ApiError(StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+    use tower::ServiceExt; // oneshot
+    use vantage_dataset::prelude::WritableDataSet;
+
+    use super::*;
+    use crate::flaky::FlakyConfig;
+    use crate::model::{Agency, LauncherConfiguration, Pad};
+
+    async fn app() -> Router {
+        let path = tempfile::NamedTempFile::new().unwrap().into_temp_path();
+        let db = crate::db::connect(path.to_str().unwrap()).await.unwrap();
+        crate::db::create_schema(&db).await.unwrap();
+        // Keep the temp file for the test process lifetime.
+        std::mem::forget(path);
+
+        Agency::table(db.clone())
+            .insert("121".to_string(), &Agency { name: "SpaceX".into(), ..Default::default() })
+            .await
+            .unwrap();
+        Pad::table(db.clone())
+            .insert("p1".to_string(), &Pad { name: "LC-39A".into(), ..Default::default() })
+            .await
+            .unwrap();
+        LauncherConfiguration::table(db.clone())
+            .insert(
+                "c1".to_string(),
+                &LauncherConfiguration {
+                    name: "Falcon 9".into(),
+                    manufacturer_id: Some("121".into()),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+
+        router(AppState {
+            db,
+            flaky: FlakyConfig { error_rate: 0.0, latency_min_ms: 0, latency_max_ms: 0 },
+        })
+    }
+
+    fn post(body: &str) -> Request<Body> {
+        Request::builder()
+            .method("POST")
+            .uri("/sim/launches")
+            .header("content-type", "application/json")
+            .body(Body::from(body.to_string()))
+            .unwrap()
+    }
+
+    #[tokio::test]
+    async fn valid_create_returns_201() {
+        let app = app().await;
+        let resp = app
+            .oneshot(post(r#"{"lsp_id":"121","pad_id":"p1","rocket_configuration_id":"c1"}"#))
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::CREATED);
+    }
+
+    #[tokio::test]
+    async fn unknown_pad_returns_400() {
+        let app = app().await;
+        let resp = app
+            .oneshot(post(r#"{"lsp_id":"121","pad_id":"nope"}"#))
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
     }
 }
