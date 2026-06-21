@@ -1,0 +1,25 @@
+# Table: launchers — physical boosters (cores). `status.*` is the belongs-to
+# launcher status; the landing stats are recomputed server-side. `landings`
+# drills into this core's landing attempts via `launcher__id`.
+
+datasource: local
+title: Launchers
+table: "launchers/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: serial_number, type: string, flags: [title, searchable] }
+  - { name: status.name, type: string, flags: [label] }
+  - { name: flight_proven, type: bool }
+  - { name: first_launch_date, type: datetime }
+  - { name: last_launch_date, type: datetime }
+  - { name: details, type: string, flags: [searchable] }
+  - { name: total_landing_count, type: int }
+  - { name: successful_landings, type: int }
+  - { name: failed_landings, type: int }
+
+references:
+  landings:
+    table: landings
+    kind: has_many
+    foreign_key: launcher__id

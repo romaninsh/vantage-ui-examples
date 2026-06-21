@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: cores — list view over `table/cores.yaml`.
+
+title: Cores
+
+elements:
+  - kind: tableview
+    spot: body
+    table: cores
+    params:
+      columns:
+        id: { pin: true, width: 110, label: ID }
+        status:
+          width: 130
+          label: Status
+          color:
+            success: [active]
+            muted: [unknown, inactive, retired]
+            red: [lost, expended]
+        block: { width: 90, label: Block }
+        reuse_count: { width: 110, label: Reuses }
+        rtls_attempts:
+          width: 120
+          label: RTLS attempts
+          tooltip: Return-to-launch-site landing attempts
+        rtls_landings: { width: 120, label: RTLS landings }
+        asds_attempts:
+          width: 120
+          label: ASDS attempts
+          tooltip: Autonomous Spaceport Drone Ship landing attempts
+        asds_landings: { width: 120, label: ASDS landings }
+        water_landing:
+          width: 130
+          label: Water landing
+          color:
+            blue: ["true"]
+          labels:
+            "true": Yes
+            "false": No
+        original_launch: { width: 200, label: Original launch }

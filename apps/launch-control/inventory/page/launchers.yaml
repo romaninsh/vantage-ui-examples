@@ -1,0 +1,8 @@
+# Page: launchers — list with a binder (selecting a row reveals its relation tabs).
+title: Launchers
+layout: binder
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launchers

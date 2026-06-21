@@ -1,0 +1,8 @@
+# Page: payloads — list with a binder (selecting a row reveals its relation tabs).
+title: Payloads
+layout: binder
+
+elements:
+  - kind: tableview
+    spot: body
+    table: payloads

@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Cache Efficiency
+elements:
+  - kind: tableview
+    spot: body
+    table: gh-workflows
+    row_actions:
+      # Runs the scaffold-runs command: discovers this workflow's steps and
+      # generates a dedicated runs table + page (columns = steps), then adds it
+      # to the sidebar. The viewer hot-reloads the new files — no restart.
+      - label: Generate runs table
+        primary: true
+        action: |
+          actions.scaffold_runs(row);

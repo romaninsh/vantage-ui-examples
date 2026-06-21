@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: landpads — list view over `table/landpads.yaml`.
+
+title: Landpads
+
+elements:
+  - kind: tableview
+    spot: body
+    table: landpads
+    params:
+      columns:
+        id: { pin: true, width: 120, label: ID }
+        full_name: { pin: true, width: 280, label: Full name }
+        landing_type:
+          width: 130
+          label: Type
+          color:
+            blue: [ASDS]
+            muted: [RTLS]
+          labels:
+            ASDS: Drone ship
+            RTLS: Return to launch site
+        status:
+          width: 120
+          label: Status
+          color:
+            success: [active]
+            gray: ["under construction"]
+            red: [retired, lost]
+        attempted_landings: { width: 130, label: Attempts }
+        successful_landings: { width: 130, label: Landings }
+        wikipedia: { width: 240, label: Wikipedia }

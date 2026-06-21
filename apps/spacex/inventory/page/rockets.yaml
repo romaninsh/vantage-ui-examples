@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: rockets — list view over `table/rockets.yaml`.
+#
+# Context-menu right-click navigations to other entities are wired in
+# pass 2, once their pages exist.
+
+title: Rockets
+
+elements:
+  - kind: tableview
+    spot: body
+    table: rockets
+    params:
+      columns:
+        id: { pin: true, width: 100, label: ID }
+        name: { pin: true, width: 180, label: Name }
+        type: { width: 130, label: Type }
+        company: { width: 110, label: Company }
+        country: { width: 130, label: Country }
+        active:
+          width: 110
+          label: Active
+          color:
+            success: ["true"]
+            red: ["false"]
+          labels:
+            "true": Active
+            "false": Retired
+        stages: { width: 80, label: Stages }
+        boosters: { width: 90, label: Boosters }
+        cost_per_launch: { width: 160, label: "Cost / launch (USD)" }
+        success_rate_pct: { width: 130, label: "Success rate (%)" }
+        first_flight: { width: 140, label: First flight }
+        description: { width: 480, label: Description }
+        wikipedia:
+          width: 260
+          label: Wikipedia
+          tooltip: "Wikipedia URL — kept as plain text, no in-grid hyperlink."

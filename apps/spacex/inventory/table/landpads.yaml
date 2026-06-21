@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: landpads — ground and drone-ship landing platforms.
+#
+# Note: SpaceX returns landing counts here as strings, not numbers,
+# so we widen `attempted_landings` and `successful_landings` to
+# `string`. Sorting is lexicographic, not numeric — acceptable for
+# small counts.
+#
+# Display hints live on `page/landpads.yaml::elements[].params.columns`.
+
+datasource: spacex
+title: Landpads
+
+has_many:
+  - { table: cores,    foreign_key: landpad_id }
+  - { table: launches, foreign_key: landpad_id }
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: full_name, type: string, flags: [title, searchable] }
+  - { name: landing_type, type: string }
+  - { name: status, type: string }
+  - { name: attempted_landings, type: string }
+  - { name: successful_landings, type: string }
+  - { name: wikipedia, type: string }

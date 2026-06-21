@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+
+# Menu: left — SpaceX project sidebar. Pages are grouped by domain
+# (vehicles, missions, infrastructure). One section per cluster keeps
+# the sidebar scannable as more entities land.
+
+title: SpaceX
+
+items:
+  - section: Vehicles
+    children:
+      - page: rockets
+        label: Rockets
+        icon: Star
+
+      - page: dragons
+        label: Dragons
+        icon: Star
+
+      - page: capsules
+        label: Capsules
+        icon: Inbox
+
+      - page: cores
+        label: Cores
+        icon: Inbox
+
+  - section: Missions
+    children:
+      - page: launches
+        label: Launches
+        icon: ChevronRight
+
+      - page: missions
+        label: Missions
+        icon: Map
+
+      - page: payloads
+        label: Payloads
+        icon: Inbox
+
+  - section: Infrastructure
+    children:
+      - page: ships
+        label: Ships
+        icon: Bot
+
+      - page: landpads
+        label: Landpads
+        icon: Map
+
+      - page: launchpads
+        label: Launchpads
+        icon: Map

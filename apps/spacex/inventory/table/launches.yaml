@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: launches — every Falcon launch SpaceX has ever flown.
+#
+# `mission_id` is a list on the wire (a launch can belong to multiple
+# mission "programs"), so we treat it as a plain string and surface
+# the encoded array verbatim — no cross-entity drill-down on this
+# column without nested-selection adapter support upstream.
+#
+# Display hints live on `page/launches.yaml::elements[].params.columns`.
+
+datasource: spacex
+title: Launches
+
+has_many:
+  # Has-many relations surface as right-click "Open <relation>" entries
+  # in the grid's context menu. SpaceX exposes these as nested objects
+  # rather than flat FKs, so the destination's server-side
+  # `find: { launch_id: "..." }` filter won't actually match anything —
+  # `Backend::open_detail` falls back to an unfiltered destination
+  # Vista (see `connect/mod.rs::open_detail_unfiltered`) so the
+  # navigation still opens the target tab.
+  - { table: missions,  foreign_key: launch_id }
+  - { table: payloads,  foreign_key: launch_id }
+  - { table: ships,     foreign_key: launch_id }
+  - { table: cores,     foreign_key: launch_id }
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: mission_name, type: string, flags: [title, searchable] }
+  - { name: launch_year, type: string }
+  - { name: launch_date_utc, type: datetime }
+  - { name: launch_success, type: bool }
+  - { name: upcoming, type: bool }
+  - { name: is_tentative, type: bool }
+  - { name: mission_id, type: string }
+  - { name: details, type: string, flags: [searchable] }

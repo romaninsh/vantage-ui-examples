@@ -1,0 +1,35 @@
+[package]
+name = "launch-control-server"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Self-hosted, deliberately-flaky Launch Library 2 demo server for the launch-control vantage-ui example"
+
+[dependencies]
+# Vantage data layer (crates.io 0.6.x — no patch; this example ships against published crates).
+vantage-core = "0.6"
+vantage-types = "0.6"
+vantage-table = "0.6"
+vantage-dataset = "0.6"
+vantage-expressions = "0.6"
+vantage-sql = { version = "0.6", features = ["sqlite", "vista"] }
+# REST routes are exposed through the Vista facade (the same surface the
+# api-client UI talks to), not raw Tables.
+vantage-vista = "0.6"
+
+# Async + HTTP server + CLI + (de)serialization
+tokio = { version = "1.52", features = ["full"] }
+axum = "0.8"
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ciborium = "0.2"
+indexmap = "2"
+clap = { version = "4.6", features = ["derive"] }
+anyhow = "1"
+rand = "0.8"
+# `last_updated` timestamps stamped by the launch-replay simulator.
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+
+# Seeder fetches from lldev.
+reqwest = { version = "0.12", features = ["json"] }

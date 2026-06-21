@@ -1,0 +1,25 @@
+# Table: landings — booster landing attempts. The drill target of launches →
+# "landings". `landing_location.*` is the belongs-to landpad (drilled into via
+# its id), `launcher.*` the core. The simulator flips `success` on the outcome.
+
+datasource: local
+title: Landings
+table: "landings/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: launch_id, type: string, flags: [hidden], references: launches }
+  - { name: launch.name, type: string, flags: [title] }
+  - { name: launcher_id, type: string, flags: [hidden], references: launchers }
+  - { name: launcher.serial_number, type: string }
+  - {
+      name: landing_location_id,
+      type: string,
+      flags: [hidden],
+      references: landpads,
+    }
+  - { name: landing_location.name, type: string }
+  - { name: type.name, type: string, flags: [label] }
+  - { name: success, type: bool }
+  - { name: attempt, type: bool }
+  - { name: description, type: string, flags: [searchable] }

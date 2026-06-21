@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: launchpads — list view over `table/launchpads.yaml`.
+
+title: Launchpads
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launchpads
+    params:
+      columns:
+        id: { pin: true, width: 140, label: ID }
+        name: { pin: true, width: 220, label: Name }
+        status:
+          width: 140
+          label: Status
+          color:
+            success: [active]
+            muted: ["under construction", inactive]
+            red: [retired, lost]
+        attempted_launches: { width: 130, label: Attempts }
+        successful_launches: { width: 130, label: Launches }
+        details: { width: 540, label: Details }
+        wikipedia: { width: 240, label: Wikipedia }

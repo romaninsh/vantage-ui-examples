@@ -1,0 +1,4 @@
+# Project-wide settings. A dark, mission-control palette for a live launch board.
+theme:
+  light: Catppuccin Latte
+  dark: Spaceduck

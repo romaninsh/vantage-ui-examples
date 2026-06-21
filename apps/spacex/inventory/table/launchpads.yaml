@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: launchpads — launch complexes (LC-39A, SLC-40, BC, …).
+#
+# Display hints live on `page/launchpads.yaml::elements[].params.columns`.
+
+datasource: spacex
+title: Launchpads
+
+has_many:
+  - { table: launches, foreign_key: launch_site_id }
+  - { table: rockets,  foreign_key: launchpad_id }
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: status, type: string }
+  - { name: attempted_launches, type: int }
+  - { name: successful_launches, type: int }
+  - { name: details, type: string, flags: [searchable] }
+  - { name: wikipedia, type: string }

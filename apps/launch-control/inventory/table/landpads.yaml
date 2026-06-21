@@ -1,0 +1,25 @@
+# Table: landpads — landing locations (ground pads / drone ships). The landing
+# stats are recomputed server-side from our landing data. `landings` drills via
+# `landing_location__id`.
+
+datasource: local
+title: Landpads
+table: "landpads/"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: abbrev, type: string }
+  - { name: celestial_body_name, type: string }
+  - { name: active, type: bool }
+  - { name: latitude, type: float }
+  - { name: longitude, type: float }
+  - { name: total_landing_count, type: int }
+  - { name: successful_landings, type: int }
+  - { name: failed_landings, type: int }
+
+references:
+  landings:
+    table: landings
+    kind: has_many
+    foreign_key: landing_location__id

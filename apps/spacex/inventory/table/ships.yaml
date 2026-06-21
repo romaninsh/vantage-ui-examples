@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: ships — recovery and support vessels (drone ships, fairing
+# catchers, tugs, …). Active fleet members carry the `active: true`
+# flag; retired vessels keep their historical landing counts.
+#
+# Display hints live on `page/ships.yaml::elements[].params.columns`.
+
+datasource: spacex
+title: Ships
+
+has_many:
+  - { table: launches, foreign_key: ship_id }
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: type, type: string, flags: [title] }
+  - { name: home_port, type: string }
+  - { name: active, type: bool }
+  - { name: year_built, type: int }
+  - { name: model, type: string }
+  - { name: successful_landings, type: int }
+  - { name: attempted_landings, type: int }
+  - { name: url, type: string }

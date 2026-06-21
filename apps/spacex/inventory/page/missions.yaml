@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: missions — list view over `table/missions.yaml`.
+
+title: Missions
+
+elements:
+  - kind: tableview
+    spot: body
+    table: missions
+    params:
+      columns:
+        id: { pin: true, width: 100, label: ID }
+        name: { pin: true, width: 220, label: Name }
+        manufacturers: { width: 220, label: Manufacturers }
+        description: { width: 540, label: Description }
+        twitter: { width: 220, label: Twitter }
+        website: { width: 240, label: Website }
+        wikipedia: { width: 240, label: Wikipedia }

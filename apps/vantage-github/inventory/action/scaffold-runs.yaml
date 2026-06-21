@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# Invoked from the Cache Efficiency page as `actions.scaffold_runs(row)`.
+# `${row.x}` is substituted from the clicked workflow row at dispatch time.
+kind: terminal
+# Body text of the dialog (the terminal renderer shows the top-level
+# `description`). `${row.x}` is interpolated here too.
+description: |
+  Pulls this workflow's latest successful run, discovers its steps, and writes
+  a dedicated runs table + page whose columns are those steps (one column per
+  step, each cell the step's duration in seconds). The new page is registered
+  in the sidebar under "Workflow Runs". Click Run to generate it — the viewer
+  hot-reloads the new files, no restart needed.
+dialog:
+  title: "Generate runs table — ${row.name}"
+terminal:
+  # cwd defaults to the inventory root, so the relative command + `--inventory .`
+  # both resolve there (that's where table/, page/ and menu/ live).
+  command: ./scripts/gh-rust-caching-stats
+  args:
+    - scaffold-runs
+    - "${row.id}"
+    - romaninsh/vantage
+    - --name
+    - "${row.name}"
+    - --inventory
+    - "."

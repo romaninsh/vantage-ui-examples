@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: launches — list view over `table/launches.yaml`.
+
+title: Launches
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launches
+    params:
+      columns:
+        id: { pin: true, width: 90, label: ID }
+        mission_name: { pin: true, width: 260, label: Mission }
+        launch_year: { width: 80, label: Year }
+        launch_date_utc: { width: 200, label: "Launch (UTC)" }
+        launch_success:
+          width: 110
+          label: Success
+          color:
+            success: ["true"]
+            red: ["false"]
+          labels:
+            "true": Success
+            "false": Failed
+        upcoming:
+          width: 110
+          label: Upcoming
+          color:
+            blue: ["true"]
+          labels:
+            "true": Upcoming
+            "false": Flown
+        is_tentative:
+          width: 110
+          label: Tentative
+          color:
+            warning: ["true"]
+          labels:
+            "true": Tentative
+            "false": Confirmed
+        mission_id:
+          width: 280
+          label: Mission IDs
+          tooltip: "Wire shape is `[String]` — server returns a list."
+        details: { width: 480, label: Details }

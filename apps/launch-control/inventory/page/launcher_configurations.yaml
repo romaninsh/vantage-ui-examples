@@ -1,0 +1,8 @@
+# Page: launcher_configurations — list with a binder (selecting a row reveals its relation tabs).
+title: Launcher Configurations
+layout: binder
+
+elements:
+  - kind: tableview
+    spot: body
+    table: launcher_configurations

@@ -1,0 +1,19 @@
+# Table: payload_flights — the launch↔payload join. The drill target of
+# launches → "payloads": each payload a launch carried, its destination and
+# amount. Filters by `launch__id` server-side (this server honors it, so no
+# client-filter datasource is needed).
+
+datasource: local
+title: Payload flights
+table: "payload_flights/?mode=detailed"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: launch_id, type: string, flags: [hidden], references: launches }
+  - { name: launch.name, type: string }
+  - { name: payload_id, type: string, flags: [hidden], references: payloads }
+  - { name: payload.name, type: string, flags: [title, searchable] }
+  - { name: payload.type.name, type: string, flags: [label] }
+  - { name: payload.mass, type: float }
+  - { name: destination, type: string }
+  - { name: amount, type: int }

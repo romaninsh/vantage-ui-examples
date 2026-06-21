@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: payloads — list view over `table/payloads.yaml`.
+
+title: Payloads
+
+elements:
+  - kind: tableview
+    spot: body
+    table: payloads
+    params:
+      columns:
+        id: { pin: true, width: 280, label: ID }
+        payload_type:
+          width: 160
+          label: Type
+          color:
+            blue: [Satellite, "Dragon 1.1", "Dragon Boilerplate"]
+            muted: [Lander, "Crew Dragon"]
+        nationality: { width: 140, label: Nationality }
+        manufacturer: { width: 220, label: Manufacturer }
+        customers:
+          width: 240
+          label: Customers
+          tooltip: "Wire shape is `[String]`; list rendered as JSON text."
+        orbit: { width: 110, label: Orbit }
+        payload_mass_kg: { width: 140, label: "Mass (kg)" }
+        reused:
+          width: 100
+          label: Reused
+          color:
+            success: ["true"]
+          labels:
+            "true": Reused
+            "false": "First flight"

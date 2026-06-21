@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+# Table: capsules — Dragon capsule serial numbers (e.g. C201, C108).
+# `status` is the operational state today; `reuse_count` and
+# `landings` are historical totals.
+#
+# Display hints live on `page/capsules.yaml::elements[].params.columns`.
+
+datasource: spacex
+title: Capsules
+
+has_many:
+  - { table: launches, foreign_key: capsule_id }
+  - { table: missions, foreign_key: capsule_id }
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: status, type: string, flags: [title] }
+  - { name: type, type: string, flags: [title] }
+  - { name: reuse_count, type: int }
+  - { name: landings, type: int }
+  - { name: original_launch, type: datetime }

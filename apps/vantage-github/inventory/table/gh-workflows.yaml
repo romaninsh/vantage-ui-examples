@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: gh-stats
+title: Build Pipelines
+columns:
+  - name: id
+    type: int
+    flags: [id]
+  - name: name
+    type: string
+    flags: [title, searchable]
+  - name: state
+    type: string
+  # Filled in lazily by the `workflow-steps` detail pass (augmentation): the step
+  # count and comma-joined step names of the workflow's latest successful run.
+  # The "Generate runs table" row action turns those steps into a dedicated,
+  # per-workflow runs table whose columns ARE the steps.
+  - name: step_count
+    type: int
+  - name: steps
+    type: string
+cmd:
+  # List pass: cheap — one call lists every workflow.
+  rhai: |
+    let out = run(["workflows", "romaninsh/vantage"]);
+    if out.exit_code != 0 { throw out.stderr; }
+    parse_json(out.stdout)
+  # Detail pass (augmentation): discover this workflow's steps from its latest
+  # successful run's jobs[].steps[]. Degrades to an empty list when there's no
+  # usable successful run — the row still hydrates.
+  detail: |
+    let step_count = 0;
+    let steps = "";
+    let out = run(["workflow-steps", id.to_string(), "romaninsh/vantage"]);
+    if out.exit_code == 0 {
+      let sj = parse_json(out.stdout);
+      step_count = sj.step_count;
+      for st in sj.steps {
+        if steps == "" { steps = st.name; } else { steps += ", " + st.name; }
+      }
+    }
+    [#{ "step_count": step_count, "steps": steps }]

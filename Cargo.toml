@@ -1,8 +1,22 @@
 [workspace]
 resolver = "2"
-members = ["test-framework"]
+members = ["test-framework", "apps/launch-control/server"]
 
 [workspace.package]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/romaninsh/vantage-ui-examples"
+
+# DEV-ONLY: local patch so launch-control-server builds against unreleased
+# vantage fixes (vantage-sql `fetch_window` for SQLite + `Pagination::window`).
+# Covers vantage-sql's full path-dep closure so versions stay consistent.
+# Remove once those land on crates.io (vantage-sql 0.6.1, vantage-table 0.6.4).
+[patch.crates-io]
+vantage-core = { path = "../vantage/vantage-core" }
+vantage-types = { path = "../vantage/vantage-types" }
+vantage-types-entity = { path = "../vantage/vantage-types/entity" }
+vantage-expressions = { path = "../vantage/vantage-expressions" }
+vantage-dataset = { path = "../vantage/vantage-dataset" }
+vantage-table = { path = "../vantage/vantage-table" }
+vantage-vista = { path = "../vantage/vantage-vista" }
+vantage-sql = { path = "../vantage/vantage-sql" }

@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=./page-schema-1.json
+
+# Page: ships — list view over `table/ships.yaml`.
+
+title: Ships
+
+elements:
+  - kind: tableview
+    spot: body
+    table: ships
+    params:
+      columns:
+        id: { pin: true, width: 110, label: ID }
+        name: { pin: true, width: 220, label: Name }
+        type: { width: 160, label: Type }
+        home_port: { width: 180, label: Home port }
+        active:
+          width: 100
+          label: Active
+          color:
+            success: ["true"]
+            red: ["false"]
+          labels:
+            "true": Active
+            "false": Retired
+        year_built: { width: 110, label: Year built }
+        model: { width: 140, label: Model }
+        successful_landings: { width: 120, label: Landings }
+        attempted_landings: { width: 120, label: Attempts }
+        url: { width: 240, label: URL }
