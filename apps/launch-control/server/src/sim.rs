@@ -14,8 +14,8 @@
 use std::time::Duration;
 
 use vantage_dataset::prelude::{ReadableDataSet, WritableDataSet};
+use vantage_sql::prelude::SqliteOperation;
 use vantage_sql::sqlite::SqliteDB;
-use vantage_sql::sqlite_expr;
 
 use crate::model::{Landing, Launch, LaunchStatus};
 
@@ -151,7 +151,7 @@ where
 /// Flip this launch's landing rows to a resolved attempt and stamp them.
 async fn resolve_landings(db: &SqliteDB, launch_id: &str, success: bool) -> anyhow::Result<usize> {
     let table = Landing::table(db.clone());
-    let cond = sqlite_expr!("{} = {}", (table["launch_id"]), launch_id);
+    let cond = table["launch_id"].eq(launch_id);
     let table = table.with_condition(cond);
 
     let landings = table.list().await?;
@@ -177,7 +177,7 @@ async fn launch_name(db: &SqliteDB, id: &str) -> anyhow::Result<String> {
 /// none are pending (e.g. after a full loop), fall back to every launch.
 async fn candidate_ids(db: &SqliteDB) -> anyhow::Result<Vec<String>> {
     let table = Launch::table(db.clone());
-    let cond = sqlite_expr!("{} IN ('1', '2', '5', '8')", (table["status_id"]));
+    let cond = table["status_id"].in_list(&["1", "2", "5", "8"]);
     let pending = table.with_condition(cond).list().await?;
     if !pending.is_empty() {
         return Ok(pending.keys().cloned().collect());

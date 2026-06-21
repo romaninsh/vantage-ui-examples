@@ -2,7 +2,7 @@ use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
-use crate::model::aggregates;
+use crate::model::launch::LaunchTableExt;
 use crate::model::{Agency, Launch};
 
 /// A rocket design (e.g. "Falcon 9 Block 5"). Built by a manufacturer (agency);
@@ -46,9 +46,23 @@ impl LauncherConfiguration {
             .with_column_of::<Option<String>>("last_updated")
             .with_one("manufacturer", "manufacturer_id", Agency::table)
             .with_many("launches", "rocket_configuration_id", Launch::table)
-            .with_expression("total_launch_count", aggregates::launch_count)
-            .with_expression("successful_launches", aggregates::successful_launches)
-            .with_expression("failed_launches", aggregates::failed_launches)
-            .with_expression("pending_launches", aggregates::pending_launches)
+            .with_expression("total_launch_count", |t| {
+                t.query_launches().get_count_query()
+            })
+            .with_expression("successful_launches", |t| {
+                t.query_launches().count_successful()
+            })
+            .with_expression("failed_launches", |t| t.query_launches().count_failed())
+            .with_expression("pending_launches", |t| t.query_launches().count_pending())
+    }
+}
+
+trait LauncherConfigurationTableExt {
+    fn query_launches(&self) -> Table<SqliteDB, Launch>;
+}
+
+impl LauncherConfigurationTableExt for Table<SqliteDB, LauncherConfiguration> {
+    fn query_launches(&self) -> Table<SqliteDB, Launch> {
+        self.get_subquery_as("launches").unwrap()
     }
 }

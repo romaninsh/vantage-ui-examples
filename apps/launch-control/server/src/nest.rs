@@ -8,36 +8,9 @@
 //! `mission{orbit{}}`, etc. — matching LL2's detailed shape.
 
 use ciborium::Value as Cbor;
-use serde_json::{Map, Number, Value as Json};
+use serde_json::{Map, Value as Json};
 use vantage_types::Record;
 use vantage_vista::{ReferenceKind, Vista};
-
-/// Convert a single CBOR cell to JSON. Covers the scalar + container shapes our
-/// SQLite rows actually produce; tags unwrap to their inner value.
-pub fn cbor_to_json(v: &Cbor) -> Json {
-    match v {
-        Cbor::Null => Json::Null,
-        Cbor::Bool(b) => Json::Bool(*b),
-        Cbor::Integer(i) => Json::Number(Number::from(i128::from(*i) as i64)),
-        Cbor::Float(f) => Number::from_f64(*f).map(Json::Number).unwrap_or(Json::Null),
-        Cbor::Text(s) => Json::String(s.clone()),
-        Cbor::Bytes(b) => Json::String(format!("<{} bytes>", b.len())),
-        Cbor::Array(a) => Json::Array(a.iter().map(cbor_to_json).collect()),
-        Cbor::Map(m) => Json::Object(
-            m.iter()
-                .map(|(k, val)| {
-                    let key = match k {
-                        Cbor::Text(s) => s.clone(),
-                        other => format!("{other:?}"),
-                    };
-                    (key, cbor_to_json(val))
-                })
-                .collect(),
-        ),
-        Cbor::Tag(_, inner) => cbor_to_json(inner),
-        _ => Json::Null,
-    }
-}
 
 /// Build the JSON object for `row`. With `detailed`, expand `HasOne` references
 /// through `vista.get_ref(..)` (which narrows a fresh Vista to the related row)
@@ -45,7 +18,7 @@ pub fn cbor_to_json(v: &Cbor) -> Json {
 pub async fn row_to_json(vista: &Vista, row: &Record<Cbor>, detailed: bool, depth: u8) -> Json {
     let mut map: Map<String, Json> = row
         .iter()
-        .map(|(k, v)| (k.clone(), cbor_to_json(v)))
+        .map(|(k, v)| (k.clone(), v.deserialized::<Json>().unwrap_or(Json::Null)))
         .collect();
 
     if detailed && depth > 0 {

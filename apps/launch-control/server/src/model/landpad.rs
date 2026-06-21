@@ -2,8 +2,8 @@ use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
-use crate::model::aggregates;
 use crate::model::Landing;
+use crate::model::landing::LandingTableExt;
 
 /// A landing location (ground pad or drone ship). Receives many landings.
 #[entity(SqliteType)]
@@ -32,8 +32,22 @@ impl Landpad {
             .with_column_of::<Option<f64>>("longitude")
             .with_column_of::<Option<String>>("last_updated")
             .with_many("landings", "landing_location_id", Landing::table)
-            .with_expression("total_landing_count", aggregates::landing_count)
-            .with_expression("successful_landings", aggregates::successful_landings)
-            .with_expression("failed_landings", aggregates::failed_landings)
+            .with_expression("total_landing_count", |t| {
+                t.query_landings().get_count_query()
+            })
+            .with_expression("successful_landings", |t| {
+                t.query_landings().count_successful()
+            })
+            .with_expression("failed_landings", |t| t.query_landings().count_failed())
+    }
+}
+
+trait LandpadTableExt {
+    fn query_landings(&self) -> Table<SqliteDB, Landing>;
+}
+
+impl LandpadTableExt for Table<SqliteDB, Landpad> {
+    fn query_landings(&self) -> Table<SqliteDB, Landing> {
+        self.get_subquery_as("landings").unwrap()
     }
 }

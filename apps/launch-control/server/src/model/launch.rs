@@ -1,10 +1,12 @@
+use vantage_expressions::Expression;
+use vantage_sql::sqlite::operation::SqliteOperation;
 use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_sql::sqlite_expr;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
 use crate::model::{
-    Agency, LaunchCrew, LaunchStatus, Landing, LauncherConfiguration, Mission, NetPrecision, Pad,
+    Agency, Landing, LaunchCrew, LaunchStatus, LauncherConfiguration, Mission, NetPrecision, Pad,
     PayloadFlight,
 };
 
@@ -65,16 +67,12 @@ impl Launch {
             .with_many("launch_crew", "launch_id", LaunchCrew::table)
             // Computed aggregates (phase 3) — LL2 stores these denormalized; we don't.
             .with_expression("payload_count", |t| {
-                t.get_subquery_as::<PayloadFlight>("payload_flights")
-                    .unwrap()
-                    .get_count_query()
+                t.query_payload_flights().get_count_query()
             })
-            .with_expression("crew_count", |t| {
-                t.get_subquery_as::<LaunchCrew>("launch_crew")
-                    .unwrap()
-                    .get_count_query()
-            })
+            .with_expression("crew_count", |t| t.query_launch_crew().get_count_query())
             // Two-hop rollup: sum payload mass across this launch's payload flights.
+            // Raw SQL because vantage's correlated subqueries can't express a JOIN
+            // through the junction table cleanly.
             .with_expression("total_payload_mass", |_t| {
                 sqlite_expr!(
                     "(SELECT COALESCE(SUM(p.mass), 0) FROM payload_flights pf \
@@ -82,5 +80,44 @@ impl Launch {
                      WHERE pf.launch_id = launches.id)"
                 )
             })
+    }
+}
+
+/// Launch-side query helpers.
+/// - The `query_*` methods produce correlated subqueries used by Launch's own
+///   computed expressions.
+/// - The `count_*` methods narrow a Launches subquery by status and return its
+///   `COUNT(*)` — used by the launch-count aggregates on agencies, rocket
+///   configurations and pads.
+pub(crate) trait LaunchTableExt {
+    fn query_payload_flights(&self) -> Table<SqliteDB, PayloadFlight>;
+    fn query_launch_crew(&self) -> Table<SqliteDB, LaunchCrew>;
+    fn count_successful(self) -> Expression<AnySqliteType>;
+    fn count_failed(self) -> Expression<AnySqliteType>;
+    fn count_pending(self) -> Expression<AnySqliteType>;
+}
+
+impl LaunchTableExt for Table<SqliteDB, Launch> {
+    fn query_payload_flights(&self) -> Table<SqliteDB, PayloadFlight> {
+        self.get_subquery_as("payload_flights").unwrap()
+    }
+
+    fn query_launch_crew(&self) -> Table<SqliteDB, LaunchCrew> {
+        self.get_subquery_as("launch_crew").unwrap()
+    }
+
+    fn count_successful(self) -> Expression<AnySqliteType> {
+        let cond = self["status_id"].eq("3");
+        self.with_condition(cond).get_count_query()
+    }
+
+    fn count_failed(self) -> Expression<AnySqliteType> {
+        let cond = self["status_id"].in_list(&["4", "7"]);
+        self.with_condition(cond).get_count_query()
+    }
+
+    fn count_pending(self) -> Expression<AnySqliteType> {
+        let cond = self["status_id"].not_in_list(&["3", "4", "7"]);
+        self.with_condition(cond).get_count_query()
     }
 }
