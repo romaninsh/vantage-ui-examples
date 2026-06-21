@@ -1,9 +1,8 @@
 use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
-use vantage_sql::sqlite_expr;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
-use crate::model::Pad;
+use crate::model::{Launch, Pad};
 
 /// A spaceport. Hosts many pads.
 #[entity(SqliteType)]
@@ -35,12 +34,22 @@ impl Location {
             .with_column_of::<Option<String>>("last_updated")
             .with_many("pads", "location_id", Pad::table)
             // Two-hop rollup: launches whose pad sits at this location.
-            .with_expression("total_launch_count", |_t| {
-                sqlite_expr!(
-                    "(SELECT COUNT(*) FROM launches l \
-                     JOIN pads pd ON pd.id = l.pad_id \
-                     WHERE pd.location_id = locations.id)"
-                )
+            .with_expression("total_launch_count", |t| {
+                t.query_launches().get_count_query()
             })
+    }
+}
+
+trait LocationTableExt {
+    fn query_launches(&self) -> Table<SqliteDB, Launch>;
+}
+
+impl LocationTableExt for Table<SqliteDB, Location> {
+    fn query_launches(&self) -> Table<SqliteDB, Launch> {
+        // Location → pads (correlated), then pads → launches (IN subquery).
+        // get_ref_as embeds the pads condition inside the IN subquery,
+        // keeping the location correlation intact.
+        let pads = self.get_subquery_as::<Pad>("pads").unwrap();
+        pads.get_ref_as::<Launch>("launches").unwrap()
     }
 }

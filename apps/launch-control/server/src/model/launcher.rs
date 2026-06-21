@@ -2,7 +2,7 @@ use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
-use crate::model::aggregates;
+use crate::model::landing::LandingTableExt;
 use crate::model::{Landing, LauncherStatus};
 
 /// A physical booster (a "core"), identified by serial number. Accumulates many
@@ -32,8 +32,22 @@ impl Launcher {
             .with_column_of::<Option<String>>("last_updated")
             .with_one("status", "status_id", LauncherStatus::table)
             .with_many("landings", "launcher_id", Landing::table)
-            .with_expression("total_landing_count", aggregates::landing_count)
-            .with_expression("successful_landings", aggregates::successful_landings)
-            .with_expression("failed_landings", aggregates::failed_landings)
+            .with_expression("total_landing_count", |t| {
+                t.query_landings().get_count_query()
+            })
+            .with_expression("successful_landings", |t| {
+                t.query_landings().count_successful()
+            })
+            .with_expression("failed_landings", |t| t.query_landings().count_failed())
+    }
+}
+
+trait LauncherTableExt {
+    fn query_landings(&self) -> Table<SqliteDB, Landing>;
+}
+
+impl LauncherTableExt for Table<SqliteDB, Launcher> {
+    fn query_landings(&self) -> Table<SqliteDB, Landing> {
+        self.get_subquery_as("landings").unwrap()
     }
 }

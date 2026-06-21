@@ -1,0 +1,4 @@
+# Project-wide settings. See the vantage-application-settings skill.
+theme:
+  light: Hybrid Light
+  dark: Hybrid Dark

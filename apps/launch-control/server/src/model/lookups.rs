@@ -55,19 +55,3 @@ named_lookup!(PayloadType, "payload_types");
 named_lookup!(LauncherStatus, "launcher_statuses");
 named_lookup!(AstronautStatus, "astronaut_statuses");
 named_lookup!(AstronautType, "astronaut_types");
-
-#[entity(SqliteType)]
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct Orbit {
-    pub name: String,
-    pub abbrev: String,
-}
-
-impl Orbit {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, Orbit> {
-        Table::new("orbits", db)
-            .with_id_column("id")
-            .with_column_of::<String>("name")
-            .with_column_of::<String>("abbrev")
-    }
-}

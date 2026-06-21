@@ -36,13 +36,39 @@ jobs:
     runs-on: macos-14 # Apple silicon — matches the aarch64 DMG
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      # Lay the two repos out as siblings so the workspace's `../vantage`
+      # patch resolves. DEV-ONLY: launch-control's bundled server builds
+      # against unreleased vantage-sql (`fetch_window` for SQLite), so the
+      # root Cargo.toml [patch.crates-io]'s every vantage crate at ../vantage.
+      # Remove this checkout once those land on crates.io and the patch is
+      # dropped (vantage-sql 0.6.x / vantage-table 0.6.x).
+      - name: Checkout examples
+        uses: actions/checkout@v4
+        with:
+          path: vantage-ui-examples
+
+      - name: Checkout vantage (for the ../vantage workspace patch)
+        uses: actions/checkout@v4
+        with:
+          repository: romaninsh/vantage
+          ref: sqlite-fetch-window
+          path: vantage
 
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: vantage-ui-examples
+
+      # launch-control's BDD needs its bundled REST server; the harness
+      # builds/seeds/serves it itself, but build it up front so the (heavy)
+      # compile is its own cached, legible step.
+      - name: Build launch-control server
+        working-directory: vantage-ui-examples
+        run: cargo build -p launch-control-server
 
       - name: Run BDD suite against all apps
+        working-directory: vantage-ui-examples
         run: cargo run -p test-framework -- --all
         env:
           VANTAGE_UI_VERSION: ${{ inputs.version }}

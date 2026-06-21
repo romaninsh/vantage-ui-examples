@@ -10,7 +10,7 @@ datasource: spacex
 title: Ships
 
 has_many:
-  - { table: launches, foreign_key: ship_id }
+  - { table: launches, foreign_key: ship }
 
 columns:
   - { name: id, type: string, flags: [id] }

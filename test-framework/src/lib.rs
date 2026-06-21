@@ -8,6 +8,8 @@
 //! binary and drives it over MCP. It never links vantage-ui source and must
 //! not use gpui / `TestAppContext` (see `.rules`).
 
+pub mod fake_rest;
+pub mod launch_control;
 pub mod launcher;
 pub mod mcp_client;
 pub mod world;

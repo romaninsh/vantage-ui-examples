@@ -1,9 +1,11 @@
 //! Vantage table models — one entity per file, bakery_model3-style. Each
-//! `Type::table(db)` builds a `Table<SqliteDB, Type>` with its raw columns and
-//! relations, plus computed aggregate expressions (see [`aggregates`]).
+//! `Type::table(db)` builds a `Table<SqliteDB, Type>` with its raw columns,
+//! relations, and computed aggregate expressions (LL2 stores these stats
+//! denormalized; we recompute them inline as correlated subqueries via
+//! `with_expression`). LL2 launch-status ids: 3 = success, 4/7 = failure,
+//! everything else pending.
 
 mod agency;
-mod aggregates;
 mod astronaut;
 mod landing;
 mod landpad;
@@ -14,6 +16,7 @@ mod launcher_configuration;
 mod location;
 mod lookups;
 mod mission;
+mod orbit;
 mod pad;
 mod payload;
 mod payload_flight;
@@ -29,9 +32,10 @@ pub use launcher_configuration::LauncherConfiguration;
 pub use location::Location;
 pub use lookups::{
     AgencyType, AstronautStatus, AstronautType, LandingType, LaunchStatus, LauncherStatus,
-    NetPrecision, Orbit, PayloadType,
+    NetPrecision, PayloadType,
 };
 pub use mission::Mission;
+pub use orbit::Orbit;
 pub use pad::Pad;
 pub use payload::Payload;
 pub use payload_flight::PayloadFlight;

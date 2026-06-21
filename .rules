@@ -1,50 +1,88 @@
-# Agent rules for vantage-ui-examples
+# vantage-ui-examples
 
-Concise guidelines for working in this repo. (A fuller agent skill will come
-later; see todo/agent-skill.md.)
+A public, **black-box** example catalog + **BDD UI test suite** for the closed-source `vantage-ui`
+app. Two jobs: ship runnable example inventories, and prove the published binary opens them clean.
+
+If this file drifts from the repo (new app, new MCP tool, renamed driver), fix it in the same change.
 
 ## What this repo is
-A public, **black-box** example catalog + BDD UI test suite for the
-closed-source `vantage-ui` app.
-- The ONLY way to control the app is its MCP API. Never link or vendor
-  vantage-ui source code. Do NOT add gpui or `TestAppContext` here — those are
-  vantage-ui's in-process tools and cannot drive the published binary.
-- Tests launch the real published binary (path from `$VANTAGE_UI_BIN`) and
-  drive it over MCP (`http://127.0.0.1:14488/mcp`). Today the app exposes only
-  the `list_logs` tool; richer interaction is blocked on new MCP tools (see
-  todo/scenario-features.md).
+
+- The **only** way to control the app is its **MCP API** at `http://127.0.0.1:14488/mcp`. Today the
+  app exposes a single tool, **`list_logs`** — richer interaction is blocked on new MCP tools
+  (tracked in `todo/scenario-features.md`).
+- **Strictly black-box.** Never vendor vantage-ui source. Never add `gpui` or `TestAppContext` here —
+  those are vantage-ui's in-process tools and can't drive a published binary.
+- Tests launch the **real published binary**, resolved by the launcher in this order: `$VANTAGE_UI_BIN`
+  → download+cache from S3 (`https://vantage-releases.s3.eu-west-2.amazonaws.com`, cached under
+  `~/.cache/vantage-ui/`) → local `../vantage-ui` release build.
 
 ## Layout contract
-- `test-framework/` — the reusable engine (`src/{world,launcher,mcp_client}.rs`,
-  in the lib) plus the `vantage-ui-test` driver binary and the shared steps
-  (`src/steps/`, in the binary). Shared `*.feature` live in
-  `test-framework/features/common/`.
-- `apps/<name>/` — one self-contained example app: `inventory/` (the YAML
-  catalog), `tests/` (app-specific `*.feature`), `README.md`, optional `docs/`.
-- Shared steps and common features live in the framework — never copy them per
-  app.
+
+- `test-framework/` — the reusable engine: `src/{world,launcher,mcp_client}.rs` (lib), the
+  **`vantage-ui-test`** driver binary, and the shared steps in `src/steps/`. Shared `*.feature` live
+  in `test-framework/features/common/` (currently just `startup.feature`). Never copy shared steps
+  per app.
+- `apps/<name>/` — one self-contained example: `inventory/` (the YAML catalog), `tests/`
+  (app-specific `*.feature`), `README.md`, optional `docs/`.
+
+## The example apps
+
+- **`apps/bakery/`** — CSV-backed, **offline-clean** (no network on startup). The reference app.
+- **`apps/spacex/`** — GraphQL against the public SpaceX API; **intentionally not offline-clean**
+  (its README says so) — it exercises a live remote datasource.
+- **`apps/vantage-github/`** — **self-mutating inventory**: `kind: terminal` actions run `gh` and
+  generate/commit inventory files that hot-reload (not ephemeral); uses `chart_type: stacked_area`.
+
+## Inventory layout
+
+`inventory/` holds `datasource/`, `table/`, `page/`, `menu/`, and `action/` YAML (the `action/`
+subdir defines row/page actions — all three apps use it now).
 
 ## Adding an app
-1. Create `apps/<name>/inventory/` with `datasource/ table/ page/ menu/` YAML.
-2. Keep it **offline-clean**: launching must log no ERROR. Prefer a CSV
-   datasource (it opens no connection at startup) or a committed, seeded SQLite
-   file. A datasource pointing at an unreachable DB logs an ERROR and fails the
-   startup test.
-3. Add a `README.md`. The shared startup check runs automatically; add
-   `tests/*.feature` only for app-specific behavior.
+
+1. Create `apps/<name>/inventory/` with the YAML folders above.
+2. Keep it **offline-clean** unless the app is explicitly about a remote source: launching must log no
+   ERROR. Prefer a CSV datasource (opens no connection at startup) or a committed, seeded SQLite file.
+   A datasource pointing at an unreachable DB logs ERROR and fails the startup test.
+3. Add a `README.md`. The shared startup check runs automatically; add `tests/*.feature` only for
+   app-specific behaviour.
 
 ## Adding a scenario
-- Reuse existing steps; add a new step only when none fits. Keep gherkin
-  declarative — put logic in step functions, not the feature text.
+
+- Reuse existing steps; add a new step only when none fits. Keep gherkin declarative — logic goes in
+  step functions, not feature text.
 - Tag not-yet-runnable scenarios `@wip`; the driver filters them out.
+- Readiness is signalled by the logs, not the clock: wait for the catalog's `"loaded folder"` INFO
+  lines (one per inventory folder kind) — **don't depend on wall-clock timing.**
 
 ## Running & quality
-- `cargo run -p test-framework -- apps/<name>` (single) or `-- --all`.
-- Set `$VANTAGE_UI_BIN`, or build `../vantage-ui` with `cargo build --release`.
+
+- `cargo run -p test-framework -- apps/<name>` (one app) or `-- --all`.
+- Set `$VANTAGE_UI_BIN`, or build `../vantage-ui` with `cargo build --release`. The driver sets
+  `$VANTAGE_APP_INVENTORY` and `$VANTAGE_MCP_ADDR` for the launched binary.
 - Keep `cargo fmt` and `cargo clippy` clean.
-- Pin `rmcp` to the exact version vantage-ui's server uses (wire compat).
-- Don't depend on wall-clock timing — poll the MCP logs for readiness.
+- Pin `rmcp` to the **exact** version vantage-ui's MCP server uses (wire compat) — currently
+  `=1.7.0`.
+
+## CI
+
+- `.github/workflows/bdd.yaml` — reusable workflow (`workflow_call`) taking `channel` + `version`,
+  resolving the binary from S3 and running the suite.
+- `bdd-nightly.yaml` / `bdd-stable.yaml` — thin wrappers **dispatched by vantage-ui's nightly and
+  release pipelines** after a build publishes. Fire-and-forget; vantage-ui doesn't block its release
+  on them. Free CI minutes (public repo).
 
 ## Scope discipline
-Capture out-of-scope-but-needed work in `todo/*.md`; don't silently expand
-scope or park unscoped work in code comments.
+
+Capture out-of-scope-but-needed work in `todo/*.md`; don't silently expand scope or park unscoped
+work in code comments. Commits: single-line, imperative; no `Co-Authored-By: Claude` trailer.
+
+## Related repos
+
+Checked out alongside this one under `~/Work/` — each has its own `.rules`:
+
+- **`vantage-ui`** — the app under test (private repo). New MCP tools / YAML features land there
+  first; this repo's scenarios follow. Its release pipeline dispatches this repo's `bdd-*.yaml`.
+- **`vantage`** — the data-layer crates (`vantage-*`) the example inventories run against.
+- **`vantage-terraform`** — owns the `vantage-releases` bucket the launcher pulls binaries from.
+- **`vantage-web2`** — the marketing site; mirrors this repo's examples catalog.

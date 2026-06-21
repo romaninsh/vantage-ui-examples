@@ -8,7 +8,7 @@ datasource: spacex
 title: Launchpads
 
 has_many:
-  - { table: launches, foreign_key: launch_site_id }
+  - { table: launches, foreign_key: site_id }
   - { table: rockets,  foreign_key: launchpad_id }
 
 columns:

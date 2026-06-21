@@ -1,8 +1,10 @@
+use vantage_expressions::Expression;
+use vantage_sql::sqlite::operation::SqliteOperation;
 use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
-use crate::model::{Landpad, Launch, Launcher, LandingType};
+use crate::model::{LandingType, Landpad, Launch, Launcher};
 
 /// A booster landing attempt for a launch. `success` is null until the attempt
 /// resolves — the simulator flips it during a replay.
@@ -35,5 +37,24 @@ impl Landing {
             .with_one("launcher", "launcher_id", Launcher::table)
             .with_one("landing_location", "landing_location_id", Landpad::table)
             .with_one("type", "type_id", LandingType::table)
+    }
+}
+
+/// Landing-side query helper, parallel to [`LaunchTableExt`]: narrow a
+/// landings subquery by outcome and return its `COUNT(*)` expression.
+pub(crate) trait LandingTableExt {
+    fn count_successful(self) -> Expression<AnySqliteType>;
+    fn count_failed(self) -> Expression<AnySqliteType>;
+}
+
+impl LandingTableExt for Table<SqliteDB, Landing> {
+    fn count_successful(self) -> Expression<AnySqliteType> {
+        let cond = self["success"].eq(true);
+        self.with_condition(cond).get_count_query()
+    }
+
+    fn count_failed(self) -> Expression<AnySqliteType> {
+        let cond = self["success"].eq(false);
+        self.with_condition(cond).get_count_query()
     }
 }

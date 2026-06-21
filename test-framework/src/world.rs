@@ -6,8 +6,10 @@ use std::time::{Duration, Instant};
 
 use cucumber::World;
 
+use crate::fake_rest;
+use crate::launch_control;
 use crate::launcher::{self, AppProcess};
-use crate::mcp_client::{LogEntry, McpClient};
+use crate::mcp_client::{DataModel, LogEntry, McpClient};
 
 /// Env var the driver sets per-app; the launch step reads the inventory
 /// path from here so the shared gherkin step needs no path argument.
@@ -18,6 +20,10 @@ pub const INVENTORY_ENV: &str = "VANTAGE_APP_INVENTORY";
 pub struct VantageWorld {
     pub app: Option<AppProcess>,
     pub mcp: Option<McpClient>,
+    /// Last successful `run_data_script` result (the `Then` steps assert on it).
+    pub last: Option<serde_json::Value>,
+    /// Last `run_data_script` error message (for the "fails with" steps).
+    pub last_error: Option<String>,
 }
 
 impl std::fmt::Debug for VantageWorld {
@@ -31,10 +37,67 @@ impl std::fmt::Debug for VantageWorld {
 
 impl VantageWorld {
     async fn new() -> Self {
+        // Bring up the canned LL2 backend before any app launches, so the
+        // mock app's datasources resolve and the shared startup scenario's
+        // "no errors" check passes. Idempotent across scenarios.
+        fake_rest::ensure_started().await;
+        // launch-control is the one app with a real bundled REST server it
+        // can't run without; build/seed/serve it (only for that app, to avoid
+        // a needless build + port bind for everyone else).
+        if Self::inventory_is_launch_control() {
+            launch_control::ensure_started().await;
+        }
         Self {
             app: None,
             mcp: None,
+            last: None,
+            last_error: None,
         }
+    }
+
+    fn mcp(&self) -> &McpClient {
+        self.mcp.as_ref().expect("mcp not connected")
+    }
+
+    /// Poll `list_models` until it reports at least one model (the catalog's
+    /// resolver is published when the first page builds, slightly after the
+    /// catalog folders load) — or panic after `timeout`.
+    pub async fn wait_for_data_tools(&self, timeout: Duration) {
+        let deadline = Instant::now() + timeout;
+        loop {
+            if let Ok(models) = self.mcp().list_models().await {
+                if !models.is_empty() {
+                    return;
+                }
+            }
+            if Instant::now() >= deadline {
+                panic!("data tools not ready (list_models stayed empty) within {timeout:?}");
+            }
+            tokio::time::sleep(Duration::from_millis(150)).await;
+        }
+    }
+
+    pub async fn models(&self) -> Vec<DataModel> {
+        self.mcp().list_models().await.expect("list_models")
+    }
+
+    /// Run a data script, recording the result in `last` (on success) or the
+    /// error text in `last_error` (on failure). Both are cleared first.
+    pub async fn run_script(&mut self, script: &str, mode: &str, limit: Option<u32>) {
+        self.last = None;
+        self.last_error = None;
+        match self.mcp().run_data_script(script, mode, limit).await {
+            Ok(v) => self.last = Some(v),
+            Err(e) => self.last_error = Some(format!("{e:#}")),
+        }
+    }
+
+    /// `true` when the app the driver selected for this scenario is
+    /// launch-control (its inventory path lives under `apps/launch-control`).
+    fn inventory_is_launch_control() -> bool {
+        std::env::var(INVENTORY_ENV)
+            .map(|p| p.contains("launch-control"))
+            .unwrap_or(false)
     }
 
     /// The inventory to launch, taken from `$VANTAGE_APP_INVENTORY`.
