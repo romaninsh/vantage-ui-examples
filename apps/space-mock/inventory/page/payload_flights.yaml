@@ -1,7 +1,0 @@
-title: Payload flights
-
-elements:
-  - kind: tableview
-    spot: body
-    table: payload_flights
-    params: {}

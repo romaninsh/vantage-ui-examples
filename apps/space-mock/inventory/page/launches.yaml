@@ -1,7 +1,0 @@
-title: Launches
-
-elements:
-  - kind: tableview
-    spot: body
-    table: launches
-    params: {}

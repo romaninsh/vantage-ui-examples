@@ -11,6 +11,7 @@
 
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
+use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
 use tokio::process::{Child, Command};
@@ -224,6 +225,15 @@ impl AppProcess {
     /// readiness lines are captured.
     pub fn spawn(inventory: &str) -> Result<Self> {
         let bin = resolve_binary()?;
+
+        // Each scenario relaunches the app against the same inventory. A prior
+        // instance killed mid-write (we SIGKILL on Drop) can leave a
+        // half-written redb in the generated `.cache/`, which the next launch
+        // fails to open ("Failed to open redb cache: invalid data") and logs as
+        // an ERROR — tripping the "no error log entries" check. Start every
+        // launch from a clean generated cache so scenarios are hermetic.
+        let _ = std::fs::remove_dir_all(Path::new(inventory).join(".cache"));
+
         let child = Command::new(&bin)
             .arg(inventory)
             .env("VANTAGE_MCP_ADDR", mcp_addr())
@@ -244,6 +254,19 @@ impl AppProcess {
 
 impl Drop for AppProcess {
     fn drop(&mut self) {
+        // Kill AND reap before returning. Cucumber runs scenarios serially and
+        // each gets a fresh app, so the next launch happens right after this
+        // Drop. A bare async `start_kill` leaves the dying process briefly
+        // holding the fixed MCP port (14488) and the inventory's redb cache
+        // handle — the next app then either can't bind MCP (so the client talks
+        // to the dying instance and `call_tool` fails mid-scenario) or reads a
+        // half-written redb. Blocking until the OS reaps it releases both.
         let _ = self.child.start_kill();
+        for _ in 0..200 {
+            match self.child.try_wait() {
+                Ok(Some(_)) | Err(_) => return,
+                Ok(None) => std::thread::sleep(Duration::from_millis(10)),
+            }
+        }
     }
 }
