@@ -14,7 +14,10 @@ params:
   name:                    { type: string, label: "Mission name" }
 http:
   method: POST
-  url: "${LAUNCH_CONTROL_URL}/sim/launches"
+  # The bundled server's fixed local address (matches datasource/local.yaml).
+  # Hardcoded rather than ${ENV} because http_request errors on an unset var,
+  # and this demo's server is always at 127.0.0.1:8080.
+  url: "http://127.0.0.1:8080/sim/launches"
   headers:
     Content-Type: "application/json"
   body:

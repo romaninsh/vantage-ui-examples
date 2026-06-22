@@ -16,7 +16,17 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: write  # publish the rolling release
+  id-token: write  # OIDC into the site-bucket uploader role
+
+# Serve archives from the site bucket: the vantage:// installer only trusts
+# vantage-ui.com, so https://vantage-ui.com/examples/<slug>.zip is the canonical
+# install URL. Same OIDC role the website deploy uses (site_deployer policy).
+env:
+  AWS_REGION: eu-west-2
+  AWS_ROLE_ARN: arn:aws:iam::578465001751:role/vantage-demo-release-uploader
+  SITE_BUCKET: vantage-ui.com
+  CF_DISTRIBUTION_ID: E18KQTM4QLF7KJ
 
 jobs:
   build:
@@ -41,3 +51,19 @@ jobs:
           name: Example archives (latest)
           body: "Per-example `.zip` archives for the vantage:// one-click installer. Rebuilt on every push to main."
           files: dist/*.zip
+
+      # ---------- Serve archives from the site bucket ----------
+      # The website's S3 sync excludes examples/*.zip, so these survive a deploy.
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Publish archives to site bucket
+        run: |
+          set -euo pipefail
+          aws s3 cp dist/ "s3://${SITE_BUCKET}/examples/" \
+            --recursive --exclude '*' --include '*.zip' \
+            --content-type application/zip --cache-control "max-age=300"
+          aws cloudfront create-invalidation \
+            --distribution-id "${CF_DISTRIBUTION_ID}" --paths '/examples/*.zip'
