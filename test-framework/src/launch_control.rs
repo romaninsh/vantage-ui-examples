@@ -7,9 +7,9 @@
 //! shared `startup.feature` "no errors" check — and the data-tool scenarios —
 //! would fail without it.
 //!
-//! We start it deterministically (`--no-sim --error-rate 0`): no background
-//! launch-replay mutating rows and no injected 503s, so `run_data_script`
-//! `direct` reads are stable and startup stays error-free. The DB is gitignored,
+//! We start it deterministically (`--error-rate 0`): no injected 503s, so
+//! `run_data_script` `direct` reads are stable and startup stays error-free.
+//! The DB is gitignored,
 //! so we seed it from the committed fixtures first (offline — no `--refetch`).
 //!
 //! Idempotent and cheap to call from every `World::new`: if something is already
@@ -85,11 +85,10 @@ async fn start() -> Result<()> {
 
     // 3. Serve deterministically. Detached: the harness reuses it across
     //    scenarios and the OS reaps it when the test process exits.
-    eprintln!("starting launch-control server on :{PORT} (no-sim, error-rate 0)…");
+    eprintln!("starting launch-control server on :{PORT} (error-rate 0)…");
     Command::new(SERVER_BIN)
         .args([
             "serve",
-            "--no-sim",
             "--error-rate",
             "0",
             "--port",

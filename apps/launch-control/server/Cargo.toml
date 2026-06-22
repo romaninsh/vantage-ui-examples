@@ -28,8 +28,12 @@ indexmap = "2"
 clap = { version = "4.6", features = ["derive"] }
 anyhow = "1"
 rand = "0.8"
-# `last_updated` timestamps stamped by the launch-replay simulator.
+# `last_updated` timestamps stamped by the mission simulator.
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 # Seeder fetches from lldev.
 reqwest = { version = "0.12", features = ["json"] }
+
+[dev-dependencies]
+tempfile = "3"
+tower = { version = "0.5", features = ["util"] }

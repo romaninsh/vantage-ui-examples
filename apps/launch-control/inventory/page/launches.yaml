@@ -11,9 +11,15 @@ title: Launches
 layout: binder
 
 elements:
-  - kind: tableview
+  - kind: crud
     spot: body
     table: launches
+    toolbar:
+      - label: "New simulated launch"
+        icon: Play
+        action: |
+          let r = actions.new_launch();
+          actions.submit_launch(r.lsp_id, r.pad_id, r.rocket_configuration_id, r.name);
     params:
       # Ordering is done server-side in table/launches.yaml (the api-client
       # treats columns as non-orderable, so a client-side default_sort no-ops).

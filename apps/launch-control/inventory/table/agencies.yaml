@@ -19,6 +19,9 @@ columns:
   - { name: successful_launches, type: int }
   - { name: failed_launches, type: int }
   - { name: pending_launches, type: int }
+  # Computed server-side ("true"/"false"): does this agency manufacture any
+  # launcher configuration? Used to filter the new-launch provider dropdown.
+  - { name: has_rockets, type: string }
 
 references:
   launches:
