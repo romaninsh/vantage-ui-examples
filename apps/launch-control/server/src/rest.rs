@@ -61,22 +61,16 @@ async fn create_sim_launch(
     State(state): State<AppState>,
     Json(input): Json<crate::sim::CreateLaunch>,
 ) -> Result<(StatusCode, Json<Value>), ApiError> {
-    let seed: u64 = rand::random();
-    let base = chrono::Utc::now();
-
-    let created = crate::sim::create_launch(&state.db, input, seed, base)
+    // Create synchronously so the response carries the new id, then drive the
+    // ~1-minute human-churn mission in the background.
+    let id = crate::sim::create_launch(&state.db, input)
         .await
         .map_err(ApiError::from_trigger)?;
 
-    let id = created.ctx.launch_id.clone();
     let db = state.db.clone();
-    let ctx = created.ctx.clone();
-    let seed = created.seed;
+    let mission_id = id.clone();
     tokio::spawn(async move {
-        if let Err(e) =
-            crate::sim::run_mission(db, ctx, seed, crate::sim::mission_phases(), crate::sim::Pace::RealTime)
-                .await
-        {
+        if let Err(e) = crate::sim::run(&db, &mission_id, crate::sim::Pace::RealTime).await {
             eprintln!("sim: mission failed: {e:#}");
         }
     });

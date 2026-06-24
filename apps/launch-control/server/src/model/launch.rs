@@ -1,3 +1,4 @@
+use vantage_dataset::prelude::InsertableDataSet;
 use vantage_expressions::Expression;
 use vantage_sql::sqlite::operation::SqliteOperation;
 use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
@@ -83,13 +84,25 @@ impl Launch {
     }
 }
 
+/// The few fields a launch is born with; the rest are populated by the mission
+/// simulator over its lifetime. Maps from the `POST /sim/launches` body.
+pub(crate) struct NewLaunch {
+    pub name: String,
+    pub lsp_id: Option<String>,
+    pub pad_id: Option<String>,
+    pub rocket_configuration_id: Option<String>,
+}
+
 /// Launch-side query helpers.
+/// - `new_launch` is the domain create verb: insert an unscheduled launch and
+///   return its generated id.
 /// - The `query_*` methods produce correlated subqueries used by Launch's own
 ///   computed expressions.
 /// - The `count_*` methods narrow a Launches subquery by status and return its
 ///   `COUNT(*)` — used by the launch-count aggregates on agencies, rocket
 ///   configurations and pads.
 pub(crate) trait LaunchTableExt {
+    async fn new_launch(&self, args: NewLaunch) -> anyhow::Result<String>;
     fn query_payload_flights(&self) -> Table<SqliteDB, PayloadFlight>;
     fn query_launch_crew(&self) -> Table<SqliteDB, LaunchCrew>;
     fn count_successful(self) -> Expression<AnySqliteType>;
@@ -98,6 +111,20 @@ pub(crate) trait LaunchTableExt {
 }
 
 impl LaunchTableExt for Table<SqliteDB, Launch> {
+    async fn new_launch(&self, args: NewLaunch) -> anyhow::Result<String> {
+        let launch = Launch {
+            name: args.name,
+            status_id: Some("2".into()), // To Be Determined
+            lsp_id: args.lsp_id,
+            pad_id: args.pad_id,
+            rocket_configuration_id: args.rocket_configuration_id,
+            last_updated: Some(now_ll2()),
+            ..Default::default()
+        };
+        let id = self.insert_return_id(&launch).await?;
+        Ok(id)
+    }
+
     fn query_payload_flights(&self) -> Table<SqliteDB, PayloadFlight> {
         self.get_subquery_as("payload_flights").unwrap()
     }
@@ -120,4 +147,9 @@ impl LaunchTableExt for Table<SqliteDB, Launch> {
         let cond = self["status_id"].not_in_list(&["3", "4", "7"]);
         self.with_condition(cond).get_count_query()
     }
+}
+
+/// Current time in LL2's `last_updated` format, e.g. `2026-06-21T12:00:00Z`.
+fn now_ll2() -> String {
+    chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string()
 }
