@@ -1,0 +1,167 @@
+# View: launch_summary — the binder's custom "Summary" tab for a launch.
+#
+# A read-only widget tree bound to the selected launch (`record`), laid out as a
+# two-column dashboard. The left column carries status + a countdown that swaps
+# to live ascent telemetry once the launch lifts off; the right column lists the
+# crew and payloads (`get_ref` traversals). Everything live-refreshes off scenery
+# while the simulator drives the mission. Any node that fails renders an inline
+# error chip without breaking the rest of the view.
+# yaml-language-server: $schema=./view-schema-1.json
+
+title: Summary
+table: launches
+
+body:
+  # Header: name + current status.
+  - kind: row
+    gap: 8
+    children:
+      - kind: label
+        text: "${record.name}"
+        style: heading
+      - kind: badge
+        text: "${record.status.name}"
+        color:
+          green: ["Go for Launch", "Launch Successful"]
+          yellow:
+            [
+              "Launch in Flight",
+              "To Be Confirmed",
+              "To Be Determined",
+              "On Hold",
+            ]
+          red: ["Launch Failure", "Launch was a Partial Failure"]
+
+  - kind: label
+    text: "${record.rocket_configuration.full_name}"
+    secondary: "${record.pad.name}"
+    style: muted
+
+  # Two even columns: flight status on the left, manifest on the right.
+  - kind: row
+    gap: 24
+    children:
+      - kind: column
+        grow: true
+        gap: 12
+        children:
+          - kind: progress
+            label: "Launch probability"
+            value: "${record.probability}"
+            color: green
+
+          # Before launch: count down to the scheduled liftoff (T-0).
+          - kind: when
+            condition: 'record.phase == "countdown"'
+            children:
+              - kind: separator
+                label: "Countdown"
+              # Time-driven, so it ticks once a second; the rest of the view
+              # repaints only when its data changes.
+              - kind: countdown
+                target: "${record.net}"
+                label: "Liftoff in"
+                repaint: 1hz
+
+          # After launch: live ascent telemetry (only once actually flying — a
+          # never-launched record has no phase and shows neither block).
+          #
+          # The simulator stamps telemetry every ~2s; between samples each readout
+          # projects forward from the *last* telemetry — velocity from
+          # `acceleration_ms2`, altitude/downrange from the per-axis speed rates.
+          # `secs_since(record.last_updated)` is wall seconds since that sample;
+          # ×15 converts to MET (30 MET-s per 2s wall tick). The frontend is
+          # deliberately dumb: it just keeps projecting whatever it last saw, and
+          # the server's next sample snaps it back to reality — so a MECO or a
+          # lagged update needs no special client logic. The `latency` readout
+          # surfaces that lag (≈1s normally; higher if the server falls behind).
+          # Projection runs in `ascent`; `orbit` freezes the values.
+          - kind: when
+            condition: 'record.phase == "ascent" || record.phase == "orbit"'
+            children:
+              - kind: separator
+                label: "Telemetry"
+              # `repaint: 30hz` on the row ticks the whole telemetry subtree (the
+              # timer fires while this row is visible, re-evaluating every readout
+              # — including the sibling progress bars, which the view repaints with
+              # it). The readouts themselves just declare their formula.
+              - kind: row
+                gap: 16
+                repaint: 3hz
+                children:
+                  - kind: stat
+                    label: "Altitude"
+                    value: '${ if record.phase != "ascent" { record.altitude_km } else { record.altitude_km + record.vertical_speed_ms / 1000.0 * secs_since(record.last_updated) * 15.0 } }'
+                    unit: km
+                  - kind: stat
+                    label: "Velocity"
+                    value: '${ if record.phase != "ascent" { record.velocity_ms } else { record.velocity_ms + record.acceleration_ms2 * secs_since(record.last_updated) * 15.0 } }'
+                    unit: m/s
+                  - kind: stat
+                    label: "Acceleration"
+                    value: "${record.acceleration_ms2}"
+                    unit: m/s²
+                  - kind: stat
+                    label: "Downrange"
+                    value: '${ if record.phase != "ascent" { record.downrange_km } else { record.downrange_km + record.ground_speed_ms / 1000.0 * secs_since(record.last_updated) * 15.0 } }'
+                    unit: km
+                  - kind: stat
+                    label: "MET"
+                    value: '${ if record.phase != "ascent" { record.met_seconds } else { round(record.met_seconds.to_float() + secs_since(record.last_updated) * 15.0) } }'
+                    unit: s
+                  # Seconds since the last server telemetry — ≈1s when healthy,
+                  # climbing if the server lags behind the 30hz client.
+                  - kind: stat
+                    label: "Latency"
+                    value: "${ round(secs_since(record.last_updated), 1) }"
+                    unit: s
+              - kind: progress
+                label: "Altitude to orbit (200 km)"
+                value: '${ if record.phase != "ascent" { record.altitude_km } else { record.altitude_km + record.vertical_speed_ms / 1000.0 * secs_since(record.last_updated) * 15.0 } }'
+                max: "200"
+                color: blue
+              - kind: progress
+                label: "Velocity to orbital (6.1 km/s)"
+                value: '${ if record.phase != "ascent" { record.velocity_ms } else { record.velocity_ms + record.acceleration_ms2 * secs_since(record.last_updated) * 15.0 } }'
+                max: "6100"
+                color: cyan
+
+      - kind: column
+        grow: true
+        gap: 12
+        children:
+          - kind: stat
+            label: "Total payload"
+            value: '${unit(record.total_payload_mass, "kg")}'
+
+          - kind: separator
+            label: "Crew"
+          # Fixed row height → the list caches its paint and repaints only when
+          # crew changes, not when the surrounding view ticks the countdown.
+          - kind: list
+            ref: crew
+            height: 32
+            empty: "No crew assigned yet"
+            item:
+              - kind: label
+                text: "${row.astronaut.name}"
+              - kind: badge
+                text: "${row.role}"
+
+          - kind: separator
+            label: "Payloads"
+          # Taller rows: each payload shows a name plus a destination/mass stat.
+          - kind: list
+            ref: payloads
+            height: 48
+            empty: "No payloads yet"
+            item:
+              - kind: label
+                text: "${row.payload.name}"
+              - kind: stat
+                label: "${row.destination}"
+                value: '${unit(row.payload.mass, "kg")}'
+
+  - kind: label
+    text: "Created ${record.created_at}"
+    style: muted

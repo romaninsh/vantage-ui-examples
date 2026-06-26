@@ -66,12 +66,14 @@ async fn create_sim_launch(
     let id = crate::sim::create_launch(&state.db, input)
         .await
         .map_err(ApiError::from_trigger)?;
+    println!("sim: created launch id={id}; starting mission");
 
     let db = state.db.clone();
     let mission_id = id.clone();
     tokio::spawn(async move {
-        if let Err(e) = crate::sim::run(&db, &mission_id, crate::sim::Pace::RealTime).await {
-            eprintln!("sim: mission failed: {e:#}");
+        match crate::sim::run(&db, &mission_id, crate::sim::Pace::RealTime).await {
+            Ok(()) => println!("sim: mission complete id={mission_id}"),
+            Err(e) => eprintln!("sim: mission failed id={mission_id}: {e:#}"),
         }
     });
 
@@ -178,7 +180,10 @@ fn to_column(param: &str) -> String {
 }
 
 fn is_reserved(key: &str) -> bool {
-    matches!(key, "mode" | "limit" | "offset" | "ordering" | "search" | "format")
+    matches!(
+        key,
+        "mode" | "limit" | "offset" | "ordering" | "search" | "format"
+    )
 }
 
 fn parse(params: &HashMap<String, String>, key: &str) -> Option<usize> {
@@ -230,11 +235,23 @@ mod tests {
         std::mem::forget(path);
 
         Agency::table(db.clone())
-            .insert("121".to_string(), &Agency { name: "SpaceX".into(), ..Default::default() })
+            .insert(
+                "121".to_string(),
+                &Agency {
+                    name: "SpaceX".into(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         Pad::table(db.clone())
-            .insert("p1".to_string(), &Pad { name: "LC-39A".into(), ..Default::default() })
+            .insert(
+                "p1".to_string(),
+                &Pad {
+                    name: "LC-39A".into(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         LauncherConfiguration::table(db.clone())
@@ -251,7 +268,11 @@ mod tests {
 
         router(AppState {
             db,
-            flaky: FlakyConfig { error_rate: 0.0, latency_min_ms: 0, latency_max_ms: 0 },
+            flaky: FlakyConfig {
+                error_rate: 0.0,
+                latency_min_ms: 0,
+                latency_max_ms: 0,
+            },
         })
     }
 
@@ -268,7 +289,9 @@ mod tests {
     async fn valid_create_returns_201() {
         let app = app().await;
         let resp = app
-            .oneshot(post(r#"{"lsp_id":"121","pad_id":"p1","rocket_configuration_id":"c1"}"#))
+            .oneshot(post(
+                r#"{"lsp_id":"121","pad_id":"p1","rocket_configuration_id":"c1"}"#,
+            ))
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::CREATED);

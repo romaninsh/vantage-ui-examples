@@ -18,10 +18,23 @@ pub async fn connect(path: &str) -> Result<SqliteDB> {
     Ok(SqliteDB::connect(&url).await?)
 }
 
-/// Create every table if it does not already exist.
+/// Create every table if it does not already exist, then apply additive
+/// migrations against any pre-existing database.
 pub async fn create_schema(db: &SqliteDB) -> Result<()> {
     for stmt in SCHEMA {
         sqlx::query(stmt).execute(db.pool()).await?;
+    }
+    // `CREATE TABLE IF NOT EXISTS` never alters an already-seeded `launches`
+    // table, so add the telemetry columns separately. SQLite has no
+    // `ADD COLUMN IF NOT EXISTS`; a duplicate-column error just means the
+    // migration already ran, so swallow it and keep going.
+    for stmt in MIGRATIONS {
+        if let Err(e) = sqlx::query(stmt).execute(db.pool()).await {
+            let msg = e.to_string();
+            if !msg.contains("duplicate column name") {
+                return Err(e.into());
+            }
+        }
     }
     Ok(())
 }
@@ -100,5 +113,25 @@ const SCHEMA: &[&str] = &[
         id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))), name TEXT, status_id TEXT, net TEXT, net_precision_id TEXT,
         window_start TEXT, window_end TEXT, launch_designator TEXT, probability INTEGER,
         webcast_live INTEGER, failreason TEXT, lsp_id TEXT, rocket_configuration_id TEXT,
-        mission_id TEXT, pad_id TEXT, last_updated TEXT)",
+        mission_id TEXT, pad_id TEXT, last_updated TEXT,
+        phase TEXT, met_seconds INTEGER, altitude_km REAL, velocity_ms REAL,
+        acceleration_ms2 REAL, downrange_km REAL,
+        vertical_speed_ms REAL, ground_speed_ms REAL, thrust_kn REAL,
+        created_at TEXT, updated_at TEXT)",
+];
+
+/// Additive column migrations applied on every boot. Each runs once; a repeat
+/// raises "duplicate column name", which [`create_schema`] treats as success.
+const MIGRATIONS: &[&str] = &[
+    "ALTER TABLE launches ADD COLUMN phase TEXT",
+    "ALTER TABLE launches ADD COLUMN met_seconds INTEGER",
+    "ALTER TABLE launches ADD COLUMN altitude_km REAL",
+    "ALTER TABLE launches ADD COLUMN velocity_ms REAL",
+    "ALTER TABLE launches ADD COLUMN acceleration_ms2 REAL",
+    "ALTER TABLE launches ADD COLUMN downrange_km REAL",
+    "ALTER TABLE launches ADD COLUMN vertical_speed_ms REAL",
+    "ALTER TABLE launches ADD COLUMN ground_speed_ms REAL",
+    "ALTER TABLE launches ADD COLUMN thrust_kn REAL",
+    "ALTER TABLE launches ADD COLUMN created_at TEXT",
+    "ALTER TABLE launches ADD COLUMN updated_at TEXT",
 ];

@@ -1,0 +1,76 @@
+name: Deploy launch-control server
+
+# Builds the launch-control demo server as a Lambda container image, pushes it to
+# ECR, and refreshes the Lambda function. Infrastructure (ECR repo, function,
+# OIDC deploy role) is provisioned by vantage-terraform/lambda.tf — this workflow
+# never creates it, it only pushes new images and calls UpdateFunctionCode.
+#
+# First run note: until `tofu apply -var launch_control_image_tag=latest` has
+# created the function, the refresh step is skipped (it logs and exits 0) — the
+# image push still succeeds, giving tofu an image to create the function from.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/launch-control/server/**"
+      - ".dockerignore"
+      - ".github/workflows/deploy-launch-control.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # OIDC into the launch-control deploy role
+
+env:
+  AWS_REGION: eu-west-2
+  AWS_ROLE_ARN: arn:aws:iam::578465001751:role/vantage-demo-launch-control-deployer
+  ECR_REPOSITORY: vantage-demo-launch-control
+  FUNCTION_NAME: vantage-demo-launch-control
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        id: build
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          set -euo pipefail
+          IMAGE="${REGISTRY}/${ECR_REPOSITORY}"
+          SHA_TAG="${IMAGE}:${GITHUB_SHA}"
+          LATEST_TAG="${IMAGE}:latest"
+          # Build context is the repo root so Cargo sees the workspace.
+          docker build -f apps/launch-control/server/Dockerfile -t "$SHA_TAG" -t "$LATEST_TAG" .
+          docker push "$SHA_TAG"
+          docker push "$LATEST_TAG"
+          echo "image_uri=${SHA_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Refresh the Lambda function
+        env:
+          IMAGE_URI: ${{ steps.build.outputs.image_uri }}
+        run: |
+          set -euo pipefail
+          if aws lambda get-function --function-name "$FUNCTION_NAME" >/dev/null 2>&1; then
+            aws lambda update-function-code \
+              --function-name "$FUNCTION_NAME" \
+              --image-uri "$IMAGE_URI" \
+              --publish
+            echo "Refreshed $FUNCTION_NAME -> $IMAGE_URI"
+          else
+            echo "::notice::Function $FUNCTION_NAME does not exist yet."
+            echo "Run: tofu apply -var launch_control_image_tag=latest  (in vantage-terraform) to create it."
+          fi

@@ -1,4 +1,5 @@
 use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use vantage_table::prelude::IdGenerator;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
@@ -19,6 +20,7 @@ impl Mission {
     pub fn table(db: SqliteDB) -> Table<SqliteDB, Mission> {
         Table::new("missions", db)
             .with_id_column("id")
+            .with_generated_id(IdGenerator::UuidV7)
             .with_column_of::<String>("name")
             .with_column_of::<Option<String>>("mission_type")
             .with_column_of::<Option<String>>("description")

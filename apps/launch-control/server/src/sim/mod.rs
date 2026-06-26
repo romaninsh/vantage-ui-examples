@@ -2,6 +2,7 @@
 //! human-churn script that drives a launch over ~1 minute (`mission`), and the
 //! pacing helpers it uses (`pace`).
 
+pub mod ascent;
 pub mod mission;
 pub mod pace;
 pub mod trigger;
@@ -22,7 +23,7 @@ mod tests {
     use crate::model::{Astronaut, Launch, LaunchCrew, LaunchTableExt, NewLaunch, PayloadFlight};
 
     /// The whole mission, run instantly (`NoDelay`), then assert the end state:
-    /// status, probability, the corrected crew, the surname fix, and the
+    /// orbit insertion, telemetry, the corrected crew, the surname fix, and the
     /// foreign-key-filled payload flight.
     #[tokio::test]
     async fn mission_runs_to_go_for_launch() {
@@ -41,12 +42,20 @@ mod tests {
 
         run(&h.db, &id, Pace::NoDelay).await.unwrap();
 
-        // Final launch state: go for launch, fully confident, scheduled, missioned.
+        // Final launch state: reached orbit after a successful ascent, with
+        // telemetry written, still fully confident, scheduled and missioned.
         let launch = launches.get(id.clone()).await.unwrap().expect("launch");
-        assert_eq!(launch.status_id.as_deref(), Some("1")); // Go for Launch
+        assert_eq!(launch.status_id.as_deref(), Some("3")); // Launch Successful
+        assert_eq!(launch.phase.as_deref(), Some("orbit"));
         assert_eq!(launch.probability, Some(95));
         assert!(launch.mission_id.is_some());
         assert!(launch.net.is_some());
+        assert!(launch.altitude_km.unwrap_or(0.0) > 0.0);
+        assert!(launch.velocity_ms.unwrap_or(0.0) > 0.0);
+        // Audit stamps filled by the `with_timestamps` hook: created once on
+        // insert, updated on every edit through the ascent.
+        assert!(launch.created_at.is_some());
+        assert!(launch.updated_at.is_some());
 
         // Crew: the stray fifth member was deleted → exactly 4, all ours.
         let crew = LaunchCrew::table(h.db.clone()).list().await.unwrap();
@@ -57,8 +66,14 @@ mod tests {
         assert_eq!(ours.len(), 4);
 
         // Roles were swapped → exactly one Commander and one Pilot remain.
-        let commander = ours.iter().filter(|c| c.role.as_deref() == Some("Commander")).count();
-        let pilot = ours.iter().filter(|c| c.role.as_deref() == Some("Pilot")).count();
+        let commander = ours
+            .iter()
+            .filter(|c| c.role.as_deref() == Some("Commander"))
+            .count();
+        let pilot = ours
+            .iter()
+            .filter(|c| c.role.as_deref() == Some("Pilot"))
+            .count();
         assert_eq!((commander, pilot), (1, 1));
 
         // Surname typo corrected.
@@ -68,6 +83,10 @@ mod tests {
 
         // Payload flight attached with launch_id filled in by the traversal.
         let flights = PayloadFlight::table(h.db.clone()).list().await.unwrap();
-        assert!(flights.values().any(|f| f.launch_id.as_deref() == Some(id.as_str())));
+        assert!(
+            flights
+                .values()
+                .any(|f| f.launch_id.as_deref() == Some(id.as_str()))
+        );
     }
 }

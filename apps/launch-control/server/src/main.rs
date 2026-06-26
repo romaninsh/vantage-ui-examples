@@ -19,13 +19,24 @@ use vantage_dataset::traits::ReadableValueSet;
 use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_types::Record;
 
-const DB_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/launch.sqlite");
+/// SQLite location. `LAUNCH_DB_PATH` overrides the compile-time default — set it
+/// to `/tmp/launch.sqlite` on AWS Lambda, whose only writable disk is `/tmp`.
+fn db_path() -> String {
+    std::env::var("LAUNCH_DB_PATH")
+        .unwrap_or_else(|_| concat!(env!("CARGO_MANIFEST_DIR"), "/launch.sqlite").to_string())
+}
 
 #[derive(Parser)]
-#[command(name = "launch-control-server", about = "Self-hosted, flaky LL2 demo server")]
+#[command(
+    name = "launch-control-server",
+    about = "Self-hosted, flaky LL2 demo server"
+)]
 struct Cli {
+    // Optional so the binary started with no arguments — e.g. a Lambda container
+    // whose entrypoint is the server, fronted by the Lambda Web Adapter — falls
+    // through to `Serve` configured from the environment.
     #[command(subcommand)]
-    cmd: Cmd,
+    cmd: Option<Cmd>,
 }
 
 #[derive(Subcommand)]
@@ -60,10 +71,10 @@ enum Cmd {
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    let database = db::connect(DB_PATH).await?;
+    let database = db::connect(&db_path()).await?;
     db::create_schema(&database).await?;
 
-    match cli.cmd {
+    match cli.cmd.unwrap_or_else(serve_from_env) {
         Cmd::Seed { refetch } => {
             if refetch {
                 seed::refetch().await?;
@@ -77,6 +88,17 @@ async fn main() -> Result<()> {
             latency_min,
             latency_max,
         } => {
+            // Auto-seed an empty database so a fresh boot serves data with no
+            // separate `seed` step. On Lambda each cold start gets an empty
+            // `/tmp` and seeds itself from the embedded fixtures; a database that
+            // already holds launches (local dev) is left untouched.
+            let launches: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM launches")
+                .fetch_one(database.pool())
+                .await?;
+            if launches == 0 {
+                seed::seed(&database).await?;
+            }
+
             let state = rest::AppState {
                 db: database.clone(),
                 flaky: flaky::FlakyConfig {
@@ -96,6 +118,24 @@ async fn main() -> Result<()> {
         }
     }
     Ok(())
+}
+
+/// `Serve` configured entirely from the environment — the entrypoint when the
+/// binary is launched with no subcommand (the Lambda container case). `PORT` is
+/// the Lambda Web Adapter's convention for the port the app listens on.
+fn serve_from_env() -> Cmd {
+    fn env_parse<T: std::str::FromStr>(key: &str, default: T) -> T {
+        std::env::var(key)
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(default)
+    }
+    Cmd::Serve {
+        port: env_parse("PORT", 8080),
+        error_rate: env_parse("ERROR_RATE", 0.10),
+        latency_min: env_parse("LATENCY_MIN_MS", 150),
+        latency_max: env_parse("LATENCY_MAX_MS", 1200),
+    }
 }
 
 type Rows = IndexMap<String, Record<AnySqliteType>>;
@@ -135,7 +175,11 @@ async fn list_table(db: &SqliteDB, table: &str) -> Result<Rows> {
     let rows = match table {
         "launches" => Launch::table(db.clone()).list_values().await?,
         "agencies" => Agency::table(db.clone()).list_values().await?,
-        "launcher_configurations" => LauncherConfiguration::table(db.clone()).list_values().await?,
+        "launcher_configurations" => {
+            LauncherConfiguration::table(db.clone())
+                .list_values()
+                .await?
+        }
         "launchers" => Launcher::table(db.clone()).list_values().await?,
         "pads" => Pad::table(db.clone()).list_values().await?,
         "locations" => Location::table(db.clone()).list_values().await?,

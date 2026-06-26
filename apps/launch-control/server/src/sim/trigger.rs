@@ -92,15 +92,33 @@ mod tests {
     async fn seed_refs(db: &SqliteDB) {
         // Two agencies, a pad, and one config belonging to agency "121".
         Agency::table(db.clone())
-            .insert("121".to_string(), &Agency { name: "SpaceX".into(), ..Default::default() })
+            .insert(
+                "121".to_string(),
+                &Agency {
+                    name: "SpaceX".into(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         Agency::table(db.clone())
-            .insert("999".to_string(), &Agency { name: "Rocket Lab".into(), ..Default::default() })
+            .insert(
+                "999".to_string(),
+                &Agency {
+                    name: "Rocket Lab".into(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         Pad::table(db.clone())
-            .insert("p1".to_string(), &Pad { name: "LC-39A".into(), ..Default::default() })
+            .insert(
+                "p1".to_string(),
+                &Pad {
+                    name: "LC-39A".into(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         LauncherConfiguration::table(db.clone())

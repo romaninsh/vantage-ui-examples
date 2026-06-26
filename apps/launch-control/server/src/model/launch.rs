@@ -3,6 +3,7 @@ use vantage_expressions::Expression;
 use vantage_sql::sqlite::operation::SqliteOperation;
 use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_sql::sqlite_expr;
+use vantage_table::prelude::IdGenerator;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
@@ -32,12 +33,30 @@ pub struct Launch {
     pub mission_id: Option<String>,
     pub pad_id: Option<String>,
     pub last_updated: Option<String>,
+    // Flight telemetry — written live by the mission simulator's ascent phase.
+    pub phase: Option<String>,
+    pub met_seconds: Option<i64>,
+    pub altitude_km: Option<f64>,
+    pub velocity_ms: Option<f64>,
+    pub acceleration_ms2: Option<f64>,
+    pub downrange_km: Option<f64>,
+    // Per-axis speed components and engine thrust (0 after MECO). The summary
+    // view projects altitude/downrange from these rates between samples.
+    pub vertical_speed_ms: Option<f64>,
+    pub ground_speed_ms: Option<f64>,
+    pub thrust_kn: Option<f64>,
+    // Audit stamps, filled by the table's `with_timestamps` hook: `created_at`
+    // once on insert, `updated_at` on every write.
+    pub created_at: Option<String>,
+    pub updated_at: Option<String>,
 }
 
 impl Launch {
     pub fn table(db: SqliteDB) -> Table<SqliteDB, Launch> {
         Table::new("launches", db)
             .with_id_column("id")
+            .with_generated_id(IdGenerator::UuidV7)
+            .with_timestamps()
             .with_column_of::<String>("name")
             .with_column_of::<Option<String>>("status_id")
             .with_column_of::<Option<String>>("net")
@@ -53,6 +72,17 @@ impl Launch {
             .with_column_of::<Option<String>>("mission_id")
             .with_column_of::<Option<String>>("pad_id")
             .with_column_of::<Option<String>>("last_updated")
+            .with_column_of::<Option<String>>("phase")
+            .with_column_of::<Option<i64>>("met_seconds")
+            .with_column_of::<Option<f64>>("altitude_km")
+            .with_column_of::<Option<f64>>("velocity_ms")
+            .with_column_of::<Option<f64>>("acceleration_ms2")
+            .with_column_of::<Option<f64>>("downrange_km")
+            .with_column_of::<Option<f64>>("vertical_speed_ms")
+            .with_column_of::<Option<f64>>("ground_speed_ms")
+            .with_column_of::<Option<f64>>("thrust_kn")
+            .with_column_of::<Option<String>>("created_at")
+            .with_column_of::<Option<String>>("updated_at")
             .with_one("status", "status_id", LaunchStatus::table)
             .with_one("net_precision", "net_precision_id", NetPrecision::table)
             .with_one("launch_service_provider", "lsp_id", Agency::table)
@@ -115,6 +145,7 @@ impl LaunchTableExt for Table<SqliteDB, Launch> {
         let launch = Launch {
             name: args.name,
             status_id: Some("2".into()), // To Be Determined
+            phase: Some("countdown".into()),
             lsp_id: args.lsp_id,
             pad_id: args.pad_id,
             rocket_configuration_id: args.rocket_configuration_id,

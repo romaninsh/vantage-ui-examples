@@ -40,6 +40,7 @@ pub fn ll2_now(t: DateTime<Utc>) -> String {
 const STATUSES: &[(&str, &str, &str)] = &[
     ("1", "Go for Launch", "Go"),
     ("2", "To Be Determined", "TBD"),
+    ("3", "Launch Successful", "Success"),
     ("8", "To Be Confirmed", "TBC"),
 ];
 
