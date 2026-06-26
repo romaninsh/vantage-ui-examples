@@ -1,4 +1,5 @@
 use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use vantage_table::prelude::IdGenerator;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
@@ -19,6 +20,7 @@ impl LaunchCrew {
     pub fn table(db: SqliteDB) -> Table<SqliteDB, LaunchCrew> {
         Table::new("launch_crew", db)
             .with_id_column("id")
+            .with_generated_id(IdGenerator::UuidV7)
             .with_column_of::<Option<String>>("launch_id")
             .with_column_of::<Option<String>>("astronaut_id")
             .with_column_of::<Option<String>>("role")

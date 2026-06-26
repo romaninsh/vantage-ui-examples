@@ -26,6 +26,7 @@ pub use astronaut::Astronaut;
 pub use landing::Landing;
 pub use landpad::Landpad;
 pub use launch::Launch;
+pub(crate) use launch::{LaunchTableExt, NewLaunch};
 pub use launch_crew::LaunchCrew;
 pub use launcher::Launcher;
 pub use launcher_configuration::LauncherConfiguration;

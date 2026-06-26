@@ -9,10 +9,10 @@ description = "Self-hosted, deliberately-flaky Launch Library 2 demo server for 
 # Vantage data layer (crates.io 0.6.x — no patch; this example ships against published crates).
 vantage-core = "0.6"
 vantage-types = "0.6"
-vantage-table = "0.6"
+vantage-table = "0.6.8"
 vantage-dataset = "0.6"
 vantage-expressions = "0.6"
-vantage-sql = { version = "0.6", features = ["sqlite", "vista"] }
+vantage-sql = { version = "0.6.4", features = ["sqlite", "vista"] }
 # REST routes are exposed through the Vista facade (the same surface the
 # api-client UI talks to), not raw Tables.
 vantage-vista = "0.6"

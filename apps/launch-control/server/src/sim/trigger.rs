@@ -1,15 +1,12 @@
-//! The trigger: validate a create request, insert an unscheduled launch via the
-//! Table interface, and describe the phase pipeline a mission runs.
+//! The trigger: validate a `POST /sim/launches` request and create an
+//! unscheduled launch via the `new_launch` domain verb. The mission churn that
+//! follows lives in [`super::mission`].
 
-use chrono::DateTime;
-use chrono::Utc;
 use serde::Deserialize;
-use vantage_dataset::prelude::{ReadableDataSet, WritableDataSet};
+use vantage_dataset::prelude::ReadableDataSet;
 use vantage_sql::sqlite::SqliteDB;
 
-use super::engine::{MissionContext, Phase, ll2_now, new_launch_id};
-use super::countdown::CountdownPhase;
-use crate::model::{Agency, Launch, LauncherConfiguration, Pad};
+use crate::model::{Agency, Launch, LaunchTableExt, LauncherConfiguration, NewLaunch, Pad};
 
 /// The POST /sim/launches body. All engine knobs are deliberately absent.
 #[derive(Debug, Deserialize)]
@@ -28,24 +25,8 @@ pub enum TriggerError {
     Internal(anyhow::Error),
 }
 
-#[derive(Debug)]
-pub struct Created {
-    pub ctx: MissionContext,
-    pub seed: u64,
-}
-
-/// The phases every mission runs, in order. P2/P3 append to this.
-pub fn mission_phases() -> Vec<Box<dyn Phase>> {
-    vec![Box::new(CountdownPhase)]
-}
-
-/// Validate the request, insert an unscheduled launch, and build the context.
-pub async fn create_launch(
-    db: &SqliteDB,
-    input: CreateLaunch,
-    seed: u64,
-    base: DateTime<Utc>,
-) -> Result<Created, TriggerError> {
+/// Validate the request, create an unscheduled launch, and return its id.
+pub async fn create_launch(db: &SqliteDB, input: CreateLaunch) -> Result<String, TriggerError> {
     // Agency must exist.
     let agency = Agency::table(db.clone())
         .get(input.lsp_id.clone())
@@ -74,7 +55,7 @@ pub async fn create_launch(
             return Err(bad(format!("unknown rocket_configuration_id `{cfg_id}`")));
         };
         // Approximation: LSP and rocket manufacturer are not the same in general,
-        // but `manufacturer_id` is the only agency link the model exposes, so we use it.
+        // but `manufacturer_id` is the only agency link the model exposes.
         if cfg.manufacturer_id.as_deref() != Some(input.lsp_id.as_str()) {
             return Err(bad(format!(
                 "rocket configuration `{cfg_id}` does not belong to agency `{}`",
@@ -83,34 +64,15 @@ pub async fn create_launch(
         }
     }
 
-    // Insert the launch NOW: unscheduled (status TBD, no net), refs set.
-    let launch_id = new_launch_id(seed);
-    let launch = Launch {
-        name: input.name.clone().unwrap_or_default(),
-        status_id: Some("2".into()), // To Be Determined
-        net: None,
-        lsp_id: Some(input.lsp_id.clone()),
-        rocket_configuration_id: input.rocket_configuration_id.clone(),
-        pad_id: Some(input.pad_id.clone()),
-        last_updated: Some(ll2_now(base)),
-        ..Default::default()
-    };
-    // vantage's `insert` is INSERT-OR-REPLACE: an astronomically unlikely seed
-    // collision would silently overwrite an existing `sim-…` launch rather than error.
     Launch::table(db.clone())
-        .insert(launch_id.clone(), &launch)
+        .new_launch(NewLaunch {
+            name: input.name.unwrap_or_default(),
+            lsp_id: Some(input.lsp_id),
+            pad_id: Some(input.pad_id),
+            rocket_configuration_id: input.rocket_configuration_id,
+        })
         .await
-        .map_err(internal)?;
-
-    let ctx = MissionContext {
-        launch_id,
-        lsp_id: input.lsp_id,
-        pad_id: input.pad_id,
-        rocket_configuration_id: input.rocket_configuration_id,
-        name: input.name,
-        base,
-    };
-    Ok(Created { ctx, seed })
+        .map_err(TriggerError::Internal)
 }
 
 fn bad(msg: String) -> TriggerError {
@@ -125,19 +87,38 @@ fn internal<E: Into<anyhow::Error>>(e: E) -> TriggerError {
 mod tests {
     use super::*;
     use crate::sim::testutil::temp_db;
+    use vantage_dataset::prelude::WritableDataSet;
 
     async fn seed_refs(db: &SqliteDB) {
         // Two agencies, a pad, and one config belonging to agency "121".
         Agency::table(db.clone())
-            .insert("121".to_string(), &Agency { name: "SpaceX".into(), ..Default::default() })
+            .insert(
+                "121".to_string(),
+                &Agency {
+                    name: "SpaceX".into(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         Agency::table(db.clone())
-            .insert("999".to_string(), &Agency { name: "Rocket Lab".into(), ..Default::default() })
+            .insert(
+                "999".to_string(),
+                &Agency {
+                    name: "Rocket Lab".into(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         Pad::table(db.clone())
-            .insert("p1".to_string(), &Pad { name: "LC-39A".into(), ..Default::default() })
+            .insert(
+                "p1".to_string(),
+                &Pad {
+                    name: "LC-39A".into(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         LauncherConfiguration::table(db.clone())
@@ -153,10 +134,6 @@ mod tests {
             .unwrap();
     }
 
-    fn base() -> DateTime<Utc> {
-        "2026-06-21T12:00:00Z".parse().unwrap()
-    }
-
     #[tokio::test]
     async fn creates_unscheduled_launch_with_valid_refs() {
         let h = temp_db().await;
@@ -167,14 +144,13 @@ mod tests {
             rocket_configuration_id: Some("c1".into()),
             name: Some("Demo-1".into()),
         };
-        let created = create_launch(&h.db, input, 5, base()).await.unwrap();
+        let id = create_launch(&h.db, input).await.unwrap();
 
         let row = Launch::table(h.db.clone())
-            .get(created.ctx.launch_id.clone())
+            .get(id)
             .await
             .unwrap()
             .expect("inserted");
-        assert_eq!(created.ctx.launch_id, new_launch_id(5));
         assert_eq!(row.status_id.as_deref(), Some("2")); // To Be Determined
         assert_eq!(row.net, None); // unscheduled
         assert_eq!(row.lsp_id.as_deref(), Some("121"));
@@ -192,7 +168,7 @@ mod tests {
             rocket_configuration_id: None,
             name: None,
         };
-        let err = create_launch(&h.db, input, 5, base()).await.unwrap_err();
+        let err = create_launch(&h.db, input).await.unwrap_err();
         assert!(matches!(err, TriggerError::BadRequest(_)));
     }
 
@@ -207,7 +183,7 @@ mod tests {
             rocket_configuration_id: Some("c1".into()),
             name: None,
         };
-        let err = create_launch(&h.db, input, 5, base()).await.unwrap_err();
+        let err = create_launch(&h.db, input).await.unwrap_err();
         match err {
             TriggerError::BadRequest(m) => assert!(m.contains("does not belong")),
             other => panic!("expected BadRequest, got {other:?}"),

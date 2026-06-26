@@ -40,11 +40,26 @@ const LAUNCH_FILES: &[&str] = &[
 pub async fn refetch() -> Result<()> {
     let client = reqwest::Client::new();
     let jobs = [
-        ("launches_previous.json", format!("{LL2}/launches/previous/?mode=detailed&limit=25&ordering=-net")),
-        ("launches_upcoming.json", format!("{LL2}/launches/upcoming/?mode=detailed&limit=10&ordering=net")),
-        ("launches_crewed.json", format!("{LL2}/launches/?mode=detailed&search=Crew-&limit=3&ordering=-net")),
-        ("payloads.json", format!("{LL2}/payloads/?mode=detailed&limit=80&ordering=-id")),
-        ("astronauts.json", format!("{LL2}/astronauts/?mode=detailed&limit=40&ordering=-id")),
+        (
+            "launches_previous.json",
+            format!("{LL2}/launches/previous/?mode=detailed&limit=25&ordering=-net"),
+        ),
+        (
+            "launches_upcoming.json",
+            format!("{LL2}/launches/upcoming/?mode=detailed&limit=10&ordering=net"),
+        ),
+        (
+            "launches_crewed.json",
+            format!("{LL2}/launches/?mode=detailed&search=Crew-&limit=3&ordering=-net"),
+        ),
+        (
+            "payloads.json",
+            format!("{LL2}/payloads/?mode=detailed&limit=80&ordering=-id"),
+        ),
+        (
+            "astronauts.json",
+            format!("{LL2}/astronauts/?mode=detailed&limit=40&ordering=-id"),
+        ),
     ];
     for (file, url) in jobs {
         println!("fetching {file} …");
@@ -77,9 +92,35 @@ pub async fn seed(db: &SqliteDB) -> Result<()> {
     Ok(())
 }
 
+/// Fixtures are embedded at build time so seeding needs no filesystem at
+/// runtime — a fresh boot (including a Lambda cold start, where the source tree
+/// is absent) seeds straight from the binary. `refetch` rewrites the committed
+/// files on disk; the next build re-embeds them.
 fn load(file: &str) -> Result<Value> {
-    let raw = std::fs::read_to_string(format!("{FIXTURES}/{file}"))?;
-    Ok(serde_json::from_str(&raw)?)
+    let raw = match file {
+        "launches_previous.json" => include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/fixtures/launches_previous.json"
+        )),
+        "launches_upcoming.json" => include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/fixtures/launches_upcoming.json"
+        )),
+        "launches_crewed.json" => include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/fixtures/launches_crewed.json"
+        )),
+        "payloads.json" => include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/fixtures/payloads.json"
+        )),
+        "astronauts.json" => include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/fixtures/astronauts.json"
+        )),
+        other => anyhow::bail!("unknown fixture `{other}`"),
+    };
+    Ok(serde_json::from_str(raw)?)
 }
 
 fn results(envelope: &Value) -> Vec<Value> {
@@ -161,7 +202,9 @@ impl Collected {
     fn decompose_launch(&mut self, l: &Value) {
         let Some(id) = id_of(l) else { return };
 
-        let status_id = l.get("status").and_then(|s| self.described(s, Kind::LaunchStatus));
+        let status_id = l
+            .get("status")
+            .and_then(|s| self.described(s, Kind::LaunchStatus));
         let net_precision_id = l
             .get("net_precision")
             .and_then(|s| self.described(s, Kind::NetPrecision));
@@ -175,7 +218,10 @@ impl Collected {
         let mission_id = l.get("mission").and_then(|m| self.mission(m));
         let pad_id = l.get("pad").and_then(|p| self.pad(p));
 
-        if let Some(stages) = rocket.and_then(|r| r.get("launcher_stage")).and_then(Value::as_array) {
+        if let Some(stages) = rocket
+            .and_then(|r| r.get("launcher_stage"))
+            .and_then(Value::as_array)
+        {
             for stage in stages {
                 self.launcher_stage(&id, stage);
             }
@@ -199,6 +245,8 @@ impl Collected {
                 mission_id,
                 pad_id,
                 last_updated: str_at(l, "last_updated"),
+                // Telemetry is simulator-only; seeded launches start with none.
+                ..Default::default()
             },
         ));
     }
@@ -284,33 +332,39 @@ impl Collected {
 
     fn location(&mut self, loc: &Value) -> Option<String> {
         let id = id_of(loc)?;
-        self.locations.entry(id.clone()).or_insert_with(|| Location {
-            name: str_at(loc, "name").unwrap_or_default(),
-            country: name_at(loc, "country"),
-            celestial_body_name: name_at(loc, "celestial_body"),
-            active: bool_at(loc, "active"),
-            description: str_at(loc, "description"),
-            timezone_name: str_at(loc, "timezone_name"),
-            latitude: float_at(loc, "latitude"),
-            longitude: float_at(loc, "longitude"),
-            last_updated: None,
-        });
+        self.locations
+            .entry(id.clone())
+            .or_insert_with(|| Location {
+                name: str_at(loc, "name").unwrap_or_default(),
+                country: name_at(loc, "country"),
+                celestial_body_name: name_at(loc, "celestial_body"),
+                active: bool_at(loc, "active"),
+                description: str_at(loc, "description"),
+                timezone_name: str_at(loc, "timezone_name"),
+                latitude: float_at(loc, "latitude"),
+                longitude: float_at(loc, "longitude"),
+                last_updated: None,
+            });
         Some(id)
     }
 
     fn launcher_stage(&mut self, launch_id: &str, stage: &Value) {
         let launcher_id = stage.get("launcher").and_then(|l| {
             let id = id_of(l)?;
-            let status_id = l.get("status").and_then(|s| self.named(s, Kind::LauncherStatus));
-            self.launchers.entry(id.clone()).or_insert_with(|| Launcher {
-                serial_number: str_at(l, "serial_number"),
-                status_id,
-                flight_proven: bool_at(l, "flight_proven"),
-                details: str_at(l, "details"),
-                first_launch_date: str_at(l, "first_launch_date"),
-                last_launch_date: str_at(l, "last_launch_date"),
-                last_updated: None,
-            });
+            let status_id = l
+                .get("status")
+                .and_then(|s| self.named(s, Kind::LauncherStatus));
+            self.launchers
+                .entry(id.clone())
+                .or_insert_with(|| Launcher {
+                    serial_number: str_at(l, "serial_number"),
+                    status_id,
+                    flight_proven: bool_at(l, "flight_proven"),
+                    details: str_at(l, "details"),
+                    first_launch_date: str_at(l, "first_launch_date"),
+                    last_launch_date: str_at(l, "last_launch_date"),
+                    last_updated: None,
+                });
             Some(id)
         });
 
@@ -319,7 +373,9 @@ impl Collected {
             let landing_location_id = land
                 .get("landing_location")
                 .and_then(|loc| self.landpad(loc));
-            let type_id = land.get("type").and_then(|t| self.described(t, Kind::LandingType));
+            let type_id = land
+                .get("type")
+                .and_then(|t| self.described(t, Kind::LandingType));
             self.landings.push((
                 id,
                 Landing {
@@ -372,8 +428,12 @@ impl Collected {
 
     fn decompose_astronaut(&mut self, a: &Value) {
         let Some(id) = id_of(a) else { return };
-        let status_id = a.get("status").and_then(|s| self.named(s, Kind::AstronautStatus));
-        let type_id = a.get("type").and_then(|t| self.named(t, Kind::AstronautType));
+        let status_id = a
+            .get("status")
+            .and_then(|s| self.named(s, Kind::AstronautStatus));
+        let type_id = a
+            .get("type")
+            .and_then(|t| self.named(t, Kind::AstronautType));
         let agency_id = a.get("agency").and_then(|ag| self.agency(ag));
         self.astronauts.push((
             id,
@@ -425,7 +485,12 @@ impl Collected {
     /// Assign a 4-person crew to every crewed-looking launch from the astronaut
     /// pool. Synthetic linkage (lldev ships no crew in `spacecraft_stage`).
     fn synthesize_launch_crew(&mut self) {
-        const ROLES: [&str; 4] = ["Commander", "Pilot", "Mission Specialist", "Mission Specialist"];
+        const ROLES: [&str; 4] = [
+            "Commander",
+            "Pilot",
+            "Mission Specialist",
+            "Mission Specialist",
+        ];
         if self.astronauts.is_empty() {
             return;
         }
@@ -456,19 +521,41 @@ impl Collected {
     // Upsert helpers for the two lookup shapes, returning the id.
     fn described(&mut self, v: &Value, kind: Kind) -> Option<String> {
         let id = id_of(v)?;
-        let row = || (str_at(v, "name").unwrap_or_default(), str_at(v, "abbrev").unwrap_or_default(), str_at(v, "description").unwrap_or_default());
+        let row = || {
+            (
+                str_at(v, "name").unwrap_or_default(),
+                str_at(v, "abbrev").unwrap_or_default(),
+                str_at(v, "description").unwrap_or_default(),
+            )
+        };
         match kind {
             Kind::LaunchStatus => {
                 let (name, abbrev, description) = row();
-                self.launch_statuses.entry(id.clone()).or_insert(LaunchStatus { name, abbrev, description });
+                self.launch_statuses
+                    .entry(id.clone())
+                    .or_insert(LaunchStatus {
+                        name,
+                        abbrev,
+                        description,
+                    });
             }
             Kind::NetPrecision => {
                 let (name, abbrev, description) = row();
-                self.net_precisions.entry(id.clone()).or_insert(NetPrecision { name, abbrev, description });
+                self.net_precisions
+                    .entry(id.clone())
+                    .or_insert(NetPrecision {
+                        name,
+                        abbrev,
+                        description,
+                    });
             }
             Kind::LandingType => {
                 let (name, abbrev, description) = row();
-                self.landing_types.entry(id.clone()).or_insert(LandingType { name, abbrev, description });
+                self.landing_types.entry(id.clone()).or_insert(LandingType {
+                    name,
+                    abbrev,
+                    description,
+                });
             }
             _ => unreachable!(),
         }
@@ -479,11 +566,31 @@ impl Collected {
         let id = id_of(v)?;
         let name = str_at(v, "name").unwrap_or_default();
         match kind {
-            Kind::AgencyType => { self.agency_types.entry(id.clone()).or_insert(AgencyType { name }); }
-            Kind::PayloadType => { self.payload_types.entry(id.clone()).or_insert(PayloadType { name }); }
-            Kind::LauncherStatus => { self.launcher_statuses.entry(id.clone()).or_insert(LauncherStatus { name }); }
-            Kind::AstronautStatus => { self.astronaut_statuses.entry(id.clone()).or_insert(AstronautStatus { name }); }
-            Kind::AstronautType => { self.astronaut_types.entry(id.clone()).or_insert(AstronautType { name }); }
+            Kind::AgencyType => {
+                self.agency_types
+                    .entry(id.clone())
+                    .or_insert(AgencyType { name });
+            }
+            Kind::PayloadType => {
+                self.payload_types
+                    .entry(id.clone())
+                    .or_insert(PayloadType { name });
+            }
+            Kind::LauncherStatus => {
+                self.launcher_statuses
+                    .entry(id.clone())
+                    .or_insert(LauncherStatus { name });
+            }
+            Kind::AstronautStatus => {
+                self.astronaut_statuses
+                    .entry(id.clone())
+                    .or_insert(AstronautStatus { name });
+            }
+            Kind::AstronautType => {
+                self.astronaut_types
+                    .entry(id.clone())
+                    .or_insert(AstronautType { name });
+            }
             _ => unreachable!(),
         }
         Some(id)

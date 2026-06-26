@@ -1,77 +1,92 @@
-//! On-demand mission simulation: a plan-then-play engine (`engine`), the phases
-//! that drive a launch (`countdown`, …), and the trigger that creates a launch
-//! and starts a mission (`trigger`).
+//! On-demand mission simulation: the launch trigger (`trigger`), the linear
+//! human-churn script that drives a launch over ~1 minute (`mission`), and the
+//! pacing helpers it uses (`pace`).
 
-pub mod countdown;
-pub mod engine;
+pub mod ascent;
+pub mod mission;
+pub mod pace;
 pub mod trigger;
 
 #[cfg(test)]
 mod testutil;
 
-pub use countdown::CountdownPhase;
-pub use engine::{MissionContext, Pace, Phase, TimedEvent, new_launch_id, run_mission};
-pub use trigger::{CreateLaunch, Created, TriggerError, create_launch, mission_phases};
+pub use mission::run;
+pub use pace::Pace;
+pub use trigger::{CreateLaunch, TriggerError, create_launch};
 
 #[cfg(test)]
 mod tests {
-    use chrono::{DateTime, Utc};
-    use vantage_dataset::prelude::{ReadableDataSet, WritableDataSet};
+    use vantage_dataset::prelude::ReadableDataSet;
 
     use super::testutil::temp_db;
-    use super::{CountdownPhase, MissionContext, Pace, Phase, run_mission};
-    use crate::model::Launch;
+    use super::{Pace, run};
+    use crate::model::{Astronaut, Launch, LaunchCrew, LaunchTableExt, NewLaunch, PayloadFlight};
 
-    fn fixed_base() -> DateTime<Utc> {
-        "2026-06-21T12:00:00Z".parse().unwrap()
-    }
-
-    async fn run_countdown(seed: u64) -> Launch {
+    /// The whole mission, run instantly (`NoDelay`), then assert the end state:
+    /// orbit insertion, telemetry, the corrected crew, the surname fix, and the
+    /// foreign-key-filled payload flight.
+    #[tokio::test]
+    async fn mission_runs_to_go_for_launch() {
         let h = temp_db().await;
-        // A bare launch row for the countdown to drive.
-        let launch = Launch {
-            name: "Test Mission".into(),
-            status_id: Some("2".into()),
-            ..Default::default()
-        };
-        let id = super::new_launch_id(seed);
-        Launch::table(h.db.clone())
-            .insert(id.clone(), &launch)
+        let launches = Launch::table(h.db.clone());
+
+        let id = launches
+            .new_launch(NewLaunch {
+                name: "Test Mission".into(),
+                lsp_id: Some("121".into()),
+                pad_id: Some("p1".into()),
+                rocket_configuration_id: None,
+            })
             .await
             .unwrap();
 
-        let ctx = MissionContext {
-            launch_id: id.clone(),
-            lsp_id: "121".into(),
-            pad_id: "p1".into(),
-            rocket_configuration_id: None,
-            name: Some("Test Mission".into()),
-            base: fixed_base(),
-        };
-        let phases: Vec<Box<dyn Phase>> = vec![Box::new(CountdownPhase)];
-        run_mission(h.db.clone(), ctx, seed, phases, Pace::NoDelay)
-            .await
-            .unwrap();
+        run(&h.db, &id, Pace::NoDelay).await.unwrap();
 
-        Launch::table(h.db.clone())
-            .get(id)
-            .await
-            .unwrap()
-            .expect("launch still present")
-    }
+        // Final launch state: reached orbit after a successful ascent, with
+        // telemetry written, still fully confident, scheduled and missioned.
+        let launch = launches.get(id.clone()).await.unwrap().expect("launch");
+        assert_eq!(launch.status_id.as_deref(), Some("3")); // Launch Successful
+        assert_eq!(launch.phase.as_deref(), Some("orbit"));
+        assert_eq!(launch.probability, Some(95));
+        assert!(launch.mission_id.is_some());
+        assert!(launch.net.is_some());
+        assert!(launch.altitude_km.unwrap_or(0.0) > 0.0);
+        assert!(launch.velocity_ms.unwrap_or(0.0) > 0.0);
+        // Audit stamps filled by the `with_timestamps` hook: created once on
+        // insert, updated on every edit through the ascent.
+        assert!(launch.created_at.is_some());
+        assert!(launch.updated_at.is_some());
 
-    #[tokio::test]
-    async fn countdown_reaches_go_for_launch_at_t0() {
-        let l = run_countdown(7).await;
-        assert_eq!(l.status_id.as_deref(), Some("1")); // Go for Launch
-        assert_eq!(l.net.as_deref(), Some("2026-06-21T12:01:00Z")); // base + 60s
-        assert_eq!(l.probability, Some(95));
-    }
+        // Crew: the stray fifth member was deleted → exactly 4, all ours.
+        let crew = LaunchCrew::table(h.db.clone()).list().await.unwrap();
+        let ours: Vec<_> = crew
+            .values()
+            .filter(|c| c.launch_id.as_deref() == Some(id.as_str()))
+            .collect();
+        assert_eq!(ours.len(), 4);
 
-    #[tokio::test]
-    async fn same_seed_and_base_are_deterministic() {
-        let a = run_countdown(42).await;
-        let b = run_countdown(42).await;
-        assert_eq!(a, b);
+        // Roles were swapped → exactly one Commander and one Pilot remain.
+        let commander = ours
+            .iter()
+            .filter(|c| c.role.as_deref() == Some("Commander"))
+            .count();
+        let pilot = ours
+            .iter()
+            .filter(|c| c.role.as_deref() == Some("Pilot"))
+            .count();
+        assert_eq!((commander, pilot), (1, 1));
+
+        // Surname typo corrected.
+        let astronauts = Astronaut::table(h.db.clone()).list().await.unwrap();
+        assert!(astronauts.values().any(|a| a.name == "Victor Glover"));
+        assert!(!astronauts.values().any(|a| a.name == "Victor Glovr"));
+
+        // Payload flight attached with launch_id filled in by the traversal.
+        let flights = PayloadFlight::table(h.db.clone()).list().await.unwrap();
+        assert!(
+            flights
+                .values()
+                .any(|f| f.launch_id.as_deref() == Some(id.as_str()))
+        );
     }
 }

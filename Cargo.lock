@@ -756,7 +756,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2356,7 +2356,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3017,7 +3017,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3027,7 +3027,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "230a1b821ccbd75b185820a1f1ff7b14d21da1e442e22c0863ea5f08771a8874"
 dependencies = [
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3425,6 +3425,8 @@ dependencies = [
 [[package]]
 name = "vantage-core"
 version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d66077c47099355cafa9cd6f189735e946e224d556376a59ae5b3f0505bf9a4e"
 dependencies = [
  "atty",
  "indexmap",
@@ -3436,7 +3438,9 @@ dependencies = [
 
 [[package]]
 name = "vantage-dataset"
-version = "0.6.1"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60b511c291ff262889b0bf5dce5b444c7a71ab68f0ea6975028eab03a08643a7"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3456,6 +3460,8 @@ dependencies = [
 [[package]]
 name = "vantage-expressions"
 version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "225e9126793d25c608bdf8fee324326628a163c76c7844a1393cead32197e45c"
 dependencies = [
  "async-trait",
  "serde",
@@ -3468,7 +3474,9 @@ dependencies = [
 
 [[package]]
 name = "vantage-sql"
-version = "0.6.2"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c120ac35bffc2792e65f3a73a2a2428d32eaa287d8ad7267e14be3f33447550"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3492,10 +3500,13 @@ dependencies = [
 
 [[package]]
 name = "vantage-table"
-version = "0.6.4"
+version = "0.6.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5476cec20cea8b29e87a2d148d8a2fdedfb652566e02526535d5962d36707b58"
 dependencies = [
  "async-stream",
  "async-trait",
+ "chrono",
  "ciborium",
  "futures-core",
  "indexmap",
@@ -3505,6 +3516,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "uuid",
  "vantage-core",
  "vantage-dataset",
  "vantage-expressions",
@@ -3514,7 +3526,9 @@ dependencies = [
 
 [[package]]
 name = "vantage-types"
-version = "0.6.1"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bf3e02295f68be8d8f14cad6b1d65b0dc334d528b2d6344fcb844baad554ad5"
 dependencies = [
  "ciborium",
  "indexmap",
@@ -3528,6 +3542,8 @@ dependencies = [
 [[package]]
 name = "vantage-types-entity"
 version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0b7457dc46f03ae0e87e3202ff0d5236ce3c206700e54f78f28c1cda5b855cb"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3537,6 +3553,8 @@ dependencies = [
 [[package]]
 name = "vantage-vista"
 version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b29f653962bb4b921acf878d766bd9ddc7dfbd69370f6b2afb3c914f9ef308e8"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -3705,7 +3723,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

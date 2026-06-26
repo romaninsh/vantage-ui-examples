@@ -55,9 +55,26 @@ columns:
   - { name: pad.name, type: string }
   - { name: pad.location.name, type: string }
   - { name: payload_count, type: int }
-  - { name: total_payload_mass, type: float }
+  - { name: total_payload_mass, type: float, unit: kg }
   - { name: crew_count, type: int }
   - { name: last_updated, type: datetime }
+  # Audit stamps, auto-filled server-side by the table's `with_timestamps` hook.
+  - { name: created_at, type: datetime }
+  - { name: updated_at, type: datetime }
+  # Flight telemetry — written live by the simulator's ascent phase. `phase`
+  # gates the summary view (countdown before launch, telemetry after).
+  - { name: phase, type: string }
+  - { name: met_seconds, type: int }
+  - { name: altitude_km, type: float }
+  - { name: velocity_ms, type: float }
+  - { name: acceleration_ms2, type: float }
+  - { name: downrange_km, type: float }
+  # Per-axis speed components + engine thrust (0 after MECO). The summary view
+  # projects altitude/downrange from the speed rates between samples; thrust
+  # drives the engine on/off indicator.
+  - { name: vertical_speed_ms, type: float }
+  - { name: ground_speed_ms, type: float }
+  - { name: thrust_kn, type: float }
 
 references:
   payloads:

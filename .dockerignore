@@ -1,0 +1,9 @@
+# Keep the Lambda build context small and reproducible.
+target/
+**/target/
+.git/
+# Never ship a locally-seeded database — the container seeds /tmp at runtime.
+**/*.sqlite
+**/*.sqlite-*
+.github/
+**/*.md
