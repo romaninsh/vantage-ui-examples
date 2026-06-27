@@ -45,6 +45,9 @@ impl Agency {
             })
             .with_expression("failed_launches", |t| t.query_launches().count_failed())
             .with_expression("pending_launches", |t| t.query_launches().count_pending())
+            // Exercise (see the launch-control tour): add a `success_rate`
+            // aggregate here — successful / total as a percentage, computed on
+            // read like the counts above — then surface it in table/agencies.yaml.
             // `has_rockets` is computed, not stored: `"true"` when the agency
             // manufactures at least one launcher configuration. Text-valued so
             // the server-side `add_condition_eq("has_rockets", true)` (query
