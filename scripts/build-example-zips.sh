@@ -21,6 +21,10 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 out_dir="${1:-$repo_root/dist}"
 mkdir -p "$out_dir"
+# Absolutize: zip_path is used after `cd "$app_dir"` below, so a relative
+# out_dir (e.g. CI's `dist`) would resolve against the wrong directory and
+# zip would fail to open the output file (exit 15).
+out_dir="$(cd "$out_dir" && pwd)"
 
 excludes=(
     'inventory/.cache/*'

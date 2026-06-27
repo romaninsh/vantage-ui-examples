@@ -23,9 +23,19 @@ use tokio::net::TcpStream;
 use tokio::process::Command;
 use tokio::sync::OnceCell;
 
-/// Port the launch-control datasource points at
-/// (`apps/launch-control/inventory/datasource/local.yaml`).
+/// Port the launch-control datasource points at, once pointed back at the local
+/// server for BDD (see [`point_inventory_at_localhost`]).
 pub const PORT: u16 = 8080;
+
+/// The committed inventory ships pointing at the public server so a `vantage://`
+/// install works with no local setup; BDD must hit the local one instead.
+const HOSTED_URL: &str = "https://launch-control.vantage-ui.com";
+
+/// Inventory files carrying the hosted URL that BDD rewrites to localhost.
+const HOSTED_URL_FILES: &[&str] = &[
+    "apps/launch-control/inventory/datasource/local.yaml",
+    "apps/launch-control/inventory/action/submit-launch.yaml",
+];
 
 /// Cargo package that builds the bundled server.
 const SERVER_PKG: &str = "launch-control-server";
@@ -42,11 +52,38 @@ static SERVER: OnceCell<()> = OnceCell::const_new();
 pub async fn ensure_started() {
     SERVER
         .get_or_init(|| async {
+            if let Err(e) = point_inventory_at_localhost() {
+                panic!("failed to point launch-control inventory at localhost: {e:#}");
+            }
             if let Err(e) = start().await {
                 panic!("launch-control server failed to start: {e:#}");
             }
         })
         .await;
+}
+
+/// Rewrite the shipped hosted URL to `http://127.0.0.1:{PORT}` in the
+/// launch-control inventory before the app launches.
+///
+/// The committed inventory points at the public server (`HOSTED_URL`, an API
+/// Gateway → Lambda that runs with injected 503s) so a `vantage://` install
+/// works out of the box. BDD instead needs the local server this harness brings
+/// up: deterministic (`--error-rate 0`) and freshly seeded, so the counts in
+/// `data_tools.feature` are exact and reads never flake. Idempotent — only
+/// writes when it finds the hosted URL; CI checkouts are disposable, so the
+/// in-place edit is fine.
+fn point_inventory_at_localhost() -> Result<()> {
+    let local = format!("http://127.0.0.1:{PORT}");
+    for rel in HOSTED_URL_FILES {
+        let original =
+            std::fs::read_to_string(rel).with_context(|| format!("read {rel}"))?;
+        let patched = original.replace(HOSTED_URL, &local);
+        if patched != original {
+            std::fs::write(rel, &patched).with_context(|| format!("write {rel}"))?;
+            eprintln!("pointed {rel} at {local} for BDD");
+        }
+    }
+    Ok(())
 }
 
 async fn start() -> Result<()> {
