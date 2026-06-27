@@ -7,12 +7,14 @@
 #
 # Unlike the public LL2 dev API, this server *honors every filter param*
 # (`launch__id`, `lsp__id`, `pad`, …), so the whole app needs ONE datasource
-# with server-side (`query`) filtering — no client-filter fallback. Run the
-# server first:  cargo run -p launch-control-server -- serve
+# with server-side (`query`) filtering — no client-filter fallback. The hosted
+# server (API Gateway → Lambda) runs at launch-control.vantage-ui.com, so the
+# example works out of the box; to run it locally instead, point this at
+# http://127.0.0.1:8080 and start `cargo run -p launch-control-server -- serve`.
 
 description: "launch-control — self-hosted, flaky Launch Library 2 server."
 type: api-client
-url: "http://127.0.0.1:8080"
+url: "https://launch-control.vantage-ui.com"
 response_key: results
 total_key: count
 pagination:
