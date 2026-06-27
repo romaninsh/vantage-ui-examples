@@ -97,22 +97,14 @@ pub async fn run(db: &SqliteDB, id: &str, pace: Pace) -> anyhow::Result<()> {
     pace.gap(secs(3)).await;
     fix_name(&astronauts, &glover, "Victor Glover").await?;
 
-    // T-15s: create the payload and attach a flight through the launch.
+    // T-15s: the manifest fills in — three payload flights attached through the
+    // launch, one after another, so the UI's payloads tab populates live.
     pace.gap(secs(4)).await;
-    let payload_id = payloads
-        .insert_return_id(&Payload {
-            name: "Orion CSM".into(),
-            mass: Some(26_520.0),
-            ..Default::default()
-        })
-        .await?;
-    payload_flights
-        .insert_return_id(&PayloadFlight {
-            payload_id: Some(payload_id),
-            destination: Some("Trans-Lunar Injection".into()),
-            ..Default::default()
-        })
-        .await?;
+    add_payload(&payloads, &payload_flights, "Orion CSM", 26_520.0, "Trans-Lunar Injection").await?;
+    pace.gap(secs(1)).await;
+    add_payload(&payloads, &payload_flights, "ArgoMoon CubeSat", 14.0, "Lunar Flyby").await?;
+    pace.gap(secs(1)).await;
+    add_payload(&payloads, &payload_flights, "BioSentinel CubeSat", 14.0, "Heliocentric Orbit").await?;
     edit(&mut launch, |l| l.probability = Some(88)).await?;
 
     // T-6s: go for launch.
@@ -202,6 +194,32 @@ async fn add_crew(
         })
         .await?;
     Ok((astronaut_id, crew_id))
+}
+
+/// Create a payload and attach a flight to it through the launch in one step;
+/// the flight's `launch_id` is filled by the scoped set.
+async fn add_payload(
+    payloads: &Table<SqliteDB, Payload>,
+    payload_flights: &Table<SqliteDB, PayloadFlight>,
+    name: &str,
+    mass: f64,
+    destination: &str,
+) -> anyhow::Result<()> {
+    let payload_id = payloads
+        .insert_return_id(&Payload {
+            name: name.into(),
+            mass: Some(mass),
+            ..Default::default()
+        })
+        .await?;
+    payload_flights
+        .insert_return_id(&PayloadFlight {
+            payload_id: Some(payload_id),
+            destination: Some(destination.into()),
+            ..Default::default()
+        })
+        .await?;
+    Ok(())
 }
 
 /// Swap the roles of two crew rows (whatever they currently are).

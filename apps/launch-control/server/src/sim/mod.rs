@@ -81,12 +81,13 @@ mod tests {
         assert!(astronauts.values().any(|a| a.name == "Victor Glover"));
         assert!(!astronauts.values().any(|a| a.name == "Victor Glovr"));
 
-        // Payload flight attached with launch_id filled in by the traversal.
+        // Three payload flights attached, each with launch_id filled in by the
+        // traversal.
         let flights = PayloadFlight::table(h.db.clone()).list().await.unwrap();
-        assert!(
-            flights
-                .values()
-                .any(|f| f.launch_id.as_deref() == Some(id.as_str()))
-        );
+        let ours: Vec<_> = flights
+            .values()
+            .filter(|f| f.launch_id.as_deref() == Some(id.as_str()))
+            .collect();
+        assert_eq!(ours.len(), 3);
     }
 }
