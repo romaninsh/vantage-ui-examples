@@ -1,4 +1,8 @@
-use crate::db::{AnyPostgresType, AnySqliteType, Db};
+#[cfg(not(feature = "pg"))]
+use crate::db::AnySqliteType;
+#[cfg(feature = "pg")]
+use crate::db::AnyPostgresType;
+use crate::db::Db;
 use vantage_table::prelude::IdGenerator;
 use vantage_table::table::Table;
 use vantage_types::entity;
@@ -7,7 +11,8 @@ use crate::model::{Launch, Payload};
 
 /// Join between a launch and a payload (one row per payload carried on a flight).
 /// The source for per-launch payload aggregation (count, total mass).
-#[entity(SqliteType, PostgresType)]
+#[cfg_attr(not(feature = "pg"), entity(SqliteType))]
+#[cfg_attr(feature = "pg", entity(PostgresType))]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct PayloadFlight {
     pub launch_id: Option<String>,

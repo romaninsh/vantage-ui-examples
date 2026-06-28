@@ -35,6 +35,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Build the binary on the runner (not inside Docker) so it reuses the same
+      # Swatinem/rust-cache every other pipeline uses; the image is then just the
+      # static binary on `scratch`. Target is arm64 (Graviton) musl, cross-built
+      # from the x86_64 runner via cargo-zigbuild (zig compiles ring's C cleanly,
+      # which musl-gcc does not).
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-musl
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: arm64-pg-lambda
+
+      - uses: mlugg/setup-zig@v1
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild
+
+      - name: Build static binary (PostgreSQL-only + native Lambda runtime)
+        run: |
+          cargo zigbuild --release --target aarch64-unknown-linux-musl \
+            -p launch-control-server --no-default-features --features pg,lambda
+
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
@@ -53,10 +76,9 @@ jobs:
           IMAGE="${REGISTRY}/${ECR_REPOSITORY}"
           SHA_TAG="${IMAGE}:${GITHUB_SHA}"
           LATEST_TAG="${IMAGE}:latest"
-          # Build context is the repo root so Cargo sees the workspace.
-          # FEATURES=pg builds the PostgreSQL backend (reads DATABASE_URL from the
-          # Lambda env provisioned by vantage-terraform/rds.tf).
-          docker build -f apps/launch-control/server/Dockerfile --build-arg FEATURES=pg -t "$SHA_TAG" -t "$LATEST_TAG" .
+          # Packages the runner-built static binary; build context is the repo
+          # root so the Dockerfile can COPY it from target/.
+          docker build -f apps/launch-control/server/Dockerfile -t "$SHA_TAG" -t "$LATEST_TAG" .
           docker push "$SHA_TAG"
           docker push "$LATEST_TAG"
           echo "image_uri=${SHA_TAG}" >> "$GITHUB_OUTPUT"

@@ -1,4 +1,8 @@
-use crate::db::{AnyPostgresType, AnySqliteType, Db};
+#[cfg(not(feature = "pg"))]
+use crate::db::AnySqliteType;
+#[cfg(feature = "pg")]
+use crate::db::AnyPostgresType;
+use crate::db::Db;
 use vantage_table::prelude::IdGenerator;
 use vantage_table::table::Table;
 use vantage_types::entity;
@@ -8,7 +12,8 @@ use crate::model::{Agency, AstronautStatus, AstronautType, LaunchCrew};
 /// A crew member. Career counts (flights/landings/spacewalks) are intrinsic LL2
 /// fields describing the person, kept verbatim — distinct from the stats we
 /// recompute from our own launch data. Linked to launches via `launch_crew`.
-#[entity(SqliteType, PostgresType)]
+#[cfg_attr(not(feature = "pg"), entity(SqliteType))]
+#[cfg_attr(feature = "pg", entity(PostgresType))]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Astronaut {
     pub name: String,

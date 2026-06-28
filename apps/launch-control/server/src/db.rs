@@ -5,10 +5,11 @@
 //! expressions on the table models (see `model/`).
 //!
 //! The backend is selected at compile time: SQLite by default, PostgreSQL under
-//! `--features pg`. [`Db`] is the chosen datasource and [`Cell`] its value type;
-//! the rest of the app is written against those aliases, never a concrete
-//! backend. Models carry both [`AnySqliteType`] and [`AnyPostgresType`] markers
-//! (`#[entity(SqliteType, PostgresType)]`) so the same struct works either way.
+//! `--features pg`, and only the selected one is compiled in (so the `pg` build
+//! never pulls SQLite). [`Db`] is the chosen datasource and [`Cell`] its value
+//! type; the rest of the app is written against those aliases, never a concrete
+//! backend. Each model's `#[entity]` marker is cfg-gated to the active backend
+//! (`SqliteType` / `PostgresType`) so the same struct works either way.
 //!
 //! Every id and foreign-key column is `TEXT`. LL2 mixes integer ids (agencies,
 //! astronauts, launchers) with UUID ids (launches, payloads); storing them all
@@ -20,10 +21,13 @@
 use anyhow::Result;
 use vantage_table::prelude::TableSource;
 
-// Both backend markers are always in scope for the `#[entity(SqliteType,
-// PostgresType)]` annotations, regardless of which `Db` is selected.
-pub use vantage_sql::postgres::AnyPostgresType;
+// The selected backend's value type, exported for the (cfg-gated) `#[entity]`
+// marker on each model. Only the active backend's crate feature is compiled in,
+// so the lambda/`pg` build never pulls SQLite (libsqlite3-sys).
+#[cfg(not(feature = "pg"))]
 pub use vantage_sql::sqlite::AnySqliteType;
+#[cfg(feature = "pg")]
+pub use vantage_sql::postgres::AnyPostgresType;
 
 /// The selected datasource. SQLite by default; PostgreSQL under `--features pg`.
 #[cfg(not(feature = "pg"))]
