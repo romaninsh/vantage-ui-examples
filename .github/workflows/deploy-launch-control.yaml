@@ -54,7 +54,9 @@ jobs:
           SHA_TAG="${IMAGE}:${GITHUB_SHA}"
           LATEST_TAG="${IMAGE}:latest"
           # Build context is the repo root so Cargo sees the workspace.
-          docker build -f apps/launch-control/server/Dockerfile -t "$SHA_TAG" -t "$LATEST_TAG" .
+          # FEATURES=pg builds the PostgreSQL backend (reads DATABASE_URL from the
+          # Lambda env provisioned by vantage-terraform/rds.tf).
+          docker build -f apps/launch-control/server/Dockerfile --build-arg FEATURES=pg -t "$SHA_TAG" -t "$LATEST_TAG" .
           docker push "$SHA_TAG"
           docker push "$LATEST_TAG"
           echo "image_uri=${SHA_TAG}" >> "$GITHUB_OUTPUT"
