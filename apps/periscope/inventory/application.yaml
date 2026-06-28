@@ -1,5 +1,6 @@
 # Project-wide settings for Periscope — a deep-sea control room for your cluster.
-# Tokyo Night gives the dark, submarine-console feel; Ayu Light keeps the day shift readable.
+# Solarized Dark's deep-teal base reads like a sonar/submarine instrument panel;
+# Solarized Light is its matched day-shift counterpart (same accents, designed as a pair).
 theme:
-  light: Ayu Light
-  dark: Tokyo Night
+  light: Solarized Light
+  dark: Solarized Dark
