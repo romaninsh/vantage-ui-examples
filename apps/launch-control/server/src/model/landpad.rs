@@ -1,4 +1,4 @@
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use crate::db::{AnyPostgresType, AnySqliteType, Db};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
@@ -6,7 +6,7 @@ use crate::model::Landing;
 use crate::model::landing::LandingTableExt;
 
 /// A landing location (ground pad or drone ship). Receives many landings.
-#[entity(SqliteType)]
+#[entity(SqliteType, PostgresType)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Landpad {
     pub name: String,
@@ -20,9 +20,10 @@ pub struct Landpad {
 }
 
 impl Landpad {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, Landpad> {
+    pub fn table(db: Db) -> Table<Db, Landpad> {
         Table::new("landpads", db)
             .with_id_column("id")
+            .with_text_id()
             .with_column_of::<String>("name")
             .with_column_of::<Option<String>>("abbrev")
             .with_column_of::<Option<String>>("celestial_body_name")
@@ -43,11 +44,11 @@ impl Landpad {
 }
 
 trait LandpadTableExt {
-    fn query_landings(&self) -> Table<SqliteDB, Landing>;
+    fn query_landings(&self) -> Table<Db, Landing>;
 }
 
-impl LandpadTableExt for Table<SqliteDB, Landpad> {
-    fn query_landings(&self) -> Table<SqliteDB, Landing> {
+impl LandpadTableExt for Table<Db, Landpad> {
+    fn query_landings(&self) -> Table<Db, Landing> {
         self.get_subquery_as("landings").unwrap()
     }
 }
