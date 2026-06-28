@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use chrono::{DateTime, Utc};
 use vantage_dataset::prelude::{ReadableDataSet, WritableDataSet};
-use vantage_sql::sqlite::SqliteDB;
+use crate::db::Db;
 
 use crate::model::LaunchStatus;
 
@@ -46,7 +46,7 @@ const STATUSES: &[(&str, &str, &str)] = &[
 
 /// Ensure the statuses the simulator sets exist as rows (for the UI join),
 /// writing only missing ids so seeded rows keep their real descriptions.
-pub async fn ensure_statuses(db: &SqliteDB) -> anyhow::Result<()> {
+pub async fn ensure_statuses(db: &Db) -> anyhow::Result<()> {
     let table = LaunchStatus::table(db.clone());
     let existing = table.list().await?;
     for (id, name, abbrev) in STATUSES {

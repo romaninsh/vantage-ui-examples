@@ -23,8 +23,9 @@ use axum::{
 };
 use ciborium::Value as Cbor;
 use serde_json::{Value, json};
-use vantage_sql::sqlite::SqliteDB;
 use vantage_vista::{SortDirection, Vista};
+
+use crate::db::Db;
 
 use crate::flaky::FlakyConfig;
 use crate::model::*;
@@ -35,7 +36,7 @@ const NEST_DEPTH: u8 = 2;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db: SqliteDB,
+    pub db: Db,
     pub flaky: FlakyConfig,
 }
 
@@ -134,7 +135,7 @@ async fn list(
 }
 
 /// Build a Vista for a table name. One `match`; every arm yields a `Vista`.
-fn vista_for(db: &SqliteDB, table: &str) -> Result<Vista, ApiError> {
+fn vista_for(db: &Db, table: &str) -> Result<Vista, ApiError> {
     let f = db.vista_factory();
     let built = match table {
         "launches" => f.from_table(Launch::table(db.clone())),

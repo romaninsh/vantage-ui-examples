@@ -1,11 +1,11 @@
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use crate::db::{AnyPostgresType, AnySqliteType, Db};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
 use crate::model::{Launch, Pad};
 
 /// A spaceport. Hosts many pads.
-#[entity(SqliteType)]
+#[entity(SqliteType, PostgresType)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Location {
     pub name: String,
@@ -20,9 +20,10 @@ pub struct Location {
 }
 
 impl Location {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, Location> {
+    pub fn table(db: Db) -> Table<Db, Location> {
         Table::new("locations", db)
             .with_id_column("id")
+            .with_text_id()
             .with_column_of::<String>("name")
             .with_column_of::<Option<String>>("country")
             .with_column_of::<Option<String>>("celestial_body_name")
@@ -41,11 +42,11 @@ impl Location {
 }
 
 trait LocationTableExt {
-    fn query_launches(&self) -> Table<SqliteDB, Launch>;
+    fn query_launches(&self) -> Table<Db, Launch>;
 }
 
-impl LocationTableExt for Table<SqliteDB, Location> {
-    fn query_launches(&self) -> Table<SqliteDB, Launch> {
+impl LocationTableExt for Table<Db, Location> {
+    fn query_launches(&self) -> Table<Db, Launch> {
         // Location → pads (correlated), then pads → launches (IN subquery).
         // get_ref_as embeds the pads condition inside the IN subquery,
         // keeping the location correlation intact.

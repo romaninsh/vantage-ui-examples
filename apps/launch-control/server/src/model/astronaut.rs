@@ -1,4 +1,4 @@
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use crate::db::{AnyPostgresType, AnySqliteType, Db};
 use vantage_table::prelude::IdGenerator;
 use vantage_table::table::Table;
 use vantage_types::entity;
@@ -8,7 +8,7 @@ use crate::model::{Agency, AstronautStatus, AstronautType, LaunchCrew};
 /// A crew member. Career counts (flights/landings/spacewalks) are intrinsic LL2
 /// fields describing the person, kept verbatim — distinct from the stats we
 /// recompute from our own launch data. Linked to launches via `launch_crew`.
-#[entity(SqliteType)]
+#[entity(SqliteType, PostgresType)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Astronaut {
     pub name: String,
@@ -32,9 +32,10 @@ pub struct Astronaut {
 }
 
 impl Astronaut {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, Astronaut> {
+    pub fn table(db: Db) -> Table<Db, Astronaut> {
         Table::new("astronauts", db)
             .with_id_column("id")
+            .with_text_id()
             .with_generated_id(IdGenerator::UuidV7)
             .with_column_of::<String>("name")
             .with_column_of::<Option<String>>("status_id")

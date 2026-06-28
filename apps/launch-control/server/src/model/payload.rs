@@ -1,4 +1,4 @@
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use crate::db::{AnyPostgresType, AnySqliteType, Db};
 use vantage_table::prelude::IdGenerator;
 use vantage_table::table::Table;
 use vantage_types::entity;
@@ -7,7 +7,7 @@ use crate::model::{Agency, PayloadFlight, PayloadType};
 
 /// A satellite / probe / cargo. Manufactured and operated by agencies; flown on
 /// one or more launches via payload flights.
-#[entity(SqliteType)]
+#[entity(SqliteType, PostgresType)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Payload {
     pub name: String,
@@ -20,9 +20,10 @@ pub struct Payload {
 }
 
 impl Payload {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, Payload> {
+    pub fn table(db: Db) -> Table<Db, Payload> {
         Table::new("payloads", db)
             .with_id_column("id")
+            .with_text_id()
             .with_generated_id(IdGenerator::UuidV7)
             .with_column_of::<String>("name")
             .with_column_of::<Option<String>>("type_id")

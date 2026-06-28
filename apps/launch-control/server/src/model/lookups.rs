@@ -2,14 +2,14 @@
 //! abbreviation/description) that the core entities point at via a foreign key
 //! and that `?mode=detailed` re-nests as `{ id, name, … }` objects.
 
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use crate::db::{AnyPostgresType, AnySqliteType, Db};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
 /// Lookups carrying name + abbrev + description (status-like).
 macro_rules! described_lookup {
     ($struct:ident, $table:literal) => {
-        #[entity(SqliteType)]
+        #[entity(SqliteType, PostgresType)]
         #[derive(Debug, Clone, PartialEq, Default)]
         pub struct $struct {
             pub name: String,
@@ -17,9 +17,10 @@ macro_rules! described_lookup {
             pub description: String,
         }
         impl $struct {
-            pub fn table(db: SqliteDB) -> Table<SqliteDB, $struct> {
+            pub fn table(db: Db) -> Table<Db, $struct> {
                 Table::new($table, db)
                     .with_id_column("id")
+            .with_text_id()
                     .with_column_of::<String>("name")
                     .with_column_of::<String>("abbrev")
                     .with_column_of::<String>("description")
@@ -31,15 +32,16 @@ macro_rules! described_lookup {
 /// Lookups carrying name only.
 macro_rules! named_lookup {
     ($struct:ident, $table:literal) => {
-        #[entity(SqliteType)]
+        #[entity(SqliteType, PostgresType)]
         #[derive(Debug, Clone, PartialEq, Default)]
         pub struct $struct {
             pub name: String,
         }
         impl $struct {
-            pub fn table(db: SqliteDB) -> Table<SqliteDB, $struct> {
+            pub fn table(db: Db) -> Table<Db, $struct> {
                 Table::new($table, db)
                     .with_id_column("id")
+            .with_text_id()
                     .with_column_of::<String>("name")
             }
         }

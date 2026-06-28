@@ -1,14 +1,13 @@
 use vantage_expressions::Expression;
-use vantage_sql::sqlite::operation::SqliteOperation;
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
+use crate::db::{AnyPostgresType, AnySqliteType, Cell, Db, DbOperation};
 use crate::model::{LandingType, Landpad, Launch, Launcher};
 
 /// A booster landing attempt for a launch. `success` is null until the attempt
 /// resolves — the simulator flips it during a replay.
-#[entity(SqliteType)]
+#[entity(SqliteType, PostgresType)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Landing {
     pub launch_id: Option<String>,
@@ -22,9 +21,10 @@ pub struct Landing {
 }
 
 impl Landing {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, Landing> {
+    pub fn table(db: Db) -> Table<Db, Landing> {
         Table::new("landings", db)
             .with_id_column("id")
+            .with_text_id()
             .with_column_of::<Option<String>>("launch_id")
             .with_column_of::<Option<String>>("launcher_id")
             .with_column_of::<Option<String>>("landing_location_id")
@@ -43,17 +43,17 @@ impl Landing {
 /// Landing-side query helper, parallel to [`LaunchTableExt`]: narrow a
 /// landings subquery by outcome and return its `COUNT(*)` expression.
 pub(crate) trait LandingTableExt {
-    fn count_successful(self) -> Expression<AnySqliteType>;
-    fn count_failed(self) -> Expression<AnySqliteType>;
+    fn count_successful(self) -> Expression<Cell>;
+    fn count_failed(self) -> Expression<Cell>;
 }
 
-impl LandingTableExt for Table<SqliteDB, Landing> {
-    fn count_successful(self) -> Expression<AnySqliteType> {
+impl LandingTableExt for Table<Db, Landing> {
+    fn count_successful(self) -> Expression<Cell> {
         let cond = self["success"].eq(true);
         self.with_condition(cond).get_count_query()
     }
 
-    fn count_failed(self) -> Expression<AnySqliteType> {
+    fn count_failed(self) -> Expression<Cell> {
         let cond = self["success"].eq(false);
         self.with_condition(cond).get_count_query()
     }

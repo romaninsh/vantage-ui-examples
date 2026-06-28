@@ -1,5 +1,5 @@
 //! Vantage table models — one entity per file, bakery_model3-style. Each
-//! `Type::table(db)` builds a `Table<SqliteDB, Type>` with its raw columns,
+//! `Type::table(db)` builds a `Table<Db, Type>` with its raw columns,
 //! relations, and computed aggregate expressions (LL2 stores these stats
 //! denormalized; we recompute them inline as correlated subqueries via
 //! `with_expression`). LL2 launch-status ids: 3 = success, 4/7 = failure,

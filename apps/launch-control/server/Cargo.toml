@@ -5,22 +5,33 @@ edition = "2024"
 publish = false
 description = "Self-hosted, deliberately-flaky Launch Library 2 demo server for the launch-control vantage-ui example"
 
+[features]
+# Default build talks to SQLite (zero-setup local dev). `--features pg` flips the
+# `Db` type alias to PostgreSQL; see `src/db.rs`.
+default = []
+pg = []
+
 [dependencies]
 # Vantage data layer (crates.io 0.6.x — no patch; this example ships against published crates).
 vantage-core = "0.6"
 vantage-types = "0.6"
-vantage-table = "0.6.8"
+# 0.6.9 carries `Table::with_text_id` (text-keyed id columns on PostgreSQL).
+vantage-table = "0.6.9"
 vantage-dataset = "0.6"
 vantage-expressions = "0.6"
-vantage-sql = { version = "0.6.4", features = ["sqlite", "vista"] }
+# Both SQL backends compile in so a model can carry both datasource markers
+# (`#[entity(SqliteType, PostgresType)]`); the `pg` feature below selects which
+# one the app instantiates. 0.6.5 binds text ids correctly + adds the Postgres
+# Vista window fetch.
+vantage-sql = { version = "0.6.5", features = ["sqlite", "postgres", "vista"] }
 # REST routes are exposed through the Vista facade (the same surface the
 # api-client UI talks to), not raw Tables.
-vantage-vista = "0.6"
+vantage-vista = "0.6.5"
 
 # Async + HTTP server + CLI + (de)serialization
 tokio = { version = "1.52", features = ["full"] }
 axum = "0.8"
-sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite"] }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite", "postgres"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 ciborium = "0.2"

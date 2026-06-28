@@ -2,12 +2,12 @@
 #![cfg(test)]
 
 use tempfile::TempPath;
-use vantage_sql::sqlite::SqliteDB;
+use crate::db::Db;
 
 /// A temp DB whose backing file is deleted when this drops. `db` is declared
 /// first so its pool closes before the file is removed.
 pub struct TempDb {
-    pub db: SqliteDB,
+    pub db: Db,
     _path: TempPath,
 }
 
