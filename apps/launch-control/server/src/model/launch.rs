@@ -1,21 +1,19 @@
 use vantage_dataset::prelude::InsertableDataSet;
-use vantage_expressions::Expression;
-use vantage_sql::sqlite::operation::SqliteOperation;
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
-use vantage_sql::sqlite_expr;
+use vantage_expressions::{Expression, expr_any};
 use vantage_table::prelude::IdGenerator;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
+use crate::db::{AnyPostgresType, AnySqliteType, Cell, Db, DbOperation};
 use crate::model::{
     Agency, Landing, LaunchCrew, LaunchStatus, LauncherConfiguration, Mission, NetPrecision, Pad,
-    PayloadFlight,
+    Payload, PayloadFlight,
 };
 
 /// The hub entity. Belongs to a status, provider (agency), rocket
 /// configuration, mission and pad; has many payload flights, landings and
 /// crew assignments.
-#[entity(SqliteType)]
+#[entity(SqliteType, PostgresType)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Launch {
     pub name: String,
@@ -52,9 +50,10 @@ pub struct Launch {
 }
 
 impl Launch {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, Launch> {
+    pub fn table(db: Db) -> Table<Db, Launch> {
         Table::new("launches", db)
             .with_id_column("id")
+            .with_text_id()
             .with_generated_id(IdGenerator::UuidV7)
             .with_timestamps()
             .with_column_of::<String>("name")
@@ -101,15 +100,17 @@ impl Launch {
                 t.query_payload_flights().get_count_query()
             })
             .with_expression("crew_count", |t| t.query_launch_crew().get_count_query())
-            // Two-hop rollup: sum payload mass across this launch's payload flights.
-            // Raw SQL because vantage's correlated subqueries can't express a JOIN
-            // through the junction table cleanly.
-            .with_expression("total_payload_mass", |_t| {
-                sqlite_expr!(
-                    "(SELECT COALESCE(SUM(p.mass), 0) FROM payload_flights pf \
-                     JOIN payloads p ON p.id = pf.payload_id \
-                     WHERE pf.launch_id = launches.id)"
-                )
+            // Two-hop rollup: sum payload mass across this launch's payloads.
+            // Built from relation traversal, not raw SQL: launch → payload_flights
+            // (correlated) → payloads (`IN (subquery)`), then a portable
+            // `get_sum_query` over `mass`. `COALESCE(..., 0)` keeps an empty
+            // launch at 0 rather than null.
+            .with_expression("total_payload_mass", |t| {
+                let payloads = t
+                    .query_payload_flights()
+                    .get_ref_as::<Payload>("payload")
+                    .unwrap();
+                expr_any!("COALESCE({}, 0)", (payloads.get_sum_query(&payloads["mass"])))
             })
     }
 }
@@ -133,14 +134,14 @@ pub(crate) struct NewLaunch {
 ///   configurations and pads.
 pub(crate) trait LaunchTableExt {
     async fn new_launch(&self, args: NewLaunch) -> anyhow::Result<String>;
-    fn query_payload_flights(&self) -> Table<SqliteDB, PayloadFlight>;
-    fn query_launch_crew(&self) -> Table<SqliteDB, LaunchCrew>;
-    fn count_successful(self) -> Expression<AnySqliteType>;
-    fn count_failed(self) -> Expression<AnySqliteType>;
-    fn count_pending(self) -> Expression<AnySqliteType>;
+    fn query_payload_flights(&self) -> Table<Db, PayloadFlight>;
+    fn query_launch_crew(&self) -> Table<Db, LaunchCrew>;
+    fn count_successful(self) -> Expression<Cell>;
+    fn count_failed(self) -> Expression<Cell>;
+    fn count_pending(self) -> Expression<Cell>;
 }
 
-impl LaunchTableExt for Table<SqliteDB, Launch> {
+impl LaunchTableExt for Table<Db, Launch> {
     async fn new_launch(&self, args: NewLaunch) -> anyhow::Result<String> {
         let launch = Launch {
             name: args.name,
@@ -156,25 +157,25 @@ impl LaunchTableExt for Table<SqliteDB, Launch> {
         Ok(id)
     }
 
-    fn query_payload_flights(&self) -> Table<SqliteDB, PayloadFlight> {
+    fn query_payload_flights(&self) -> Table<Db, PayloadFlight> {
         self.get_subquery_as("payload_flights").unwrap()
     }
 
-    fn query_launch_crew(&self) -> Table<SqliteDB, LaunchCrew> {
+    fn query_launch_crew(&self) -> Table<Db, LaunchCrew> {
         self.get_subquery_as("launch_crew").unwrap()
     }
 
-    fn count_successful(self) -> Expression<AnySqliteType> {
+    fn count_successful(self) -> Expression<Cell> {
         let cond = self["status_id"].eq("3");
         self.with_condition(cond).get_count_query()
     }
 
-    fn count_failed(self) -> Expression<AnySqliteType> {
+    fn count_failed(self) -> Expression<Cell> {
         let cond = self["status_id"].in_list(&["4", "7"]);
         self.with_condition(cond).get_count_query()
     }
 
-    fn count_pending(self) -> Expression<AnySqliteType> {
+    fn count_pending(self) -> Expression<Cell> {
         let cond = self["status_id"].not_in_list(&["3", "4", "7"]);
         self.with_condition(cond).get_count_query()
     }

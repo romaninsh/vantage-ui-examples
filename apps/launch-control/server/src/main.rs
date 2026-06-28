@@ -16,11 +16,13 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use indexmap::IndexMap;
 use vantage_dataset::traits::ReadableValueSet;
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
 use vantage_types::Record;
+
+use crate::db::{Cell, Db};
 
 /// SQLite location. `LAUNCH_DB_PATH` overrides the compile-time default — set it
 /// to `/tmp/launch.sqlite` on AWS Lambda, whose only writable disk is `/tmp`.
+/// Ignored by the PostgreSQL (`pg`) build, which connects via `DATABASE_URL`.
 fn db_path() -> String {
     std::env::var("LAUNCH_DB_PATH")
         .unwrap_or_else(|_| concat!(env!("CARGO_MANIFEST_DIR"), "/launch.sqlite").to_string())
@@ -138,9 +140,9 @@ fn serve_from_env() -> Cmd {
     }
 }
 
-type Rows = IndexMap<String, Record<AnySqliteType>>;
+type Rows = IndexMap<String, Record<Cell>>;
 
-async fn query(db: &SqliteDB, table: &str, filter: Option<&str>) -> Result<()> {
+async fn query(db: &Db, table: &str, filter: Option<&str>) -> Result<()> {
     let rows = list_table(db, table).await?;
     let (field, value) = match filter.and_then(|f| f.split_once('=')) {
         Some((f, v)) => (Some(f), Some(v)),
@@ -170,7 +172,7 @@ async fn query(db: &SqliteDB, table: &str, filter: Option<&str>) -> Result<()> {
 
 /// Build the requested table and return its rows as raw value records. One
 /// `match` over the table name; every arm yields the same uniform type.
-async fn list_table(db: &SqliteDB, table: &str) -> Result<Rows> {
+async fn list_table(db: &Db, table: &str) -> Result<Rows> {
     use model::*;
     let rows = match table {
         "launches" => Launch::table(db.clone()).list_values().await?,

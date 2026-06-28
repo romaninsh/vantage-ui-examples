@@ -4,7 +4,7 @@
 
 use serde::Deserialize;
 use vantage_dataset::prelude::ReadableDataSet;
-use vantage_sql::sqlite::SqliteDB;
+use crate::db::Db;
 
 use crate::model::{Agency, Launch, LaunchTableExt, LauncherConfiguration, NewLaunch, Pad};
 
@@ -26,7 +26,7 @@ pub enum TriggerError {
 }
 
 /// Validate the request, create an unscheduled launch, and return its id.
-pub async fn create_launch(db: &SqliteDB, input: CreateLaunch) -> Result<String, TriggerError> {
+pub async fn create_launch(db: &Db, input: CreateLaunch) -> Result<String, TriggerError> {
     // Agency must exist.
     let agency = Agency::table(db.clone())
         .get(input.lsp_id.clone())
@@ -89,7 +89,7 @@ mod tests {
     use crate::sim::testutil::temp_db;
     use vantage_dataset::prelude::WritableDataSet;
 
-    async fn seed_refs(db: &SqliteDB) {
+    async fn seed_refs(db: &Db) {
         // Two agencies, a pad, and one config belonging to agency "121".
         Agency::table(db.clone())
             .insert(

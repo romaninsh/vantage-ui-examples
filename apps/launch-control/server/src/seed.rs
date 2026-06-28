@@ -23,7 +23,7 @@ use std::collections::HashMap;
 use anyhow::Result;
 use serde_json::Value;
 use vantage_dataset::traits::WritableDataSet;
-use vantage_sql::sqlite::SqliteDB;
+use crate::db::Db;
 
 use crate::model::*;
 
@@ -70,7 +70,7 @@ pub async fn refetch() -> Result<()> {
 }
 
 /// Decompose the fixtures and write every normalized row into `db`.
-pub async fn seed(db: &SqliteDB) -> Result<()> {
+pub async fn seed(db: &Db) -> Result<()> {
     let mut c = Collected::default();
 
     for file in LAUNCH_FILES {
@@ -596,7 +596,7 @@ impl Collected {
         Some(id)
     }
 
-    async fn write_all(&self, db: &SqliteDB) -> Result<()> {
+    async fn write_all(&self, db: &Db) -> Result<()> {
         macro_rules! write_rows {
             ($ctor:path, $rows:expr) => {{
                 let t = $ctor(db.clone());

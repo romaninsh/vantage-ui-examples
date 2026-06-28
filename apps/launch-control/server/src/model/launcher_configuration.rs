@@ -1,4 +1,4 @@
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use crate::db::{AnyPostgresType, AnySqliteType, Db};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
@@ -7,7 +7,7 @@ use crate::model::{Agency, Launch};
 
 /// A rocket design (e.g. "Falcon 9 Block 5"). Built by a manufacturer (agency);
 /// flown by many launches.
-#[entity(SqliteType)]
+#[entity(SqliteType, PostgresType)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct LauncherConfiguration {
     pub name: String,
@@ -27,9 +27,10 @@ pub struct LauncherConfiguration {
 }
 
 impl LauncherConfiguration {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, LauncherConfiguration> {
+    pub fn table(db: Db) -> Table<Db, LauncherConfiguration> {
         Table::new("launcher_configurations", db)
             .with_id_column("id")
+            .with_text_id()
             .with_column_of::<String>("name")
             .with_column_of::<Option<String>>("full_name")
             .with_column_of::<Option<String>>("variant")
@@ -58,11 +59,11 @@ impl LauncherConfiguration {
 }
 
 trait LauncherConfigurationTableExt {
-    fn query_launches(&self) -> Table<SqliteDB, Launch>;
+    fn query_launches(&self) -> Table<Db, Launch>;
 }
 
-impl LauncherConfigurationTableExt for Table<SqliteDB, LauncherConfiguration> {
-    fn query_launches(&self) -> Table<SqliteDB, Launch> {
+impl LauncherConfigurationTableExt for Table<Db, LauncherConfiguration> {
+    fn query_launches(&self) -> Table<Db, Launch> {
         self.get_subquery_as("launches").unwrap()
     }
 }

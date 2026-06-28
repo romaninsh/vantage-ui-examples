@@ -1,4 +1,4 @@
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use crate::db::{AnyPostgresType, AnySqliteType, Db};
 use vantage_table::prelude::IdGenerator;
 use vantage_table::table::Table;
 use vantage_types::entity;
@@ -6,7 +6,7 @@ use vantage_types::entity;
 use crate::model::Orbit;
 
 /// A launch's mission. Targets an orbit.
-#[entity(SqliteType)]
+#[entity(SqliteType, PostgresType)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Mission {
     pub name: String,
@@ -17,9 +17,10 @@ pub struct Mission {
 }
 
 impl Mission {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, Mission> {
+    pub fn table(db: Db) -> Table<Db, Mission> {
         Table::new("missions", db)
             .with_id_column("id")
+            .with_text_id()
             .with_generated_id(IdGenerator::UuidV7)
             .with_column_of::<String>("name")
             .with_column_of::<Option<String>>("mission_type")

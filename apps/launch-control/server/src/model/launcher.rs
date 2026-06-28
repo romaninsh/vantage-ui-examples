@@ -1,4 +1,4 @@
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use crate::db::{AnyPostgresType, AnySqliteType, Db};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
@@ -7,7 +7,7 @@ use crate::model::{Landing, LauncherStatus};
 
 /// A physical booster (a "core"), identified by serial number. Accumulates many
 /// landing attempts across its flights.
-#[entity(SqliteType)]
+#[entity(SqliteType, PostgresType)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Launcher {
     pub serial_number: Option<String>,
@@ -20,9 +20,10 @@ pub struct Launcher {
 }
 
 impl Launcher {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, Launcher> {
+    pub fn table(db: Db) -> Table<Db, Launcher> {
         Table::new("launchers", db)
             .with_id_column("id")
+            .with_text_id()
             .with_column_of::<Option<String>>("serial_number")
             .with_column_of::<Option<String>>("status_id")
             .with_column_of::<Option<bool>>("flight_proven")
@@ -43,11 +44,11 @@ impl Launcher {
 }
 
 trait LauncherTableExt {
-    fn query_landings(&self) -> Table<SqliteDB, Landing>;
+    fn query_landings(&self) -> Table<Db, Landing>;
 }
 
-impl LauncherTableExt for Table<SqliteDB, Launcher> {
-    fn query_landings(&self) -> Table<SqliteDB, Landing> {
+impl LauncherTableExt for Table<Db, Launcher> {
+    fn query_landings(&self) -> Table<Db, Landing> {
         self.get_subquery_as("landings").unwrap()
     }
 }

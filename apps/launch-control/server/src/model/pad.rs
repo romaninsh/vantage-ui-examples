@@ -1,11 +1,11 @@
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use crate::db::{AnyPostgresType, AnySqliteType, Db};
 use vantage_table::table::Table;
 use vantage_types::entity;
 
 use crate::model::{Launch, Location};
 
 /// A launch pad. Sits at a location; hosts many launches.
-#[entity(SqliteType)]
+#[entity(SqliteType, PostgresType)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Pad {
     pub name: String,
@@ -19,9 +19,10 @@ pub struct Pad {
 }
 
 impl Pad {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, Pad> {
+    pub fn table(db: Db) -> Table<Db, Pad> {
         Table::new("pads", db)
             .with_id_column("id")
+            .with_text_id()
             .with_column_of::<String>("name")
             .with_column_of::<Option<String>>("country")
             .with_column_of::<Option<String>>("location_id")
@@ -39,11 +40,11 @@ impl Pad {
 }
 
 trait PadTableExt {
-    fn query_launches(&self) -> Table<SqliteDB, Launch>;
+    fn query_launches(&self) -> Table<Db, Launch>;
 }
 
-impl PadTableExt for Table<SqliteDB, Pad> {
-    fn query_launches(&self) -> Table<SqliteDB, Launch> {
+impl PadTableExt for Table<Db, Pad> {
+    fn query_launches(&self) -> Table<Db, Launch> {
         self.get_subquery_as("launches").unwrap()
     }
 }

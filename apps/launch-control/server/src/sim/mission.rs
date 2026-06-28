@@ -13,7 +13,7 @@ use chrono::Utc;
 use vantage_dataset::prelude::{
     ActiveEntity, ActiveEntitySet, InsertableDataSet, WritableValueSet,
 };
-use vantage_sql::sqlite::SqliteDB;
+use crate::db::Db;
 use vantage_table::prelude::GetRefExt;
 use vantage_table::table::Table;
 
@@ -27,7 +27,7 @@ const PILOT: &str = "Pilot";
 const SPECIALIST: &str = "Mission Specialist";
 
 /// Run the mission for an already-created launch `id`.
-pub async fn run(db: &SqliteDB, id: &str, pace: Pace) -> anyhow::Result<()> {
+pub async fn run(db: &Db, id: &str, pace: Pace) -> anyhow::Result<()> {
     ensure_statuses(db).await?;
 
     let launches = Launch::table(db.clone());
@@ -97,22 +97,14 @@ pub async fn run(db: &SqliteDB, id: &str, pace: Pace) -> anyhow::Result<()> {
     pace.gap(secs(3)).await;
     fix_name(&astronauts, &glover, "Victor Glover").await?;
 
-    // T-15s: create the payload and attach a flight through the launch.
+    // T-15s: the manifest fills in — three payload flights attached through the
+    // launch, one after another, so the UI's payloads tab populates live.
     pace.gap(secs(4)).await;
-    let payload_id = payloads
-        .insert_return_id(&Payload {
-            name: "Orion CSM".into(),
-            mass: Some(26_520.0),
-            ..Default::default()
-        })
-        .await?;
-    payload_flights
-        .insert_return_id(&PayloadFlight {
-            payload_id: Some(payload_id),
-            destination: Some("Trans-Lunar Injection".into()),
-            ..Default::default()
-        })
-        .await?;
+    add_payload(&payloads, &payload_flights, "Orion CSM", 26_520.0, "Trans-Lunar Injection").await?;
+    pace.gap(secs(1)).await;
+    add_payload(&payloads, &payload_flights, "ArgoMoon CubeSat", 14.0, "Lunar Flyby").await?;
+    pace.gap(secs(1)).await;
+    add_payload(&payloads, &payload_flights, "BioSentinel CubeSat", 14.0, "Heliocentric Orbit").await?;
     edit(&mut launch, |l| l.probability = Some(88)).await?;
 
     // T-6s: go for launch.
@@ -171,7 +163,7 @@ const ASCENT_TICKS: i64 = 36;
 /// Apply `f` to the launch, stamp `last_updated` (the UI live-refresh keys off
 /// it), and persist. Every launch edit goes through here.
 async fn edit(
-    launch: &mut ActiveEntity<'_, Table<SqliteDB, Launch>, Launch>,
+    launch: &mut ActiveEntity<'_, Table<Db, Launch>, Launch>,
     f: impl FnOnce(&mut Launch),
 ) -> anyhow::Result<()> {
     f(launch);
@@ -183,8 +175,8 @@ async fn edit(
 /// Create an astronaut and assign them to the launch crew in one step; the crew
 /// row's `launch_id` is filled by the scoped set. Returns (astronaut id, crew id).
 async fn add_crew(
-    astronauts: &Table<SqliteDB, Astronaut>,
-    launch_crew: &Table<SqliteDB, LaunchCrew>,
+    astronauts: &Table<Db, Astronaut>,
+    launch_crew: &Table<Db, LaunchCrew>,
     name: &str,
     role: &str,
 ) -> anyhow::Result<(String, String)> {
@@ -204,8 +196,34 @@ async fn add_crew(
     Ok((astronaut_id, crew_id))
 }
 
+/// Create a payload and attach a flight to it through the launch in one step;
+/// the flight's `launch_id` is filled by the scoped set.
+async fn add_payload(
+    payloads: &Table<Db, Payload>,
+    payload_flights: &Table<Db, PayloadFlight>,
+    name: &str,
+    mass: f64,
+    destination: &str,
+) -> anyhow::Result<()> {
+    let payload_id = payloads
+        .insert_return_id(&Payload {
+            name: name.into(),
+            mass: Some(mass),
+            ..Default::default()
+        })
+        .await?;
+    payload_flights
+        .insert_return_id(&PayloadFlight {
+            payload_id: Some(payload_id),
+            destination: Some(destination.into()),
+            ..Default::default()
+        })
+        .await?;
+    Ok(())
+}
+
 /// Swap the roles of two crew rows (whatever they currently are).
-async fn swap_roles(crew: &Table<SqliteDB, LaunchCrew>, a: &str, b: &str) -> anyhow::Result<()> {
+async fn swap_roles(crew: &Table<Db, LaunchCrew>, a: &str, b: &str) -> anyhow::Result<()> {
     let mut x = crew
         .get_entity(a.to_string())
         .await?
@@ -222,7 +240,7 @@ async fn swap_roles(crew: &Table<SqliteDB, LaunchCrew>, a: &str, b: &str) -> any
 
 /// Correct an astronaut's name.
 async fn fix_name(
-    astronauts: &Table<SqliteDB, Astronaut>,
+    astronauts: &Table<Db, Astronaut>,
     id: &str,
     name: &str,
 ) -> anyhow::Result<()> {

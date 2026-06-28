@@ -1,4 +1,4 @@
-use vantage_sql::sqlite::{AnySqliteType, SqliteDB};
+use crate::db::{AnyPostgresType, AnySqliteType, Db};
 use vantage_table::prelude::IdGenerator;
 use vantage_table::table::Table;
 use vantage_types::entity;
@@ -7,7 +7,7 @@ use crate::model::{Launch, Payload};
 
 /// Join between a launch and a payload (one row per payload carried on a flight).
 /// The source for per-launch payload aggregation (count, total mass).
-#[entity(SqliteType)]
+#[entity(SqliteType, PostgresType)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct PayloadFlight {
     pub launch_id: Option<String>,
@@ -18,9 +18,10 @@ pub struct PayloadFlight {
 }
 
 impl PayloadFlight {
-    pub fn table(db: SqliteDB) -> Table<SqliteDB, PayloadFlight> {
+    pub fn table(db: Db) -> Table<Db, PayloadFlight> {
         Table::new("payload_flights", db)
             .with_id_column("id")
+            .with_text_id()
             .with_generated_id(IdGenerator::UuidV7)
             .with_column_of::<Option<String>>("launch_id")
             .with_column_of::<Option<String>>("payload_id")
