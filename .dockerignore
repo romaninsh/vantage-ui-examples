@@ -1,12 +1,10 @@
-# The Lambda image packages only the prebuilt static binary (compiled on the CI
-# runner — see .github/workflows/deploy-launch-control.yaml). Exclude everything,
-# then re-include just that one binary and its ancestor dirs, so the build
-# context stays tiny.
+# The Lambda image packages only the prebuilt binary (compiled on the CI runner
+# — see .github/workflows/deploy-launch-control.yaml). Exclude everything, then
+# re-include just that one binary and its ancestor dirs, so the build context
+# stays tiny.
 *
 !target
 target/*
-!target/aarch64-unknown-linux-musl
-target/aarch64-unknown-linux-musl/*
-!target/aarch64-unknown-linux-musl/release
-target/aarch64-unknown-linux-musl/release/*
-!target/aarch64-unknown-linux-musl/release/launch-control-server
+!target/release
+target/release/*
+!target/release/launch-control-server
