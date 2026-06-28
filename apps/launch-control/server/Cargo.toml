@@ -21,9 +21,10 @@ vantage-dataset = "0.6"
 vantage-expressions = "0.6"
 # Both SQL backends compile in so a model can carry both datasource markers
 # (`#[entity(SqliteType, PostgresType)]`); the `pg` feature below selects which
-# one the app instantiates. 0.6.5 binds text ids correctly + adds the Postgres
-# Vista window fetch.
-vantage-sql = { version = "0.6.5", features = ["sqlite", "postgres", "vista"] }
+# one the app instantiates. 0.6.6 builds sqlx with TLS so the Postgres pool can
+# reach an SSL-enforcing server (e.g. RDS `rds.force_ssl=1`); also binds text ids
+# correctly + adds the Postgres Vista window fetch.
+vantage-sql = { version = "0.6.6", features = ["sqlite", "postgres", "vista"] }
 # REST routes are exposed through the Vista facade (the same surface the
 # api-client UI talks to), not raw Tables.
 vantage-vista = "0.6.5"
