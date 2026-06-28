@@ -110,21 +110,36 @@ async fn main() -> Result<()> {
                 },
             };
             let app = rest::router(state);
-            let addr = format!("0.0.0.0:{port}");
-            let listener = tokio::net::TcpListener::bind(&addr).await?;
-            println!(
-                "launch-control serving on http://127.0.0.1:{port}  \
-                 (error_rate={error_rate}, latency={latency_min}-{latency_max}ms)"
-            );
-            axum::serve(listener, app).await?;
+
+            #[cfg(feature = "lambda")]
+            {
+                // Native AWS Lambda runtime: drive the axum Router straight off
+                // the Lambda Runtime API (no Lambda Web Adapter, no listening
+                // socket). `port` is unused in this mode.
+                let _ = port;
+                lambda_http::run(app)
+                    .await
+                    .map_err(|e| anyhow::anyhow!("lambda runtime error: {e}"))?;
+            }
+            #[cfg(not(feature = "lambda"))]
+            {
+                let addr = format!("0.0.0.0:{port}");
+                let listener = tokio::net::TcpListener::bind(&addr).await?;
+                println!(
+                    "launch-control serving on http://127.0.0.1:{port}  \
+                     (error_rate={error_rate}, latency={latency_min}-{latency_max}ms)"
+                );
+                axum::serve(listener, app).await?;
+            }
         }
     }
     Ok(())
 }
 
 /// `Serve` configured entirely from the environment — the entrypoint when the
-/// binary is launched with no subcommand (the Lambda container case). `PORT` is
-/// the Lambda Web Adapter's convention for the port the app listens on.
+/// binary is launched with no subcommand (the Lambda container case). Under the
+/// `lambda` feature the binary speaks the Runtime API and `PORT` is unused;
+/// otherwise it's the TCP port the axum listener binds.
 fn serve_from_env() -> Cmd {
     fn env_parse<T: std::str::FromStr>(key: &str, default: T) -> T {
         std::env::var(key)

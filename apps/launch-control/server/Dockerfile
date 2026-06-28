@@ -1,44 +1,27 @@
-# Lambda container image for the launch-control demo server.
+# Lambda container image for the launch-control demo server — a single,
+# statically-linked (arm64 musl) binary on `scratch`. There is no build stage
+# here: CI compiles the binary on the runner (reusing the shared
+# Swatinem/rust-cache, the same cache every other pipeline uses) and this image
+# just packages it. The result is a tiny image with no OS userland.
 #
-# The unmodified axum server is fronted by the AWS Lambda Web Adapter, copied in
-# as an external extension: it polls the Lambda Runtime API and forwards each
-# invocation to the HTTP server listening on $PORT — so no Lambda-specific code
-# is needed.
+# The binary is built `--no-default-features --features pg,lambda`:
+#   - `lambda`: speaks the AWS Lambda Runtime API directly (lambda_http) — no
+#     Lambda Web Adapter extension, no listening socket, faster cold start.
+#   - `pg` (no `sqlite`): PostgreSQL-only — no SQLite, no libsqlite3-sys. Reads
+#     DATABASE_URL from the Lambda env (injected by vantage-terraform/rds.tf).
+#     sqlx + reqwest both link rustls with webpki roots compiled in, so nothing
+#     external (OpenSSL, CA bundle) is needed — hence `scratch` works.
 #
-# Backend (the `FEATURES` build arg): empty builds the SQLite image (the default
-# everywhere), where the database lives in /tmp (Lambda's only writable disk) and
-# is seeded from embedded fixtures on a cold start. `--build-arg FEATURES=pg`
-# builds the PostgreSQL image — the deploy workflow passes this; the server then
-# reads DATABASE_URL from the Lambda env (injected by vantage-terraform/rds.tf).
-#
-# Build context is the vantage-ui-examples repo root (so Cargo can see the
-# workspace); the server's vantage-* deps come from crates.io.
-#
+# arm64 (Graviton) Lambda — the function is `architectures = ["arm64"]`. Built on
+# an x86_64 runner via cargo-zigbuild (zig cross-compiles ring's C). See the
+# deploy workflow:
+#   cargo zigbuild --release --target aarch64-unknown-linux-musl \
+#     --no-default-features --features pg,lambda -p launch-control-server
 #   docker build -f apps/launch-control/server/Dockerfile -t launch-control .
-#   docker build -f apps/launch-control/server/Dockerfile --build-arg FEATURES=pg -t launch-control .
 
-FROM rust:1-bookworm AS builder
-WORKDIR /build
-COPY . .
-# Empty = SQLite (default); `pg` selects the PostgreSQL backend.
-ARG FEATURES=""
-RUN cargo build --release -p launch-control-server ${FEATURES:+--features "$FEATURES"}
+FROM scratch
 
-FROM debian:bookworm-slim
-# The adapter runs as a Lambda extension and bridges Runtime API ⇄ HTTP.
-COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.0 /lambda-adapter /opt/extensions/lambda-adapter
-# libssl3: reqwest uses native-tls (dynamically linked OpenSSL), so the binary
-# needs libssl.so.3 present to start even though `serve` makes no outbound calls.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates libssl3 \
-    && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /build/target/release/launch-control-server /usr/local/bin/launch-control-server
+# Static binary, built on the runner. Build context is the repo root.
+COPY target/aarch64-unknown-linux-musl/release/launch-control-server /launch-control-server
 
-# PORT: where the adapter forwards (LWA convention). LAUNCH_DB_PATH: the writable
-# /tmp database. Readiness via TCP so the adapter waits for the port to open
-# (after the cold-start seed) rather than probing an HTTP route.
-ENV PORT=8080 \
-    LAUNCH_DB_PATH=/tmp/launch.sqlite \
-    AWS_LWA_READINESS_CHECK_PROTOCOL=tcp
-
-ENTRYPOINT ["/usr/local/bin/launch-control-server"]
+ENTRYPOINT ["/launch-control-server"]

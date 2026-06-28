@@ -3,12 +3,17 @@ use vantage_sql::primitives::Case;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
-use crate::db::{AnyPostgresType, AnySqliteType, Db};
+#[cfg(not(feature = "pg"))]
+use crate::db::AnySqliteType;
+#[cfg(feature = "pg")]
+use crate::db::AnyPostgresType;
+use crate::db::Db;
 use crate::model::launch::LaunchTableExt;
 use crate::model::{AgencyType, Launch, LauncherConfiguration};
 
 /// A launch service provider / manufacturer. Has many launches (as the LSP).
-#[entity(SqliteType, PostgresType)]
+#[cfg_attr(not(feature = "pg"), entity(SqliteType))]
+#[cfg_attr(feature = "pg", entity(PostgresType))]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Agency {
     pub name: String,

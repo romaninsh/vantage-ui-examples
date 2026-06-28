@@ -6,10 +6,17 @@ publish = false
 description = "Self-hosted, deliberately-flaky Launch Library 2 demo server for the launch-control vantage-ui example"
 
 [features]
-# Default build talks to SQLite (zero-setup local dev). `--features pg` flips the
-# `Db` type alias to PostgreSQL; see `src/db.rs`.
-default = []
-pg = []
+# Exactly one backend is compiled in. Default is SQLite (zero-setup local dev);
+# `--no-default-features --features pg` is PostgreSQL-only — it pulls neither the
+# SQLite vantage backend nor libsqlite3-sys, keeping the Lambda binary lean. See
+# `src/db.rs` (the `Db` alias) and each model's cfg-gated `#[entity]` marker.
+default = ["sqlite"]
+sqlite = ["vantage-sql/sqlite", "sqlx/sqlite"]
+pg = ["vantage-sql/postgres", "sqlx/postgres"]
+# Run as a native AWS Lambda (the Runtime API, via lambda_http) instead of a TCP
+# server — no Lambda Web Adapter. The deployed image is built with this; local
+# dev omits it and keeps the plain axum listener. See the `Serve` arm in main.rs.
+lambda = ["dep:lambda_http"]
 
 [dependencies]
 # Vantage data layer (crates.io 0.6.x — no patch; this example ships against published crates).
@@ -19,12 +26,12 @@ vantage-types = "0.6"
 vantage-table = "0.6.9"
 vantage-dataset = "0.6"
 vantage-expressions = "0.6"
-# Both SQL backends compile in so a model can carry both datasource markers
-# (`#[entity(SqliteType, PostgresType)]`); the `pg` feature below selects which
-# one the app instantiates. 0.6.6 builds sqlx with TLS so the Postgres pool can
-# reach an SSL-enforcing server (e.g. RDS `rds.force_ssl=1`); also binds text ids
-# correctly + adds the Postgres Vista window fetch.
-vantage-sql = { version = "0.6.6", features = ["sqlite", "postgres", "vista"] }
+# The SQL backend is selected by the `sqlite`/`pg` features above (each enables
+# the matching vantage-sql backend), so a non-default build compiles only one.
+# 0.6.6 builds sqlx with TLS so the Postgres pool can reach an SSL-enforcing
+# server (e.g. RDS `rds.force_ssl=1`); also binds text ids correctly + adds the
+# Postgres Vista window fetch.
+vantage-sql = { version = "0.6.6", default-features = false, features = ["vista"] }
 # REST routes are exposed through the Vista facade (the same surface the
 # api-client UI talks to), not raw Tables.
 vantage-vista = "0.6.5"
@@ -32,7 +39,7 @@ vantage-vista = "0.6.5"
 # Async + HTTP server + CLI + (de)serialization
 tokio = { version = "1.52", features = ["full"] }
 axum = "0.8"
-sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite", "postgres"] }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 ciborium = "0.2"
@@ -44,7 +51,12 @@ rand = "0.8"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 # Seeder fetches from lldev.
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls-webpki-roots"] }
+
+# Native Lambda runtime (the `lambda` feature). Speaks the Lambda Runtime API
+# directly and runs an axum Router, so the deployed image needs no Lambda Web
+# Adapter extension. http/hyper 1.x — matches axum 0.8.
+lambda_http = { version = "1.2", optional = true, default-features = false, features = ["apigw_http"] }
 
 [dev-dependencies]
 tempfile = "3"

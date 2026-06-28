@@ -1,4 +1,8 @@
-use crate::db::{AnyPostgresType, AnySqliteType, Db};
+#[cfg(not(feature = "pg"))]
+use crate::db::AnySqliteType;
+#[cfg(feature = "pg")]
+use crate::db::AnyPostgresType;
+use crate::db::Db;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
@@ -7,7 +11,8 @@ use crate::model::{Agency, Launch};
 
 /// A rocket design (e.g. "Falcon 9 Block 5"). Built by a manufacturer (agency);
 /// flown by many launches.
-#[entity(SqliteType, PostgresType)]
+#[cfg_attr(not(feature = "pg"), entity(SqliteType))]
+#[cfg_attr(feature = "pg", entity(PostgresType))]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct LauncherConfiguration {
     pub name: String,

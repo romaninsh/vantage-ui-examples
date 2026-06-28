@@ -4,7 +4,11 @@ use vantage_table::prelude::IdGenerator;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
-use crate::db::{AnyPostgresType, AnySqliteType, Cell, Db, DbOperation};
+#[cfg(not(feature = "pg"))]
+use crate::db::AnySqliteType;
+#[cfg(feature = "pg")]
+use crate::db::AnyPostgresType;
+use crate::db::{Cell, Db, DbOperation};
 use crate::model::{
     Agency, Landing, LaunchCrew, LaunchStatus, LauncherConfiguration, Mission, NetPrecision, Pad,
     Payload, PayloadFlight,
@@ -13,7 +17,8 @@ use crate::model::{
 /// The hub entity. Belongs to a status, provider (agency), rocket
 /// configuration, mission and pad; has many payload flights, landings and
 /// crew assignments.
-#[entity(SqliteType, PostgresType)]
+#[cfg_attr(not(feature = "pg"), entity(SqliteType))]
+#[cfg_attr(feature = "pg", entity(PostgresType))]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Launch {
     pub name: String,

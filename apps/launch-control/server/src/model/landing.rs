@@ -2,12 +2,17 @@ use vantage_expressions::Expression;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
-use crate::db::{AnyPostgresType, AnySqliteType, Cell, Db, DbOperation};
+#[cfg(not(feature = "pg"))]
+use crate::db::AnySqliteType;
+#[cfg(feature = "pg")]
+use crate::db::AnyPostgresType;
+use crate::db::{Cell, Db, DbOperation};
 use crate::model::{LandingType, Landpad, Launch, Launcher};
 
 /// A booster landing attempt for a launch. `success` is null until the attempt
 /// resolves — the simulator flips it during a replay.
-#[entity(SqliteType, PostgresType)]
+#[cfg_attr(not(feature = "pg"), entity(SqliteType))]
+#[cfg_attr(feature = "pg", entity(PostgresType))]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Landing {
     pub launch_id: Option<String>,

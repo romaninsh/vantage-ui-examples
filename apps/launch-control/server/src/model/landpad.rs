@@ -1,4 +1,8 @@
-use crate::db::{AnyPostgresType, AnySqliteType, Db};
+#[cfg(not(feature = "pg"))]
+use crate::db::AnySqliteType;
+#[cfg(feature = "pg")]
+use crate::db::AnyPostgresType;
+use crate::db::Db;
 use vantage_table::table::Table;
 use vantage_types::entity;
 
@@ -6,7 +10,8 @@ use crate::model::Landing;
 use crate::model::landing::LandingTableExt;
 
 /// A landing location (ground pad or drone ship). Receives many landings.
-#[entity(SqliteType, PostgresType)]
+#[cfg_attr(not(feature = "pg"), entity(SqliteType))]
+#[cfg_attr(feature = "pg", entity(PostgresType))]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Landpad {
     pub name: String,
