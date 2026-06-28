@@ -30,32 +30,26 @@ env:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # Native arm64 (Graviton) runner — builds the arm64 binary directly, no
+    # cross-compile and no zig/musl toolchain.
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
       # Build the binary on the runner (not inside Docker) so it reuses the same
-      # Swatinem/rust-cache every other pipeline uses; the image is then just the
-      # static binary on `scratch`. Target is arm64 (Graviton) musl, cross-built
-      # from the x86_64 runner via cargo-zigbuild (zig compiles ring's C cleanly,
-      # which musl-gcc does not).
+      # Swatinem/rust-cache every other pipeline uses; the image then just copies
+      # it onto a distroless base. Native arm64 glibc build — stock gcc compiles
+      # ring's C, so no zig/musl needed.
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-unknown-linux-musl
 
       - uses: Swatinem/rust-cache@v2
         with:
           key: arm64-pg-lambda
 
-      - uses: mlugg/setup-zig@v1
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-zigbuild
-
-      - name: Build static binary (PostgreSQL-only + native Lambda runtime)
+      - name: Build binary (PostgreSQL-only + native Lambda runtime)
         run: |
-          cargo zigbuild --release --target aarch64-unknown-linux-musl \
+          cargo build --release \
             -p launch-control-server --no-default-features --features pg,lambda
 
       - uses: aws-actions/configure-aws-credentials@v4
