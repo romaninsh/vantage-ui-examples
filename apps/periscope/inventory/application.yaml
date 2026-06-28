@@ -1,0 +1,5 @@
+# Project-wide settings for Periscope — a deep-sea control room for your cluster.
+# Tokyo Night gives the dark, submarine-console feel; Ayu Light keeps the day shift readable.
+theme:
+  light: Ayu Light
+  dark: Tokyo Night

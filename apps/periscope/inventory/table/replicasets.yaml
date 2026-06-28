@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: replicasets — the middle of the Deployment → ReplicaSet → Pod chain.
+# `id` is the RS name, which each owned pod carries as a projected `ownerName`,
+# so `pods` narrows to exactly this ReplicaSet's pods.
+datasource: cluster
+title: ReplicaSets
+table: "apis/apps/v1/replicasets"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: namespace, type: string, references: namespaces }
+  - { name: replicas, type: int }
+  - { name: ready, type: int }
+  - { name: available, type: int }
+  - { name: age, type: string }
+
+references:
+  pods:
+    table: pods
+    kind: has_many
+    foreign_key: ownerName

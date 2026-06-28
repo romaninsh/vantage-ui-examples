@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: jobs — run-to-completion workloads. succeeded/active/failed track the
+# pods spawned by the Job against its desired `completions`.
+datasource: cluster
+title: Jobs
+table: "apis/batch/v1/jobs"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: namespace, type: string, references: namespaces }
+  - { name: completions, type: int }
+  - { name: succeeded, type: int }
+  - { name: active, type: int }
+  - { name: failed, type: int }
+  - { name: age, type: string }

@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: overview — the periscope view of the whole cluster. A grid dashboard of
+# capacity charts. The Namespace control re-scopes only the namespaced charts
+# (deployments / pods); the node charts are cluster-wide and ignore it.
+#
+# Charts plot one point per row (no aggregation): node capacity comes straight
+# from the parsed quantity columns, so the bars are real cores / bytes.
+
+title: Overview
+layout: grid
+columns: 2
+
+controls:
+  - name: namespace
+    label: Namespace
+    source:
+      table: namespaces
+      value: id
+      label: name
+      all_label: All namespaces
+
+elements:
+  - kind: chart
+    spot: body
+    table: nodes
+    chart_type: bar
+    x: name
+    y: cpuCapacityMillicores
+    title: "CPU capacity by node (mCPU)"
+
+  - kind: chart
+    spot: body
+    table: nodes
+    chart_type: bar
+    x: name
+    y: memCapacityBytes
+    title: "Memory capacity by node (bytes)"
+
+  - kind: chart
+    spot: body
+    table: deployments
+    chart_type: bar
+    x: name
+    y: replicas
+    title: "Desired replicas by deployment"
+    where: 'controls.namespace == "" || row.namespace == controls.namespace'
+
+  - kind: chart
+    spot: body
+    table: pods
+    chart_type: bar
+    x: name
+    y: restarts
+    title: "Restarts by pod"
+    where: 'controls.namespace == "" || row.namespace == controls.namespace'

@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: services — stable network endpoints. `ports` is a projected summary
+# ("80/TCP, 443/TCP"); `type` is ClusterIP / NodePort / LoadBalancer.
+datasource: cluster
+title: Services
+table: "api/v1/services"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: namespace, type: string, references: namespaces }
+  - { name: type, type: string }
+  - { name: clusterIP, type: string }
+  - { name: ports, type: string }
+  - { name: age, type: string }
