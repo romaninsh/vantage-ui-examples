@@ -1,0 +1,6 @@
+Needs a live Kubernetes cluster: the `cluster` datasource auto-connects on
+startup, so without one the app logs a connect ERROR and the shared "clean
+startup" check fails. The published-binary BDD runner (macOS, no cluster) can't
+provide one. Run it explicitly with a cluster up (see cluster/):
+  ./apps/periscope/cluster/start.sh && ./apps/periscope/cluster/ingress.sh
+  cargo run -p test-framework -- apps/periscope
