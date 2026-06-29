@@ -25,8 +25,14 @@ elements:
           let r = actions.new_launch();
           actions.submit_launch(r.lsp_id, r.pad_id, r.rocket_configuration_id, r.name);
     params:
-      # Ordering is done server-side in table/launches.yaml (the api-client
-      # treats columns as non-orderable, so a client-side default_sort no-ops).
+      # Client-side default sort by `last_updated`, newest first. The Dio sorts
+      # over its cache and re-applies it after every refresh, so the launch the
+      # simulator just touched floats to the top. (Because `last_updated` ticks
+      # constantly, the order legitimately reshuffles as the sim runs; switch the
+      # column to `net` for a stable order that doesn't move on refresh.)
+      default_sort:
+        column: last_updated
+        direction: desc
       # 1s so the summary's live telemetry tracks the simulator's ~2s stamps
       # (the projection smooths the gaps; the latency readout shows the lag).
       refresh_interval: 1
@@ -51,11 +57,17 @@ elements:
         status.name:
           color:
             green: ["Go for Launch", "Launch Successful"]
-            yellow: ["Launch in Flight", "To Be Confirmed", "To Be Determined", "On Hold"]
+            yellow:
+              [
+                "Launch in Flight",
+                "To Be Confirmed",
+                "To Be Determined",
+                "On Hold",
+              ]
             red: ["Launch Failure", "Launch was a Partial Failure"]
         webcast_live:
           label: Live
-        net:
+        last_updated:
         launch_service_provider.name:
           label: Provider
         rocket_configuration.name:
@@ -65,4 +77,4 @@ elements:
         payload_count:
         crew_count:
         total_payload_mass:
-        last_updated:
+        net:
