@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: cluster — the Kubernetes cluster Periscope is pointed at.
+#
+# Served by the native `vantage-kubernetes` backend: it loads the current
+# kubeconfig context (honours $KUBECONFIG) or an in-cluster service account,
+# then fetches each resource over the real Kubernetes API and projects the
+# nested JSON into flat, typed rows. Every `table:` is a resource API path;
+# list paths are cluster-wide, so relations span all namespaces.
+#
+# `namespace:` is the default scope for namespaced lookups; the bundled demo
+# fixtures live in `demo` (3-replica nginx Deployment, a sidecar Pod, a Job,
+# a ConfigMap + Secret). Point this at any cluster you can reach with kubectl.
+
+type: kubernetes
+description: "Kubernetes cluster (current kubeconfig context)."
+namespace: demo

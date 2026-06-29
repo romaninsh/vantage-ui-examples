@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: deployments — desired vs live replica counts. The owning-Deployment
+# name is projected onto every pod as `ownerDeployment` (the pod-template-hash
+# stripped off the ReplicaSet name), so `pods` drills straight to this
+# deployment's pods; `replicasets` drills to the ones it owns (`ownerName`).
+datasource: cluster
+title: Deployments
+table: "apis/apps/v1/deployments"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: namespace, type: string, references: namespaces }
+  - { name: replicas, type: int }
+  - { name: ready, type: int }
+  - { name: updated, type: int }
+  - { name: available, type: int }
+  - { name: age, type: string }
+
+references:
+  replicasets:
+    table: replicasets
+    kind: has_many
+    foreign_key: ownerName
+  pods:
+    table: pods
+    kind: has_many
+    foreign_key: ownerDeployment

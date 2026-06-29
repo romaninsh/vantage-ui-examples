@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: usage — live resource usage from the metrics.k8s.io API (metrics-server).
+# Charts stay empty until metrics-server has a sample window; that's expected on
+# a freshly-started cluster. The Namespace control narrows the per-pod charts.
+
+title: Usage
+layout: grid
+columns: 2
+
+controls:
+  - name: namespace
+    label: Namespace
+    source:
+      table: namespaces
+      value: id
+      label: name
+      all_label: All namespaces
+
+elements:
+  - kind: chart
+    spot: body
+    table: node_metrics
+    chart_type: bar
+    x: name
+    y: cpuMillicores
+    title: "CPU in use by node (mCPU)"
+
+  - kind: chart
+    spot: body
+    table: node_metrics
+    chart_type: bar
+    x: name
+    y: memBytes
+    title: "Memory in use by node (bytes)"
+
+  - kind: chart
+    spot: body
+    table: pod_metrics
+    chart_type: bar
+    x: name
+    y: cpuMillicores
+    title: "CPU in use by pod (mCPU)"
+    where: 'controls.namespace == "" || row.namespace == controls.namespace'
+
+  - kind: chart
+    spot: body
+    table: pod_metrics
+    chart_type: bar
+    x: name
+    y: memBytes
+    title: "Memory in use by pod (bytes)"
+    where: 'controls.namespace == "" || row.namespace == controls.namespace'

@@ -1,0 +1,77 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# View: deployment_summary — the Deployments binder's custom "Summary" tab.
+# Rollout health for the selected deployment (`record`): a ready/desired
+# progress bar, the replica counts, then live lists of the ReplicaSets and Pods
+# it owns (relation traversals).
+
+title: Summary
+table: deployments
+
+body:
+  - kind: row
+    gap: 8
+    children:
+      - kind: label
+        text: "${record.name}"
+        style: heading
+      - kind: badge
+        text: '${ if record.ready == record.replicas { "Healthy" } else { "Rolling" } }'
+        color:
+          green: ["Healthy"]
+          yellow: ["Rolling"]
+
+  - kind: label
+    text: "${record.namespace}"
+    style: muted
+
+  - kind: separator
+    label: "Rollout"
+  - kind: progress
+    label: "Ready replicas"
+    value: "${record.ready}"
+    max: "${record.replicas}"
+    color: green
+  - kind: row
+    gap: 16
+    children:
+      - kind: stat
+        label: "Desired"
+        value: "${record.replicas}"
+      - kind: stat
+        label: "Ready"
+        value: "${record.ready}"
+      - kind: stat
+        label: "Updated"
+        value: "${record.updated}"
+      - kind: stat
+        label: "Available"
+        value: "${record.available}"
+
+  - kind: separator
+    label: "ReplicaSets"
+  - kind: list
+    ref: replicasets
+    height: 32
+    empty: "No ReplicaSets"
+    item:
+      - kind: label
+        text: "${row.name}"
+      - kind: stat
+        label: "ready"
+        value: "${row.ready}/${row.replicas}"
+
+  - kind: separator
+    label: "Pods"
+  - kind: list
+    ref: pods
+    height: 32
+    empty: "No pods"
+    item:
+      - kind: label
+        text: "${row.name}"
+      - kind: badge
+        text: "${row.phase}"
+        color:
+          green: ["Running", "Succeeded"]
+          yellow: ["Pending", "ContainerCreating"]
+          red: ["Failed", "Unknown"]

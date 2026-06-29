@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: namespaces — the tenancy boundary, and the richest hub in the app.
+# `id` is the namespace name, which every namespaced resource carries as a
+# projected `namespace` field — so one namespace fans out to eight relation
+# tabs (pods, deployments, replicasets, services, jobs, configmaps, secrets,
+# events).
+datasource: cluster
+title: Namespaces
+table: "api/v1/namespaces"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: phase, type: string }
+  - { name: age, type: string }
+
+references:
+  pods:
+    table: pods
+    kind: has_many
+    foreign_key: namespace
+  deployments:
+    table: deployments
+    kind: has_many
+    foreign_key: namespace
+  replicasets:
+    table: replicasets
+    kind: has_many
+    foreign_key: namespace
+  services:
+    table: services
+    kind: has_many
+    foreign_key: namespace
+  jobs:
+    table: jobs
+    kind: has_many
+    foreign_key: namespace
+  configmaps:
+    table: configmaps
+    kind: has_many
+    foreign_key: namespace
+  secrets:
+    table: secrets
+    kind: has_many
+    foreign_key: namespace
+  events:
+    table: events
+    kind: has_many
+    foreign_key: namespace

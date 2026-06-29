@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: explorer — a burger (vertical drill). Pick a namespace up top, its
+# deployments stack below; pick a deployment, its pods stack below that. Each
+# level resolves a relation against the selected row of the level above
+# (namespaces → deployments → pods), so you walk the cluster top-down in one
+# scrolling column.
+title: Explorer
+layout: burger
+
+elements:
+  - kind: tableview
+    spot: body
+    table: namespaces
+  - kind: tableview
+    spot: body
+    ref: deployments
+  - kind: tableview
+    spot: body
+    ref: pods

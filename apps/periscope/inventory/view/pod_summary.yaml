@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# View: pod_summary — the Pods binder's custom "Summary" tab. A read-only card
+# for the selected pod (`record`): identity + phase, then the at-a-glance health
+# stats (ready containers, restart count, IP, node). Any node that fails to
+# evaluate renders an inline error chip without breaking the rest of the view.
+
+title: Summary
+table: pods
+
+body:
+  - kind: row
+    gap: 8
+    children:
+      - kind: label
+        text: "${record.name}"
+        style: heading
+      - kind: badge
+        text: "${record.phase}"
+        color:
+          green: ["Running", "Succeeded"]
+          yellow: ["Pending", "ContainerCreating"]
+          red: ["Failed", "Unknown", "CrashLoopBackOff", "Error"]
+
+  - kind: label
+    text: "${record.namespace}"
+    secondary: "${record.nodeName}"
+    style: muted
+
+  - kind: separator
+    label: "Health"
+  - kind: row
+    gap: 16
+    children:
+      - kind: stat
+        label: "Ready"
+        value: "${record.ready}"
+      - kind: stat
+        label: "Restarts"
+        value: "${record.restarts}"
+      - kind: stat
+        label: "Pod IP"
+        value: "${record.podIP}"
+      - kind: stat
+        label: "Age"
+        value: "${record.age}"
+
+  - kind: label
+    text: "Scheduled on ${record.nodeName}"
+    style: muted

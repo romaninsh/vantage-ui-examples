@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: replicasets — a binder. Selecting a ReplicaSet reveals its Pods tab.
+title: ReplicaSets
+layout: binder
+
+elements:
+  - kind: tableview
+    spot: body
+    table: replicasets

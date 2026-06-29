@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: events — the cluster's activity log. `reason` is the row title;
+# `object` is a projected "Kind/name" of the involved object; `type` is
+# Normal / Warning. `count` is how many times the event has fired.
+datasource: cluster
+title: Events
+table: "api/v1/events"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: reason, type: string, flags: [title, searchable] }
+  - { name: namespace, type: string, references: namespaces }
+  - { name: type, type: string }
+  - { name: object, type: string }
+  - { name: message, type: string, flags: [searchable] }
+  - { name: count, type: int }
+  - { name: age, type: string }
