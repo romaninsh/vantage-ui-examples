@@ -19,6 +19,9 @@ items:
       - page: runs-mongodb_tests
         label: "MongoDB Tests"
         icon: Play
+      - page: runs-ui_examples_build
+        label: "UI Examples Build"
+        icon: Play
       - page: runs-vantage_sql
         label: "vantage-sql"
         icon: Play
