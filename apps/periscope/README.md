@@ -54,8 +54,15 @@ Periscope needs **two things**:
 
 2. **A reachable cluster.** Any context `kubectl` can hit works; the bundled
    demo fixtures (a 3-replica nginx Deployment, a sidecar Pod, a Job, a
-   ConfigMap + Secret in namespace `demo`) come from the `vantage-kubernetes`
-   crate's `scripts/{start,ingress}.sh` (minikube + Helm).
+   ConfigMap + Secret in namespace `demo`). Spin up a throwaway one with the
+   bundled scripts (minikube + Helm):
+
+   ```sh
+   ./cluster/start.sh      # minikube + metrics-server, wait Ready
+   ./cluster/ingress.sh    # seed the demo workloads via Helm
+   ```
+
+   See [`cluster/README.md`](cluster/README.md) for prerequisites and teardown.
 
 Then open it:
 
