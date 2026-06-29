@@ -32,6 +32,10 @@ on:
         default: "latest"
 
 jobs:
+  # Run 1 — the published-binary sweep over every app. Periscope opts out via
+  # `apps/periscope/.bdd-skip` (it needs a live cluster; see the `kubernetes`
+  # job below). Runs on both channels. (Job id kept as `bdd` so the existing
+  # "bdd / bdd" status check stays stable.)
   bdd:
     runs-on: macos-14 # Apple silicon — matches the aarch64 DMG
     timeout-minutes: 30
@@ -70,6 +74,57 @@ jobs:
       - name: Run BDD suite against all apps
         working-directory: vantage-ui-examples
         run: cargo run -p test-framework -- --all
+        env:
+          VANTAGE_UI_VERSION: ${{ inputs.version }}
+          VANTAGE_UI_CHANNEL: ${{ inputs.channel }}
+          RUST_BACKTRACE: 1
+
+  # Run 2 — Periscope against a real Kubernetes cluster. Brings up a local
+  # cluster (colima + k3s, which ships metrics-server) on the same macOS runner
+  # so the published binary still works, installs Helm, seeds the demo workloads
+  # via the app's own chart, then drives Periscope over MCP to prove the live
+  # nodes/namespaces/pods/deployments come through. Nightly only: the kubernetes
+  # datasource backend ships in the `main` channel (Vantage 0.20+), not stable.
+  kubernetes:
+    if: inputs.channel == 'main'
+    runs-on: macos-14
+    timeout-minutes: 45
+    steps:
+      - name: Checkout examples
+        uses: actions/checkout@v4
+        with:
+          path: vantage-ui-examples
+
+      - name: Checkout vantage (for the ../vantage workspace patch)
+        uses: actions/checkout@v4
+        with:
+          repository: romaninsh/vantage
+          ref: sqlite-fetch-window
+          path: vantage
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: vantage-ui-examples
+
+      - name: Install Kubernetes tooling
+        run: brew install colima docker kubectl helm
+
+      - name: Start a local Kubernetes cluster (colima + k3s)
+        run: |
+          colima start --kubernetes --cpu 3 --memory 6 --disk 20
+          kubectl config use-context colima
+          kubectl wait --for=condition=Ready node --all --timeout=180s
+          kubectl get nodes -o wide
+
+      - name: Seed the demo workloads (Helm)
+        working-directory: vantage-ui-examples
+        run: ./apps/periscope/cluster/ingress.sh
+
+      - name: Run Periscope BDD against the live cluster
+        working-directory: vantage-ui-examples
+        run: cargo run -p test-framework -- apps/periscope
         env:
           VANTAGE_UI_VERSION: ${{ inputs.version }}
           VANTAGE_UI_CHANNEL: ${{ inputs.channel }}
