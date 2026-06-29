@@ -79,53 +79,9 @@ jobs:
           VANTAGE_UI_CHANNEL: ${{ inputs.channel }}
           RUST_BACKTRACE: 1
 
-  # Run 2 — Periscope against a real Kubernetes cluster. Brings up a local
-  # cluster (colima + k3s, which ships metrics-server) on the same macOS runner
-  # so the published binary still works, installs Helm, seeds the demo workloads
-  # via the app's own chart, then drives Periscope over MCP to prove the live
-  # nodes/namespaces/pods/deployments come through. Nightly only: the kubernetes
-  # datasource backend ships in the `main` channel (Vantage 0.20+), not stable.
-  kubernetes:
-    if: inputs.channel == 'main'
-    runs-on: macos-14
-    timeout-minutes: 45
-    steps:
-      - name: Checkout examples
-        uses: actions/checkout@v4
-        with:
-          path: vantage-ui-examples
-
-      - name: Checkout vantage (for the ../vantage workspace patch)
-        uses: actions/checkout@v4
-        with:
-          repository: romaninsh/vantage
-          ref: sqlite-fetch-window
-          path: vantage
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: vantage-ui-examples
-
-      - name: Install Kubernetes tooling
-        run: brew install colima docker kubectl helm
-
-      - name: Start a local Kubernetes cluster (colima + k3s)
-        run: |
-          colima start --kubernetes --cpu 3 --memory 6 --disk 20
-          kubectl config use-context colima
-          kubectl wait --for=condition=Ready node --all --timeout=180s
-          kubectl get nodes -o wide
-
-      - name: Seed the demo workloads (Helm)
-        working-directory: vantage-ui-examples
-        run: ./apps/periscope/cluster/ingress.sh
-
-      - name: Run Periscope BDD against the live cluster
-        working-directory: vantage-ui-examples
-        run: cargo run -p test-framework -- apps/periscope
-        env:
-          VANTAGE_UI_VERSION: ${{ inputs.version }}
-          VANTAGE_UI_CHANNEL: ${{ inputs.channel }}
-          RUST_BACKTRACE: 1
+  # A second `kubernetes` job used to drive Periscope against a live cluster
+  # (colima + k3s on the macOS runner). Disabled — GitHub-hosted macOS runners
+  # can't do the nested virtualization colima's `vz` driver needs, so it failed
+  # at cluster startup on every run (incl. unrelated PRs). Restore it from git
+  # history onto a self-hosted Apple-Silicon runner (where `vz` works), or
+  # re-home the cluster to a Linux runner with kind/k3d. Tracked in VAN-16.
