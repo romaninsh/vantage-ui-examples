@@ -92,6 +92,22 @@ fn resolve_apps(args: &[String]) -> anyhow::Result<Vec<PathBuf>> {
             .filter_map(|e| e.ok())
             .map(|e| e.path())
             .filter(|p| p.is_dir())
+            .filter(|p| {
+                // An app opts out of the `--all` sweep with a `.bdd-skip` file —
+                // e.g. it needs external infra a CI runner can't provide (the
+                // file's contents, if any, are printed as the reason). It still
+                // runs when named explicitly: `vantage-ui-test apps/<name>`.
+                let marker = p.join(".bdd-skip");
+                if marker.is_file() {
+                    let reason = std::fs::read_to_string(&marker).unwrap_or_default();
+                    let reason = reason.trim();
+                    let reason = if reason.is_empty() { ".bdd-skip present" } else { reason };
+                    eprintln!("skipping {} (--all): {reason}", p.display());
+                    false
+                } else {
+                    true
+                }
+            })
             .collect();
         apps.sort();
         Ok(apps)

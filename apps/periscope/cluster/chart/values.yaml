@@ -1,0 +1,9 @@
+# Fixture knobs. Edit and re-run ./ingress.sh to roll out changes — Periscope
+# picks them up on its next refresh.
+web:
+  # Number of nginx replicas (the deployment "web" → this many pods).
+  replicas: 3
+  image: nginx:1.27-alpine
+
+busybox:
+  image: busybox:1.36

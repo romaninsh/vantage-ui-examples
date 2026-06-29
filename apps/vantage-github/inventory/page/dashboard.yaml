@@ -69,6 +69,68 @@ elements:
       - complete_job
   - kind: chart
     spot: body
+    table: runs-ui_examples_build
+    chart_type: stacked_area
+    x: run_number
+    labels: false
+    title: "UI Examples Build"
+    series:
+      - build_examples_egui__set_up_job
+      - build_examples_egui__run_actions_checkout_v4
+      - build_examples_egui__run_swatinem_rust_cache_v2
+      - build_examples_egui__install_system_dependencies
+      - build_examples_egui__build_example_egui
+      - build_examples_egui__check_example_egui_formatting
+      - build_examples_egui__post_run_swatinem_rust_cache_v2
+      - build_examples_egui__post_run_actions_checkout_v4
+      - build_examples_egui__complete_job
+      - build_examples_gpui__set_up_job
+      - build_examples_gpui__run_actions_checkout_v4
+      - build_examples_gpui__run_swatinem_rust_cache_v2
+      - build_examples_gpui__install_system_dependencies
+      - build_examples_gpui__build_example_gpui
+      - build_examples_gpui__check_example_gpui_formatting
+      - build_examples_gpui__post_run_swatinem_rust_cache_v2
+      - build_examples_gpui__post_run_actions_checkout_v4
+      - build_examples_gpui__complete_job
+      - build_examples_tui__set_up_job
+      - build_examples_tui__run_actions_checkout_v4
+      - build_examples_tui__run_swatinem_rust_cache_v2
+      - build_examples_tui__install_system_dependencies
+      - build_examples_tui__build_example_tui
+      - build_examples_tui__check_example_tui_formatting
+      - build_examples_tui__post_run_swatinem_rust_cache_v2
+      - build_examples_tui__post_run_actions_checkout_v4
+      - build_examples_tui__complete_job
+      - build_examples_slint__set_up_job
+      - build_examples_slint__run_actions_checkout_v4
+      - build_examples_slint__run_swatinem_rust_cache_v2
+      - build_examples_slint__install_system_dependencies
+      - build_examples_slint__build_example_slint
+      - build_examples_slint__check_example_slint_formatting
+      - build_examples_slint__post_run_swatinem_rust_cache_v2
+      - build_examples_slint__post_run_actions_checkout_v4
+      - build_examples_slint__complete_job
+      - build_examples_tauri__set_up_job
+      - build_examples_tauri__run_actions_checkout_v4
+      - build_examples_tauri__run_swatinem_rust_cache_v2
+      - build_examples_tauri__install_system_dependencies
+      - build_examples_tauri__build_example_tauri
+      - build_examples_tauri__check_example_tauri_formatting
+      - build_examples_tauri__post_run_swatinem_rust_cache_v2
+      - build_examples_tauri__post_run_actions_checkout_v4
+      - build_examples_tauri__complete_job
+      - build_examples_cursive__set_up_job
+      - build_examples_cursive__run_actions_checkout_v4
+      - build_examples_cursive__run_swatinem_rust_cache_v2
+      - build_examples_cursive__install_system_dependencies
+      - build_examples_cursive__build_example_cursive
+      - build_examples_cursive__check_example_cursive_formatting
+      - build_examples_cursive__post_run_swatinem_rust_cache_v2
+      - build_examples_cursive__post_run_actions_checkout_v4
+      - build_examples_cursive__complete_job
+  - kind: chart
+    spot: body
     table: runs-vantage_sql
     chart_type: stacked_area
     x: run_number
