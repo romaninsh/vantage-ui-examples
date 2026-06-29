@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: pod_metrics — live per-pod CPU/memory usage (summed across the pod's
+# containers) from metrics.k8s.io. Requires metrics-server; empty until it has
+# sampled.
+datasource: cluster
+title: Pod usage
+table: "apis/metrics.k8s.io/v1beta1/pods"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: namespace, type: string, references: namespaces }
+  - { name: cpuMillicores, type: int }
+  - { name: memBytes, type: bytes }

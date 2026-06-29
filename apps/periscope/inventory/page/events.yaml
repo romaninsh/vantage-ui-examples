@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: events — the cluster activity log, newest churn first. Refreshes often
+# so new Warnings surface quickly.
+title: Events
+
+elements:
+  - kind: tableview
+    spot: body
+    table: events
+    params:
+      refresh_interval: 10

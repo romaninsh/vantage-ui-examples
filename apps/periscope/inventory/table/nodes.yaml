@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: nodes — cluster machines. `id` is the node name, so it joins straight
+# to a pod's projected `nodeName`. CPU/memory capacity are parsed from K8s
+# quantity strings ("16331752Ki", "4") into real numbers for the dashboards.
+datasource: cluster
+title: Nodes
+table: "api/v1/nodes"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: ready, type: bool }
+  - { name: roles, type: string }
+  - { name: version, type: string }
+  - { name: internalIP, type: string }
+  - { name: cpuCapacityMillicores, type: int }
+  - { name: memCapacityBytes, type: bytes }
+  - { name: age, type: string }
+
+references:
+  pods:
+    table: pods
+    kind: has_many
+    foreign_key: nodeName

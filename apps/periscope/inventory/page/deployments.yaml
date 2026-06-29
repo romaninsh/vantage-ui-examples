@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: deployments — a binder. Custom Summary tab (rollout health + owned
+# ReplicaSets/Pods) plus the auto-derived Pods and ReplicaSets relation tabs.
+# Polls every few seconds so replica counts track the live cluster.
+title: Deployments
+layout: binder
+
+elements:
+  - kind: crud
+    spot: body
+    table: deployments
+    views:
+      - deployment_summary
+    params:
+      refresh_interval: 5

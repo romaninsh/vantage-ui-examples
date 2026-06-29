@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: configmaps — flat list of ConfigMaps (key counts only).
+title: ConfigMaps
+
+elements:
+  - kind: tableview
+    spot: body
+    table: configmaps

@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: nodes — a binder. The node grid on top; selecting a node fills the
+# bottom with a custom Summary tab (capacity + its pods) plus the auto-derived
+# Pods relation tab.
+title: Nodes
+layout: binder
+
+elements:
+  - kind: crud
+    spot: body
+    table: nodes
+    views:
+      - node_summary

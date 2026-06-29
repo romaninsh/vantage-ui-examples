@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: services — flat list of Services. The namespace cell links back to its
+# namespace.
+title: Services
+
+elements:
+  - kind: tableview
+    spot: body
+    table: services

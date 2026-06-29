@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: namespaces — a binder, and the widest fan-out in the app. Selecting a
+# namespace reveals one auto-derived tab per relation: pods, deployments,
+# replicasets, services, jobs, configmaps, secrets, events.
+title: Namespaces
+layout: binder
+
+elements:
+  - kind: tableview
+    spot: body
+    table: namespaces

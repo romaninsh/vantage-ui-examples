@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+# Menu: left — Periscope's sidebar. Overview is the headline; everything else is
+# grouped the way you'd reach for it in an incident: cluster hardware, then the
+# workloads running on it, then the explorer drill-downs, network, config, and
+# the activity log. Most entries are also reachable by drilling from a parent.
+
+title: Periscope
+
+items:
+  - page: overview
+    label: Overview
+    icon: LayoutDashboard
+  - page: usage
+    label: Usage
+    icon: ChartPie
+
+  - section: Cluster
+    children:
+      - page: nodes
+        label: Nodes
+        icon: HardDrive
+      - page: namespaces
+        label: Namespaces
+        icon: Folder
+      - page: infra
+        label: Infrastructure
+        icon: Cpu
+
+  - section: Workloads
+    children:
+      - page: deployments
+        label: Deployments
+        icon: GalleryVerticalEnd
+      - page: replicasets
+        label: ReplicaSets
+        icon: Copy
+      - page: pods
+        label: Pods
+        icon: Inbox
+      - page: jobs
+        label: Jobs
+        icon: Play
+
+  - section: Explore
+    children:
+      - page: explorer
+        label: Namespace explorer
+        icon: Inspector
+
+  - section: Network & config
+    children:
+      - page: services
+        label: Services
+        icon: Network
+      - page: configmaps
+        label: ConfigMaps
+        icon: File
+      - page: secrets
+        label: Secrets
+        icon: EyeOff
+
+  - section: Activity
+    children:
+      - page: events
+        label: Events
+        icon: Bell

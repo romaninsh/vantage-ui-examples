@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: pods — a binder. The pod grid with a custom Summary tab (health at a
+# glance). Cells for namespace / node / owning deployment are drill-up links
+# into those records. Refreshes every few seconds to track phase changes.
+title: Pods
+layout: binder
+
+elements:
+  - kind: crud
+    spot: body
+    table: pods
+    views:
+      - pod_summary
+    params:
+      refresh_interval: 5

@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: configmaps — non-secret config. `keys` is the count of data entries
+# (values are never fetched into the row).
+datasource: cluster
+title: ConfigMaps
+table: "api/v1/configmaps"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: namespace, type: string, references: namespaces }
+  - { name: keys, type: int }
+  - { name: age, type: string }

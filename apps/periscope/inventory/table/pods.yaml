@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: pods — the workhorse, where most drill-downs end up. `ready` is a
+# projected "2/3" string (containers ready / total) and `restarts` sums every
+# container's restartCount. The FK-bearing columns carry belongs-to
+# `references:` so each cell is a drill-UP link: a pod's namespace / node /
+# owning deployment open straight into that record.
+datasource: cluster
+title: Pods
+table: "api/v1/pods"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: namespace, type: string, references: namespaces }
+  - { name: nodeName, type: string, references: nodes }
+  - { name: phase, type: string }
+  - { name: ready, type: string }
+  - { name: restarts, type: int }
+  - { name: podIP, type: string }
+  - { name: ownerDeployment, type: string, flags: [hidden], references: deployments }
+  - { name: age, type: string }

@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: node_metrics — live per-node CPU/memory usage from the metrics.k8s.io
+# API (requires metrics-server). `id`/`name` are the node name, so this lines
+# up one-to-one with `nodes`. Empty until metrics-server has a sample window.
+datasource: cluster
+title: Node usage
+table: "apis/metrics.k8s.io/v1beta1/nodes"
+
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: cpuMillicores, type: int }
+  - { name: memBytes, type: bytes }

@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# View: node_summary — the Nodes binder's custom "Summary" tab. Capacity and
+# readiness for the selected node (`record`), plus a live list of the pods
+# scheduled on it (a `pods` relation traversal). CPU is shown in cores
+# (millicores / 1000) and memory in GiB (bytes / 2^30).
+
+title: Summary
+table: nodes
+
+body:
+  - kind: row
+    gap: 8
+    children:
+      - kind: label
+        text: "${record.name}"
+        style: heading
+      - kind: badge
+        text: '${ if record.ready { "Ready" } else { "NotReady" } }'
+        color:
+          green: ["Ready"]
+          red: ["NotReady"]
+
+  - kind: label
+    text: "${record.roles}"
+    secondary: "${record.version}"
+    style: muted
+
+  - kind: separator
+    label: "Capacity"
+  - kind: row
+    gap: 16
+    children:
+      - kind: stat
+        label: "CPU"
+        value: "${ round(record.cpuCapacityMillicores.to_float() / 1000.0, 1) }"
+        unit: cores
+      - kind: stat
+        label: "Memory"
+        value: "${ round(record.memCapacityBytes.to_float() / 1073741824.0, 1) }"
+        unit: GiB
+      - kind: stat
+        label: "Internal IP"
+        value: "${record.internalIP}"
+      - kind: stat
+        label: "Age"
+        value: "${record.age}"
+
+  - kind: separator
+    label: "Pods on this node"
+  - kind: list
+    ref: pods
+    height: 32
+    empty: "No pods scheduled here"
+    item:
+      - kind: label
+        text: "${row.namespace}/${row.name}"
+      - kind: badge
+        text: "${row.phase}"
+        color:
+          green: ["Running", "Succeeded"]
+          yellow: ["Pending", "ContainerCreating"]
+          red: ["Failed", "Unknown"]

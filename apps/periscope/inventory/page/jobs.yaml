@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: jobs — flat list of batch Jobs with completion counts.
+title: Jobs
+
+elements:
+  - kind: tableview
+    spot: body
+    table: jobs
