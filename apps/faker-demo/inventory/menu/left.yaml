@@ -1,0 +1,45 @@
+# Menu: left — the PristineGym CEO control panel.
+#
+# "Live Ops" holds the real, live views (the renamed dashboard + two tables).
+# "Broadcast" and "Act" are the interactive control surfaces — push something
+# out, then watch the response. Those pages are placeholders (labels only) for
+# now; the loops they'd close are noted in each comment.
+title: PristineGym
+items:
+  - section: Live Ops
+    children:
+      - page: dashboard
+        label: Command Centre
+        icon: LayoutDashboard
+      - page: regions
+        label: Regions
+        icon: Map
+      - page: feed
+        label: Live Feed
+        icon: Network
+
+  # Push out → watch it land.
+  - section: Broadcast
+    children:
+      - page: announce # → delivered / read-by-club tally
+        label: Send Announcement
+        icon: Bell
+      - page: pulse # → one-question poll, answers stream in live
+        label: Member Pulse
+        icon: Heart
+      - page: promo # → off-peak discount, then footfall responds on the board
+        label: Run a Promo
+        icon: Star
+
+  # Decisions with a return path.
+  - section: Act
+    children:
+      - page: targets # → set a regional target, dashboard tracks vs it
+        label: Regional Targets
+        icon: Globe
+      - page: approvals # → approve/deny manager requests
+        label: Approvals
+        icon: Check
+      - page: incidents # → raise a club issue, track to resolved
+        label: Incidents
+        icon: TriangleAlert

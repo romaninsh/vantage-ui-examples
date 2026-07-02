@@ -1,0 +1,19 @@
+# Page: regions — the full per-region table, live. Ranked by headcount, with the
+# `live` cell coloured so an offline region reads at a glance.
+title: Regions
+elements:
+  - kind: tableview
+    spot: body
+    table: top
+    params:
+      default_sort:
+        column: visitors
+        direction: desc
+      columns:
+        region: {}
+        visitors: {}
+        vs_baseline: {}
+        live:
+          color:
+            green: ["Live"]
+            red: ["Offline"]

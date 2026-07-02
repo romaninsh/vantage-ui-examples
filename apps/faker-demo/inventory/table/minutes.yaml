@@ -1,0 +1,11 @@
+# Table: minutes — arrivals per minute (the last 10 buckets). The sim sums only
+# arriving members (positive movements) into each minute, so every bar is
+# positive and the current one grows through the minute. Oldest-first, so the
+# bar chart reads left→right in time. Fed by the `gym-traffic` pulse sim.
+datasource: gym-traffic
+title: Arrivals
+faker:
+  role: minutes
+columns:
+  - { name: minute, type: string, flags: [id, title] }
+  - { name: attendees, type: int }

@@ -1,0 +1,11 @@
+# Page: feed — the raw incoming stream as a full table (newest-first).
+title: Live Feed
+elements:
+  - kind: tableview
+    spot: body
+    table: updates
+    params:
+      columns:
+        updated: {}
+        region: {}
+        delta: {}

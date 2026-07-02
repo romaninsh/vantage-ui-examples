@@ -1,0 +1,32 @@
+# Datasource: gym-traffic — PristineGym's live occupancy feed (synthetic).
+#
+# The `pulse` effect stands in for an upstream stream-processing job (a Kafka
+# KTable): a fixed set of keys (UK regions) each carry a current value that
+# drifts within a rubber-banded ±`band`% of a hard-coded baseline. One shared
+# sim drives a COUPLED PAIR of keyed-upsert tables — a raw `updates` feed and a
+# derived `top` aggregate — so both stay in lockstep. No backend, no network;
+# aggregation happens entirely in the sim (Vantage does none client-side).
+type: faker
+effect: pulse
+key_column: region
+value_column: visitors
+band: 5
+rate:
+  min: 1s
+  max: 3s
+# South West periodically drops offline (frozen value, live = "Offline").
+offline:
+  - South West
+# Baselines ≈ members training at once, per region (~28k total nationally).
+keys:
+  - { name: London, baseline: 5300 }
+  - { name: South East, baseline: 3900 }
+  - { name: North West, baseline: 3300 }
+  - { name: West Midlands, baseline: 2500 }
+  - { name: Yorkshire & Humber, baseline: 2500 }
+  - { name: East of England, baseline: 2200 }
+  - { name: South West, baseline: 1900 }
+  - { name: East Midlands, baseline: 1900 }
+  - { name: Scotland, baseline: 1900 }
+  - { name: Wales, baseline: 1100 }
+  - { name: North East, baseline: 1100 }
