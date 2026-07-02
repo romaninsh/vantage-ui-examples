@@ -1,0 +1,12 @@
+# Table: updates — the raw incoming feed (an append log): each change is a new
+# row — the signed `delta` that moved a region and when — newest-first, expiring
+# after a few seconds so the stream visibly flows. This is the "Kafka stream" the
+# dashboard makes sense of. Fed by the shared `gym-traffic` pulse sim's feed half.
+datasource: gym-traffic
+title: Updates
+faker:
+  role: feed
+columns:
+  - { name: region, type: string, flags: [id, title, searchable] }
+  - { name: delta, type: int }
+  - { name: updated, type: string }
