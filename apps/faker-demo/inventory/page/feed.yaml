@@ -1,7 +1,8 @@
-# Page: feed — the raw incoming stream as a full table (framework grammar).
+# Page: feed — the raw incoming stream as a full table (framework grammar;
+# crud = the full table chrome, same widget upstream's tableview drove).
 title: Live Feed
 body:
-  - kind: grid
+  - kind: crud
     table: updates
     params:
       columns: [updated, region, delta]
