@@ -1,10 +1,11 @@
 # Page: regions — the full per-region table, live (framework grammar; the
-# hosted grid chrome sorts by header click). Publishes the selected region.
+# hosted grid chrome sorts by header click). Ranked by headcount via the
+# binding's shape. Publishes the selected region.
 title: Regions
 body:
   - kind: crud
     name: regions
-    table: top
+    table: { script: 'scenery("top").sort("visitors", "desc")' }
     params:
       columns: [region, visitors, vs_baseline, live]
       id_column: region

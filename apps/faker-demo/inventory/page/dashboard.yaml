@@ -10,7 +10,9 @@ body:
       - kind: row
         children:
           - kind: chart
-            table: top
+            # Shaping lives on the binding: biggest region first, resolved
+            # once into its own sorted scenery (the shared one stays as-is).
+            table: { script: 'scenery("top").sort("visitors", "desc")' }
             params:
               x: region
               y: visitors
@@ -27,13 +29,12 @@ body:
       - kind: row
         children:
           - kind: list
-            table: top
+            table: { script: 'scenery("top").sort("visitors", "desc")' }
             item:
               - kind: label
                 params:
                   text: "${row.region}  ·  ${row.visitors}   (${row.vs_baseline}% vs baseline, ${row.live})"
           - kind: logview
-            table: updates
+            table: { script: 'scenery("updates").limit(15)' }
             params:
               columns: [updated, region, delta]
-              limit: 15
