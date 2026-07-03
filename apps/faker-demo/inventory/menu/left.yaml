@@ -20,6 +20,9 @@ items:
       - page: framework-demo
         label: Framework Demo
         icon: Frame
+      - page: framework-grid
+        label: Framework Grid
+        icon: GalleryVerticalEnd
 
   # Push out → watch it land.
   - section: Broadcast

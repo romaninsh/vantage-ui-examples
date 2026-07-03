@@ -1,0 +1,29 @@
+# Page: framework-grid — exercises `kind: grid`, the first heavyweight
+# component on the framework contract. The grid binds the live `top` table
+# (rows repaint as the sim moves), publishes `selected_id` (the `region`
+# column — this table has no `id`), and the labels below prove both directions:
+# selection flows out through the scope graph, and the same value drives a
+# `when:`-gated confirmation line.
+title: Framework Grid
+body:
+  - kind: column
+    children:
+      - kind: label
+        params:
+          text: "${app.brand} regions — click a row to select it"
+
+      - kind: grid
+        name: regions
+        table: top
+        params:
+          columns: [region, visitors, live]
+          id_column: region
+
+      - kind: label
+        params:
+          text: "Selected region: ${regions.selected_id}"
+
+      - kind: label
+        when: ${regions.selected_id}
+        params:
+          text: "…selection is non-empty, so this when:-gated line appeared"
