@@ -1,0 +1,49 @@
+# Page: launches-fw — the binder DECOMPOSED into framework primitives, side
+# by side with the legacy `launches` binder for comparison: a crud grid
+# publishing `selected_id`, a tab select gated on selection, a record form,
+# and relation grids narrowed via `related()` (structural on selection).
+title: Launches (framework)
+body:
+  - kind: column
+    children:
+      - kind: crud
+        name: launches
+        table: launches
+        params:
+          id_column: id
+          columns:
+            name: { width: 400 }
+            status.name:
+              color:
+                green: ["Go for Launch", "Launch Successful"]
+                yellow: ["Launch in Flight", "To Be Confirmed", "To Be Determined", "On Hold"]
+                red: ["Launch Failure", "Launch was a Partial Failure"]
+            webcast_live: { label: Live }
+            launch_service_provider.name: { label: Provider }
+            rocket_configuration.name: { label: Rocket }
+            pad.name: { label: Pad }
+            net: {}
+
+      - kind: select
+        name: tab
+        when: ${launches.selected_id}
+        params:
+          options: [Details, Payloads, Crew, Landings]
+          default: Details
+
+      - kind: form
+        when: '${tab.value == "Details"}'
+        table: launches
+        record: "${launches.selected_id}"
+
+      - kind: grid
+        when: '${tab.value == "Payloads"}'
+        table: { script: 'related("launches", "${launches.selected_id}", "payloads")' }
+
+      - kind: grid
+        when: '${tab.value == "Crew"}'
+        table: { script: 'related("launches", "${launches.selected_id}", "crew")' }
+
+      - kind: grid
+        when: '${tab.value == "Landings"}'
+        table: { script: 'related("launches", "${launches.selected_id}", "landings")' }
