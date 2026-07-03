@@ -4,7 +4,6 @@
 # menu-label: AWS Backend Tests
 # step-slugs: set_up_job,run_actions_checkout_v4,run_swatinem_rust_cache_v2,build_vantage_aws,run_tests_offline_only_integration_tests_are,check_formatting,run_clippy,run_aws_cli_against_live_aws,post_run_swatinem_rust_cache_v2,post_run_actions_checkout_v4,complete_job
 title: "AWS Backend Tests runs"
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: runs-aws_backend_tests
