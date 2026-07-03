@@ -41,7 +41,10 @@ body:
               palette: {}
               text: 'region + "  ·  " + visitors.to_string()'
               label: 'switch live == "Live" { true => #{ text: vs_baseline.to_string() + "%", color: switch vs_baseline >= 0 { true => "green", false => "red" } }, false => #{ text: "OFFLINE", color: "danger" } }'
-          - kind: logview
+          # The raw incoming feed — like upstream: a formatted list with the
+          # signed delta coloured green/red, newest changes flowing in.
+          - kind: list
             table: { script: 'scenery("updates").tail(15)' }
             params:
-              columns: [updated, region, delta]
+              text: 'updated + "   " + region'
+              label: 'switch delta >= 0 { true => #{ text: "+" + delta.to_string(), color: "green" }, false => #{ text: delta.to_string(), color: "red" } }'
