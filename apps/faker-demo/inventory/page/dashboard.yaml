@@ -31,12 +31,16 @@ body:
               value_labels: true
       - kind: row
         children:
+          # Ranked regions; the leading swatch matches each region's pie
+          # slice (same palette, same visitors-desc order), and the label
+          # shows the trend / OFFLINE. Rhai row formats — the real list
+          # widget hosts this, same as upstream.
           - kind: list
             table: { script: 'scenery("top").sort("visitors", "desc")' }
-            item:
-              - kind: label
-                params:
-                  text: "${row.region}  ·  ${row.visitors}   (${row.vs_baseline}% vs baseline, ${row.live})"
+            params:
+              palette: {}
+              text: 'region + "  ·  " + visitors.to_string()'
+              label: 'switch live == "Live" { true => #{ text: vs_baseline.to_string() + "%", color: switch vs_baseline >= 0 { true => "green", false => "red" } }, false => #{ text: "OFFLINE", color: "danger" } }'
           - kind: logview
             table: { script: 'scenery("updates").tail(15)' }
             params:

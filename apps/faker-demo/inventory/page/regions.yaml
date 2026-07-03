@@ -7,5 +7,12 @@ body:
     name: regions
     table: { script: 'scenery("top").sort("visitors", "desc")' }
     params:
-      columns: [region, visitors, vs_baseline, live]
       id_column: region
+      columns:
+        region: {}
+        visitors: {}
+        vs_baseline: {}
+        live:
+          color:
+            green: ["Live"]
+            red: ["Offline"]
