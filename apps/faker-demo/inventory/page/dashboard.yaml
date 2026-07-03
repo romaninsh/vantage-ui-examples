@@ -19,7 +19,10 @@ body:
               label: Members training now
               chart_type: pie
           - kind: chart
-            table: minutes
+            # tail() follows the end of the table — the last 10 minute
+            # buckets, sliding as new minutes append (limit() would freeze
+            # on the oldest 10).
+            table: { script: 'scenery("minutes").tail(10)' }
             params:
               x: minute
               y: attendees
@@ -35,6 +38,6 @@ body:
                 params:
                   text: "${row.region}  ·  ${row.visitors}   (${row.vs_baseline}% vs baseline, ${row.live})"
           - kind: logview
-            table: { script: 'scenery("updates").limit(15)' }
+            table: { script: 'scenery("updates").tail(15)' }
             params:
               columns: [updated, region, delta]

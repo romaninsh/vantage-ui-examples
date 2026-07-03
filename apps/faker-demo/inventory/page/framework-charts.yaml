@@ -22,6 +22,6 @@ body:
           text: "Incoming feed — kind: logview over the updates table"
 
       - kind: logview
-        table: { script: 'scenery("updates").limit(12)' }
+        table: { script: 'scenery("updates").tail(12)' }
         params:
           columns: [updated, region, delta]
