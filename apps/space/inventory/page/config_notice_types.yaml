@@ -4,8 +4,7 @@
 
 title: notice types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_notice_types
     params: {}

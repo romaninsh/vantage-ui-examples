@@ -4,9 +4,6 @@
 
 title: Previous events
 
-elements:
-  - kind: tableview
-    spot: body
-    table: events_previous
-    params:
-      default_sort: { column: date, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("events_previous").sort("date", "desc")' }

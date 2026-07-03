@@ -4,8 +4,7 @@
 
 title: Programs
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: programs
     params: {}

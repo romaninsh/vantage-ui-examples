@@ -4,9 +4,6 @@
 
 title: Landings
 
-elements:
-  - kind: tableview
-    spot: body
-    table: landings
-    params:
-      default_sort: { column: id, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("landings").sort("id", "desc")' }

@@ -4,8 +4,7 @@
 
 title: spacecraft statuses
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_spacecraft_statuses
     params: {}

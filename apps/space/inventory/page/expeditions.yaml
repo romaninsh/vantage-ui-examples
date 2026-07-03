@@ -5,9 +5,6 @@
 
 title: Expeditions
 
-elements:
-  - kind: tableview
-    spot: body
-    table: expeditions
-    params:
-      default_sort: { column: start, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("expeditions").sort("start", "desc")' }

@@ -4,8 +4,7 @@
 
 title: event types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_event_types
     params: {}

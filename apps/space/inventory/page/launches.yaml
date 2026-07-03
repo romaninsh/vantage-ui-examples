@@ -6,9 +6,6 @@
 
 title: Launches
 
-elements:
-  - kind: tableview
-    spot: body
-    table: launches
-    params:
-      default_sort: { column: net, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("launches").sort("net", "desc")' }

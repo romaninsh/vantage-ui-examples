@@ -4,9 +4,6 @@
 
 title: Spacecraft families
 
-elements:
-  - kind: tableview
-    spot: body
-    table: spacecraft_configuration_families
-    params:
-      default_sort: { column: name, direction: asc }
+body:
+  - kind: crud
+    table: { script: 'scenery("spacecraft_configuration_families").sort("name", "asc")' }

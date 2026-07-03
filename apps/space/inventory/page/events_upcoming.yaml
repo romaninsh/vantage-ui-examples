@@ -4,9 +4,6 @@
 
 title: Upcoming events
 
-elements:
-  - kind: tableview
-    spot: body
-    table: events_upcoming
-    params:
-      default_sort: { column: date, direction: asc }
+body:
+  - kind: crud
+    table: { script: 'scenery("events_upcoming").sort("date", "asc")' }

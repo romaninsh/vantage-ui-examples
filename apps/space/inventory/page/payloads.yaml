@@ -4,8 +4,7 @@
 
 title: Payloads
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: payloads
     params: {}

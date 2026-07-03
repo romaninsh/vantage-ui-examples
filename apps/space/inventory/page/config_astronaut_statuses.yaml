@@ -4,8 +4,7 @@
 
 title: astronaut statuses
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_astronaut_statuses
     params: {}

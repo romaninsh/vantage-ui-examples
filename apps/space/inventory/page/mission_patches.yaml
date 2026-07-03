@@ -4,9 +4,6 @@
 
 title: Mission patches
 
-elements:
-  - kind: tableview
-    spot: body
-    table: mission_patches
-    params:
-      default_sort: { column: priority, direction: asc }
+body:
+  - kind: crud
+    table: { script: 'scenery("mission_patches").sort("priority", "asc")' }

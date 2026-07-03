@@ -4,9 +4,6 @@
 
 title: Events
 
-elements:
-  - kind: tableview
-    spot: body
-    table: events
-    params:
-      default_sort: { column: date, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("events").sort("date", "desc")' }

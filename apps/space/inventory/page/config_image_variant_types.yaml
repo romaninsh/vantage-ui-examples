@@ -4,8 +4,7 @@
 
 title: image variant types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_image_variant_types
     params: {}

@@ -4,8 +4,7 @@
 
 title: astronaut types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_astronaut_types
     params: {}

@@ -4,8 +4,7 @@
 
 title: program types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_program_types
     params: {}

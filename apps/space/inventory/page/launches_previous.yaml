@@ -4,9 +4,6 @@
 
 title: Previous launches
 
-elements:
-  - kind: tableview
-    spot: body
-    table: launches_previous
-    params:
-      default_sort: { column: net, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("launches_previous").sort("net", "desc")' }

@@ -4,8 +4,7 @@
 
 title: first stage types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_first_stage_types
     params: {}
