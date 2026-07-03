@@ -1,59 +1,39 @@
-# Page: dashboard — PristineGym's live footfall, a 2×2 grid over the
-# `gym-traffic` pulse feed. Every widget updates in place as the sim upserts
-# per-region rows (no re-list). The pie/bar/first list read the derived `top`
-# aggregate; the second list is the raw `updates` stream.
-#
-# `default_sort` orders at the scenery level (applied when the scenery opens),
-# never inside the view — so the pie and the first list both request
-# `visitors desc` and share one live-re-ranking scenery over the shared Dio.
+# Page: dashboard — the Command Centre, on the framework grammar. Two hosted
+# charts side by side (pie of members training now, bars of arrivals per
+# minute) over two live framework lists (ranked regions, the raw feed tail).
+# The legacy list's Rhai colour maps are approximated with plain templates —
+# rich list formatting returns with the list-chrome convergence.
 title: Command Centre
-layout: grid
-columns: 2
-elements:
-  # Share of members training right now, biggest region first.
-  - kind: chart
-    spot: body
-    table: top
-    chart_type: pie
-    x: region
-    y: visitors
-    title: Members training now
-    params:
-      default_sort:
-        column: visitors
-        direction: desc
-
-  # Arrivals per minute (last 10). The sim counts only arriving members, so
-  # each bar is positive; the minute (":39") sits under the bar, the attendee
-  # total on top, and the current bar grows as members check in.
-  - kind: chart
-    spot: body
-    table: minutes
-    chart_type: bar
-    x: minute
-    y: attendees
-    title: Arrivals per minute
-    value_labels: true
-
-  # Ranked regions; a leading swatch matches each region's pie slice (same
-  # palette, same visitors-desc order), and the label shows the trend / OFFLINE.
-  - kind: list
-    spot: body
-    table: top
-    params:
-      default_sort:
-        column: visitors
-        direction: desc
-      palette: {}
-      text: 'region + "  ·  " + visitors.to_string()'
-      # Label returns a #{ text, color } map — green above baseline, red below,
-      # danger when offline. (A bare string works too, with no colour.)
-      label: 'switch live == "Live" { true => #{ text: vs_baseline.to_string() + "%", color: switch vs_baseline >= 0 { true => "green", false => "red" } }, false => #{ text: "OFFLINE", color: "danger" } }'
-
-  # The raw incoming feed — newest change on top, streaming in live.
-  - kind: list
-    spot: body
-    table: updates
-    params:
-      text: 'updated + "   " + region'
-      label: 'switch delta >= 0 { true => #{ text: "+" + delta.to_string(), color: "green" }, false => #{ text: delta.to_string(), color: "red" } }'
+body:
+  - kind: column
+    children:
+      - kind: row
+        children:
+          - kind: chart
+            table: top
+            params:
+              x: region
+              y: visitors
+              label: Members training now
+              chart_type: pie
+          - kind: chart
+            table: minutes
+            params:
+              x: minute
+              y: attendees
+              label: Arrivals per minute
+              chart_type: bar
+              value_labels: true
+      - kind: row
+        children:
+          - kind: list
+            table: top
+            item:
+              - kind: label
+                params:
+                  text: "${row.region}  ·  ${row.visitors}   (${row.vs_baseline}% vs baseline, ${row.live})"
+          - kind: logview
+            table: updates
+            params:
+              columns: [updated, region, delta]
+              limit: 15
