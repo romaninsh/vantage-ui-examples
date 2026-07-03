@@ -1,54 +1,27 @@
-# Page: launches-fw — the binder DECOMPOSED into framework primitives, side
-# by side with the legacy `launches` binder for comparison: a crud grid
-# publishing `selected_id`, a tab select gated on selection, a record form,
-# and relation grids narrowed via `related()` (structural on selection).
+# Page: launches-fw — the framework binder composite, side by side with the
+# legacy `launches` binder for comparison. ONE element: master crud grid on
+# top; selecting a row reveals a resizable bottom panel with Details (record
+# form) plus one grid per has_many relation — all auto-derived from the
+# table's declared relations. Selection is internal (value-class): no page
+# remounts while arrow-keying through rows.
 title: Launches (framework)
 body:
-  - kind: column
-    children:
-      - kind: crud
-        name: launches
-        table: launches
-        params:
-          id_column: id
-          # A GRID param, not binding shaping: the header arrow displays it
-          # and header clicks re-sort. (Binding `.sort()` is for widgets with
-          # no native sort UI, e.g. pie charts.)
-          default_sort: { column: last_updated, direction: desc }
-          columns:
-            name: { width: 400 }
-            status.name:
-              color:
-                green: ["Go for Launch", "Launch Successful"]
-                yellow: ["Launch in Flight", "To Be Confirmed", "To Be Determined", "On Hold"]
-                red: ["Launch Failure", "Launch was a Partial Failure"]
-            webcast_live: { label: Live }
-            last_updated: {}
-            launch_service_provider.name: { label: Provider }
-            rocket_configuration.name: { label: Rocket }
-            pad.name: { label: Pad }
-            net: {}
-
-      - kind: select
-        name: tab
-        when: ${launches.selected_id}
-        params:
-          options: [Details, Payloads, Crew, Landings]
-          default: Details
-
-      - kind: form
-        when: '${tab.value == "Details" && launches.selected_id != ""}'
-        table: launches
-        record: "${launches.selected_id}"
-
-      - kind: grid
-        when: '${tab.value == "Payloads" && launches.selected_id != ""}'
-        table: { script: 'related("launches", "${launches.selected_id}", "payloads")' }
-
-      - kind: grid
-        when: '${tab.value == "Crew" && launches.selected_id != ""}'
-        table: { script: 'related("launches", "${launches.selected_id}", "crew")' }
-
-      - kind: grid
-        when: '${tab.value == "Landings" && launches.selected_id != ""}'
-        table: { script: 'related("launches", "${launches.selected_id}", "landings")' }
+  - kind: binder
+    name: launches
+    table: launches
+    params:
+      id_column: id
+      default_sort: { column: last_updated, direction: desc }
+      columns:
+        name: { width: 400 }
+        status.name:
+          color:
+            green: ["Go for Launch", "Launch Successful"]
+            yellow: ["Launch in Flight", "To Be Confirmed", "To Be Determined", "On Hold"]
+            red: ["Launch Failure", "Launch was a Partial Failure"]
+        webcast_live: { label: Live }
+        last_updated: {}
+        launch_service_provider.name: { label: Provider }
+        rocket_configuration.name: { label: Rocket }
+        pad.name: { label: Pad }
+        net: {}
