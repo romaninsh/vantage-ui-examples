@@ -4,9 +4,8 @@
 
 title: Cores
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: cores
     params:
       columns:

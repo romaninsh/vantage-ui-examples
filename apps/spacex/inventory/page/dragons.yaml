@@ -4,9 +4,8 @@
 
 title: Dragons
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: dragons
     params:
       columns:

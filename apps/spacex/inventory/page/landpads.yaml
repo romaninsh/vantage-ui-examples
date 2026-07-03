@@ -4,9 +4,8 @@
 
 title: Landpads
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: landpads
     params:
       columns:
