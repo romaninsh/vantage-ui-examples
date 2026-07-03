@@ -1,9 +1,0 @@
-# yaml-language-server: $schema=./page-schema-1.json
-
-# Page: events_previous — past events, most recent first.
-
-title: Previous events
-
-body:
-  - kind: crud
-    table: { script: 'scenery("events_previous").sort("date", "desc")' }

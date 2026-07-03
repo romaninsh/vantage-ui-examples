@@ -8,28 +8,13 @@ title: Space
 items:
   - section: Flights
     children:
-      - section: Launches
-        children:
-          - page: launches
-            label: All launches
-            icon: ArrowUp
-          - page: launches_upcoming
-            label: Upcoming launches
-            icon: ArrowUp
-          - page: launches_previous
-            label: Previous launches
-            icon: ArrowDown
-      - section: Events
-        children:
-          - page: events
-            label: All events
-            icon: Calendar
-          - page: events_upcoming
-            label: Upcoming events
-            icon: Calendar
-          - page: events_previous
-            label: Previous events
-            icon: ArrowDown
+      # all/upcoming/previous is an on-page range control now.
+      - page: launches
+        label: Launches
+        icon: ArrowUp
+      - page: events
+        label: Events
+        icon: Calendar
       - section: Payloads & patches
         children:
           - page: payloads

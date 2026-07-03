@@ -1,9 +1,0 @@
-# yaml-language-server: $schema=./page-schema-1.json
-
-# Page: events_upcoming — upcoming events, soonest first.
-
-title: Upcoming events
-
-body:
-  - kind: crud
-    table: { script: 'scenery("events_upcoming").sort("date", "asc")' }
