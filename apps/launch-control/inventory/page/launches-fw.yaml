@@ -8,9 +8,13 @@ body:
     children:
       - kind: crud
         name: launches
-        table: { script: 'scenery("launches").sort("last_updated", "desc")' }
+        table: launches
         params:
           id_column: id
+          # A GRID param, not binding shaping: the header arrow displays it
+          # and header clicks re-sort. (Binding `.sort()` is for widgets with
+          # no native sort UI, e.g. pie charts.)
+          default_sort: { column: last_updated, direction: desc }
           columns:
             name: { width: 400 }
             status.name:
@@ -33,18 +37,18 @@ body:
           default: Details
 
       - kind: form
-        when: '${tab.value == "Details"}'
+        when: '${tab.value == "Details" && launches.selected_id != ""}'
         table: launches
         record: "${launches.selected_id}"
 
       - kind: grid
-        when: '${tab.value == "Payloads"}'
+        when: '${tab.value == "Payloads" && launches.selected_id != ""}'
         table: { script: 'related("launches", "${launches.selected_id}", "payloads")' }
 
       - kind: grid
-        when: '${tab.value == "Crew"}'
+        when: '${tab.value == "Crew" && launches.selected_id != ""}'
         table: { script: 'related("launches", "${launches.selected_id}", "crew")' }
 
       - kind: grid
-        when: '${tab.value == "Landings"}'
+        when: '${tab.value == "Landings" && launches.selected_id != ""}'
         table: { script: 'related("launches", "${launches.selected_id}", "landings")' }
