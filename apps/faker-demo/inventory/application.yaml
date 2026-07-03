@@ -1,0 +1,17 @@
+# Application root. Theme is defaulted; the framework entries below feed the
+# shared app scope every `body:`-grammar page mounts under:
+#
+#   variables: → live `app.<name>` sources (the only writable scope entries)
+#   profiles:  → the active profile's env file becomes `profile.*` snapshots
+#                (keys prefixed SECRET_ become `secret.*` instead)
+#
+# The active profile is `VANTAGE_PROFILE` if set, else the first one (dev).
+variables:
+  brand:
+    type: string
+    default: PristineGym
+profiles:
+  dev:
+    env_file: profiles/dev.env
+  prod:
+    env_file: profiles/prod.env

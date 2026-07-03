@@ -17,6 +17,9 @@ items:
       - page: feed
         label: Live Feed
         icon: Network
+      - page: framework-demo
+        label: Framework Demo
+        icon: Frame
 
   # Push out → watch it land.
   - section: Broadcast
