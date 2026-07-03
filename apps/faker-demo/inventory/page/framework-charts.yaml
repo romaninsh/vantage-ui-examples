@@ -1,0 +1,28 @@
+# Page: framework-charts — exercises the remaining heavyweight kinds on the
+# framework contract. The chart bars re-scale live as the `minutes` buckets
+# grow (the current minute's bar visibly climbs), and the logview tails the
+# `updates` feed — rows expire after a few seconds, so the stream flows.
+title: Framework Charts
+body:
+  - kind: column
+    children:
+      - kind: label
+        params:
+          text: "Arrivals per minute — kind: chart over the minutes table"
+
+      - kind: chart
+        table: minutes
+        params:
+          x: minute
+          y: attendees
+          label: arrivals per minute (last 10)
+
+      - kind: label
+        params:
+          text: "Incoming feed — kind: logview over the updates table"
+
+      - kind: logview
+        table: updates
+        params:
+          columns: [updated, region, delta]
+          limit: 12

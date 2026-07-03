@@ -23,6 +23,9 @@ items:
       - page: framework-grid
         label: Framework Grid
         icon: GalleryVerticalEnd
+      - page: framework-charts
+        label: Framework Charts
+        icon: ChartPie
 
   # Push out → watch it land.
   - section: Broadcast
