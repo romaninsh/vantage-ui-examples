@@ -8,7 +8,7 @@ body:
     children:
       - kind: crud
         name: launches
-        table: launches
+        table: { script: 'scenery("launches").sort("last_updated", "desc")' }
         params:
           id_column: id
           columns:
@@ -19,6 +19,7 @@ body:
                 yellow: ["Launch in Flight", "To Be Confirmed", "To Be Determined", "On Hold"]
                 red: ["Launch Failure", "Launch was a Partial Failure"]
             webcast_live: { label: Live }
+            last_updated: {}
             launch_service_provider.name: { label: Provider }
             rocket_configuration.name: { label: Rocket }
             pad.name: { label: Pad }
