@@ -1,11 +1,8 @@
-# Page: feed — the raw incoming stream as a full table (newest-first).
+# Page: feed — the raw incoming stream as a full table (framework grammar).
 title: Live Feed
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: grid
     table: updates
     params:
-      columns:
-        updated: {}
-        region: {}
-        delta: {}
+      columns: [updated, region, delta]
+      id_column: region

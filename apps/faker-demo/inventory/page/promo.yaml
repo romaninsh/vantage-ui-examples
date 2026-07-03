@@ -1,2 +1,6 @@
-# Page: promo — placeholder (not implemented yet).
+# Page: promo — placeholder (not implemented yet; framework grammar).
 title: Run a Promo
+body:
+  - kind: label
+    params:
+      text: "Run a Promo — coming soon"
