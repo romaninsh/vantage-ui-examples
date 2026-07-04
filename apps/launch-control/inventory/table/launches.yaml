@@ -15,11 +15,10 @@
 
 datasource: local
 title: Launches
-# Order server-side by last_updated so the launch the simulator is currently
-# driving (freshest timestamp) is always row 1. We can't rely on the page's
-# client-side `default_sort` here — the generic api-client treats columns as
-# non-orderable, so it silently no-ops and you get raw insertion order.
-table: "launches/?mode=detailed&ordering=-last_updated"
+# The server returns insertion order and ignores `?ordering=` — ordering
+# comes from the page's `default_sort`, imposed client-side over the Dio
+# cache after every load/refresh (the REST vista reports `can_order: false`).
+table: "launches/?mode=detailed"
 
 columns:
   - { name: id, type: string, flags: [id] }
