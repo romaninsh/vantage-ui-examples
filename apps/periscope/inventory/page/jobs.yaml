@@ -1,8 +1,7 @@
 # yaml-language-server: $schema=./page-schema-1.json
-# Page: jobs — flat list of batch Jobs with completion counts.
+# Page: jobs — framework grid (flat list).
 title: Jobs
-
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: grid
+    name: jobs
     table: jobs

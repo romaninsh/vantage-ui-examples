@@ -3,13 +3,11 @@
 # glance). Cells for namespace / node / owning deployment are drill-up links
 # into those records. Refreshes every few seconds to track phase changes.
 title: Pods
-layout: binder
-
-elements:
-  - kind: crud
-    spot: body
+body:
+  - kind: binder
+    name: pods
     table: pods
-    views:
-      - pod_summary
     params:
       refresh_interval: 5
+      views:
+        - pod_summary
