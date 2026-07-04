@@ -12,10 +12,21 @@ body:
     params:
       id_column: id
       default_sort: { column: last_updated, direction: desc }
+      # Re-pull the launches viewport every 2s (the simulator stamps
+      # `last_updated` about that often) — a new launch floats to the top
+      # and the summary's telemetry keeps tracking. Content-aware
+      # generation: an unchanged re-pull repaints nothing.
+      refresh_interval: 2
       # Custom read-only summary tab (view/launch_summary.yaml), shown
       # before the auto-derived Details / relation tabs.
       views:
         - launch_summary
+      toolbar:
+        - label: "New simulated launch"
+          icon: Play
+          action: |
+            let r = actions.new_launch();
+            actions.submit_launch(r.lsp_id, r.pad_id, r.rocket_configuration_id, r.name);
       columns:
         name: { width: 400 }
         status.name:
