@@ -1,19 +1,19 @@
 # yaml-language-server: $schema=./page-schema-1.json
-# Page: explorer — a burger (vertical drill). Pick a namespace up top, its
-# deployments stack below; pick a deployment, its pods stack below that. Each
-# level resolves a relation against the selected row of the level above
-# (namespaces → deployments → pods), so you walk the cluster top-down in one
-# scrolling column.
+# Page: explorer — a vertical drill. Pick a namespace up top, its deployments
+# stack below; pick a deployment, its pods stack below that. Each level is a
+# reactive related() binding against the selection of the level above.
 title: Explorer
-layout: burger
-
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: grid
+    name: namespaces
     table: namespaces
-  - kind: tableview
-    spot: body
-    ref: deployments
-  - kind: tableview
-    spot: body
-    ref: pods
+  - kind: grid
+    name: deployments
+    when: '${namespaces.selected_id} != ""'
+    table:
+      script: related("namespaces", "${namespaces.selected_id}", "deployments")
+  - kind: grid
+    name: pods
+    when: '${deployments.selected_id} != ""'
+    table:
+      script: related("deployments", "${deployments.selected_id}", "pods")

@@ -1,14 +1,14 @@
 # yaml-language-server: $schema=./page-schema-1.json
-# Page: infra — a burger (vertical drill) for the hardware view: nodes up top,
-# select one and the pods scheduled on it stack below (the node → pods relation,
-# joined on the projected `nodeName`).
+# Page: infra — the hardware view: nodes up top, select one and the pods
+# scheduled on it stack below (the node → pods relation, joined on the
+# projected `nodeName`).
 title: Infrastructure
-layout: burger
-
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: grid
+    name: nodes
     table: nodes
-  - kind: tableview
-    spot: body
-    ref: pods
+  - kind: grid
+    name: pods
+    when: '${nodes.selected_id} != ""'
+    table:
+      script: related("nodes", "${nodes.selected_id}", "pods")
