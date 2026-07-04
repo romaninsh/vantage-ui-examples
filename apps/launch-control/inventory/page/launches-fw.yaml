@@ -12,6 +12,10 @@ body:
     params:
       id_column: id
       default_sort: { column: last_updated, direction: desc }
+      # Custom read-only summary tab (view/launch_summary.yaml), shown
+      # before the auto-derived Details / relation tabs.
+      views:
+        - launch_summary
       columns:
         name: { width: 400 }
         status.name:
