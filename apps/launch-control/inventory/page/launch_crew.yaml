@@ -1,7 +1,6 @@
-# Page: launch_crew — list view (a drill target).
+# Page: launch_crew — framework grid (a drill target).
 title: Launch Crew
-
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: grid
+    name: launch_crew
     table: launch_crew

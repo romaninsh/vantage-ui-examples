@@ -1,8 +1,7 @@
-# Page: landpads — list with a binder (selecting a row reveals its relation tabs).
+# Page: landpads — framework binder: grid on top; selecting a row reveals a
+# Details form plus one tab per declared relation.
 title: Landpads
-layout: binder
-
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: binder
+    name: landpads
     table: landpads

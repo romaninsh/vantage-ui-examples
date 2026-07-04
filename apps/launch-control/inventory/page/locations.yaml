@@ -1,8 +1,7 @@
-# Page: locations — list with a binder (selecting a row reveals its relation tabs).
+# Page: locations — framework binder: grid on top; selecting a row reveals a
+# Details form plus one tab per declared relation.
 title: Locations
-layout: binder
-
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: binder
+    name: locations
     table: locations

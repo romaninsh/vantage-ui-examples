@@ -8,11 +8,6 @@ items:
     label: Launch board
     icon: ArrowUp
 
-  # Framework-decomposed binder, side by side with the legacy board.
-  - page: launches-fw
-    label: Launch board (fw)
-    icon: Frame
-
   - section: Flights
     children:
       - page: payloads

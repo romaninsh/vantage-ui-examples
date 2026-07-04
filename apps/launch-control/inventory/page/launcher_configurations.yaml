@@ -1,8 +1,7 @@
-# Page: launcher_configurations — list with a binder (selecting a row reveals its relation tabs).
+# Page: launcher_configurations — framework binder: grid on top; selecting a row reveals a
+# Details form plus one tab per declared relation.
 title: Launcher Configurations
-layout: binder
-
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: binder
+    name: launcher_configurations
     table: launcher_configurations

@@ -1,7 +1,6 @@
-# Page: landings — list view (a drill target).
+# Page: landings — framework grid (a drill target).
 title: Landings
-
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: grid
+    name: landings
     table: landings

@@ -1,7 +1,6 @@
-# Page: astronauts — list view (a drill target).
+# Page: astronauts — framework grid (a drill target).
 title: Astronauts
-
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: grid
+    name: astronauts
     table: astronauts
