@@ -322,9 +322,8 @@ def _gen_page_yaml(name: str, slug: str, workflow_id: str, step_slugs: list) -> 
         f"# menu-label: {name}\n"
         f"# step-slugs: {','.join(step_slugs)}\n"
         f'title: "{_yaml_dq(name)} runs"\n'
-        "elements:\n"
-        "  - kind: tableview\n"
-        "    spot: body\n"
+        "body:\n"
+        "  - kind: crud\n"
         f"    table: runs-{slug}\n"
     )
 
@@ -374,21 +373,26 @@ def _rebuild_dashboard(inventory: str) -> bool:
         "#   x = run number (one point per run), layers = steps (seconds),",
         "#   stacked to the total runtime. No axis labels — these are dense tiles.",
         "title: Dashboard",
-        "layout: grid",
-        "columns: 2",
-        "elements:",
+        "body:",
+        "  - kind: column",
+        "    children:",
     ]
-    for stem, label, slugs in entries:
-        out.append("  - kind: chart")
-        out.append("    spot: body")
-        out.append(f"    table: {stem}")
-        out.append("    chart_type: stacked_area")
-        out.append("    x: run_number")
-        out.append("    labels: false")
-        out.append(f'    title: "{_yaml_dq(label)}"')
-        out.append("    series:")
-        for sl in slugs:
-            out.append(f"      - {sl}")
+    # Two tiles per row — the framework grammar's row/column composition
+    # replaces the legacy `layout: grid` + `columns: 2`.
+    for i in range(0, len(entries), 2):
+        out.append("      - kind: row")
+        out.append("        children:")
+        for stem, label, slugs in entries[i : i + 2]:
+            out.append("          - kind: chart")
+            out.append(f"            table: {stem}")
+            out.append("            params:")
+            out.append("              x: run_number")
+            out.append("              chart_type: stacked_area")
+            out.append("              labels: false")
+            out.append(f'              label: "{_yaml_dq(label)}"')
+            out.append("              series:")
+            for sl in slugs:
+                out.append(f"                - {sl}")
     _atomic_write(dash_path, "\n".join(out) + "\n")
     return True
 

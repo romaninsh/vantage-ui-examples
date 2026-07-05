@@ -1,0 +1,67 @@
+# Page: framework-demo — the first framework-grammar page (`body:` instead of
+# `elements:`). Mounted through the vantage-ui framework pipeline: components
+# init over a scope frame chained under the shared app scope, dependencies are
+# discovered from `${...}` reads, and the `top` table binds to the live
+# gym-traffic scenery — the stat and the region list update in place as the
+# sim pushes new headcounts.
+#
+# Scope tour: `${app.brand}` is an application.yaml variable, `${profile.motd}`
+# comes from the active profile's env file, the select is clickable (chips)
+# and publishes `focus.value`, and the `kind: view` mount pulls in
+# view/region-brief.yaml — private inside, `brief.total` exported out.
+#
+# Rendering is deliberately primitive (plain divs, no widget chrome) — this
+# page proves the pipeline, not the styling.
+title: Framework Demo
+body:
+  - kind: column
+    children:
+      - kind: label
+        params:
+          text: "${app.brand} regions — rendered by the vantage-ui framework"
+
+      # From the active profile's env file (profiles/dev.env by default).
+      - kind: label
+        params:
+          text: "${profile.motd}"
+
+      # Row count over the live aggregate table; publishes `region_count.value`.
+      - kind: stat
+        name: region_count
+        table: top
+        params:
+          label: regions reporting
+
+      # Named select publishes `focus.value` into the page scope. Clickable:
+      # each option renders as a chip; clicking writes the value source.
+      - kind: select
+        name: focus
+        params:
+          options: ["All regions", "Busiest only"]
+          default: "All regions"
+
+      # Reads two published outputs — ui_tree shows this label's read-set.
+      - kind: label
+        params:
+          text: "Focus: ${focus.value} — ${region_count.value} regions live"
+
+      # A framework view mount: args in, declared outputs out (see
+      # view/region-brief.yaml). The view's internal `count` name is
+      # invisible here; only `brief.total` crosses the boundary.
+      - kind: view
+        name: brief
+        src: region-brief
+        args:
+          heading: "Region brief — mounted from view/region-brief.yaml"
+
+      - kind: label
+        params:
+          text: "The view exported brief.total = ${brief.total}"
+
+      # One row per region, re-rendered in place as visitors change.
+      - kind: list
+        table: top
+        item:
+          - kind: label
+            params:
+              text: "${row.region}: ${row.visitors} visitors (${row.live})"

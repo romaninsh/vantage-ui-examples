@@ -4,187 +4,207 @@
 #   x = run number (one point per run), layers = steps (seconds),
 #   stacked to the total runtime. No axis labels — these are dense tiles.
 title: Dashboard
-layout: grid
-columns: 2
-elements:
-  - kind: chart
-    spot: body
-    table: runs-aws_backend_tests
-    chart_type: stacked_area
-    x: run_number
-    labels: false
-    title: "AWS Backend Tests"
-    series:
-      - set_up_job
-      - run_actions_checkout_v4
-      - run_swatinem_rust_cache_v2
-      - build_vantage_aws
-      - run_tests_offline_only_integration_tests_are
-      - check_formatting
-      - run_clippy
-      - run_aws_cli_against_live_aws
-      - post_run_swatinem_rust_cache_v2
-      - post_run_actions_checkout_v4
-      - complete_job
-  - kind: chart
-    spot: body
-    table: runs-main_workspace_v0_3_core
-    chart_type: stacked_area
-    x: run_number
-    labels: false
-    title: "Main Workspace (v0.3 Core)"
-    series:
-      - set_up_job
-      - run_actions_checkout_v4
-      - run_swatinem_rust_cache_v2
-      - check_workspace_structure
-      - build_all_crates
-      - run_all_tests
-      - check_formatting
-      - run_clippy
-      - check_documentation
-      - post_run_swatinem_rust_cache_v2
-      - post_run_actions_checkout_v4
-      - complete_job
-  - kind: chart
-    spot: body
-    table: runs-mongodb_tests
-    chart_type: stacked_area
-    x: run_number
-    labels: false
-    title: "MongoDB Tests"
-    series:
-      - set_up_job
-      - initialize_containers
-      - run_actions_checkout_v4
-      - run_swatinem_rust_cache_v2
-      - seed_database
-      - build_vantage_mongodb
-      - run_unit_tests
-      - run_integration_tests
-      - cleanup
-      - post_run_swatinem_rust_cache_v2
-      - post_run_actions_checkout_v4
-      - stop_containers
-      - complete_job
-  - kind: chart
-    spot: body
-    table: runs-ui_examples_build
-    chart_type: stacked_area
-    x: run_number
-    labels: false
-    title: "UI Examples Build"
-    series:
-      - build_examples_egui__set_up_job
-      - build_examples_egui__run_actions_checkout_v4
-      - build_examples_egui__run_swatinem_rust_cache_v2
-      - build_examples_egui__install_system_dependencies
-      - build_examples_egui__build_example_egui
-      - build_examples_egui__check_example_egui_formatting
-      - build_examples_egui__post_run_swatinem_rust_cache_v2
-      - build_examples_egui__post_run_actions_checkout_v4
-      - build_examples_egui__complete_job
-      - build_examples_gpui__set_up_job
-      - build_examples_gpui__run_actions_checkout_v4
-      - build_examples_gpui__run_swatinem_rust_cache_v2
-      - build_examples_gpui__install_system_dependencies
-      - build_examples_gpui__build_example_gpui
-      - build_examples_gpui__check_example_gpui_formatting
-      - build_examples_gpui__post_run_swatinem_rust_cache_v2
-      - build_examples_gpui__post_run_actions_checkout_v4
-      - build_examples_gpui__complete_job
-      - build_examples_tui__set_up_job
-      - build_examples_tui__run_actions_checkout_v4
-      - build_examples_tui__run_swatinem_rust_cache_v2
-      - build_examples_tui__install_system_dependencies
-      - build_examples_tui__build_example_tui
-      - build_examples_tui__check_example_tui_formatting
-      - build_examples_tui__post_run_swatinem_rust_cache_v2
-      - build_examples_tui__post_run_actions_checkout_v4
-      - build_examples_tui__complete_job
-      - build_examples_slint__set_up_job
-      - build_examples_slint__run_actions_checkout_v4
-      - build_examples_slint__run_swatinem_rust_cache_v2
-      - build_examples_slint__install_system_dependencies
-      - build_examples_slint__build_example_slint
-      - build_examples_slint__check_example_slint_formatting
-      - build_examples_slint__post_run_swatinem_rust_cache_v2
-      - build_examples_slint__post_run_actions_checkout_v4
-      - build_examples_slint__complete_job
-      - build_examples_tauri__set_up_job
-      - build_examples_tauri__run_actions_checkout_v4
-      - build_examples_tauri__run_swatinem_rust_cache_v2
-      - build_examples_tauri__install_system_dependencies
-      - build_examples_tauri__build_example_tauri
-      - build_examples_tauri__check_example_tauri_formatting
-      - build_examples_tauri__post_run_swatinem_rust_cache_v2
-      - build_examples_tauri__post_run_actions_checkout_v4
-      - build_examples_tauri__complete_job
-      - build_examples_cursive__set_up_job
-      - build_examples_cursive__run_actions_checkout_v4
-      - build_examples_cursive__run_swatinem_rust_cache_v2
-      - build_examples_cursive__install_system_dependencies
-      - build_examples_cursive__build_example_cursive
-      - build_examples_cursive__check_example_cursive_formatting
-      - build_examples_cursive__post_run_swatinem_rust_cache_v2
-      - build_examples_cursive__post_run_actions_checkout_v4
-      - build_examples_cursive__complete_job
-  - kind: chart
-    spot: body
-    table: runs-vantage_sql
-    chart_type: stacked_area
-    x: run_number
-    labels: false
-    title: "vantage-sql"
-    series:
-      - mysql__set_up_job
-      - mysql__initialize_containers
-      - mysql__run_actions_checkout_v4
-      - mysql__run_swatinem_rust_cache_v2
-      - mysql__populate_sqlite_database
-      - mysql__populate_postgresql_databases
-      - mysql__populate_mysql_databases
-      - mysql__build
-      - mysql__test
-      - mysql__clippy
-      - mysql__build_bakery_model3
-      - mysql__bakery_model3_smoke_test
-      - mysql__bakery_model3_csv_smoke_test
-      - mysql__post_run_swatinem_rust_cache_v2
-      - mysql__post_run_actions_checkout_v4
-      - mysql__stop_containers
-      - mysql__complete_job
-      - sqlite__set_up_job
-      - sqlite__initialize_containers
-      - sqlite__run_actions_checkout_v4
-      - sqlite__run_swatinem_rust_cache_v2
-      - sqlite__populate_sqlite_database
-      - sqlite__populate_postgresql_databases
-      - sqlite__populate_mysql_databases
-      - sqlite__build
-      - sqlite__test
-      - sqlite__clippy
-      - sqlite__build_bakery_model3
-      - sqlite__bakery_model3_smoke_test
-      - sqlite__bakery_model3_csv_smoke_test
-      - sqlite__post_run_swatinem_rust_cache_v2
-      - sqlite__post_run_actions_checkout_v4
-      - sqlite__stop_containers
-      - sqlite__complete_job
-      - postgres__set_up_job
-      - postgres__initialize_containers
-      - postgres__run_actions_checkout_v4
-      - postgres__run_swatinem_rust_cache_v2
-      - postgres__populate_sqlite_database
-      - postgres__populate_postgresql_databases
-      - postgres__populate_mysql_databases
-      - postgres__build
-      - postgres__test
-      - postgres__clippy
-      - postgres__build_bakery_model3
-      - postgres__bakery_model3_smoke_test
-      - postgres__bakery_model3_csv_smoke_test
-      - postgres__post_run_swatinem_rust_cache_v2
-      - postgres__post_run_actions_checkout_v4
-      - postgres__stop_containers
-      - postgres__complete_job
+body:
+  - kind: column
+    children:
+      - kind: row
+        children:
+          - kind: chart
+            table: runs-aws_backend_tests
+            params:
+              x: run_number
+              chart_type: stacked_area
+              labels: false
+              label: "AWS Backend Tests"
+              series:
+                - set_up_job
+                - run_actions_checkout_v4
+                - run_swatinem_rust_cache_v2
+                - build_vantage_aws
+                - run_tests_offline_only_integration_tests_are
+                - check_formatting
+                - run_clippy
+                - run_aws_cli_against_live_aws
+                - post_run_swatinem_rust_cache_v2
+                - post_run_actions_checkout_v4
+                - complete_job
+          - kind: chart
+            table: runs-main_workspace_v0_3_core
+            params:
+              x: run_number
+              chart_type: stacked_area
+              labels: false
+              label: "Main Workspace (v0.3 Core)"
+              series:
+                - set_up_job
+                - run_actions_checkout_v4
+                - run_swatinem_rust_cache_v2
+                - check_workspace_structure
+                - build_all_crates
+                - run_all_tests
+                - check_formatting
+                - run_clippy
+                - check_documentation
+                - post_run_swatinem_rust_cache_v2
+                - post_run_actions_checkout_v4
+                - complete_job
+      - kind: row
+        children:
+          - kind: chart
+            table: runs-mongodb_tests
+            params:
+              x: run_number
+              chart_type: stacked_area
+              labels: false
+              label: "MongoDB Tests"
+              series:
+                - set_up_job
+                - initialize_containers
+                - run_actions_checkout_v4
+                - run_swatinem_rust_cache_v2
+                - seed_database
+                - build_vantage_mongodb
+                - run_unit_tests
+                - run_integration_tests
+                - cleanup
+                - post_run_swatinem_rust_cache_v2
+                - post_run_actions_checkout_v4
+                - stop_containers
+                - complete_job
+          - kind: chart
+            table: runs-pr_version_check
+            params:
+              x: run_number
+              chart_type: stacked_area
+              labels: false
+              label: "PR version check"
+              series:
+                - set_up_job
+                - run_actions_checkout_v4
+                - find_changed_crates_and_verify_version_changelog
+                - sync_release_labels_on_pr
+                - post_run_actions_checkout_v4
+                - complete_job
+      - kind: row
+        children:
+          - kind: chart
+            table: runs-ui_examples_build
+            params:
+              x: run_number
+              chart_type: stacked_area
+              labels: false
+              label: "UI Examples Build"
+              series:
+                - build_examples_egui__set_up_job
+                - build_examples_egui__run_actions_checkout_v4
+                - build_examples_egui__run_swatinem_rust_cache_v2
+                - build_examples_egui__install_system_dependencies
+                - build_examples_egui__build_example_egui
+                - build_examples_egui__check_example_egui_formatting
+                - build_examples_egui__post_run_swatinem_rust_cache_v2
+                - build_examples_egui__post_run_actions_checkout_v4
+                - build_examples_egui__complete_job
+                - build_examples_gpui__set_up_job
+                - build_examples_gpui__run_actions_checkout_v4
+                - build_examples_gpui__run_swatinem_rust_cache_v2
+                - build_examples_gpui__install_system_dependencies
+                - build_examples_gpui__build_example_gpui
+                - build_examples_gpui__check_example_gpui_formatting
+                - build_examples_gpui__post_run_swatinem_rust_cache_v2
+                - build_examples_gpui__post_run_actions_checkout_v4
+                - build_examples_gpui__complete_job
+                - build_examples_tui__set_up_job
+                - build_examples_tui__run_actions_checkout_v4
+                - build_examples_tui__run_swatinem_rust_cache_v2
+                - build_examples_tui__install_system_dependencies
+                - build_examples_tui__build_example_tui
+                - build_examples_tui__check_example_tui_formatting
+                - build_examples_tui__post_run_swatinem_rust_cache_v2
+                - build_examples_tui__post_run_actions_checkout_v4
+                - build_examples_tui__complete_job
+                - build_examples_slint__set_up_job
+                - build_examples_slint__run_actions_checkout_v4
+                - build_examples_slint__run_swatinem_rust_cache_v2
+                - build_examples_slint__install_system_dependencies
+                - build_examples_slint__build_example_slint
+                - build_examples_slint__check_example_slint_formatting
+                - build_examples_slint__post_run_swatinem_rust_cache_v2
+                - build_examples_slint__post_run_actions_checkout_v4
+                - build_examples_slint__complete_job
+                - build_examples_tauri__set_up_job
+                - build_examples_tauri__run_actions_checkout_v4
+                - build_examples_tauri__run_swatinem_rust_cache_v2
+                - build_examples_tauri__install_system_dependencies
+                - build_examples_tauri__build_example_tauri
+                - build_examples_tauri__check_example_tauri_formatting
+                - build_examples_tauri__post_run_swatinem_rust_cache_v2
+                - build_examples_tauri__post_run_actions_checkout_v4
+                - build_examples_tauri__complete_job
+                - build_examples_cursive__set_up_job
+                - build_examples_cursive__run_actions_checkout_v4
+                - build_examples_cursive__run_swatinem_rust_cache_v2
+                - build_examples_cursive__install_system_dependencies
+                - build_examples_cursive__build_example_cursive
+                - build_examples_cursive__check_example_cursive_formatting
+                - build_examples_cursive__post_run_swatinem_rust_cache_v2
+                - build_examples_cursive__post_run_actions_checkout_v4
+                - build_examples_cursive__complete_job
+          - kind: chart
+            table: runs-vantage_sql
+            params:
+              x: run_number
+              chart_type: stacked_area
+              labels: false
+              label: "vantage-sql"
+              series:
+                - mysql__set_up_job
+                - mysql__initialize_containers
+                - mysql__run_actions_checkout_v4
+                - mysql__run_swatinem_rust_cache_v2
+                - mysql__populate_sqlite_database
+                - mysql__populate_postgresql_databases
+                - mysql__populate_mysql_databases
+                - mysql__build
+                - mysql__test
+                - mysql__clippy
+                - mysql__build_bakery_model3
+                - mysql__bakery_model3_smoke_test
+                - mysql__bakery_model3_csv_smoke_test
+                - mysql__post_run_swatinem_rust_cache_v2
+                - mysql__post_run_actions_checkout_v4
+                - mysql__stop_containers
+                - mysql__complete_job
+                - sqlite__set_up_job
+                - sqlite__initialize_containers
+                - sqlite__run_actions_checkout_v4
+                - sqlite__run_swatinem_rust_cache_v2
+                - sqlite__populate_sqlite_database
+                - sqlite__populate_postgresql_databases
+                - sqlite__populate_mysql_databases
+                - sqlite__build
+                - sqlite__test
+                - sqlite__clippy
+                - sqlite__build_bakery_model3
+                - sqlite__bakery_model3_smoke_test
+                - sqlite__bakery_model3_csv_smoke_test
+                - sqlite__post_run_swatinem_rust_cache_v2
+                - sqlite__post_run_actions_checkout_v4
+                - sqlite__stop_containers
+                - sqlite__complete_job
+                - postgres__set_up_job
+                - postgres__initialize_containers
+                - postgres__run_actions_checkout_v4
+                - postgres__run_swatinem_rust_cache_v2
+                - postgres__populate_sqlite_database
+                - postgres__populate_postgresql_databases
+                - postgres__populate_mysql_databases
+                - postgres__build
+                - postgres__test
+                - postgres__clippy
+                - postgres__build_bakery_model3
+                - postgres__bakery_model3_smoke_test
+                - postgres__bakery_model3_csv_smoke_test
+                - postgres__post_run_swatinem_rust_cache_v2
+                - postgres__post_run_actions_checkout_v4
+                - postgres__stop_containers
+                - postgres__complete_job

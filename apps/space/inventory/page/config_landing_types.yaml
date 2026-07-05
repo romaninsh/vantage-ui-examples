@@ -4,8 +4,7 @@
 
 title: landing types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_landing_types
     params: {}

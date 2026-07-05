@@ -4,9 +4,6 @@
 
 title: Updates
 
-elements:
-  - kind: tableview
-    spot: body
-    table: updates
-    params:
-      default_sort: { column: created_on, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("updates").sort("created_on", "desc")' }

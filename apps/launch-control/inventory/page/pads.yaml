@@ -1,8 +1,7 @@
-# Page: pads — list with a binder (selecting a row reveals its relation tabs).
+# Page: pads — framework binder: grid on top; selecting a row reveals a
+# Details form plus one tab per declared relation.
 title: Pads
-layout: binder
-
-elements:
-  - kind: tableview
-    spot: body
-    table: pads
+body:
+  - kind: binder
+    name: pads
+    observe: pads

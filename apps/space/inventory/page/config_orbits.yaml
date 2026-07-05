@@ -4,8 +4,7 @@
 
 title: oruits
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_orbits
     params: {}

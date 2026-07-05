@@ -4,8 +4,7 @@
 
 title: docking locations
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_docking_locations
     params: {}

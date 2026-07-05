@@ -4,8 +4,7 @@
 
 title: road closure statuses
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_road_closure_statuses
     params: {}

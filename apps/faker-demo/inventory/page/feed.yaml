@@ -1,11 +1,9 @@
-# Page: feed — the raw incoming stream as a full table (newest-first).
+# Page: feed — the raw incoming stream as a full table (framework grammar;
+# crud = the full table chrome, same widget upstream's tableview drove).
 title: Live Feed
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: updates
     params:
-      columns:
-        updated: {}
-        region: {}
-        delta: {}
+      columns: [updated, region, delta]
+      id_column: region

@@ -5,8 +5,7 @@
 
 title: Locations
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: locations
     params: {}

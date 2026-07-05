@@ -4,8 +4,7 @@
 
 title: space station statuses
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_space_station_statuses
     params: {}

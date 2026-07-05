@@ -5,9 +5,6 @@
 
 title: Celestial bodies
 
-elements:
-  - kind: tableview
-    spot: body
-    table: celestial_bodies
-    params:
-      default_sort: { column: name, direction: asc }
+body:
+  - kind: crud
+    table: { script: 'scenery("celestial_bodies").sort("name", "asc")' }

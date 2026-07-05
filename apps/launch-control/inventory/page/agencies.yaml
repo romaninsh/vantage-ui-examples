@@ -1,8 +1,7 @@
-# Page: agencies — list with a binder (selecting a row reveals its relation tabs).
+# Page: agencies — framework binder: grid on top; selecting a row reveals a
+# Details form plus one tab per declared relation.
 title: Agencies
-layout: binder
-
-elements:
-  - kind: tableview
-    spot: body
-    table: agencies
+body:
+  - kind: binder
+    name: agencies
+    observe: agencies

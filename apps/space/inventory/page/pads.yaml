@@ -5,8 +5,7 @@
 
 title: Pads
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: pads
     params: {}

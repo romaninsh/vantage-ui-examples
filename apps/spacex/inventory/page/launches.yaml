@@ -4,9 +4,8 @@
 
 title: Launches
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: launches
     params:
       columns:

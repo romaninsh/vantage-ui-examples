@@ -4,8 +4,7 @@
 
 title: mission types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_mission_types
     params: {}

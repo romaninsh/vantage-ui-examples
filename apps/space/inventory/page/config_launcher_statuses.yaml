@@ -4,8 +4,7 @@
 
 title: launcher statuses
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_launcher_statuses
     params: {}

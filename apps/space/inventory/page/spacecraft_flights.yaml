@@ -5,9 +5,6 @@
 
 title: Spacecraft flights
 
-elements:
-  - kind: tableview
-    spot: body
-    table: spacecraft_flights
-    params:
-      default_sort: { column: mission_end, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("spacecraft_flights").sort("mission_end", "desc")' }

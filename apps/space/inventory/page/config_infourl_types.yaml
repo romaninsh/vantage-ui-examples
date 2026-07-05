@@ -4,8 +4,7 @@
 
 title: infourl types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_infourl_types
     params: {}

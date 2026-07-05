@@ -2,9 +2,9 @@
 
 use std::time::Duration;
 
+use crate::db::Db;
 use chrono::{DateTime, Utc};
 use vantage_dataset::prelude::{ReadableDataSet, WritableDataSet};
-use crate::db::Db;
 
 use crate::model::LaunchStatus;
 

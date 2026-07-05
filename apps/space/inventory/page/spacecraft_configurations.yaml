@@ -4,9 +4,6 @@
 
 title: Spacecraft configurations
 
-elements:
-  - kind: tableview
-    spot: body
-    table: spacecraft_configurations
-    params:
-      default_sort: { column: name, direction: asc }
+body:
+  - kind: crud
+    table: { script: 'scenery("spacecraft_configurations").sort("name", "asc")' }

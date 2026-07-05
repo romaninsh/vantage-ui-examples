@@ -7,9 +7,8 @@
 
 title: Rockets
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: rockets
     params:
       columns:

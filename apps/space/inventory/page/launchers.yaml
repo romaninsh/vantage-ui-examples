@@ -4,9 +4,6 @@
 
 title: Launchers
 
-elements:
-  - kind: tableview
-    spot: body
-    table: launchers
-    params:
-      default_sort: { column: flights, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("launchers").sort("flights", "desc")' }

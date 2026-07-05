@@ -1,8 +1,7 @@
-# Page: launchers — list with a binder (selecting a row reveals its relation tabs).
+# Page: launchers — framework binder: grid on top; selecting a row reveals a
+# Details form plus one tab per declared relation.
 title: Launchers
-layout: binder
-
-elements:
-  - kind: tableview
-    spot: body
-    table: launchers
+body:
+  - kind: binder
+    name: launchers
+    observe: launchers

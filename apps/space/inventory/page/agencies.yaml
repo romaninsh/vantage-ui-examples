@@ -5,8 +5,7 @@
 
 title: Agencies
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: agencies
     params: {}

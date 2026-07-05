@@ -4,8 +4,7 @@
 
 title: net precisions
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_net_precisions
     params: {}

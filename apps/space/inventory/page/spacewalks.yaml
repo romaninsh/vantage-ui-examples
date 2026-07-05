@@ -4,9 +4,6 @@
 
 title: Spacewalks
 
-elements:
-  - kind: tableview
-    spot: body
-    table: spacewalks
-    params:
-      default_sort: { column: start, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("spacewalks").sort("start", "desc")' }

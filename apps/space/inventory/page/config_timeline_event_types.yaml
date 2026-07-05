@@ -4,8 +4,7 @@
 
 title: timeline event types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_timeline_event_types
     params: {}

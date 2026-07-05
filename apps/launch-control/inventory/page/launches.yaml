@@ -1,80 +1,63 @@
-# Page: launches — THE screen. A `binder`: launches grid on top; selecting a
-# launch fills the bottom with auto-derived tabs — a Details form plus one grid
-# per relation (payloads / crew / landings). From there you keep drilling:
-# a landing → its landpad, the details form's provider / rocket / pad → location.
-#
-# The page polls `last_updated` cheaply via `refresh_probe`; only when the live
-# simulator changes a launch does it do a full refresh — and diorama never blanks
-# the grid on one of the server's injected 503s.
-
+# Page: launches — THE screen, as a framework binder composite. ONE element:
+# master crud grid on top; selecting a row reveals a resizable bottom panel
+# with the hand-authored Summary view (view/launch_summary.yaml), Details
+# (record form), and one grid per has_many relation — auto-derived from the
+# table's declared relations. Selection is internal (value-class): no page
+# remounts while arrow-keying through rows.
 title: Launches
-layout: binder
-
-elements:
-  - kind: crud
-    spot: body
-    table: launches
-    # Custom read-only summary tab (view/launch_summary.yaml), appended after
-    # the auto-derived Details / Crew / Payloads / Landings tabs.
-    views:
-      - launch_summary
-    toolbar:
-      - label: "New simulated launch"
-        icon: Play
-        action: |
-          let r = actions.new_launch();
-          actions.submit_launch(r.lsp_id, r.pad_id, r.rocket_configuration_id, r.name);
+body:
+  # Live telemetry strip: framework stats over the SHARED launches scenery
+  # (top row = most recently updated launch, thanks to the binder's
+  # default_sort). `project:` keeps the numbers gliding between the 2s
+  # re-pulls — velocity carries altitude, acceleration carries velocity —
+  # correcting on every fresh sample and freezing if the feed stalls
+  # (max_dt = 2× the refresh cadence). The ×15 factor is sim time, matching
+  # the summary view's formulas.
+  - kind: row
+    children:
+      - kind: stat
+        observe: launches
+        project:
+          formula: "altitude_km + vertical_speed_ms / 1000.0 * dt * 15.0"
+          max_dt: 4.0
+        params: { label: "Altitude km · live" }
+      - kind: stat
+        observe: launches
+        project:
+          formula: "velocity_ms + acceleration_ms2 * dt * 15.0"
+          max_dt: 4.0
+        params: { label: "Velocity m/s · live" }
+  - kind: binder
+    name: launches
+    observe: launches
     params:
-      # Client-side default sort by `last_updated`, newest first. The Dio sorts
-      # over its cache and re-applies it after every refresh, so the launch the
-      # simulator just touched floats to the top. (Because `last_updated` ticks
-      # constantly, the order legitimately reshuffles as the sim runs; switch the
-      # column to `net` for a stable order that doesn't move on refresh.)
-      default_sort:
-        column: last_updated
-        direction: desc
-      # 1s so the summary's live telemetry tracks the simulator's ~2s stamps
-      # (the projection smooths the gaps; the latency readout shows the lag).
-      refresh_interval: 1
-      # Cheap change probe: fold over the rows for count + newest `last_updated`
-      # (the simulator bumps it on every step). We can't `add_order` here — the
-      # generic api-client backend doesn't mark columns orderable, since a remote
-      # API may not accept `?ordering=` on an arbitrary field. The whole result
-      # set fits one page, so the fold sees every launch.
-      refresh_probe: |
-        let rows = page_table().list();
-        let latest = "";
-        for r in rows {
-            let u = r.last_updated;
-            if u != () && u > latest { latest = u; }
-        }
-        "" + rows.len() + "@" + latest
+      id_column: id
+      default_sort: { column: last_updated, direction: desc }
+      # Re-pull the launches viewport every 2s (the simulator stamps
+      # `last_updated` about that often) — a new launch floats to the top
+      # and the summary's telemetry keeps tracking. Content-aware
+      # generation: an unchanged re-pull repaints nothing.
+      refresh_interval: 2
+      # Custom read-only summary tab (view/launch_summary.yaml), shown
+      # before the auto-derived Details / relation tabs.
+      views:
+        - launch_summary
+      toolbar:
+        - label: "New simulated launch"
+          icon: Play
+          action: |
+            let r = actions.new_launch();
+            actions.submit_launch(r.lsp_id, r.pad_id, r.rocket_configuration_id, r.name);
       columns:
-        # Wide enough for the launch name plus its inline status tag (the
-        # `status.name` label renders on the title cell) without overlap.
-        name:
-          width: 400
+        name: { width: 400 }
         status.name:
           color:
             green: ["Go for Launch", "Launch Successful"]
-            yellow:
-              [
-                "Launch in Flight",
-                "To Be Confirmed",
-                "To Be Determined",
-                "On Hold",
-              ]
+            yellow: ["Launch in Flight", "To Be Confirmed", "To Be Determined", "On Hold"]
             red: ["Launch Failure", "Launch was a Partial Failure"]
-        webcast_live:
-          label: Live
-        last_updated:
-        launch_service_provider.name:
-          label: Provider
-        rocket_configuration.name:
-          label: Rocket
-        pad.name:
-          label: Pad
-        payload_count:
-        crew_count:
-        total_payload_mass:
-        net:
+        webcast_live: { label: Live }
+        last_updated: {}
+        launch_service_provider.name: { label: Provider }
+        rocket_configuration.name: { label: Rocket }
+        pad.name: { label: Pad }
+        net: {}

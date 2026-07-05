@@ -4,9 +4,8 @@
 
 title: Capsules
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: capsules
     params:
       columns:

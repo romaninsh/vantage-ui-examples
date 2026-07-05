@@ -1,8 +1,7 @@
-# Page: payloads — list with a binder (selecting a row reveals its relation tabs).
+# Page: payloads — framework binder: grid on top; selecting a row reveals a
+# Details form plus one tab per declared relation.
 title: Payloads
-layout: binder
-
-elements:
-  - kind: tableview
-    spot: body
-    table: payloads
+body:
+  - kind: binder
+    name: payloads
+    observe: payloads

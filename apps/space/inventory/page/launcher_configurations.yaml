@@ -5,8 +5,7 @@
 
 title: Launcher configurations
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: launcher_configurations
     params: {}

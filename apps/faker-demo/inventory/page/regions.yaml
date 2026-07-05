@@ -1,14 +1,13 @@
-# Page: regions — the full per-region table, live. Ranked by headcount, with the
-# `live` cell coloured so an offline region reads at a glance.
+# Page: regions — the full per-region table, live (framework grammar; the
+# hosted grid chrome sorts by header click). Ranked by headcount via the
+# binding's shape. Publishes the selected region.
 title: Regions
-elements:
-  - kind: tableview
-    spot: body
-    table: top
+body:
+  - kind: crud
+    name: regions
+    table: { script: 'scenery("top").sort("visitors", "desc")' }
     params:
-      default_sort:
-        column: visitors
-        direction: desc
+      id_column: region
       columns:
         region: {}
         visitors: {}

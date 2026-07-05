@@ -4,9 +4,8 @@
 
 title: Missions
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: missions
     params:
       columns:

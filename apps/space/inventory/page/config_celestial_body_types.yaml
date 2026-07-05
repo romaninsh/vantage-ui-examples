@@ -4,8 +4,7 @@
 
 title: celestial uody types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_celestial_body_types
     params: {}

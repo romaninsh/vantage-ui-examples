@@ -5,9 +5,6 @@
 
 title: Docking events
 
-elements:
-  - kind: tableview
-    spot: body
-    table: docking_events
-    params:
-      default_sort: { column: docking, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("docking_events").sort("docking", "desc")' }

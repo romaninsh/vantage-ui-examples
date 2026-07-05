@@ -4,9 +4,8 @@
 
 title: Ships
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: ships
     params:
       columns:

@@ -5,9 +5,6 @@
 
 title: Starship fleet
 
-elements:
-  - kind: tableview
-    spot: body
-    table: starship_vehicles
-    params:
-      default_sort: { column: last_launch_date, direction: desc }
+body:
+  - kind: crud
+    table: { script: 'scenery("starship_vehicles").sort("last_launch_date", "desc")' }

@@ -1,12 +1,16 @@
 # yaml-language-server: $schema=./page-schema-1.json
 
-# Page: events — list view (standalone). Sorted by date, most recent first.
+# Page: events — one page for all/upcoming/previous, same reactive-binding
+# pattern as launches: the range select structurally re-shapes the binding.
 
 title: Events
 
-elements:
-  - kind: tableview
-    spot: body
-    table: events
-    params:
-      default_sort: { column: date, direction: desc }
+body:
+  - kind: column
+    children:
+      - kind: select
+        name: range
+        params: { options: [all, upcoming, previous], default: all }
+      - kind: crud
+        table:
+          script: 'scenery(if "${range.value}" == "all" { "events" } else { "events_${range.value}" }).sort("date", if "${range.value}" == "upcoming" { "asc" } else { "desc" })'

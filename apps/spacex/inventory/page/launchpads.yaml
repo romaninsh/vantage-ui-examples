@@ -4,9 +4,8 @@
 
 title: Launchpads
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: launchpads
     params:
       columns:

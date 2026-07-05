@@ -4,8 +4,7 @@
 
 title: vidurl types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_vidurl_types
     params: {}

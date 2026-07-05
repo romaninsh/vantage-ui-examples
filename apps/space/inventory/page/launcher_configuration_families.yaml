@@ -4,9 +4,6 @@
 
 title: Launcher families
 
-elements:
-  - kind: tableview
-    spot: body
-    table: launcher_configuration_families
-    params:
-      default_sort: { column: name, direction: asc }
+body:
+  - kind: crud
+    table: { script: 'scenery("launcher_configuration_families").sort("name", "asc")' }

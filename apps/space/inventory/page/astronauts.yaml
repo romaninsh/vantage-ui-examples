@@ -4,8 +4,7 @@
 
 title: Astronauts
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: astronauts
     params: {}

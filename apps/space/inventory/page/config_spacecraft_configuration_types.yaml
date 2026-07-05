@@ -4,8 +4,7 @@
 
 title: spacecraft configuration types
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: config_spacecraft_configuration_types
     params: {}

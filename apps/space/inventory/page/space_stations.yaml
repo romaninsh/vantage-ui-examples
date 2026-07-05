@@ -4,8 +4,7 @@
 
 title: Space stations
 
-elements:
-  - kind: tableview
-    spot: body
+body:
+  - kind: crud
     table: space_stations
     params: {}

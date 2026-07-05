@@ -17,6 +17,15 @@ items:
       - page: feed
         label: Live Feed
         icon: Network
+      - page: framework-demo
+        label: Framework Demo
+        icon: Frame
+      - page: framework-grid
+        label: Framework Grid
+        icon: GalleryVerticalEnd
+      - page: framework-charts
+        label: Framework Charts
+        icon: ChartPie
 
   # Push out → watch it land.
   - section: Broadcast
