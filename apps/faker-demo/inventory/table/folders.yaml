@@ -1,0 +1,11 @@
+# Table: folders — the path-parameterized listing family over the logs sim.
+# One row per child of a path: the finder opens one scenery per expanded
+# folder, all routed through this single family (one Dio).
+datasource: logs
+title: Folders
+columns:
+  - { name: name, type: string, flags: [id, title] }
+  - { name: kind, type: string }
+  - { name: size, type: int }
+  - { name: created, type: string }
+  - { name: modified, type: string }
