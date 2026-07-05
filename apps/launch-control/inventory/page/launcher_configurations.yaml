@@ -4,4 +4,4 @@ title: Launcher Configurations
 body:
   - kind: binder
     name: launcher_configurations
-    table: launcher_configurations
+    observe: launcher_configurations

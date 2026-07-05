@@ -4,4 +4,4 @@ title: Landpads
 body:
   - kind: binder
     name: landpads
-    table: landpads
+    observe: landpads

@@ -3,4 +3,4 @@ title: Launch Crew
 body:
   - kind: grid
     name: launch_crew
-    table: launch_crew
+    observe: launch_crew

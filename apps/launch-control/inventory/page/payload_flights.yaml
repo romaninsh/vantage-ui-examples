@@ -3,4 +3,4 @@ title: Payload Flights
 body:
   - kind: grid
     name: payload_flights
-    table: payload_flights
+    observe: payload_flights
