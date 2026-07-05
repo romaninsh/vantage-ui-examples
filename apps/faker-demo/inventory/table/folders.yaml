@@ -3,6 +3,13 @@
 # folder, all routed through this single family (one Dio).
 datasource: logs
 title: Folders
+# Folder rows lift {size, file_count} from the sim's get-only size vista via
+# the dio-level augment — still one Dio; sizes trickle in with the vista's
+# natural latency (the debounce showcase).
+augment:
+  from: folder_size
+  key: path
+  columns: [size, file_count]
 columns:
   - { name: name, type: string, flags: [id, title] }
   - { name: kind, type: string }
