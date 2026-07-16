@@ -1,0 +1,500 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ActionConfig",
+  "type": "object",
+  "required": [
+    "kind"
+  ],
+  "properties": {
+    "description": {
+      "description": "Free-form description rendered in the dialog body (above the form fields, or alongside the confirm prompt). Plain text; line breaks preserved. Available on all kinds.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "dialog": {
+      "description": "Dialog presentation overrides (title, size, button labels, confirm style). All fields optional; defaults documented on [`DialogSpec`]. Used by every kind.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/DialogSpec"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "form": {
+      "description": "Form field declarations for `kind: form`. Either explicit `fields:` entries or a `table:` reference (or both — explicit entries override the table column's defaults). Ignored by `kind: confirm` and `kind: http_request`.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/FormSpec"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "http": {
+      "description": "HTTP body for `kind: http_request`. Mandatory when the kind is `http_request`; ignored otherwise. Validated at catalog time.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/HttpSpec"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "kind": {
+      "description": "Discriminator for the action's executor.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ActionKind"
+        }
+      ]
+    },
+    "params": {
+      "description": "Positional parameter declarations for `kind: http_request`. Declaration order is the **public contract**: the Rhai host fn `actions.<name>(...)` takes its arguments in this exact order. Ignored by `kind: form` and `kind: confirm` (those use `form:` instead).",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ParamDef"
+      }
+    },
+    "stream": {
+      "description": "Command + line filter for `kind: stream`. Mandatory when the kind is `stream`; ignored otherwise. Validated at catalog time.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/StreamSpec"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "terminal": {
+      "description": "Command to run for `kind: terminal`. Mandatory when the kind is `terminal`; ignored otherwise. Validated at catalog time.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/TerminalSpec"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "ActionKind": {
+      "description": "Action executor discriminator.",
+      "oneOf": [
+        {
+          "description": "Opens a dialog with form fields; returns a record of user input.",
+          "type": "string",
+          "enum": [
+            "form"
+          ]
+        },
+        {
+          "description": "Opens a yes/no dialog; returns a bool.",
+          "type": "string",
+          "enum": [
+            "confirm"
+          ]
+        },
+        {
+          "description": "Opens a read-only dialog over resolved `params:`, fires HTTP on confirm. Deliberately narrow — not a form.",
+          "type": "string",
+          "enum": [
+            "http_request"
+          ]
+        },
+        {
+          "description": "Opens a dialog with a description, the command, and a read-only terminal that streams the command's PTY output on Run.",
+          "type": "string",
+          "enum": [
+            "terminal"
+          ]
+        },
+        {
+          "description": "Opens a bottom sheet that runs the command immediately with piped output, filters each line through a Rhai closure, and streams it into a read-only terminal. Killed on close. For live log tails.",
+          "type": "string",
+          "enum": [
+            "stream"
+          ]
+        },
+        {
+          "description": "Opens a two-column dialog: a `form:` on the left and a read-only terminal on the right. On submit the form disables and the `terminal.command` runs in a PTY with `${form.<field>}` and `${row.<field>}` interpolated, streaming output into the terminal. Requires both `form:` and `terminal:`. Returns unit. Built for \"collect inputs, then run a create/apply command\".",
+          "type": "string",
+          "enum": [
+            "command"
+          ]
+        }
+      ]
+    },
+    "ColumnType": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "string",
+            "int",
+            "float",
+            "decimal",
+            "bool",
+            "datetime",
+            "duration"
+          ]
+        },
+        {
+          "description": "Integer byte count, rendered as `1.5 KB` / `29.0 MB` / `1.4 GB` (base-1024). Sources that emit a JSON number or a numeric string both work.",
+          "type": "string",
+          "enum": [
+            "bytes"
+          ]
+        }
+      ]
+    },
+    "ConfirmStyle": {
+      "type": "string",
+      "enum": [
+        "default",
+        "danger"
+      ]
+    },
+    "DialogSize": {
+      "type": "string",
+      "enum": [
+        "sm",
+        "md",
+        "lg"
+      ]
+    },
+    "DialogSpec": {
+      "description": "Presentation overrides for the action dialog. All fields optional; the defaults below produce a sensible dialog for any kind.\n\n`title` and `description` support `${row.x}` interpolation at dispatch time when the action is invoked from a row context — see `vantage-actions` runtime for the substitution rules.",
+      "type": "object",
+      "properties": {
+        "cancel_label": {
+          "description": "Cancel button label. Default: `\"Cancel\"`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confirm_label": {
+          "description": "Confirm button label. Default: `\"OK\"`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confirm_style": {
+          "description": "Visual emphasis of the confirm button. `danger` renders red — reserve for destructive actions (delete, cancel order).",
+          "default": "default",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ConfirmStyle"
+            }
+          ]
+        },
+        "description": {
+          "description": "Free-form body text rendered above the form fields / confirm prompt. Plain text; line breaks preserved.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "size": {
+          "description": "Modal width hint. Default: `md`.",
+          "default": "md",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DialogSize"
+            }
+          ]
+        },
+        "title": {
+          "description": "Dialog header. Default: humanised action key (`cancel_order` → `\"Cancel order\"`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "FieldEntry": {
+      "description": "Sugar: a `fields:` entry is either a bare column name (string) OR a full field-def map. Bare strings only make sense when `form.table:` is set — enforced by `catalog::validate`.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/definitions/FormField"
+        }
+      ]
+    },
+    "FormField": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "choices": {
+          "description": "Enum-style dropdown values. Inherited from the table column when `form.table:` is set and the column declares choices.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "default": {
+          "description": "Default value rendered when the dialog opens (and the field is not prefilled from a row). String form — coerced to the field type at render time.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "multiline": {
+          "description": "Render a multi-line text area (string fields only).",
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "option_label": {
+          "description": "Column in each `options` row to display. Defaults to the value.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "option_value": {
+          "description": "Column in each `options` row to submit as the field value. Defaults to `id`; set it when the option table's id column has a different name (e.g. versions keyed by `version`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "options": {
+          "description": "Rhai *query* script (same surface as a table `cmd:` — `table(..)`, `get_ref(..)`, `add_order(..)`, `list()`) returning the dropdown's option rows. `${row.x}` is interpolated against the action's row before the script runs, so options can be narrowed by the parent record (e.g. a product's versions via `get_ref`). An alternative to a `references:` column as the dropdown's source; the first row returned becomes the default selection.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "placeholder": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "readonly": {
+          "description": "Render the field disabled (non-editable). Useful for an auto-filled identifier shown for context — e.g. a product id defaulted from `${row.id}` that the user shouldn't change.",
+          "type": "boolean"
+        },
+        "required": {
+          "default": true,
+          "type": "boolean"
+        },
+        "type": {
+          "description": "Optional when `form.table:` is set AND the named column resolves there. Required otherwise.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ColumnType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "widget": {
+          "description": "Optional renderer override. Today only `dropdown` is wired — it pairs with a `references:` column to surface a select populated from the referenced table's rows. Plain text input is the default when omitted.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/FormWidget"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "FormSpec": {
+      "description": "Form definition for `kind: form` actions. Fields are either declared explicitly or inherited from a referenced table.",
+      "type": "object",
+      "properties": {
+        "fields": {
+          "description": "Field list. Omit when `table:` is set to default to \"all writable columns of the table in declaration order\".",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldEntry"
+          }
+        },
+        "table": {
+          "description": "When set, fields inherit column metadata (type, label, choices, default) from this table's definition. Bare-string entries in `fields:` resolve against this table. Validated in `catalog::validate` to require this when any shorthand entry is present.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "FormWidget": {
+      "oneOf": [
+        {
+          "description": "Render a select populated from the referenced table's rows. Only valid on a column that declares `references:`; otherwise `catalog::validate` flags the field.",
+          "type": "string",
+          "enum": [
+            "dropdown"
+          ]
+        }
+      ]
+    },
+    "HttpMethod": {
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE"
+      ]
+    },
+    "HttpSpec": {
+      "description": "HTTP execution body for `kind: http_request`. URL and header values support `${ENV_VAR}` substitution from the process environment at call time (unset = catalog warning + action disabled). JSON body values are Rhai expressions evaluated with the resolved param map in scope — bare names reference params (`body.email: email`).",
+      "type": "object",
+      "required": [
+        "method",
+        "url"
+      ],
+      "properties": {
+        "body": {
+          "description": "Flat key→value JSON body. Values are Rhai expressions; for a literal string write `\"'literal'\"`. Nested objects are not supported in v1 — flatten or stringify upstream.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "method": {
+          "$ref": "#/definitions/HttpMethod"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ParamDef": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "label": {
+          "description": "Human label rendered in the read-only confirmation dialog's parameter table. `None` falls back to a humanised form of the param name (`client_id` → `Client id`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "required": {
+          "description": "Required at call time. Defaults to `true`. Optional params land when arity-overloading is wired in a follow-up.",
+          "default": true,
+          "type": "boolean"
+        },
+        "type": {
+          "description": "Static type. Used for type-checking the arguments passed in the row-action Rhai body when the host fn is registered.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ColumnType"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "StreamSpec": {
+      "description": "The command a `kind: stream` action runs. Unlike `kind: terminal`, the child is launched with its stdout/stderr **piped** (not a PTY), so a long-running producer like `aws logs tail … --follow` emits clean, uncoloured, line-delimited text — the right input for a per-line Rhai filter. The command runs the instant the sheet opens and is killed when it closes; it receives no input.\n\n`${row.x}` references in `command`/`args`/`cwd` are substituted from the row passed to `actions.<name>(row)` (a row-action body), so a single action can tail whichever stream the user selected.",
+      "type": "object",
+      "required": [
+        "command"
+      ],
+      "properties": {
+        "args": {
+          "description": "Arguments passed to the program, in order. `${row.x}` substituted.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "command": {
+          "description": "Program to execute. Resolved on `PATH` or given absolutely.",
+          "type": "string"
+        },
+        "cwd": {
+          "description": "Working directory for the child. Relative paths resolve against the vista (catalog) root; absent means the vista root itself.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "filter": {
+          "description": "Rhai source evaluated **once** to a closure `|line| { … }` that is then called for each output line. The return value decides output: a string is emitted as-is, a map `#{ message, level }` is rendered through the timestamp/level filter, and `()`/`false` drops the line. Absent ⇒ each raw line is emitted verbatim.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "TerminalSpec": {
+      "description": "The command a `kind: terminal` action runs. Launched in a PTY (so it believes it is attached to a real TTY — colours, progress bars, line redraws all work) with its output streamed into a read-only terminal. It receives no user input.",
+      "type": "object",
+      "required": [
+        "command"
+      ],
+      "properties": {
+        "args": {
+          "description": "Arguments passed to the program, in order.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "command": {
+          "description": "Program to execute. Resolved on `PATH` or given absolutely (e.g. `python3`, `/usr/bin/env`).",
+          "type": "string"
+        },
+        "cwd": {
+          "description": "Working directory for the child. Relative paths resolve against the vista (catalog) root; absent means the vista root itself.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

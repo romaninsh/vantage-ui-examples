@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Login audit — list over the `login_audit` table: who signed in, and when.
+title: Login Audit
+body:
+  - kind: binder
+    name: login_audit
+    observe: login_audit

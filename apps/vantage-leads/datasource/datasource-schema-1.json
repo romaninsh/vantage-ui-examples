@@ -1,0 +1,735 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DatasourceConfig",
+  "description": "Outer struct intentionally omits `#[serde(deny_unknown_fields)]`: `#[serde(flatten)]` + tagged enum + schemars produces a `oneOf` schema where each variant has `additionalProperties: false` and doesn't know about the outer struct's fields. Strict-deny here would cause every datasource YAML to fail schema validation. The inner `DatasourceKind` is also lax for the same reason; the other per-kind types (TableConfig, PageConfig, etc.) keep their strict-deny since they don't use flatten.",
+  "type": "object",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "type",
+        "url"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "sqlite"
+          ]
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "type",
+        "url"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "postgres"
+          ]
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "type",
+        "url"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "mysql"
+          ]
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "database",
+        "namespace",
+        "type",
+        "url"
+      ],
+      "properties": {
+        "database": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "password": {
+          "description": "Optional signin password. `${VAR}`-substitutable like `username`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "token": {
+          "description": "Optional pre-issued access token (JWT). Takes priority over `username`/`password`; authenticates via the SurrealDB `authenticate` RPC. `${VAR}`-substitutable. Used for SurrealDB Cloud instances, whose access token is brokered out of band.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "surreal-db"
+          ]
+        },
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "description": "Optional signin username (root or NS/DB user). Supports `${VAR}` references resolved from the environment — including secrets managed in the project `.env` — so credentials stay out of the committed inventory. Paired with `password`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "database",
+        "type",
+        "url"
+      ],
+      "properties": {
+        "database": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "mongo"
+          ]
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "description": "Directory of CSV files. Each file under `path` becomes one table.",
+      "type": "object",
+      "required": [
+        "path",
+        "type"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "csv"
+          ]
+        }
+      }
+    },
+    {
+      "description": "vantage-api-client backed; one datasource per remote service.",
+      "type": "object",
+      "required": [
+        "type",
+        "url"
+      ],
+      "properties": {
+        "auth": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ApiAuth"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "debug": {
+          "description": "When `true`, every REST request logs the URL it fetched and how many rows came back (visible in `list_logs`). A development aid for confirming pagination/filter params; leave off in normal use.",
+          "type": "boolean"
+        },
+        "filter_strategy": {
+          "description": "How conditions that don't fill a URL path `{placeholder}` are applied. `query` (default) sends them as `?field=value`; `client` applies them as in-memory row filters after the fetch — for APIs that filter only by path segments and reject/ignore unknown query params (e.g. the Mercury control-API, whose deployments endpoint takes `product_id` in the path and whose CLI filters version/env client-side).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ApiFilterStrategy"
+            }
+          ]
+        },
+        "max_connections": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "no_pagination": {
+          "description": "Set to `true` for APIs that don't paginate — no `_page`/`_limit` query params are sent, and the perpetual grid stops after the first chunk. Required for FastAPI/ Pydantic services that treat unknown query params as strict filters (a `_page=1` request would return `[]`).",
+          "type": "boolean"
+        },
+        "pagination": {
+          "description": "Pagination query-param names. Omit for the JSON-Server default (`?_page=&_limit=`, 1-based pages — the JSONPlaceholder shape).",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ApiPagination"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "response_key": {
+          "description": "Envelope key the row array lives under — e.g. `results` for an API that returns `{ \"count\": …, \"results\": [ … ] }` (Launch Library 2, DRF, …). Omit for a bare `[ … ]` response body.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "total_key": {
+          "description": "Envelope field holding the grand total of matching rows — e.g. `count` for `{ \"count\": 7400, \"results\": [ … ] }`. When set (alongside `pagination`), the grid loads rows lazily on scroll and sizes its scrollbar to the full total instead of fetching a single server-default page. Omit for APIs with no total field (the grid then loads only the first page).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "api-client"
+          ]
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "description": "GraphQL endpoint backed by `vantage_api_client::GraphqlApi`. One datasource per endpoint. `dialect` controls how filter arguments are rendered: `generic` (flat `{ field: v }` — the SpaceX-style public-API shape, default) or `hasura` (`{ field: { _eq: v } }`, full operator coverage). `filter_arg` overrides the argument name the dialect would pick (`find` for generic, `where` for hasura).",
+      "type": "object",
+      "required": [
+        "type",
+        "url"
+      ],
+      "properties": {
+        "auth": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ApiAuth"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dialect": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GraphQlDialect"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filter_arg": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "graphql"
+          ]
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "description": "vantage-aws backed (JSON-1.1 RPC: CloudWatch Logs, ECS, …). All credential fields are optional; missing pieces fall back to env vars (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`) and then `~/.aws/credentials` `[default]`. Set `profile` to read a named section instead of `[default]`.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "access_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile": {
+          "description": "Named AWS credentials profile (`~/.aws/credentials`). Takes priority over `access_key`/`secret_key` but can be combined with `region` to override the profile's region.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "region": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "secret_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "aws"
+          ]
+        }
+      }
+    },
+    {
+      "description": "`vantage_aws::dynamodb::DynamoDB` backed. Same auth surface as [`Self::Aws`] but builds tables on top of the typed DynamoDB data source — that means `AttributeValue` envelopes are unwrapped on the way out (so columns render as plain strings / numbers / bools instead of `{\"S\": \"...\"}` shapes), and `params:` becomes server-side `FilterExpression` `eq` conditions instead of being stuffed into the request body. Tables on this datasource set `table:` to the DynamoDB table name directly (e.g. `ddb-mercplat-api`), not the `protocol/array_key:service/target` triple.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "access_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "region": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "secret_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "aws-dynamodb"
+          ]
+        }
+      }
+    },
+    {
+      "description": "`vantage-kubernetes` backed — the cluster's REST API as tables. Connects via the ambient kubeconfig (current context, honouring `$KUBECONFIG`) or the in-cluster service account. Each table's `table:` is the resource API path (`api/v1/pods`, `apis/apps/v1/deployments`); `params:` (e.g. `namespace: demo`) bake in as client-side `eq` filters.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "context": {
+          "description": "kubeconfig context to use. Reserved — the current context is used today; set to document intent.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "namespace": {
+          "description": "Default namespace for namespaced convenience paths.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "kubernetes"
+          ]
+        }
+      }
+    },
+    {
+      "description": "`vantage-cmd` backed — fetches data by executing a local CLI. `command` is the locked binary (e.g. `mercury`); per-table Rhai scripts (the table's `cmd:` block) build the argv, run it, and parse stdout into rows. The script can never change *which* binary runs, only its arguments. The child process gets a cleared environment plus the declared `env`; `pass_path` (default `true`) additionally forwards `PATH`/`HOME` so the binary and its own config (credentials, tokens) resolve.",
+      "type": "object",
+      "required": [
+        "command",
+        "type"
+      ],
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "pass_path": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "cmd"
+          ]
+        }
+      }
+    },
+    {
+      "description": "`vantage-faker` backed — a synthetic, in-memory datasource that generates realistic rows (via the `fake` crate) and, for the `fifo` effect, keeps mutating them over time. No external connection. Values come from each column's name (`email`, `city`, …) then its type. These datasource-level fields are the defaults; a table's `faker:` block overrides them per table.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "backfill": {
+          "description": "How much history the `live_folder` sim replays at full speed on startup, as a duration string (`30m`, `1h`). Default `1h`, so the tree is populated before the first real-time tick.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "band": {
+          "description": "Rubber-band half-width as a percentage of baseline. Default `5`.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "count": {
+          "description": "Row count for the `static` effect. Default 20.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "effect": {
+          "description": "`static` (generate `count` rows once; the default), `fifo` (insert one row per `interval`, newest-first, expiring each after a random duration in `[retention_lo, retention_hi]`), `pulse` (a keyed rubber-band aggregate feed — see the `pulse` fields below), or `live_folder` (a synthetic, constantly-growing log-folder tree: each table is a path-parameterized listing family whose per-path listings all ride one shared sim).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "interval": {
+          "description": "`fifo` insertion cadence as a duration string (`1s`, `500ms`). Default `1s`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key_column": {
+          "description": "Column holding the category name (e.g. `region`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "keys": {
+          "description": "The categories + their baselines.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PulseKeyConfig"
+          }
+        },
+        "offline": {
+          "description": "Keys that periodically blip offline (frozen value, `live = \"Offline\"`).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rate": {
+          "description": "Per-key update cadence range (duration strings). Default `1s`–`3s`.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PulseRateConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retention_hi": {
+          "description": "`fifo` maximum row lifetime before expiry. Default `15s`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "retention_lo": {
+          "description": "`fifo` minimum row lifetime before expiry. Default `8s`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "faker"
+          ]
+        },
+        "value_column": {
+          "description": "Column holding the current value on the aggregate table (e.g. `visitors`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  ],
+  "properties": {
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "definitions": {
+    "ApiAuth": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "none"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "pass",
+            "type",
+            "user"
+          ],
+          "properties": {
+            "pass": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "basic"
+              ]
+            },
+            "user": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "token",
+            "type"
+          ],
+          "properties": {
+            "token": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "bearer"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "header",
+            "type",
+            "value"
+          ],
+          "properties": {
+            "header": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "api-key"
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Reads a bearer token from the macOS Keychain via `security find-generic-password -s <service> -a <account> -w`. Sent as `Authorization: Bearer <token>` unless `scheme` overrides the prefix (e.g. `scheme: \"\"` for raw, `scheme: \"Token\"`).",
+          "type": "object",
+          "required": [
+            "account",
+            "service",
+            "type"
+          ],
+          "properties": {
+            "account": {
+              "type": "string"
+            },
+            "scheme": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "service": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "keychain"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ApiFilterStrategy": {
+      "description": "How an `api-client` datasource applies conditions that don't fill a URL path `{placeholder}`. Maps to `vantage_api_client::FilterStrategy`.",
+      "oneOf": [
+        {
+          "description": "Append as `?field=value` query params (default).",
+          "type": "string",
+          "enum": [
+            "query"
+          ]
+        },
+        {
+          "description": "Apply as in-memory row filters after the fetch.",
+          "type": "string",
+          "enum": [
+            "client"
+          ]
+        }
+      ]
+    },
+    "ApiPagination": {
+      "description": "Pagination query-param names for an `api-client` datasource. Maps to `vantage_api_client::PaginationParams`. For APIs that page by a 0-based item offset (`?offset=&limit=`, e.g. Launch Library 2) set `offset_based: true`; for 1-based page indexes (`?_page=&_limit=`) leave it false.",
+      "type": "object",
+      "required": [
+        "limit_param",
+        "page_param"
+      ],
+      "properties": {
+        "limit_param": {
+          "description": "Query param carrying the page size — e.g. `limit`, `_limit`.",
+          "type": "string"
+        },
+        "offset_based": {
+          "description": "True when `page_param` is a 0-based item offset (skip) rather than a 1-based page index.",
+          "type": "boolean"
+        },
+        "page_param": {
+          "description": "Query param carrying the page (or, when `offset_based`, the item offset) — e.g. `offset`, `_page`, `page`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "GraphQlDialect": {
+      "description": "GraphQL filter-argument rendering style — see `vantage_api_client::FilterDialect`. Lower-cased on the wire to match the rest of the inventory schema (`generic`, `hasura`).",
+      "oneOf": [
+        {
+          "description": "Flat-argument schemas like SpaceX: `{ field: v }`. Equality only.",
+          "type": "string",
+          "enum": [
+            "generic"
+          ]
+        },
+        {
+          "description": "Hasura-style: `{ field: { _eq: v } }`, with full operator coverage.",
+          "type": "string",
+          "enum": [
+            "hasura"
+          ]
+        }
+      ]
+    },
+    "PulseKeyConfig": {
+      "description": "One category the `pulse` effect tracks, with the value it rubber-bands around.",
+      "type": "object",
+      "required": [
+        "baseline",
+        "name"
+      ],
+      "properties": {
+        "baseline": {
+          "type": "number",
+          "format": "double"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PulseRateConfig": {
+      "description": "The `pulse` effect's per-key update cadence range, as duration strings.",
+      "type": "object",
+      "required": [
+        "max",
+        "min"
+      ],
+      "properties": {
+        "max": {
+          "type": "string"
+        },
+        "min": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

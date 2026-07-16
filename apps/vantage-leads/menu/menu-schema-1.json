@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MenuConfig",
+  "type": "object",
+  "required": [
+    "items"
+  ],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MenuItem"
+      }
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "IconRef": {
+      "type": "string",
+      "enum": [
+        "ALargeSmall",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "Asterisk",
+        "Battery",
+        "BatteryCharging",
+        "BatteryFull",
+        "BatteryLow",
+        "BatteryMedium",
+        "BatteryWarning",
+        "Bell",
+        "BookOpen",
+        "Bot",
+        "Building2",
+        "Calendar",
+        "CaseSensitive",
+        "ChartPie",
+        "Check",
+        "ChevronDown",
+        "ChevronLeft",
+        "ChevronRight",
+        "ChevronUp",
+        "ChevronsUpDown",
+        "CircleCheck",
+        "CircleUser",
+        "CircleX",
+        "Close",
+        "Copy",
+        "Cpu",
+        "Dash",
+        "Delete",
+        "Ellipsis",
+        "EllipsisVertical",
+        "ExternalLink",
+        "Eye",
+        "EyeOff",
+        "File",
+        "Folder",
+        "FolderClosed",
+        "FolderOpen",
+        "Frame",
+        "GalleryVerticalEnd",
+        "Github",
+        "Globe",
+        "HardDrive",
+        "Heart",
+        "HeartOff",
+        "Inbox",
+        "Info",
+        "Inspector",
+        "LayoutDashboard",
+        "Loader",
+        "LoaderCircle",
+        "Map",
+        "Maximize",
+        "MemoryStick",
+        "Menu",
+        "Minimize",
+        "Minus",
+        "Moon",
+        "Network",
+        "Palette",
+        "PanelBottom",
+        "PanelBottomOpen",
+        "PanelLeft",
+        "PanelLeftClose",
+        "PanelLeftOpen",
+        "PanelRight",
+        "PanelRightClose",
+        "PanelRightOpen",
+        "Pause",
+        "Play",
+        "Plus",
+        "Redo",
+        "Redo2",
+        "Replace",
+        "ResizeCorner",
+        "Search",
+        "Settings",
+        "Settings2",
+        "SortAscending",
+        "SortDescending",
+        "SquareTerminal",
+        "Star",
+        "StarFill",
+        "StarOff",
+        "Sun",
+        "ThumbsDown",
+        "ThumbsUp",
+        "TriangleAlert",
+        "Undo",
+        "Undo2",
+        "User",
+        "WindowClose",
+        "WindowMaximize",
+        "WindowMinimize",
+        "WindowRestore"
+      ]
+    },
+    "MenuDivider": {
+      "type": "object",
+      "required": [
+        "divider"
+      ],
+      "properties": {
+        "divider": {
+          "description": "Always true; presence is the marker.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "MenuItem": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/PageLink"
+        },
+        {
+          "$ref": "#/definitions/MenuSection"
+        },
+        {
+          "$ref": "#/definitions/MenuDivider"
+        }
+      ]
+    },
+    "MenuSection": {
+      "type": "object",
+      "required": [
+        "children",
+        "section"
+      ],
+      "properties": {
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MenuItem"
+          }
+        },
+        "section": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PageLink": {
+      "type": "object",
+      "required": [
+        "label",
+        "page"
+      ],
+      "properties": {
+        "args": {
+          "description": "Optional bound args for the destination page. Same Rhai shape as `RowAction.args`, but no `row` in scope.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/IconRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "page": {
+          "description": "→ `page/<key>.yaml`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

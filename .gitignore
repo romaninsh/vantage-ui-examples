@@ -29,3 +29,4 @@
 latest.json
 
 .DS_Store
+apps/vantage-leads/.env

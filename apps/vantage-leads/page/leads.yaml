@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Leads pipeline — list over the `lead` table. Denis works the pipeline here:
+# read what the form sent, set `status`, leave notes.
+title: Leads
+body:
+  - kind: binder
+    name: leads
+    observe: lead

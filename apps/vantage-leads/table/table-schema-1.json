@@ -1,0 +1,674 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TableConfig",
+  "type": "object",
+  "properties": {
+    "augment": {
+      "description": "Dio-level augment: lift columns from a secondary get-only source onto this table's rows, keyed by one of the row's own columns. Hydration is lazy (visible rows only) and rows patch in place as values land. Currently consulted by `effect: live_folder` faker families (the sim's folder-size vista); ignored elsewhere.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/AugmentConfig"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cmd": {
+      "description": "`cmd` driver block — the Rhai script (and optional command/env overrides) for a `vantage-cmd`-backed table. Only consulted by `cmd` datasources; ignored elsewhere.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/CmdDriverBlock"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "columns": {
+      "description": "Columns. Accepts both legacy array format and VistaSpec map format (key = column name). Normalised to `Vec<ColumnConfig>`.",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ColumnConfig"
+      }
+    },
+    "datasource": {
+      "description": "→ `datasource/<key>.yaml`.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "expressions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ExpressionDef"
+      }
+    },
+    "faker": {
+      "description": "`faker` driver block — per-table effect override for a `vantage-faker`-backed table. Each field falls back to the datasource's `Faker` defaults. Only consulted by `faker` datasources; ignored elsewhere.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/FakerDriverBlock"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "graphql": {
+      "description": "Per-table GraphQL overrides. Only consulted by GraphQL-backed datasources; ignored elsewhere.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/GraphQlTableExtras"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "has_many": {
+      "description": "Has-many relations (legacy format). Prefer `references:` in VistaSpec format.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/HasManyDecl"
+      }
+    },
+    "id_column": {
+      "description": "Override for the id column (VistaSpec field). Defaults to the column flagged `[id]`.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "name": {
+      "description": "Table name (VistaSpec field). In legacy format, derived from the file's inventory key.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "params": {
+      "description": "Static request parameters injected as conditions on every fetch. A bare string is sugar for `eq(key, value)` — used for AWS operations that require a mandatory body parameter (e.g. DynamoDB `Scan` needs `TableName`). Operator forms like `{ begins_with: \"PRODUCT#\" }` are honored by the DynamoDB backend for sort-key prefix scoping in single-table designs.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ParamValue"
+      }
+    },
+    "references": {
+      "description": "VistaSpec-style top-level references. Key = relation name. Preferred over `has_many:` for set-to-set traversals.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ReferenceFull"
+      }
+    },
+    "surreal": {
+      "description": "SurrealDB driver block (VistaSpec format).",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SurrealDriverBlock"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "table": {
+      "description": "DB-side name override; defaults to the file's inventory key or `name` in VistaSpec format.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "definitions": {
+    "AugmentConfig": {
+      "description": "The `augment:` block: `{ from: folder_size, key: path, columns: [size, file_count] }` — enrich each row from the `from` source, keyed by the row's `key` column, lifting `columns` (empty = all of the source's).",
+      "type": "object",
+      "required": [
+        "from",
+        "key"
+      ],
+      "properties": {
+        "columns": {
+          "description": "Columns lifted onto the row. Empty = every column the source returns.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "from": {
+          "description": "Name of the augment source. For a `live_folder` family this names the sim's folder-size vista.",
+          "type": "string"
+        },
+        "key": {
+          "description": "Row column whose value keys each augment fetch (e.g. `path`).",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CmdDriverBlock": {
+      "description": "`cmd` driver block at the table level (VistaSpec `cmd:` key). Mirrors `vantage_cmd`'s `CmdBlock`: the Rhai `rhai:` script builds the argv, calls `run(args)`, and parses stdout into rows. `command`/`env` override the datasource defaults for this one table.",
+      "type": "object",
+      "required": [
+        "rhai"
+      ],
+      "properties": {
+        "command": {
+          "description": "Per-table command override. Defaults to the datasource's `command`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detail": {
+          "description": "Optional per-row **detail** script for two-pass (progressive) loading. When set, `rhai` is the cheap list pass (id + cheap columns) and this script hydrates one record at a time with `id` in scope. Absent → the table is single-pass.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "env": {
+          "description": "Per-table env, merged over (and winning against) the datasource env.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "rhai": {
+          "description": "The Rhai script: builds the argv, calls `run(args)`, parses output.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ColumnConfig": {
+      "description": "One column declared on a table. Pure data shape — name, type, flags, references, per-backend extras. Display hints (column width, header label, color/value mappings, link target, etc.) live on the *page* element under `params.columns` — see `inventory::ColumnDisplay`.",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "csv": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CsvColumnExtras"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "default": true,
+        "flags": {
+          "description": "Column flags. Valid values: `id`, `mandatory`, `title`, `searchable`, `hidden`, `label` (render as a colored tag in the title cell instead of its own column).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "optional": {
+          "description": "Allow declaring a column as optional explicitly (some YAMLs do this for clarity even though `flags: [mandatory]` is the canonical \"required\" marker).",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "references": {
+          "description": "Cross-table reference. Sugar string `references: bakery` → has_one; full form lets you specify `kind` and `foreign_key`.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ReferenceDef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rules": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "sqlite": {
+          "description": "Optional per-backend column extras. Universal core columns work everywhere; these blocks let users opt into knobs only one backend understands.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SqliteColumnExtras"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "surreal": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SurrealColumnExtras"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ColumnType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "description": "Display unit for a numeric column, applied wherever the value is rendered. The stored value is unitless data; this is presentation only.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UnitDef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ColumnType": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "string",
+            "int",
+            "float",
+            "decimal",
+            "bool",
+            "datetime",
+            "duration"
+          ]
+        },
+        {
+          "description": "Integer byte count, rendered as `1.5 KB` / `29.0 MB` / `1.4 GB` (base-1024). Sources that emit a JSON number or a numeric string both work.",
+          "type": "string",
+          "enum": [
+            "bytes"
+          ]
+        }
+      ]
+    },
+    "CsvColumnExtras": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "ExpressionDef": {
+      "type": "object",
+      "required": [
+        "formula",
+        "type"
+      ],
+      "properties": {
+        "formula": {
+          "description": "Rhai source. Compiled to AST in `app/todo/3-catalog.md`.",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/ColumnType"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FakerDriverBlock": {
+      "description": "`faker` driver block at the table level. Per-table override of the `Faker` datasource's effect settings; every field falls back to the datasource default when omitted.",
+      "type": "object",
+      "properties": {
+        "count": {
+          "description": "Row count for the `static` effect.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "effect": {
+          "description": "`static` or `fifo`. Overrides the datasource default.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "interval": {
+          "description": "`fifo` insertion cadence (duration string, e.g. `1s`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "retention_hi": {
+          "description": "`fifo` maximum row lifetime before expiry.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "retention_lo": {
+          "description": "`fifo` minimum row lifetime before expiry.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "description": "`pulse` effect only: which half of the coupled sim this table reads — `feed` (raw per-key updates) or `aggregate` (derived per-key state). When omitted it's inferred from the table key (`updates` → feed, otherwise aggregate).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "GraphQlDialect": {
+      "description": "GraphQL filter-argument rendering style — see `vantage_api_client::FilterDialect`. Lower-cased on the wire to match the rest of the inventory schema (`generic`, `hasura`).",
+      "oneOf": [
+        {
+          "description": "Flat-argument schemas like SpaceX: `{ field: v }`. Equality only.",
+          "type": "string",
+          "enum": [
+            "generic"
+          ]
+        },
+        {
+          "description": "Hasura-style: `{ field: { _eq: v } }`, with full operator coverage.",
+          "type": "string",
+          "enum": [
+            "hasura"
+          ]
+        }
+      ]
+    },
+    "GraphQlTableExtras": {
+      "type": "object",
+      "properties": {
+        "dialect": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GraphQlDialect"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filter_arg": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "root_field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "HasManyDecl": {
+      "description": "Table-level `has_many` entry. Same fields as [`ReferenceFull`] minus the redundant `kind`. `narrow_via` defaults to the table's id column at build time when omitted.",
+      "type": "object",
+      "required": [
+        "table"
+      ],
+      "properties": {
+        "foreign_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "narrow_via": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "table": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "InheritBlock": {
+      "description": "Selects which parts of a `base` table a derived table inherits. Mirrors `vantage_surrealdb::vista::InheritBlock`.",
+      "type": "object",
+      "properties": {
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ParamOp": {
+      "description": "Operator forms for `params:` values. Each variant is an externally-tagged single-string, so YAML reads as `{ begins_with: \"PRODUCT#\" }`. Add a new variant per operator.",
+      "oneOf": [
+        {
+          "description": "`begins_with(field, prefix)` — DynamoDB sort-key prefix scan.",
+          "type": "object",
+          "required": [
+            "begins_with"
+          ],
+          "properties": {
+            "begins_with": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ParamValue": {
+      "description": "Value side of a `params:` entry. A bare YAML string is the eq sugar; a mapping like `{ begins_with: <prefix> }` carries an operator. Operators that the chosen backend can't represent are logged and skipped at table-build time (only the DynamoDB connector currently understands `begins_with`).",
+      "anyOf": [
+        {
+          "description": "`key: \"value\"` — equality, same shape as before this enum existed so every pre-operator YAML still parses unchanged.",
+          "type": "string"
+        },
+        {
+          "$ref": "#/definitions/ParamOp"
+        }
+      ]
+    },
+    "ReferenceDef": {
+      "anyOf": [
+        {
+          "description": "`references: bakery` — sugar for `{ table: bakery, kind: has_one }`.",
+          "type": "string"
+        },
+        {
+          "$ref": "#/definitions/ReferenceFull"
+        }
+      ]
+    },
+    "ReferenceFull": {
+      "type": "object",
+      "required": [
+        "kind",
+        "table"
+      ],
+      "properties": {
+        "foreign_key": {
+          "description": "FK column on the *other* table for has_many. Optional; the catalog can infer the column the reference is declared on when omitted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "keys": {
+          "description": "Multi-key join for row-supplied traversal, as `child_column: parent_column` pairs. When set, the child is narrowed by ALL of these (each reads the parent row's column and constrains the named child column), superseding `foreign_key`. Use when one foreign key isn't enough to identify the related rows — e.g. a deployment is identified by both `product_id` and `version_id`.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "kind": {
+          "$ref": "#/definitions/ReferenceKind"
+        },
+        "name": {
+          "description": "Relation name, must be unique across the source table's references. Page YAML's `ref:` follows this name. When omitted, defaults to the target table key.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "narrow_via": {
+          "description": "Field on the *source* table used to narrow the source to a single row before following the reference for traversal. Most backends use the source's id field; AWS APIs may need a different field (e.g. `logGroupNamePrefix` for `DescribeLogGroups`). Defaults to the column the reference is declared on.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rhai": {
+          "description": "Optional Rhai script that builds this reference's traversal target itself, instead of the default foreign-key narrowing. Evaluated lazily at traversal time with the parent `row` in scope, e.g. `table(\"order\").add_condition_eq(\"client\", row.id).add_order(\"date\", \"desc\")`. Backend support is advertised via the vista's `can_build_ref_via_script` capability (SurrealDB today); backends without it ignore the script and fall back to the foreign-key path.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "table": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ReferenceKind": {
+      "type": "string",
+      "enum": [
+        "has_one",
+        "has_many"
+      ]
+    },
+    "SqliteColumnExtras": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "SurrealColumnExtras": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "SurrealDriverBlock": {
+      "description": "SurrealDB driver block at the table level (VistaSpec `surreal:` key).",
+      "type": "object",
+      "properties": {
+        "base": {
+          "description": "Name of another table to derive this one from. Its columns/relations are inherited per `inherit`, and its `select()` is the starting point for the `rhai` transform. Produces a read-only vista.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inherit": {
+          "description": "Which of the `base` table's columns/relations to inherit.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/InheritBlock"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "modify": {
+          "description": "A Rhai script applied to the *built* vista as a final step, after the YAML table is constructed — the \"mostly built by YAML, tweak the rest in Rhai\" escape hatch. The vista is exposed as `self`; the script narrows or tweaks it with conventional verbs plus vendor expression conditions YAML can't express, e.g. `self.with_condition(ident(\"is_paying_client\") == true)`. Composes with `table`/`rhai`/`base` (runs last).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rhai": {
+          "description": "A Rhai script that builds the SELECT used as this vista's source instead of a physical table. Produces a read-only vista. With `base` set, the script runs in transform mode (the base's `select()` is seeded as `base` in scope). See the vantage-ui-builder skill's `query-sourced-tables` reference.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "table": {
+          "description": "DB-side table name override. Mutually exclusive with `rhai`/`base`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "UnitConfig": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "description": "Base metric unit (auto-scaled). Mutually exclusive with `rhai`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rhai": {
+          "description": "Rhai escape hatch: given `value`, return `[number, symbol, position]`. `position` is `\"before\"` or `\"after\"`. Used for currency and any unit the metric scaler doesn't cover.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "UnitDef": {
+      "description": "How a numeric column's value is shown with a unit. Either a built-in metric quantity that auto-scales to the most readable prefix, or a `rhai` escape hatch for anything non-metric (currency, custom symbols, positioning).",
+      "anyOf": [
+        {
+          "description": "`unit: kg` — the base metric unit the value is stored in. Auto-scales: `6400` → `6.4 t`, `0.05` (m) → `5 cm`. Supported bases: `kg`, `g`, `m`, `L`, `W`, `Wh`, `B` (and SI multiples thereof).",
+          "type": "string"
+        },
+        {
+          "description": "Full form. `metric: kg` picks the built-in scaler; `rhai:` is an escape hatch returning `[number, symbol, position]` where position is `\"before\"` or `\"after\"` (e.g. currency: `[amount, \"$\", \"before\"]`).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/UnitConfig"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
