@@ -17,6 +17,9 @@ items:
       - page: feed
         label: Live Feed
         icon: Network
+      - page: finder
+        label: Log Finder
+        icon: Folder
       - page: framework-demo
         label: Framework Demo
         icon: Frame
