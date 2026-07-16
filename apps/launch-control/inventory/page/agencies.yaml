@@ -4,4 +4,4 @@ title: Agencies
 body:
   - kind: binder
     name: agencies
-    table: agencies
+    observe: agencies

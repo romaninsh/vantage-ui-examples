@@ -3,4 +3,4 @@ title: Astronauts
 body:
   - kind: grid
     name: astronauts
-    table: astronauts
+    observe: astronauts

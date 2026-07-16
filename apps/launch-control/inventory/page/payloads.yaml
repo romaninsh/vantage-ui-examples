@@ -4,4 +4,4 @@ title: Payloads
 body:
   - kind: binder
     name: payloads
-    table: payloads
+    observe: payloads

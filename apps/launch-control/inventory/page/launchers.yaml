@@ -4,4 +4,4 @@ title: Launchers
 body:
   - kind: binder
     name: launchers
-    table: launchers
+    observe: launchers

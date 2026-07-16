@@ -4,4 +4,4 @@ title: Locations
 body:
   - kind: binder
     name: locations
-    table: locations
+    observe: locations

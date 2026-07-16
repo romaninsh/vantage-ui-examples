@@ -4,4 +4,4 @@ title: Pads
 body:
   - kind: binder
     name: pads
-    table: pads
+    observe: pads

@@ -3,4 +3,4 @@ title: Landings
 body:
   - kind: grid
     name: landings
-    table: landings
+    observe: landings

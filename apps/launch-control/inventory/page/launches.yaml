@@ -6,9 +6,30 @@
 # remounts while arrow-keying through rows.
 title: Launches
 body:
+  # Live telemetry strip: framework stats over the SHARED launches scenery
+  # (top row = most recently updated launch, thanks to the binder's
+  # default_sort). `project:` keeps the numbers gliding between the 2s
+  # re-pulls — velocity carries altitude, acceleration carries velocity —
+  # correcting on every fresh sample and freezing if the feed stalls
+  # (max_dt = 2× the refresh cadence). The ×15 factor is sim time, matching
+  # the summary view's formulas.
+  - kind: row
+    children:
+      - kind: stat
+        observe: launches
+        project:
+          formula: "altitude_km + vertical_speed_ms / 1000.0 * dt * 15.0"
+          max_dt: 4.0
+        params: { label: "Altitude km · live" }
+      - kind: stat
+        observe: launches
+        project:
+          formula: "velocity_ms + acceleration_ms2 * dt * 15.0"
+          max_dt: 4.0
+        params: { label: "Velocity m/s · live" }
   - kind: binder
     name: launches
-    table: launches
+    observe: launches
     params:
       id_column: id
       default_sort: { column: last_updated, direction: desc }
