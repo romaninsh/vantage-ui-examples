@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+# Menu: left — Vantage Leads sidebar.
+title: Vantage Leads
+
+items:
+  - section: Pipeline
+    children:
+      - page: leads
+        label: Leads
+        icon: Inbox
+  - section: Security
+    children:
+      - page: login_audit
+        label: Login Audit
+        icon: CircleUser

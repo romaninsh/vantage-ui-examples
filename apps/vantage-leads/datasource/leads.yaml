@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Cloud SurrealDB holding /framework leads (provisioned in vantage-terraform,
+# surreal/vantage-leads.surql). Full read/write access is gated by Auth0 login:
+# the `token` value is a Rhai call, so on first connect Vantage opens the browser,
+# you sign in with Google, and the returned JWT is verified by the DB's `auth0`
+# JWT access. The token is cached in .env, so later launches reconnect silently.
+type: surreal-db
+description: "Vantage leads (cloud SurrealDB, Auth0 login)"
+url: "wss://close-wasp-06fmkfm5uhq2f77ih987dcdac4.aws-euw1.surreal.cloud"
+namespace: main
+database: vantage-leads
+token: auth0_login("dev-abvcbv3ekoioaxgw.eu.auth0.com", "a2ACJFErKLvhu5Ufp9RSb7lQ0tMQ9hb6")

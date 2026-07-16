@@ -1,0 +1,482 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ViewConfig",
+  "type": "object",
+  "required": [
+    "table",
+    "title"
+  ],
+  "properties": {
+    "body": {
+      "description": "The node tree, rendered top to bottom.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ViewNode"
+      }
+    },
+    "table": {
+      "description": "The table whose selected record this view binds to (`${record.<col>}`). `ref`s in [`ViewNode::List`] resolve against this table's relations.",
+      "type": "string"
+    },
+    "title": {
+      "description": "Tab title (and the label shown for the view).",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "LabelStyle": {
+      "description": "Text emphasis for a [`ViewNode::Label`].",
+      "oneOf": [
+        {
+          "description": "Default body text.",
+          "type": "string",
+          "enum": [
+            "normal"
+          ]
+        },
+        {
+          "description": "Large, bold — section titles / headline values.",
+          "type": "string",
+          "enum": [
+            "heading"
+          ]
+        },
+        {
+          "description": "Dimmed secondary text.",
+          "type": "string",
+          "enum": [
+            "muted"
+          ]
+        },
+        {
+          "description": "Monospace — numeric readouts.",
+          "type": "string",
+          "enum": [
+            "mono"
+          ]
+        }
+      ]
+    },
+    "ViewNode": {
+      "oneOf": [
+        {
+          "description": "Horizontal flex container.",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ViewNode"
+              }
+            },
+            "gap": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "grow": {
+              "description": "Grow to fill the main axis of the parent flex (`flex: 1`). Use on a `column` inside a `row` to split width into even dashboard columns.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "row"
+              ]
+            },
+            "repaint": {
+              "description": "Timer-driven repaint rate for the whole subtree, e.g. `30hz` — set it once on a container instead of on every animated child.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "when": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Vertical flex container.",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ViewNode"
+              }
+            },
+            "gap": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "grow": {
+              "description": "Grow to fill the main axis of the parent flex (`flex: 1`). Use on a `column` inside a `row` to split width into even dashboard columns.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "column"
+              ]
+            },
+            "repaint": {
+              "description": "Timer-driven repaint rate for the whole subtree, e.g. `30hz` — set it once on a container instead of on every animated child.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "when": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "A single line of text.",
+          "type": "object",
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "label"
+              ]
+            },
+            "secondary": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "style": {
+              "default": "normal",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/LabelStyle"
+                }
+              ]
+            },
+            "text": {
+              "type": "string"
+            },
+            "when": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "A label above a prominent value, optionally with a unit suffix — telemetry readouts (`Altitude` / `182` / `km`).",
+          "type": "object",
+          "required": [
+            "kind",
+            "label",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "stat"
+              ]
+            },
+            "label": {
+              "type": "string"
+            },
+            "repaint": {
+              "description": "Timer-driven repaint rate, e.g. `30hz` — for a `value` that extrapolates between data updates (live telemetry via `secs_since`). Absent means data-driven only (repaints when the record changes).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "value": {
+              "type": "string"
+            },
+            "when": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "A small colored pill. `color` reuses the page column color map shape (theme-color name → matching value strings); the first key whose list contains the rendered text wins.",
+          "type": "object",
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "color": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "badge"
+              ]
+            },
+            "text": {
+              "type": "string"
+            },
+            "when": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "A horizontal progress bar. `value` / `max` are numeric expressions (`max` defaults to `\"100\"`); `color` is an optional theme-color name.",
+          "type": "object",
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "color": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "progress"
+              ]
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "max": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "repaint": {
+              "description": "Timer-driven repaint rate, e.g. `30hz` — for a `value`/`max` that extrapolates between data updates. Absent means data-driven only.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "value": {
+              "type": "string"
+            },
+            "when": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "A horizontal rule, optionally with a centered label.",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "separator"
+              ]
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "when": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "A live clock counting toward (`T-`) or past (`T+`) `target`, a Rhai expression resolving to an RFC3339/LL2 datetime (e.g. `${record.net}`).",
+          "type": "object",
+          "required": [
+            "kind",
+            "target"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "countdown"
+              ]
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "repaint": {
+              "description": "Timer-driven repaint rate for the clock, e.g. `1hz`. Unlike every other node — which repaints only when its data changes — a countdown is time-driven, so it needs a steady tick. Absent or `0` means no timer (the clock only advances when the bound record changes).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "target": {
+              "type": "string"
+            },
+            "when": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Repeats `item` once per row of the related set named by `ref` (a relation on the bound table, traversed via `get_ref`). Item templates evaluate against each related row (`${row.<col>}`).",
+          "type": "object",
+          "required": [
+            "kind",
+            "ref"
+          ],
+          "properties": {
+            "empty": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "height": {
+              "description": "Fixed pixel height of each item row. A uniform row height makes the list's total height deterministic, so the renderer can cache the list (it repaints only when its own rows change, not when the surrounding view does). Items are vertically centered within the row. Defaults to a sensible single-line height when omitted.",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "item": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ViewNode"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "list"
+              ]
+            },
+            "ref": {
+              "type": "string"
+            },
+            "when": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Renders `children` only when `condition` (a Rhai bool over the bound record) is true. Readable sugar over putting `when:` on a `column`.",
+          "type": "object",
+          "required": [
+            "condition",
+            "kind"
+          ],
+          "properties": {
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ViewNode"
+              }
+            },
+            "condition": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "when"
+              ]
+            },
+            "repaint": {
+              "description": "Timer-driven repaint rate for the whole subtree, e.g. `30hz` — set it once here instead of on every animated child.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

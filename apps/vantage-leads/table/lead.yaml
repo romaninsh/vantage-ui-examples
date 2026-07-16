@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: lead — /framework "get in touch" submissions (SurrealDB SCHEMALESS).
+# List view is tuned for working the pipeline: the organisation is the title with
+# the status as a colored tag beside it, then contact details and timing. The long
+# fields (the selected stack, the shareable config link) are hidden from the list to
+# keep it scannable — they still live on the record for a detail view later.
+datasource: leads
+title: Leads
+
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: organisation, type: string, flags: [title, mandatory, searchable] }
+  - { name: status, type: string, default: new, flags: [label] }
+  - { name: email, type: string, flags: [searchable], rules: { email: true } }
+  - { name: phone, type: string, optional: true }
+  - { name: created_at, type: string, optional: true }
+  - { name: notes, type: string, optional: true, flags: [searchable] }
+  - { name: stack, type: string, optional: true, flags: [hidden] }
+  - { name: config_url, type: string, optional: true, flags: [hidden] }
