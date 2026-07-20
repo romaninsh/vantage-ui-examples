@@ -49,6 +49,7 @@ apps:
     status: "available"
     icon: "auto_stories"
     blurb: "A storybook tutorial: Miss Odessa builds a live catalogue for her little library with the AI assistant she already trusts. Read along, copy her prompts into your own agent, and end up with an app of your own."
+    screenshot: "images/library/library-story-card.png"
     tour_url: "/library/"
     demonstrates:
       - "Your own agent building a Vantage app from plain-English prompts"
