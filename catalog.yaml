@@ -42,6 +42,19 @@ apps:
       - "Relation drill-downs: namespace → workloads → pods, node → pods"
       - "Capacity dashboards and burger-layout vertical explorers"
 
+  - slug: library-story
+    title: "Library Story"
+    persona: "App builders"
+    persona_url: "/solutions/app-builders/"
+    status: "available"
+    icon: "auto_stories"
+    blurb: "A storybook tutorial: Miss Odessa builds a live catalogue for her little library with the AI assistant she already trusts. Read along, copy her prompts into your own agent, and end up with an app of your own."
+    tour_url: "/library/"
+    demonstrates:
+      - "Your own agent building a Vantage app from plain-English prompts"
+      - "A SQLite prototype: books, members, loans and a dashboard"
+      - "A story that grows toward the cloud, APIs and a barcode scanner"
+
   - slug: bakery
     title: "Bakery franchise"
     persona: "Internal-tools teams"
