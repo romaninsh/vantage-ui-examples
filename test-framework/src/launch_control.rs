@@ -75,8 +75,7 @@ pub async fn ensure_started() {
 fn point_inventory_at_localhost() -> Result<()> {
     let local = format!("http://127.0.0.1:{PORT}");
     for rel in HOSTED_URL_FILES {
-        let original =
-            std::fs::read_to_string(rel).with_context(|| format!("read {rel}"))?;
+        let original = std::fs::read_to_string(rel).with_context(|| format!("read {rel}"))?;
         let patched = original.replace(HOSTED_URL, &local);
         if patched != original {
             std::fs::write(rel, &patched).with_context(|| format!("write {rel}"))?;
@@ -124,13 +123,7 @@ async fn start() -> Result<()> {
     //    scenarios and the OS reaps it when the test process exits.
     eprintln!("starting launch-control server on :{PORT} (error-rate 0)…");
     Command::new(SERVER_BIN)
-        .args([
-            "serve",
-            "--error-rate",
-            "0",
-            "--port",
-            &PORT.to_string(),
-        ])
+        .args(["serve", "--error-rate", "0", "--port", &PORT.to_string()])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()

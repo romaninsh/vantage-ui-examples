@@ -1,0 +1,5 @@
+Needs a live SurrealDB Cloud instance: the `leads` datasource reads its
+connection and credentials from env vars (see .env.example), so on a CI
+runner the app logs a connect ERROR at startup and the shared "clean
+startup" scenario fails. Run explicitly with credentials exported:
+`cargo run -p test-framework -- apps/vantage-leads`.

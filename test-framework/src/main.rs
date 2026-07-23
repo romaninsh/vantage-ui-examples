@@ -42,12 +42,19 @@ async fn main() -> ExitCode {
 
     let mut any_failed = false;
     for app in &apps {
-        let inventory = app.join("inventory");
-        if !inventory.is_dir() {
-            eprintln!("skipping {}: no inventory/ folder", app.display());
+        // Two project layouts exist: the older `inventory/` subfolder, and
+        // the flat layout newer scaffolds produce (datasource/, table/,
+        // page/ at the app root). Resolve either; an app with neither is a
+        // failure, not a skip — new apps must be runnable or carry an
+        // explicit `.bdd-skip`.
+        let Some(inventory) = resolve_inventory(app) else {
+            eprintln!(
+                "FAIL {}: no inventory/ folder and no flat project layout (add .bdd-skip to opt out)",
+                app.display()
+            );
             any_failed = true;
             continue;
-        }
+        };
 
         println!("\n=== app: {} ===", app.display());
         // The launch step reads the inventory from this env var. Safe here:
@@ -84,6 +91,21 @@ async fn main() -> ExitCode {
     }
 }
 
+/// The directory the app's project catalog lives in: `app/inventory/`
+/// (older layout) or the app root itself when the catalog folders sit
+/// flat at the top level (what newer scaffolds produce).
+fn resolve_inventory(app: &Path) -> Option<PathBuf> {
+    let nested = app.join("inventory");
+    if nested.is_dir() {
+        return Some(nested);
+    }
+    let flat_markers = ["datasource", "table", "page"];
+    if flat_markers.iter().any(|d| app.join(d).is_dir()) {
+        return Some(app.to_path_buf());
+    }
+    None
+}
+
 /// Turn CLI args into a list of app directories. `--all` scans `apps/`.
 fn resolve_apps(args: &[String]) -> anyhow::Result<Vec<PathBuf>> {
     if args.iter().any(|a| a == "--all") {
@@ -101,7 +123,11 @@ fn resolve_apps(args: &[String]) -> anyhow::Result<Vec<PathBuf>> {
                 if marker.is_file() {
                     let reason = std::fs::read_to_string(&marker).unwrap_or_default();
                     let reason = reason.trim();
-                    let reason = if reason.is_empty() { ".bdd-skip present" } else { reason };
+                    let reason = if reason.is_empty() {
+                        ".bdd-skip present"
+                    } else {
+                        reason
+                    };
                     eprintln!("skipping {} (--all): {reason}", p.display());
                     false
                 } else {
