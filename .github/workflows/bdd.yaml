@@ -40,23 +40,14 @@ jobs:
     runs-on: macos-14 # Apple silicon — matches the aarch64 DMG
     timeout-minutes: 30
     steps:
-      # Lay the two repos out as siblings so the workspace's `../vantage`
-      # patch resolves. DEV-ONLY: launch-control's bundled server builds
-      # against unreleased vantage-sql (`fetch_window` for SQLite), so the
-      # root Cargo.toml [patch.crates-io]'s every vantage crate at ../vantage.
-      # Remove this checkout once those land on crates.io and the patch is
-      # dropped (vantage-sql 0.6.x / vantage-table 0.6.x).
+      # (Checked out into a subdirectory from the days a sibling ../vantage
+      # checkout satisfied a dev-only [patch.crates-io]; the patch is long
+      # gone — every vantage crate resolves from crates.io — but the layout
+      # stays so the cache key and working-directory paths hold steady.)
       - name: Checkout examples
         uses: actions/checkout@v4
         with:
           path: vantage-ui-examples
-
-      - name: Checkout vantage (for the ../vantage workspace patch)
-        uses: actions/checkout@v4
-        with:
-          repository: romaninsh/vantage
-          ref: sqlite-fetch-window
-          path: vantage
 
       - uses: dtolnay/rust-toolchain@stable
 

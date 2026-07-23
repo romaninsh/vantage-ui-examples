@@ -117,7 +117,10 @@ fn route(path: &str, params: &HashMap<String, String>) -> Value {
 /// pre-paging total so the lazy grid can size its scrollbar.
 fn envelope(rows: Vec<Value>, params: &HashMap<String, String>) -> Value {
     let total = rows.len();
-    let offset: usize = params.get("offset").and_then(|s| s.parse().ok()).unwrap_or(0);
+    let offset: usize = params
+        .get("offset")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0);
     let limit: usize = params
         .get("limit")
         .and_then(|s| s.parse().ok())
