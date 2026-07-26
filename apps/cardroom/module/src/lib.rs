@@ -143,6 +143,13 @@ pub struct Game {
     /// New columns go on the end, with a default for the rows that already exist.
     #[default(0u32)]
     pub wait_rounds: u32,
+    /// When the current turn began, in microseconds since the epoch.
+    ///
+    /// Plain integer rather than a `Timestamp` so it can carry a default for the
+    /// automigration. Read only by the sweeper, to spot a turn nobody is ever
+    /// going to take.
+    #[default(0i64)]
+    pub to_act_since_micros: i64,
 }
 
 /// A player seated at a game. Live-only state: deleted on leaving or when the
@@ -165,6 +172,17 @@ pub struct Seat {
     pub committed: i64,
     pub state: String,
     pub joined_at: Timestamp,
+    /// Whether this seat has taken its turn on the current street.
+    ///
+    /// Recorded rather than inferred: a check moves no chips, so nothing about
+    /// the pot or the bet distinguishes "everyone checked round" from "the
+    /// street has only just opened". Reset when a street begins and whenever a
+    /// raise re-opens one.
+    ///
+    /// Appended, like every column added after the first publish — inserting one
+    /// mid-struct reorders the row and SpacetimeDB refuses to automigrate it.
+    #[default(false)]
+    pub acted: bool,
 }
 
 /// A spectator. Unlike [`Seat`] there is no uniqueness constraint — an account
@@ -272,6 +290,26 @@ pub struct StartTimer {
     pub game_id: u64,
 }
 
+/// Recurring watchdog. Inserted once, then fires forever on an interval.
+///
+/// Every other timer in this module is one-shot and self-chaining: `set_to_act`
+/// arms the next turn timer, which arms the one after it. That works right up
+/// until a single row is lost — a republish with a breaking schema change
+/// disconnects every client mid-hand, and any timer that was in flight simply
+/// never fires. Nothing re-arms it, because re-arming only happens when a turn
+/// advances, and the turn cannot advance without the timer. The table wedges
+/// forever, silently.
+///
+/// This is the recovery path: it depends on no other timer, so it can always put
+/// a stalled game back in motion.
+#[table(accessor = sweep_timer, scheduled(sweep))]
+pub struct SweepTimer {
+    #[primary_key]
+    #[auto_inc]
+    pub scheduled_id: u64,
+    pub scheduled_at: ScheduleAt,
+}
+
 /// Fires when a player has sat on their turn for too long.
 ///
 /// Load-bearing, not a nicety: the load client runs many dumb bots, and one that
@@ -371,6 +409,7 @@ pub fn init(ctx: &ReducerContext) {
         start_countdown_secs: 3,
         max_wait_rounds: 12,
     });
+    ensure_sweeper(ctx);
     log::info!("cardroom initialised");
 }
 
@@ -450,6 +489,7 @@ fn log_event(
 /// reconnects with a stored token keeps its balance instead of farming bonuses.
 #[spacetimedb::reducer]
 pub fn register(ctx: &ReducerContext, handle: String) -> Result<(), String> {
+    ensure_sweeper(ctx);
     let handle = handle.trim().to_string();
     if handle.is_empty() {
         return Err("handle must not be empty".into());
@@ -532,6 +572,7 @@ pub fn create_game(
         ended_at: None,
         winner: None,
         wait_rounds: 0,
+        to_act_since_micros: 0,
     });
 
     // One-shot timer: the join window closing is what locks the play set.
@@ -595,6 +636,7 @@ fn seat_player(ctx: &ReducerContext, game_id: u64) -> Result<(), String> {
         committed: 0,
         state: SEAT_ACTIVE.into(),
         joined_at: ctx.timestamp,
+        acted: false,
     });
 
     game.seats_taken += 1;
@@ -777,6 +819,27 @@ pub fn start_game(ctx: &ReducerContext, timer: StartTimer) {
 #[spacetimedb::reducer]
 pub fn turn_timeout(ctx: &ReducerContext, timer: TurnTimer) {
     dealer::timeout(ctx, timer.game_id, timer.seat_id, timer.hand_no);
+}
+
+/// Put any stalled table back in motion.
+#[spacetimedb::reducer]
+pub fn sweep(ctx: &ReducerContext, _timer: SweepTimer) {
+    dealer::sweep(ctx);
+}
+
+/// Make sure the watchdog is running.
+///
+/// `init` only fires on a fresh publish, so a database that already existed
+/// before the sweeper was added would never get one. Called from the paths a
+/// client always exercises, so an existing deployment heals itself on next use.
+fn ensure_sweeper(ctx: &ReducerContext) {
+    if ctx.db.sweep_timer().count() > 0 {
+        return;
+    }
+    ctx.db.sweep_timer().insert(SweepTimer {
+        scheduled_id: 0,
+        scheduled_at: ScheduleAt::Interval(Duration::from_secs(5).into()),
+    });
 }
 
 /// Close a game early — the admin counterpart to letting it play out.

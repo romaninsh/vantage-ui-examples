@@ -35,6 +35,7 @@ pub mod seat_type;
 pub mod set_config_reducer;
 pub mod start_timer_type;
 pub mod stop_observing_reducer;
+pub mod sweep_timer_type;
 pub mod top_players_table;
 pub mod turn_timer_type;
 
@@ -67,6 +68,7 @@ pub use seat_type::Seat;
 pub use set_config_reducer::set_config;
 pub use start_timer_type::StartTimer;
 pub use stop_observing_reducer::stop_observing;
+pub use sweep_timer_type::SweepTimer;
 pub use top_players_table::*;
 pub use turn_timer_type::TurnTimer;
 

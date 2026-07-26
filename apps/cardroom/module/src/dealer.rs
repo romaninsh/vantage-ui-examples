@@ -198,6 +198,7 @@ pub fn deal_hand(ctx: &ReducerContext, game_id: u64) {
 
     for mut seat in ctx.db.seat().game_id().filter(game_id) {
         seat.committed = 0;
+        seat.acted = false;
         seat.state = if seat.chips > 0 {
             SEAT_ACTIVE.into()
         } else {
@@ -291,6 +292,7 @@ fn set_to_act(ctx: &ReducerContext, game_id: u64, seat_id: Option<u64>) {
         return;
     };
     game.to_act_seat = seat_id;
+    game.to_act_since_micros = ctx.timestamp.to_micros_since_unix_epoch();
     let hand_no = game.hand_no;
     ctx.db.game().game_id().update(game);
 
@@ -369,8 +371,23 @@ pub fn handle_action(
         other => return Err(format!("unknown action '{other}'")),
     }
 
+    let seat_id = seat.seat_id;
+    let raised = matches!(action, "raise" | "bet");
+    seat.acted = true;
     ctx.db.seat().seat_id().update(seat);
     ctx.db.game().game_id().update(game);
+
+    // A raise re-opens the street: everyone else owes a response, including
+    // players who had already checked or called before it.
+    if raised {
+        for mut other in ctx.db.seat().game_id().filter(game_id) {
+            if other.seat_id != seat_id && other.state == SEAT_ACTIVE {
+                other.acted = false;
+                ctx.db.seat().seat_id().update(other);
+            }
+        }
+    }
+
     advance(ctx, game_id);
     Ok(())
 }
@@ -397,38 +414,43 @@ pub fn advance(ctx: &ReducerContext, game_id: u64) {
     }
 
     let can_act = actionable(ctx, game_id);
-    let everyone_matched = can_act.iter().all(|s| s.committed >= game.current_bet);
 
-    // A street ends once every player who *can* act has matched the bet. If
-    // nobody can act (all-in), streets run out automatically to showdown.
-    if can_act.is_empty() || (everyone_matched && street_had_action(ctx, game_id, &game)) {
+    // A street closes once everyone still able to act has both taken a turn on
+    // it and matched the current bet. Both halves are load-bearing: without
+    // "matched", a raise would go unanswered; without "taken a turn", a street
+    // would close the instant it opened, since with no bet posted every player
+    // trivially matches zero.
+    //
+    // `acted` is recorded per seat rather than inferred from the pot. Inferring
+    // it — treating `current_bet > 0` as proof someone had acted — cannot see a
+    // check, so a street where everyone checked never closed at all: the action
+    // simply went round and round while the pot, the bet and every stack stood
+    // still. It only ever escaped when a player happened to raise.
+    let closed = can_act
+        .iter()
+        .all(|s| s.acted && s.committed >= game.current_bet);
+
+    // If nobody can act (everyone all-in), the remaining streets run out
+    // automatically to showdown.
+    if can_act.is_empty() || closed {
         next_street(ctx, game_id);
         return;
     }
 
-    // Next actionable seat after the current one, wrapping.
-    let current = game.to_act_seat;
-    let next = can_act
-        .iter()
-        .find(|s| Some(s.seat_id) != current && s.committed < game.current_bet)
-        .or_else(|| can_act.iter().find(|s| Some(s.seat_id) != current))
-        .map(|s| s.seat_id);
+    // The next seat *in rotation* after the current one, wrapping — not merely
+    // the first seat that is not the current one, which with three or more
+    // players bounces between the same two and never reaches the rest.
+    let current_no = game
+        .to_act_seat
+        .and_then(|id| ctx.db.seat().seat_id().find(id))
+        .map(|s| s.seat_no);
+    let next = match current_no {
+        Some(seat_no) => can_act.iter().find(|s| s.seat_no > seat_no),
+        None => None,
+    }
+    .or_else(|| can_act.first())
+    .map(|s| s.seat_id);
     set_to_act(ctx, game_id, next);
-}
-
-/// Whether anyone has acted on this street yet.
-///
-/// Without this a street would close the instant it opened, since with no bet
-/// posted every player trivially "matches" zero.
-fn street_had_action(ctx: &ReducerContext, game_id: u64, game: &Game) -> bool {
-    game.current_bet > 0
-        || ctx
-            .db
-            .seat()
-            .game_id()
-            .filter(game_id)
-            .any(|s| s.state == SEAT_FOLDED || s.state == SEAT_ALLIN)
-        || game.to_act_seat.is_none()
 }
 
 fn next_street(ctx: &ReducerContext, game_id: u64) {
@@ -450,8 +472,10 @@ fn next_street(ctx: &ReducerContext, game_id: u64) {
 
     game.street = next.into();
     game.current_bet = 0;
+    // A fresh street: nothing is owed and nobody has spoken on it yet.
     for mut seat in ctx.db.seat().game_id().filter(game_id) {
         seat.committed = 0;
+        seat.acted = false;
         ctx.db.seat().seat_id().update(seat);
     }
     let shown = visible_board(&game).join(" ");
@@ -584,6 +608,68 @@ pub fn end_game(ctx: &ReducerContext, mut game: Game, winner: Option<spacetimedb
     game.to_act_seat = None;
     game.seats_taken = 0;
     ctx.db.game().game_id().update(game);
+}
+
+/// Put stalled tables back in motion.
+///
+/// Runs on a fixed interval and depends on nothing else, which is the whole
+/// point: every other timer here is one-shot and self-chaining, so losing a
+/// single row (a republish disconnecting clients mid-hand, say) stalls a table
+/// with nothing left to restart it.
+///
+/// Two things can stall:
+///
+/// - a **playing** table whose turn has been pending far longer than the turn
+///   timeout, because the timer that would have folded that player never fired;
+/// - a **waiting** table whose start timer was lost, which would otherwise sit
+///   there with enough players and never deal.
+///
+/// The grace period is deliberately generous — several times the turn timeout —
+/// so this never races the ordinary timers. It is a backstop, not the mechanism.
+pub fn sweep(ctx: &ReducerContext) {
+    let cfg = config(ctx);
+    let now = ctx.timestamp.to_micros_since_unix_epoch();
+    let stall_micros = (cfg.turn_timeout_secs as i64) * 3 * 1_000_000;
+
+    for game in ctx.db.game().iter() {
+        match game.status.as_str() {
+            STATUS_PLAYING => {
+                let Some(seat_id) = game.to_act_seat else {
+                    // Playing but waiting on nobody: the hand ended without the
+                    // next one starting. Deal it.
+                    if now - game.to_act_since_micros > stall_micros {
+                        log::warn!("sweep: game {} had no seat to act; dealing", game.game_id);
+                        deal_hand(ctx, game.game_id);
+                    }
+                    continue;
+                };
+                if game.to_act_since_micros == 0 || now - game.to_act_since_micros <= stall_micros {
+                    continue;
+                }
+                log::warn!(
+                    "sweep: game {} stalled on seat {} for {}s; folding",
+                    game.game_id,
+                    seat_id,
+                    (now - game.to_act_since_micros) / 1_000_000
+                );
+                if let Some(seat) = ctx.db.seat().seat_id().find(seat_id) {
+                    let _ = handle_action(ctx, seat, "fold", 0);
+                } else {
+                    // The seat is gone entirely — move the hand along without it.
+                    advance(ctx, game.game_id);
+                }
+            }
+            crate::STATUS_WAITING => {
+                // A lost start timer leaves a viable table sitting idle.
+                let seated = ctx.db.seat().game_id().filter(game.game_id).count() as u32;
+                if seated >= cfg.min_players && ctx.timestamp >= game.starts_at {
+                    log::warn!("sweep: game {} was ready but never started", game.game_id);
+                    start(ctx, game.game_id);
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 /// A player who ran out of time folds, so one stalled client cannot wedge a

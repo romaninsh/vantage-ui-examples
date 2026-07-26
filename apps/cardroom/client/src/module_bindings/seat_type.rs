@@ -16,6 +16,7 @@ pub struct Seat {
     pub committed: i64,
     pub state: String,
     pub joined_at: __sdk::Timestamp,
+    pub acted: bool,
 }
 
 impl __sdk::InModule for Seat {
@@ -35,6 +36,7 @@ pub struct SeatCols {
     pub committed: __sdk::__query_builder::Col<Seat, i64>,
     pub state: __sdk::__query_builder::Col<Seat, String>,
     pub joined_at: __sdk::__query_builder::Col<Seat, __sdk::Timestamp>,
+    pub acted: __sdk::__query_builder::Col<Seat, bool>,
 }
 
 impl __sdk::__query_builder::HasCols for Seat {
@@ -50,6 +52,7 @@ impl __sdk::__query_builder::HasCols for Seat {
             committed: __sdk::__query_builder::Col::new(table_name, "committed"),
             state: __sdk::__query_builder::Col::new(table_name, "state"),
             joined_at: __sdk::__query_builder::Col::new(table_name, "joined_at"),
+            acted: __sdk::__query_builder::Col::new(table_name, "acted"),
         }
     }
 }
