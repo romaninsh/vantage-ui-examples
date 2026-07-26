@@ -60,9 +60,16 @@ happened. Delete it and republish with the name:
     spacetimedb-cli publish --server local --yes cardroom
 ```
 
-**Use a different `--prefix` for each client process.** It names the players' saved identity tokens,
-so two runs do not fight over the same accounts — and so a restart reconnects as the same players
-rather than collecting fresh signup bonuses.
+**Every run creates new players.** Each gets a fresh identity from the host and a handle tagged with
+a random per-run string (`fleet-a1hk-0`), because handles are unique in the module — reusing one
+would collide with the account that already owns it. `--prefix` is only there to keep the output
+readable when several runs are going at once. Old accounts stay behind, which is the point: they are
+the history the dashboard reads.
+
+**Running one player alone will not deal a hand.** A game needs at least two, so a lone player opens
+a table, waits out the join window, has it abandoned, and tries again. After three of those the
+client says so and tells you what to run — but the short version is: start a fleet in another
+terminal.
 
 ## The client has two modes, because it has two jobs
 

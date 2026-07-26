@@ -12,9 +12,9 @@
 //! cargo run -p cardroom-client -- -n 1 --prefix solo
 //! ```
 //!
-//! Run both at once and they share tables. Use different `--prefix` values: the
-//! prefix names each player's saved identity token, so two processes with the
-//! same one would fight over the same accounts.
+//! Run both at once and they share tables. Every run registers **new** players
+//! with fresh identities and a random tag, so repeated and concurrent runs never
+//! collide; `--prefix` is only there to make the output readable.
 
 mod module_bindings;
 mod player;
@@ -41,9 +41,11 @@ struct Args {
     #[arg(short = 'n', long = "players", default_value_t = 1)]
     players: usize,
 
-    /// Names this run's saved identity tokens, so a restart reconnects as the
-    /// same accounts instead of farming fresh signup bonuses — and so two
-    /// concurrent runs do not collide.
+    /// Labels this run's players, e.g. `fleet-k3f9-0`.
+    ///
+    /// Every run generates fresh identities and a random tag, so two runs never
+    /// collide even with the same prefix — the prefix is only there to make the
+    /// output readable when several are going at once.
     #[arg(long, default_value = "player")]
     prefix: String,
 
@@ -65,10 +67,6 @@ struct Args {
     /// hand history is the output.
     #[arg(long, default_value_t = 5)]
     report_every: u64,
-
-    /// Where identity tokens are kept.
-    #[arg(long, default_value = ".cardroom")]
-    token_dir: String,
 }
 
 #[tokio::main]
@@ -78,19 +76,24 @@ async fn main() -> anyhow::Result<()> {
         anyhow::bail!("-n must be at least 1");
     }
 
-    std::fs::create_dir_all(&args.token_dir)?;
-
     // One player is a debugging session; many is a load test. That single fact
     // decides the whole output style.
     let verbose = args.players == 1;
     let fleet = Arc::new(Fleet::new(verbose));
 
+    // A short random tag per run. Handles are unique in the module, so without
+    // this a second run would try to register names the first run already owns —
+    // under a different identity, which the server rightly refuses.
+    let run_tag = random_tag();
+
     println!(
-        "cardroom-client → {} / {}   {} player{}   mode: {}",
+        "cardroom-client → {} / {}   {} player{} as {}-{}-*   mode: {}",
         args.server,
         args.db,
         args.players,
         if args.players == 1 { "" } else { "s" },
+        args.prefix,
+        run_tag,
         if verbose {
             "verbose (single player)"
         } else {
@@ -102,11 +105,12 @@ async fn main() -> anyhow::Result<()> {
     for index in 0..args.players {
         let args = args.clone();
         let fleet = Arc::clone(&fleet);
+        let tag = run_tag.clone();
         // Stagger the starts a little, so players do not all try to create the
         // same first game in the same instant.
         tokio::time::sleep(Duration::from_millis(120)).await;
         tasks.push(tokio::spawn(async move {
-            if let Err(e) = player::run(args, index, Arc::clone(&fleet)).await {
+            if let Err(e) = player::run(args, &tag, index, Arc::clone(&fleet)).await {
                 fleet.outcome(&format!("player{index}"), &format!("stopped: {e}"));
             }
         }));
@@ -132,4 +136,17 @@ async fn main() -> anyhow::Result<()> {
     println!("\n─── final ───");
     fleet.report();
     Ok(())
+}
+
+/// Four base-36 characters — enough to keep concurrent and repeated runs apart
+/// without making the handles unreadable.
+fn random_tag() -> String {
+    let mut n: u32 = rand::random::<u32>() % (36u32.pow(4));
+    let digits = b"0123456789abcdefghijklmnopqrstuvwxyz";
+    let mut out = [b'0'; 4];
+    for slot in out.iter_mut().rev() {
+        *slot = digits[(n % 36) as usize];
+        n /= 36;
+    }
+    String::from_utf8_lossy(&out).into_owned()
 }

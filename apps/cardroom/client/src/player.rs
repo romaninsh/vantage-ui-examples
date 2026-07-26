@@ -9,31 +9,25 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-use spacetimedb_sdk::{credentials, DbContext, Table};
+use spacetimedb_sdk::{DbContext, Table};
 
 use crate::module_bindings::*;
 use crate::report::Fleet;
 use crate::Args;
 
-pub async fn run(args: Args, index: usize, fleet: Arc<Fleet>) -> anyhow::Result<()> {
-    let handle = format!("{}-{index}", args.prefix);
-    // `credentials::File::load` consumes the handle, so keep two — one to read
-    // the saved token now, one for the connect callback to write it back.
-    let token_path = format!("{}/{}", args.token_dir, handle);
+pub async fn run(args: Args, run_tag: &str, index: usize, fleet: Arc<Fleet>) -> anyhow::Result<()> {
+    // A fresh handle every run. Handles are unique in the module, so reusing one
+    // across runs would collide with the account that already owns it — and the
+    // identity behind that account is not this process's. Randomising sidesteps
+    // it entirely, at the cost of leaving old accounts behind (which is fine:
+    // they are the history the dashboard reads).
+    let handle = format!("{}-{run_tag}-{index}", args.prefix);
 
-    // Reconnect as the same account if we have played before. Without this a
-    // restart would mint a fresh identity and collect another signup bonus,
-    // which would quietly break the fleet's chip-conservation check.
-    let saved = credentials::File::new(&token_path).load().ok().flatten();
-    let token_file = credentials::File::new(&token_path);
-
+    // No saved credentials: each run is a new player, so we connect anonymously
+    // and let the host mint us an identity.
     let connection = DbConnection::builder()
         .with_uri(&args.server)
         .with_database_name(&args.db)
-        .with_token(saved)
-        .on_connect(move |_ctx, _identity, token| {
-            let _ = token_file.save(token);
-        })
         .build()?;
 
     connection.run_threaded();
@@ -64,24 +58,23 @@ pub async fn run(args: Args, index: usize, fleet: Arc<Fleet>) -> anyhow::Result<
         tokio::time::sleep(Duration::from_millis(100)).await;
     }
 
-    let me = connection.identity();
+    register_account(&connection, &handle).await?;
 
-    if connection.db().account().identity().find(&me).is_none() {
-        connection.reducers().register(handle.clone())?;
-        tokio::time::sleep(Duration::from_millis(400)).await;
-    }
+    let me = connection.identity();
     let bankroll = connection
         .db()
         .account()
         .identity()
         .find(&me)
         .map(|a| a.bankroll)
-        .unwrap_or(0);
+        // Registration is confirmed before we get here, so a missing account
+        // means the cache has not caught up rather than that we have no money.
+        .unwrap_or_else(|| starting_capital(&connection));
     fleet.registered(starting_capital(&connection));
     fleet.outcome(&handle, &format!("registered with {bankroll} chips"));
 
-    // Chip movement is counted in every mode — it is the scoreboard's `won`/`lost`
-    // columns. Only the play-by-play narration is verbose-only.
+    // Chip movement is counted in every mode — it is the scoreboard's `pots won`
+    // column. Only the play-by-play narration is verbose-only.
     track_chip_movement(&connection, &handle, Arc::clone(&fleet));
     if fleet.verbose {
         install_commentary(&connection, &handle, Arc::clone(&fleet));
@@ -93,6 +86,86 @@ pub async fn run(args: Args, index: usize, fleet: Arc<Fleet>) -> anyhow::Result<
     fleet.busted();
     let _ = connection.disconnect();
     Ok(())
+}
+
+/// Register, and *wait for the server to say whether it worked*.
+///
+/// `reducers().register(..)` returns `Ok` as soon as the request is sent — it
+/// says nothing about whether the reducer succeeded. Ignoring that is how a
+/// rejected registration used to surface as "registered with 0 chips" followed
+/// by a player that could never do anything: the account simply did not exist.
+/// Waiting for the outcome turns a server-side refusal into the server's own
+/// error message.
+async fn register_account(connection: &DbConnection, handle: &str) -> anyhow::Result<()> {
+    let (callback, rx) = outcome_channel();
+    connection
+        .reducers()
+        .register_then(handle.to_string(), callback)?;
+    awaited(rx, &format!("registering '{handle}'")).await
+}
+
+/// Join a table, and find out whether we actually got a seat.
+async fn join_table(connection: &DbConnection, game_id: u64) -> anyhow::Result<()> {
+    let (callback, rx) = outcome_channel();
+    connection.reducers().join_game_then(game_id, callback)?;
+    awaited(rx, &format!("joining game {game_id}")).await
+}
+
+/// Open a table, and find out whether it was created.
+async fn open_table(
+    connection: &DbConnection,
+    name: String,
+    small_blind: i64,
+    buy_in: i64,
+) -> anyhow::Result<()> {
+    let (callback, rx) = outcome_channel();
+    connection
+        .reducers()
+        .create_game_then(name, small_blind, buy_in, callback)?;
+    awaited(rx, "opening a table").await
+}
+
+/// The receiver half of an awaited reducer call.
+type Outcome = tokio::sync::oneshot::Receiver<Result<(), String>>;
+
+/// Build a reducer callback that reports its outcome through a channel.
+#[allow(clippy::type_complexity)]
+fn outcome_channel() -> (
+    impl FnOnce(
+            &ReducerEventContext,
+            Result<Result<(), String>, spacetimedb_sdk::error::InternalError>,
+        ) + Send
+        + 'static,
+    Outcome,
+) {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    let callback =
+        move |_ctx: &ReducerEventContext,
+              result: Result<Result<(), String>, spacetimedb_sdk::error::InternalError>| {
+            let _ = tx.send(match result {
+                Ok(Ok(())) => Ok(()),
+                Ok(Err(message)) => Err(message),
+                Err(internal) => Err(internal.to_string()),
+            });
+        };
+    (callback, rx)
+}
+
+/// Wait for a reducer's real outcome.
+///
+/// This matters more than it looks. `reducers().join_game(..)` returns `Ok` as
+/// soon as the request is *sent*; it says nothing about whether the reducer
+/// succeeded. Treating that as success is how a refused registration surfaced as
+/// "registered with 0 chips", and how a refused join printed "joined game 26"
+/// dozens of times while the player sat there unseated. Waiting turns a
+/// server-side refusal into the server's own words.
+async fn awaited(rx: Outcome, what: &str) -> anyhow::Result<()> {
+    match tokio::time::timeout(Duration::from_secs(15), rx).await {
+        Ok(Ok(Ok(()))) => Ok(()),
+        Ok(Ok(Err(message))) => anyhow::bail!("{what} refused: {message}"),
+        Ok(Err(_)) => anyhow::bail!("connection closed before {what} completed"),
+        Err(_) => anyhow::bail!("{what} timed out after 15s — is the module published?"),
+    }
 }
 
 fn starting_capital(connection: &DbConnection) -> i64 {
@@ -112,6 +185,10 @@ async fn play_until_broke(
     handle: &str,
     fleet: &Arc<Fleet>,
 ) {
+    // Consecutive tables we opened that nobody joined. Drives both the advice we
+    // print and how long we wait before opening another.
+    let mut lonely_rounds: u32 = 0;
+
     loop {
         let me = connection.identity();
 
@@ -176,29 +253,57 @@ async fn play_until_broke(
                     // Can't afford a seat any more.
                     return;
                 }
-                let joinable = connection
-                    .db()
-                    .game()
-                    .iter()
-                    .find(|g| g.status == "waiting" && g.buy_in <= account.bankroll);
 
-                match joinable {
-                    Some(game) => {
-                        if connection.reducers().join_game(game.game_id).is_ok() {
+                // Prefer joining. A table only stays `waiting` for the join
+                // window, so look for one for a while rather than glancing once
+                // and immediately opening our own — two players each opening
+                // tables at the wrong moment never meet.
+                let patience = joining_patience(lonely_rounds);
+                if let Some(game) = wait_for_joinable(connection, account.bankroll, patience).await
+                {
+                    match join_table(connection, game.game_id).await {
+                        Ok(()) => {
                             fleet.outcome(handle, &format!("joined game {}", game.game_id));
                             fleet.joined();
+                            lonely_rounds = 0;
+                            continue;
+                        }
+                        Err(e) => {
+                            // Losing a race for the last seat is ordinary; say so
+                            // quietly and look again rather than pretending we
+                            // are seated.
+                            fleet.detail(|| format!("could not join game {}: {e}", game.game_id));
                         }
                     }
-                    None => {
-                        let name = format!("{handle}'s table");
-                        if connection
-                            .reducers()
-                            .create_game(name, args.small_blind, args.buy_in)
-                            .is_ok()
-                        {
-                            fleet.outcome(handle, "opened a table, waiting for players");
-                            fleet.joined();
-                        }
+                }
+
+                let name = format!("{handle}'s table");
+                if open_table(connection, name, args.small_blind, args.buy_in)
+                    .await
+                    .is_ok()
+                {
+                    lonely_rounds += 1;
+                    fleet.outcome(
+                        handle,
+                        &format!(
+                            "opened a table, waiting {}s for players",
+                            join_window_secs(connection)
+                        ),
+                    );
+                    fleet.joined();
+
+                    // A table nobody joins is abandoned when its window closes,
+                    // and a lone player would otherwise burn one every few
+                    // seconds in silence. Say what is actually wrong, once.
+                    if lonely_rounds == LONELY_LIMIT {
+                        fleet.hint(&format!(
+                            "no one has joined {LONELY_LIMIT} tables in a row — a game needs at \
+                             least {} players.\n            Start more in another terminal:  \
+                             cargo run -p cardroom-client -- -n 5 --prefix fleet\n            \
+                             (waiting longer between tables now, so players finishing other \
+                             games have time to find yours)",
+                            min_players(connection)
+                        ));
                     }
                 }
                 tokio::time::sleep(Duration::from_millis(900)).await;
@@ -209,6 +314,66 @@ async fn play_until_broke(
 
 fn seat_of(connection: &DbConnection, me: &spacetimedb_sdk::Identity) -> Option<Seat> {
     connection.db().seat().iter().find(|s| &s.account == me)
+}
+
+/// How many tables may go unjoined before we explain what is wrong.
+const LONELY_LIMIT: u32 = 3;
+
+/// How long to keep looking for a table to join before opening one.
+///
+/// Grows with consecutive failures. The first round is brief — if a table is
+/// already waiting we want to be in it — but a player who keeps ending up alone
+/// should wait out other tables rather than churning through join windows nobody
+/// is free to answer.
+fn joining_patience(lonely_rounds: u32) -> Duration {
+    match lonely_rounds {
+        0 => Duration::from_secs(2),
+        1..=2 => Duration::from_secs(8),
+        _ => Duration::from_secs(30),
+    }
+}
+
+/// Poll for a joinable table until one appears or `patience` runs out.
+async fn wait_for_joinable(
+    connection: &DbConnection,
+    bankroll: i64,
+    patience: Duration,
+) -> Option<Game> {
+    let deadline = tokio::time::Instant::now() + patience;
+    loop {
+        let found = connection
+            .db()
+            .game()
+            .iter()
+            .find(|g| g.status == "waiting" && g.buy_in <= bankroll);
+        if found.is_some() {
+            return found;
+        }
+        if tokio::time::Instant::now() >= deadline {
+            return None;
+        }
+        tokio::time::sleep(Duration::from_millis(400)).await;
+    }
+}
+
+fn join_window_secs(connection: &DbConnection) -> u64 {
+    connection
+        .db()
+        .config()
+        .iter()
+        .next()
+        .map(|c| c.join_window_secs)
+        .unwrap_or(10)
+}
+
+fn min_players(connection: &DbConnection) -> u32 {
+    connection
+        .db()
+        .config()
+        .iter()
+        .next()
+        .map(|c| c.min_players)
+        .unwrap_or(2)
 }
 
 /// A deliberately simple policy: fold hopeless spots, call cheap ones, raise
@@ -289,6 +454,10 @@ fn install_commentary(connection: &DbConnection, handle: &str, fleet: Arc<Fleet>
                 "small_blind" | "big_blind" => {
                     format!("{who} posts {} ({})", ev.amount, ev.kind.replace('_', " "))
                 }
+                "join" => format!("{who} sits down with {}", ev.amount),
+                "start" => format!("game on — {}", ev.detail),
+                "abandoned" => format!("table abandoned — {}", ev.detail),
+                "game_over" => format!("game over — {}", ev.detail),
                 "fold" => format!("{who} folds"),
                 "check" => format!("{who} checks"),
                 "call" => format!("{who} calls {}", ev.amount),

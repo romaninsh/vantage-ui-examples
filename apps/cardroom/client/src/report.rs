@@ -39,6 +39,15 @@ pub struct Fleet {
     /// What the fleet was given in signup bonuses — the only inflow that exists.
     granted: AtomicI64,
     drift_reported: AtomicBool,
+    /// How many consecutive reports have shown the same non-zero drift.
+    ///
+    /// Players sample their own bankroll, seat chips and pot at slightly
+    /// different instants, so a blind in flight can be counted twice for a
+    /// moment. A real leak persists across reports; a sampling skew does not —
+    /// so a single odd reading is reported as settling rather than as a bug.
+    drift_streak: AtomicU64,
+    /// Advice already given, so a hint is not repeated every round.
+    hints: Mutex<std::collections::HashSet<String>>,
     /// Serialises printing so lines from different tasks do not interleave.
     pen: Mutex<()>,
 }
@@ -57,6 +66,8 @@ impl Fleet {
             pots: Mutex::new(std::collections::HashMap::new()),
             granted: AtomicI64::new(0),
             drift_reported: AtomicBool::new(false),
+            drift_streak: AtomicU64::new(0),
+            hints: Mutex::new(std::collections::HashSet::new()),
             pen: Mutex::new(()),
         }
     }
@@ -65,6 +76,20 @@ impl Fleet {
     pub fn outcome(&self, who: &str, what: &str) {
         let _guard = self.pen.lock().unwrap();
         println!("{}  {who:<12} {what}", stamp(self.started));
+    }
+
+    /// Advice about how the run is going, printed once per distinct message.
+    ///
+    /// Deliberately not an outcome line: this is the client telling you that
+    /// something is wrong with the *setup* rather than reporting play, and a
+    /// lone player would otherwise sit there opening tables in silence.
+    pub fn hint(&self, message: &str) {
+        let mut seen = self.hints.lock().unwrap();
+        if !seen.insert(message.to_string()) {
+            return;
+        }
+        let _guard = self.pen.lock().unwrap();
+        println!("\n  ⓘ  {message}\n");
     }
 
     /// Play-by-play, printed only with `-n 1`.
@@ -150,13 +175,22 @@ impl Fleet {
         let granted = self.granted.load(Ordering::Relaxed);
         let net = bankroll + staked - granted;
 
-        let conserved = if net == 0 {
-            "✓ conserved".to_string()
+        let streak = if net == 0 {
+            self.drift_streak.store(0, Ordering::Relaxed);
+            0
         } else {
-            // Same thousands separators as every other figure on the line —
-            // this is the number you squint at.
-            let sign = if net > 0 { "+" } else { "" };
-            format!("⚠ DRIFT {sign}{}", thousands(net))
+            self.drift_streak.fetch_add(1, Ordering::Relaxed) + 1
+        };
+
+        // Same thousands separators as every other figure on the line — this is
+        // the number you squint at.
+        let sign = if net > 0 { "+" } else { "" };
+        let conserved = match (net, streak) {
+            (0, _) => "✓ conserved".to_string(),
+            // One odd reading is almost always chips in flight between a seat and
+            // a pot, sampled a moment apart.
+            (_, 1) => format!("~ settling {sign}{}", thousands(net)),
+            _ => format!("⚠ DRIFT {sign}{}", thousands(net)),
         };
 
         format!(
@@ -256,9 +290,13 @@ mod tests {
         fleet.set_pot(1, 500);
         assert!(fleet.scoreboard().contains("conserved"));
 
-        // Chips vanished — this is what a dealer bug actually looks like.
+        // Chips vanished. The first reading is treated as chips in flight — a
+        // check that cries wolf on every hand is one you learn to ignore...
         fleet.set_pot(1, 0);
         fleet.set_money("a", 9_000, 0);
+        assert!(fleet.scoreboard().contains("settling -1,000"));
+
+        // ...but it persisting is what a dealer bug actually looks like.
         assert!(fleet.scoreboard().contains("DRIFT -1,000"));
     }
 }
