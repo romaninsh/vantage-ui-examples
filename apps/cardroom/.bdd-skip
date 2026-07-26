@@ -1,0 +1,12 @@
+No vantage-ui app yet: this directory is the SpacetimeDB server, the hand
+evaluator and a load client, and the `inventory/` folder that would make it an
+app is still to be built (VAN-130). The sweep expects every `apps/*` entry to be
+a vantage-ui project, so without this marker cardroom fails it for not being one.
+
+It will still need the marker afterwards. The app reads a live SpacetimeDB host
+with the `cardroom` module published — see README.md — which a CI runner has no
+way to provide, so the shared "clean startup" scenario would log a connect ERROR
+just as periscope's and vantage-leads' do. Run it explicitly with a host up:
+  docker run -d -p 3000:3000 clockworklabs/spacetime:v2.7.0-hotfix3 start --listen-addr 0.0.0.0:3000
+  cd apps/cardroom/module && spacetimedb-cli publish --server local --yes cardroom
+  cargo run -p test-framework -- apps/cardroom
