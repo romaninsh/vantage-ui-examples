@@ -26,6 +26,7 @@ pub struct Game {
     pub created_at: __sdk::Timestamp,
     pub ended_at: Option<__sdk::Timestamp>,
     pub winner: Option<__sdk::Identity>,
+    pub wait_rounds: u32,
 }
 
 impl __sdk::InModule for Game {
@@ -55,6 +56,7 @@ pub struct GameCols {
     pub created_at: __sdk::__query_builder::Col<Game, __sdk::Timestamp>,
     pub ended_at: __sdk::__query_builder::Col<Game, Option<__sdk::Timestamp>>,
     pub winner: __sdk::__query_builder::Col<Game, Option<__sdk::Identity>>,
+    pub wait_rounds: __sdk::__query_builder::Col<Game, u32>,
 }
 
 impl __sdk::__query_builder::HasCols for Game {
@@ -80,6 +82,7 @@ impl __sdk::__query_builder::HasCols for Game {
             created_at: __sdk::__query_builder::Col::new(table_name, "created_at"),
             ended_at: __sdk::__query_builder::Col::new(table_name, "ended_at"),
             winner: __sdk::__query_builder::Col::new(table_name, "winner"),
+            wait_rounds: __sdk::__query_builder::Col::new(table_name, "wait_rounds"),
         }
     }
 }

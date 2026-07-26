@@ -34,7 +34,11 @@ pub fn card_name(card: u8) -> String {
 
 /// Render a slice of cards as `"As Td 2c"`.
 pub fn cards_name(cards: &[u8]) -> String {
-    cards.iter().map(|c| card_name(*c)).collect::<Vec<_>>().join(" ")
+    cards
+        .iter()
+        .map(|c| card_name(*c))
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 /// Hand categories, ordered so a larger value always beats a smaller one.
@@ -108,7 +112,11 @@ pub fn evaluate(cards: &[u8]) -> HandRank {
     }
 
     let rank_bits: u16 = (0..13).fold(0u16, |acc, r| {
-        if rank_counts[r] > 0 { acc | (1 << r) } else { acc }
+        if rank_counts[r] > 0 {
+            acc | (1 << r)
+        } else {
+            acc
+        }
     });
 
     let flush_suit = (0..4).find(|&s| suit_counts[s] >= 5);
@@ -130,8 +138,16 @@ pub fn evaluate(cards: &[u8]) -> HandRank {
     by_count.sort_unstable_by(|a, b| b.cmp(a));
 
     let quad = by_count.iter().find(|(c, _)| *c == 4).map(|(_, r)| *r);
-    let trips: Vec<u8> = by_count.iter().filter(|(c, _)| *c == 3).map(|(_, r)| *r).collect();
-    let pairs: Vec<u8> = by_count.iter().filter(|(c, _)| *c == 2).map(|(_, r)| *r).collect();
+    let trips: Vec<u8> = by_count
+        .iter()
+        .filter(|(c, _)| *c == 3)
+        .map(|(_, r)| *r)
+        .collect();
+    let pairs: Vec<u8> = by_count
+        .iter()
+        .filter(|(c, _)| *c == 2)
+        .map(|(_, r)| *r)
+        .collect();
 
     if let Some(q) = quad {
         let kicker = high_ranks_excluding(&by_count, &[q], 1);
@@ -151,7 +167,10 @@ pub fn evaluate(cards: &[u8]) -> HandRank {
     }
 
     if let Some(suit) = flush_suit {
-        let mut ranks: Vec<u8> = (0..13u8).rev().filter(|r| suit_ranks[suit] & (1 << r) != 0).collect();
+        let mut ranks: Vec<u8> = (0..13u8)
+            .rev()
+            .filter(|r| suit_ranks[suit] & (1 << r) != 0)
+            .collect();
         ranks.truncate(5);
         return HandRank::new(
             Category::Flush,

@@ -66,10 +66,13 @@ would collide with the account that already owns it. `--prefix` is only there to
 readable when several runs are going at once. Old accounts stay behind, which is the point: they are
 the history the dashboard reads.
 
-**Running one player alone will not deal a hand.** A game needs at least two, so a lone player opens
-a table, waits out the join window, has it abandoned, and tries again. After three of those the
-client says so and tells you what to run — but the short version is: start a fleet in another
-terminal.
+**Running one player alone will not deal a hand.** A game needs at least two. The table now *stays
+open* while it waits rather than being binned every join window, so a second player arriving a minute
+later still finds it — but nothing happens until one does. After three unfilled tables the client
+says so and tells you what to run.
+
+`-c N` stops after N games. It is honoured only with `-n 1`; a fleet exists to generate continuous
+load, and says so rather than quietly stopping.
 
 ## The client has two modes, because it has two jobs
 
@@ -98,12 +101,20 @@ per outcome plus a periodic fleet total:
             bankroll 45,000  staked 5,000  granted 50,000  ✓ conserved
 ```
 
-**The `conserved` marker is the point.** Players cannot create money — the only inflow is the signup
-bonus — so `bankroll + staked` must always equal what was granted, where `staked` counts both seat
-chips and the live pots of tables we sit at. That makes the load client a continuous
-chip-conservation check on the dealer: a leak shows up as drift within seconds instead of being found
-later by reading a ledger. Drift is reported loudly and the client keeps running, because the size
-and direction of the drift is the diagnostic.
+The last figure is this run's **profit and loss** against everyone else at the tables — `staked`
+counts both seat chips and the live pots of tables these players sit at.
+
+```admonish note title="Why P&L and not a conservation check"
+This started life as a chip-conservation check: players cannot create money, so `bankroll + staked`
+*should* equal what was granted. It reported drift constantly, and the drift was real — but the
+conclusion was wrong. Tables are shared between runs, so these players win chips from, and lose them
+to, players started by other processes. Their total is *supposed* to diverge from this run's signup
+bonuses.
+
+House-wide conservation genuinely is an invariant, and it holds — summing every account, seat and pot
+in the database against total bonuses comes to exactly zero. It just cannot be checked from one run's
+slice of the accounts, which is the mistake this line used to make.
+```
 
 ## Installing the CLI
 

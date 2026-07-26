@@ -13,6 +13,8 @@ pub struct Config {
     pub turn_timeout_secs: u64,
     pub min_players: u32,
     pub max_seats: u32,
+    pub start_countdown_secs: u64,
+    pub max_wait_rounds: u32,
 }
 
 impl __sdk::InModule for Config {
@@ -29,6 +31,8 @@ pub struct ConfigCols {
     pub turn_timeout_secs: __sdk::__query_builder::Col<Config, u64>,
     pub min_players: __sdk::__query_builder::Col<Config, u32>,
     pub max_seats: __sdk::__query_builder::Col<Config, u32>,
+    pub start_countdown_secs: __sdk::__query_builder::Col<Config, u64>,
+    pub max_wait_rounds: __sdk::__query_builder::Col<Config, u32>,
 }
 
 impl __sdk::__query_builder::HasCols for Config {
@@ -41,6 +45,11 @@ impl __sdk::__query_builder::HasCols for Config {
             turn_timeout_secs: __sdk::__query_builder::Col::new(table_name, "turn_timeout_secs"),
             min_players: __sdk::__query_builder::Col::new(table_name, "min_players"),
             max_seats: __sdk::__query_builder::Col::new(table_name, "max_seats"),
+            start_countdown_secs: __sdk::__query_builder::Col::new(
+                table_name,
+                "start_countdown_secs",
+            ),
+            max_wait_rounds: __sdk::__query_builder::Col::new(table_name, "max_wait_rounds"),
         }
     }
 }

@@ -188,6 +188,10 @@ async fn play_until_broke(
     // Consecutive tables we opened that nobody joined. Drives both the advice we
     // print and how long we wait before opening another.
     let mut lonely_rounds: u32 = 0;
+    // Games seen through to the end. `-c` is honoured only for a single player;
+    // a fleet is here to generate load.
+    let mut games_finished: u32 = 0;
+    let game_limit = if args.players == 1 { args.games } else { 0 };
 
     loop {
         let me = connection.identity();
@@ -227,8 +231,16 @@ async fn play_until_broke(
                 };
 
                 if game.status == "ended" {
-                    fleet.outcome(handle, &format!("game {} ended", game.game_id));
+                    games_finished += 1;
+                    fleet.outcome(
+                        handle,
+                        &format!("game {} ended ({games_finished} played)", game.game_id),
+                    );
                     fleet.left();
+                    if game_limit > 0 && games_finished >= game_limit {
+                        fleet.outcome(handle, &format!("played {game_limit} game(s) — done"));
+                        return;
+                    }
                     tokio::time::sleep(Duration::from_millis(500)).await;
                     continue;
                 }
@@ -425,6 +437,52 @@ fn install_commentary(connection: &DbConnection, handle: &str, fleet: Arc<Fleet>
         let fleet = Arc::clone(&fleet);
         connection.db().my_hole_cards().on_insert(move |_ctx, row| {
             fleet.detail(|| format!("dealt {} {}", card_name(row.card_a), card_name(row.card_b)));
+        });
+    }
+
+    // Watch our own table fill up. Sitting through a join window with no idea
+    // whether anyone else is coming is the single most confusing thing about
+    // running one player.
+    {
+        let fleet = Arc::clone(&fleet);
+        let me = handle.to_string();
+        connection.db().seat().on_insert(move |ctx, seat| {
+            if !matches!(ctx.event, spacetimedb_sdk::Event::Reducer(_)) || seat.handle == me {
+                return;
+            }
+            let seated = ctx
+                .db
+                .seat()
+                .iter()
+                .filter(|s| s.game_id == seat.game_id)
+                .count();
+            let needed = ctx
+                .db
+                .config()
+                .iter()
+                .next()
+                .map(|c| c.min_players as usize)
+                .unwrap_or(2);
+            let countdown = ctx
+                .db
+                .config()
+                .iter()
+                .next()
+                .map(|c| c.start_countdown_secs)
+                .unwrap_or(3);
+            fleet.detail(|| {
+                if seated >= needed {
+                    format!(
+                        "{} joined — {seated} at the table, starting in {countdown}s",
+                        seat.handle
+                    )
+                } else {
+                    format!(
+                        "{} joined — {seated} at the table, need {needed}",
+                        seat.handle
+                    )
+                }
+            });
         });
     }
 

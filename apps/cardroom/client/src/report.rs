@@ -6,7 +6,7 @@
 //! per-action log is unreadable — what matters is throughput and where the money
 //! went.
 
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 use std::sync::Mutex;
 use std::time::Instant;
 
@@ -38,14 +38,6 @@ pub struct Fleet {
     pots: Mutex<std::collections::HashMap<u64, i64>>,
     /// What the fleet was given in signup bonuses — the only inflow that exists.
     granted: AtomicI64,
-    drift_reported: AtomicBool,
-    /// How many consecutive reports have shown the same non-zero drift.
-    ///
-    /// Players sample their own bankroll, seat chips and pot at slightly
-    /// different instants, so a blind in flight can be counted twice for a
-    /// moment. A real leak persists across reports; a sampling skew does not —
-    /// so a single odd reading is reported as settling rather than as a bug.
-    drift_streak: AtomicU64,
     /// Advice already given, so a hint is not repeated every round.
     hints: Mutex<std::collections::HashSet<String>>,
     /// Serialises printing so lines from different tasks do not interleave.
@@ -65,8 +57,6 @@ impl Fleet {
             money: Mutex::new(std::collections::HashMap::new()),
             pots: Mutex::new(std::collections::HashMap::new()),
             granted: AtomicI64::new(0),
-            drift_reported: AtomicBool::new(false),
-            drift_streak: AtomicU64::new(0),
             hints: Mutex::new(std::collections::HashSet::new()),
             pen: Mutex::new(()),
         }
@@ -164,33 +154,23 @@ impl Fleet {
 
     /// The scoreboard line.
     ///
-    /// `net` is the reason this exists. Players cannot create money — the only
-    /// inflow is the signup bonus — so `bankroll + staked` must always equal what
-    /// was granted. Tracking it here turns the load client into a continuous
-    /// chip-conservation check on the server: a dealer that leaks or mints chips
-    /// shows up as a drifting `net` within seconds, rather than being found later
-    /// by reading a ledger.
+    /// The last figure is this run's **profit and loss**, not a conservation
+    /// check. It was originally the latter, and that was wrong: tables are shared
+    /// between runs, so this run's players win chips from — and lose them to —
+    /// players started by other processes. Their total legitimately diverges from
+    /// what this run was granted, and calling that "drift" reported a server bug
+    /// that did not exist. (House-wide conservation *is* an invariant, and it
+    /// holds; it just cannot be checked from one run's slice of the accounts.)
     pub fn scoreboard(&self) -> String {
         let (bankroll, staked) = self.totals();
         let granted = self.granted.load(Ordering::Relaxed);
         let net = bankroll + staked - granted;
 
-        let streak = if net == 0 {
-            self.drift_streak.store(0, Ordering::Relaxed);
-            0
-        } else {
-            self.drift_streak.fetch_add(1, Ordering::Relaxed) + 1
-        };
-
-        // Same thousands separators as every other figure on the line — this is
-        // the number you squint at.
+        // Same thousands separators as every other figure on the line.
         let sign = if net > 0 { "+" } else { "" };
-        let conserved = match (net, streak) {
-            (0, _) => "✓ conserved".to_string(),
-            // One odd reading is almost always chips in flight between a seat and
-            // a pot, sampled a moment apart.
-            (_, 1) => format!("~ settling {sign}{}", thousands(net)),
-            _ => format!("⚠ DRIFT {sign}{}", thousands(net)),
+        let result = match net {
+            0 => "level".to_string(),
+            _ => format!("P&L {sign}{}", thousands(net)),
         };
 
         format!(
@@ -205,24 +185,14 @@ impl Fleet {
             thousands(bankroll),
             thousands(staked),
             thousands(granted),
-            conserved,
+            result,
         )
     }
 
-    /// Print the scoreboard. Drift is called out once, loudly, and the client
-    /// keeps running — the size and direction of the drift is the diagnostic, so
-    /// exiting would throw away the evidence.
     pub fn report(&self) {
         let line = self.scoreboard();
         let _guard = self.pen.lock().unwrap();
         println!("{line}");
-        if line.contains("DRIFT") && !self.drift_reported.swap(true, Ordering::Relaxed) {
-            println!(
-                "            ^ chips are not conserved: the fleet's bankroll plus staked \
-                 chips no longer equals what was granted. This is a server bug — keep \
-                 running and watch which way it moves."
-            );
-        }
     }
 }
 
@@ -268,35 +238,30 @@ mod tests {
     }
 
     #[test]
-    fn conservation_is_reported_from_granted_not_from_a_guess() {
+    fn profit_and_loss_sums_every_player_and_pot() {
         let fleet = Fleet::new(false);
         fleet.registered(10_000);
         fleet.registered(10_000);
 
-        // Both players still holding everything: conserved. This only adds up if
-        // the two players are summed rather than overwriting each other — the bug
-        // this test exists to catch.
+        // Untouched: level with what this run was granted. Only adds up if the
+        // two players are summed rather than overwriting each other.
         fleet.set_money("a", 10_000, 0);
         fleet.set_money("b", 10_000, 0);
-        assert!(fleet.scoreboard().contains("conserved"));
+        assert!(fleet.scoreboard().contains("level"));
 
-        // One buys in: money moved, not created.
+        // Buying in moves money between the two pockets, it does not spend it.
         fleet.set_money("a", 9_000, 1_000);
-        assert!(fleet.scoreboard().contains("conserved"));
+        assert!(fleet.scoreboard().contains("level"));
 
-        // Mid-hand: the chips are in the pot, not on the seat. Still conserved —
-        // this is the case that made the check cry wolf every hand.
+        // Chips committed to a pot have left the seat but are still ours.
         fleet.set_money("a", 9_000, 500);
         fleet.set_pot(1, 500);
-        assert!(fleet.scoreboard().contains("conserved"));
+        assert!(fleet.scoreboard().contains("level"));
 
-        // Chips vanished. The first reading is treated as chips in flight — a
-        // check that cries wolf on every hand is one you learn to ignore...
+        // Losing a pot to a player from another run is a real loss, and the
+        // whole reason this is P&L rather than a conservation check.
         fleet.set_pot(1, 0);
         fleet.set_money("a", 9_000, 0);
-        assert!(fleet.scoreboard().contains("settling -1,000"));
-
-        // ...but it persisting is what a dealer bug actually looks like.
-        assert!(fleet.scoreboard().contains("DRIFT -1,000"));
+        assert!(fleet.scoreboard().contains("P&L -1,000"));
     }
 }

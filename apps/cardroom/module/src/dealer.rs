@@ -48,8 +48,17 @@ fn actionable(ctx: &ReducerContext, game_id: u64) -> Vec<Seat> {
     seats
 }
 
-/// Close the join window and deal the first hand, or end the game if too few
-/// players turned up.
+/// Decide whether a waiting table is ready to deal.
+///
+/// Called by every start timer — the one armed at creation, and the shorter one
+/// armed when the table reaches `min_players`. Several may be in flight at once,
+/// so this is written to be safe to run repeatedly: it re-reads the game, and
+/// does nothing unless the table is still waiting and its countdown has expired.
+///
+/// An under-subscribed table is **kept open** and re-armed rather than
+/// abandoned. Binning it after a single window is what made a lone player churn
+/// through tables: every 10 seconds it lost its seat, found no one waiting, and
+/// opened another — so two lone players could never find each other.
 pub fn start(ctx: &ReducerContext, game_id: u64) {
     let Some(mut game) = ctx.db.game().game_id().find(game_id) else {
         return;
@@ -60,9 +69,34 @@ pub fn start(ctx: &ReducerContext, game_id: u64) {
 
     let cfg = config(ctx);
     let seated = ctx.db.seat().game_id().filter(game_id).count() as u32;
+
     if seated < cfg.min_players {
-        log_event(ctx, &game, "abandoned", "", 0, "not enough players joined");
-        end_game(ctx, game, None);
+        game.wait_rounds += 1;
+        if game.wait_rounds >= cfg.max_wait_rounds {
+            log_event(ctx, &game, "abandoned", "", 0, "not enough players joined");
+            end_game(ctx, game, None);
+            return;
+        }
+        // Still hopeful: hold the table open and look again after another window.
+        let next = ctx.timestamp + Duration::from_secs(cfg.join_window_secs);
+        game.starts_at = next;
+        ctx.db.game().game_id().update(game);
+        ctx.db.start_timer().insert(StartTimer {
+            scheduled_id: 0,
+            scheduled_at: next.into(),
+            game_id,
+        });
+        return;
+    }
+
+    // Enough players, but a later joiner may have pushed the countdown back.
+    if ctx.timestamp < game.starts_at {
+        let starts_at = game.starts_at;
+        ctx.db.start_timer().insert(StartTimer {
+            scheduled_id: 0,
+            scheduled_at: starts_at.into(),
+            game_id,
+        });
         return;
     }
 
@@ -70,6 +104,43 @@ pub fn start(ctx: &ReducerContext, game_id: u64) {
     log_event(ctx, &game, "start", "", 0, &format!("{seated} players"));
     ctx.db.game().game_id().update(game);
     deal_hand(ctx, game_id);
+}
+
+/// A player vanished: cash their seat out and free it.
+///
+/// Without this a dropped client leaves a seat behind that the turn timer folds
+/// forever — a zombie occupying one of `max_seats` and, because `seat.account`
+/// is unique, locking that account out of every future table. The chips are
+/// returned rather than forfeited, so a disconnect cannot mint or destroy money.
+pub fn abandon_seat(ctx: &ReducerContext, account: spacetimedb::Identity) {
+    let Some(seat) = ctx.db.seat().account().find(account) else {
+        return;
+    };
+    let game_id = seat.game_id;
+    let handle = seat.handle.clone();
+    let seat_id = seat.seat_id;
+    let was_to_act = ctx
+        .db
+        .game()
+        .game_id()
+        .find(game_id)
+        .map(|g| g.to_act_seat == Some(seat_id))
+        .unwrap_or(false);
+
+    crate::cash_out(ctx, &seat);
+    ctx.db.seat().seat_id().delete(seat_id);
+
+    if let Some(mut game) = ctx.db.game().game_id().find(game_id) {
+        game.seats_taken = game.seats_taken.saturating_sub(1);
+        let playing = game.status == STATUS_PLAYING;
+        log_event(ctx, &game, "disconnect", &handle, 0, "left the table");
+        ctx.db.game().game_id().update(game);
+        // If it was their turn, the hand would otherwise stall until the turn
+        // timer fired; move it along now.
+        if playing || was_to_act {
+            advance(ctx, game_id);
+        }
+    }
 }
 
 /// Shuffle, deal two cards to each live seat, post blinds, and put the action on
@@ -127,7 +198,11 @@ pub fn deal_hand(ctx: &ReducerContext, game_id: u64) {
 
     for mut seat in ctx.db.seat().game_id().filter(game_id) {
         seat.committed = 0;
-        seat.state = if seat.chips > 0 { SEAT_ACTIVE.into() } else { SEAT_BUSTED.into() };
+        seat.state = if seat.chips > 0 {
+            SEAT_ACTIVE.into()
+        } else {
+            SEAT_BUSTED.into()
+        };
         ctx.db.seat().seat_id().update(seat);
     }
 
@@ -144,8 +219,20 @@ pub fn deal_hand(ctx: &ReducerContext, game_id: u64) {
     let n = contenders.len();
     let sb_idx = (game.hand_no as usize) % n;
     let bb_idx = (sb_idx + 1) % n;
-    post_blind(ctx, game_id, contenders[sb_idx].seat_id, game.small_blind, "small_blind");
-    post_blind(ctx, game_id, contenders[bb_idx].seat_id, game.big_blind, "big_blind");
+    post_blind(
+        ctx,
+        game_id,
+        contenders[sb_idx].seat_id,
+        game.small_blind,
+        "small_blind",
+    );
+    post_blind(
+        ctx,
+        game_id,
+        contenders[bb_idx].seat_id,
+        game.big_blind,
+        "big_blind",
+    );
 
     let first = contenders[(bb_idx + 1) % n].seat_id;
     set_to_act(ctx, game_id, Some(first));
@@ -300,14 +387,17 @@ pub fn advance(ctx: &ReducerContext, game_id: u64) {
     let live = live_seats(ctx, game_id);
     if live.len() <= 1 {
         // Everyone else folded — the pot goes over uncontested, no showdown.
-        award(ctx, game_id, live.iter().map(|s| s.seat_id).collect(), "uncontested");
+        award(
+            ctx,
+            game_id,
+            live.iter().map(|s| s.seat_id).collect(),
+            "uncontested",
+        );
         return;
     }
 
     let can_act = actionable(ctx, game_id);
-    let everyone_matched = can_act
-        .iter()
-        .all(|s| s.committed >= game.current_bet);
+    let everyone_matched = can_act.iter().all(|s| s.committed >= game.current_bet);
 
     // A street ends once every player who *can* act has matched the bet. If
     // nobody can act (all-in), streets run out automatically to showdown.
@@ -384,13 +474,7 @@ fn showdown(ctx: &ReducerContext, game_id: u64) {
     let mut best: Option<(u32, Vec<u64>)> = None;
 
     for seat in live_seats(ctx, game_id) {
-        let Some(hole) = ctx
-            .db
-            .hole_cards()
-            .seat_id()
-            .filter(seat.seat_id)
-            .next()
-        else {
+        let Some(hole) = ctx.db.hole_cards().seat_id().filter(seat.seat_id).next() else {
             continue;
         };
         let mut cards = board.clone();

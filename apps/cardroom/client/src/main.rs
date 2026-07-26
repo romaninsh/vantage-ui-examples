@@ -63,6 +63,14 @@ struct Args {
     #[arg(long, default_value_t = 25)]
     small_blind: i64,
 
+    /// Stop after this many games. `0` means play forever.
+    ///
+    /// Only honoured for a single player: a fleet exists to generate continuous
+    /// load, so `-n 5 -c 3` keeps the five playing and says so rather than
+    /// quietly doing something you did not ask for.
+    #[arg(short = 'c', long = "games", default_value_t = 0)]
+    games: u32,
+
     /// Seconds between fleet scoreboard lines. Ignored with `-n 1`, where the
     /// hand history is the output.
     #[arg(long, default_value_t = 5)]
@@ -80,6 +88,13 @@ async fn main() -> anyhow::Result<()> {
     // decides the whole output style.
     let verbose = args.players == 1;
     let fleet = Arc::new(Fleet::new(verbose));
+
+    if args.games > 0 && args.players > 1 {
+        println!(
+            "note: -c {} ignored — a fleet plays continuously; use -n 1 to bound the games",
+            args.games
+        );
+    }
 
     // A short random tag per run. Handles are unique in the module, so without
     // this a second run would try to register names the first run already owns —

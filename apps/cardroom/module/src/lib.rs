@@ -129,11 +129,20 @@ pub struct Game {
     pub to_act_seat: Option<u64>,
     /// Current bet a player must match to stay in this street.
     pub current_bet: i64,
-    /// When the join window closes and the first hand is dealt.
+    /// When the first hand is dealt. Pushed back while the table is still
+    /// under-subscribed, and set to a short countdown once it is not.
     pub starts_at: Timestamp,
     pub created_at: Timestamp,
     pub ended_at: Option<Timestamp>,
     pub winner: Option<Identity>,
+    /// Join windows elapsed without enough players. Bounded by
+    /// `Config::max_wait_rounds` so an abandoned table does not linger forever.
+    ///
+    /// Appended rather than slotted in next to `starts_at`: inserting a column
+    /// mid-struct reorders the row, which SpacetimeDB refuses to automigrate.
+    /// New columns go on the end, with a default for the rows that already exist.
+    #[default(0u32)]
+    pub wait_rounds: u32,
 }
 
 /// A player seated at a game. Live-only state: deleted on leaving or when the
@@ -236,8 +245,21 @@ pub struct Config {
     pub starting_capital: i64,
     pub join_window_secs: u64,
     pub turn_timeout_secs: u64,
+    /// Once this many players are seated, the table starts after
+    /// `start_countdown_secs` rather than waiting out the whole join window.
     pub min_players: u32,
+    /// Hard cap on seats. `join_game` refuses past this, so a table cannot grow
+    /// without bound however many clients are hunting for a game.
     pub max_seats: u32,
+    /// Grace period after reaching `min_players`, so a third and fourth player
+    /// can still slide in before the cards come out.
+    #[default(3u64)]
+    pub start_countdown_secs: u64,
+    /// How many join windows a table may sit under-subscribed before it gives
+    /// up. Keeping it open is the point of matchmaking — binning it after one
+    /// window is what made a lone player churn through tables.
+    #[default(12u32)]
+    pub max_wait_rounds: u32,
 }
 
 /// Fires once per game, when its join window closes.
@@ -345,6 +367,8 @@ pub fn init(ctx: &ReducerContext) {
         turn_timeout_secs: 15,
         min_players: 2,
         max_seats: 6,
+        start_countdown_secs: 3,
+        max_wait_rounds: 12,
     });
     log::info!("cardroom initialised");
 }
@@ -357,6 +381,8 @@ fn config(ctx: &ReducerContext) -> Config {
         turn_timeout_secs: 15,
         min_players: 2,
         max_seats: 6,
+        start_countdown_secs: 3,
+        max_wait_rounds: 12,
     })
 }
 
@@ -366,7 +392,13 @@ fn config(ctx: &ReducerContext) -> Config {
 
 /// Move money and record it. Every change to a bankroll goes through here, so
 /// the ledger can never disagree with the balance it describes.
-fn credit(ctx: &ReducerContext, account: &mut Account, kind: &str, amount: i64, game_id: Option<u64>) {
+fn credit(
+    ctx: &ReducerContext,
+    account: &mut Account,
+    kind: &str,
+    amount: i64,
+    game_id: Option<u64>,
+) {
     account.bankroll += amount;
     ctx.db.ledger().insert(LedgerEntry {
         entry_id: 0,
@@ -386,7 +418,14 @@ fn credit(ctx: &ReducerContext, account: &mut Account, kind: &str, amount: i64, 
 /// game, and borrowing it immutably lets callers pass fields of the same game as
 /// arguments (`log_event(ctx, &game, "join", …, game.buy_in, …)`) without
 /// fighting the borrow checker.
-fn log_event(ctx: &ReducerContext, game: &Game, kind: &str, handle: &str, amount: i64, detail: &str) {
+fn log_event(
+    ctx: &ReducerContext,
+    game: &Game,
+    kind: &str,
+    handle: &str,
+    amount: i64,
+    detail: &str,
+) {
     let seq = ctx.db.game_event().game_id().filter(game.game_id).count() as u32;
     ctx.db.game_event().insert(GameEvent {
         event_id: 0,
@@ -435,14 +474,25 @@ pub fn register(ctx: &ReducerContext, handle: String) -> Result<(), String> {
         registered_at: ctx.timestamp,
         banned: false,
     };
-    credit(ctx, &mut account, "signup_bonus", cfg.starting_capital, None);
+    credit(
+        ctx,
+        &mut account,
+        "signup_bonus",
+        cfg.starting_capital,
+        None,
+    );
     ctx.db.account().insert(account);
     Ok(())
 }
 
 /// Open a table and take the first seat. The join window starts now.
 #[spacetimedb::reducer]
-pub fn create_game(ctx: &ReducerContext, name: String, small_blind: i64, buy_in: i64) -> Result<(), String> {
+pub fn create_game(
+    ctx: &ReducerContext,
+    name: String,
+    small_blind: i64,
+    buy_in: i64,
+) -> Result<(), String> {
     let cfg = config(ctx);
     let account = require_account(ctx)?;
     if small_blind <= 0 || buy_in < small_blind * 4 {
@@ -458,7 +508,11 @@ pub fn create_game(ctx: &ReducerContext, name: String, small_blind: i64, buy_in:
     let starts_at = ctx.timestamp + Duration::from_secs(cfg.join_window_secs);
     let game = ctx.db.game().insert(Game {
         game_id: 0,
-        name: if name.trim().is_empty() { "Table".into() } else { name },
+        name: if name.trim().is_empty() {
+            "Table".into()
+        } else {
+            name
+        },
         created_by: ctx.sender(),
         small_blind,
         big_blind: small_blind * 2,
@@ -476,6 +530,7 @@ pub fn create_game(ctx: &ReducerContext, name: String, small_blind: i64, buy_in:
         created_at: ctx.timestamp,
         ended_at: None,
         winner: None,
+        wait_rounds: 0,
     });
 
     // One-shot timer: the join window closing is what locks the play set.
@@ -492,7 +547,12 @@ pub fn create_game(ctx: &ReducerContext, name: String, small_blind: i64, buy_in:
 /// Take a seat at a game that is still in its join window.
 #[spacetimedb::reducer]
 pub fn join_game(ctx: &ReducerContext, game_id: u64) -> Result<(), String> {
-    let game = ctx.db.game().game_id().find(game_id).ok_or("no such game")?;
+    let game = ctx
+        .db
+        .game()
+        .game_id()
+        .find(game_id)
+        .ok_or("no such game")?;
     if game.status != STATUS_WAITING {
         return Err("this game has already started — you can observe it instead".into());
     }
@@ -501,7 +561,12 @@ pub fn join_game(ctx: &ReducerContext, game_id: u64) -> Result<(), String> {
 
 fn seat_player(ctx: &ReducerContext, game_id: u64) -> Result<(), String> {
     let cfg = config(ctx);
-    let mut game = ctx.db.game().game_id().find(game_id).ok_or("no such game")?;
+    let mut game = ctx
+        .db
+        .game()
+        .game_id()
+        .find(game_id)
+        .ok_or("no such game")?;
     let mut account = require_account(ctx)?;
 
     if ctx.db.seat().account().find(ctx.sender()).is_some() {
@@ -540,7 +605,12 @@ fn seat_player(ctx: &ReducerContext, game_id: u64) -> Result<(), String> {
 /// Watch a game. Allowed at any status, including after it has ended.
 #[spacetimedb::reducer]
 pub fn observe_game(ctx: &ReducerContext, game_id: u64) -> Result<(), String> {
-    let mut game = ctx.db.game().game_id().find(game_id).ok_or("no such game")?;
+    let mut game = ctx
+        .db
+        .game()
+        .game_id()
+        .find(game_id)
+        .ok_or("no such game")?;
     let account = require_account(ctx)?;
     let already = ctx
         .db
@@ -585,7 +655,12 @@ pub fn stop_observing(ctx: &ReducerContext, game_id: u64) -> Result<(), String> 
 /// Leave a table, cashing chips back into the bankroll and releasing the seat.
 #[spacetimedb::reducer]
 pub fn leave_game(ctx: &ReducerContext) -> Result<(), String> {
-    let seat = ctx.db.seat().account().find(ctx.sender()).ok_or("not seated")?;
+    let seat = ctx
+        .db
+        .seat()
+        .account()
+        .find(ctx.sender())
+        .ok_or("not seated")?;
     cash_out(ctx, &seat);
     let game_id = seat.game_id;
     ctx.db.seat().seat_id().delete(seat.seat_id);
@@ -606,7 +681,13 @@ fn cash_out(ctx: &ReducerContext, seat: &Seat) {
         return;
     };
     if seat.chips > 0 {
-        credit(ctx, &mut account, "cash_out", seat.chips, Some(seat.game_id));
+        credit(
+            ctx,
+            &mut account,
+            "cash_out",
+            seat.chips,
+            Some(seat.game_id),
+        );
     }
     ctx.db.account().identity().update(account);
 }
@@ -630,7 +711,12 @@ fn require_account(ctx: &ReducerContext) -> Result<Account, String> {
 
 #[spacetimedb::reducer]
 pub fn credit_account(ctx: &ReducerContext, handle: String, amount: i64) -> Result<(), String> {
-    let mut account = ctx.db.account().handle().find(&handle).ok_or("no such account")?;
+    let mut account = ctx
+        .db
+        .account()
+        .handle()
+        .find(&handle)
+        .ok_or("no such account")?;
     credit(ctx, &mut account, "admin_credit", amount, None);
     ctx.db.account().identity().update(account);
     Ok(())
@@ -638,7 +724,12 @@ pub fn credit_account(ctx: &ReducerContext, handle: String, amount: i64) -> Resu
 
 #[spacetimedb::reducer]
 pub fn ban_account(ctx: &ReducerContext, handle: String, banned: bool) -> Result<(), String> {
-    let mut account = ctx.db.account().handle().find(&handle).ok_or("no such account")?;
+    let mut account = ctx
+        .db
+        .account()
+        .handle()
+        .find(&handle)
+        .ok_or("no such account")?;
     account.banned = banned;
     ctx.db.account().identity().update(account);
     Ok(())
@@ -652,7 +743,12 @@ pub fn ban_account(ctx: &ReducerContext, handle: String, banned: bool) -> Result
 /// the total you want committed on this street, and is ignored except on a raise.
 #[spacetimedb::reducer]
 pub fn act(ctx: &ReducerContext, action: String, amount: i64) -> Result<(), String> {
-    let seat = ctx.db.seat().account().find(ctx.sender()).ok_or("not seated")?;
+    let seat = ctx
+        .db
+        .seat()
+        .account()
+        .find(ctx.sender())
+        .ok_or("not seated")?;
     dealer::handle_action(ctx, seat, &action, amount)
 }
 
@@ -663,6 +759,12 @@ pub fn act(ctx: &ReducerContext, action: String, amount: i64) -> Result<(), Stri
 // timer into a call. Both are no-ops when the game has moved on, so a stale
 // timer can never corrupt a hand.
 // ---------------------------------------------------------------------------
+
+/// A client dropped: free its seat so the table is not held by a ghost.
+#[spacetimedb::reducer(client_disconnected)]
+pub fn on_disconnect(ctx: &ReducerContext) {
+    dealer::abandon_seat(ctx, ctx.sender());
+}
 
 /// Fires when a game's join window closes: locks the play set and deals.
 #[spacetimedb::reducer]
@@ -679,7 +781,12 @@ pub fn turn_timeout(ctx: &ReducerContext, timer: TurnTimer) {
 /// Close a game early — the admin counterpart to letting it play out.
 #[spacetimedb::reducer]
 pub fn close_game(ctx: &ReducerContext, game_id: u64) -> Result<(), String> {
-    let game = ctx.db.game().game_id().find(game_id).ok_or("no such game")?;
+    let game = ctx
+        .db
+        .game()
+        .game_id()
+        .find(game_id)
+        .ok_or("no such game")?;
     if game.status == STATUS_ENDED {
         return Ok(());
     }
