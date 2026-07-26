@@ -7,10 +7,14 @@ application server between the clients and the data.
 It exists to give `vantage-spacetimedb` something genuinely alive to read: many parallel games,
 per-account balances, an append-only event log, and continuous change with no operator input.
 
-Three parts:
+Four parts:
 
 - `module/` — the Rust WASM module: tables, two views, reducers, and scheduled timers that deal
   hands and fold players who stall.
+- `poker/` — cards and hand evaluation, as an ordinary crate. Split out of the module because a
+  native test harness cannot link against it: the SpacetimeDB bindings import `_console_log` from
+  the wasm host, so `cargo test` inside `module/` fails at the linker no matter what tests are
+  written. The evaluator needs no database, so out here `cargo test -p cardroom-poker` runs it.
 - `client/` — a dumb load client. `-n` spawns tasks; each registers an account and plays until its
   bankroll is gone.
 - `inventory/` — the YAML app: live game list, player rankings, and per-game drill-down.

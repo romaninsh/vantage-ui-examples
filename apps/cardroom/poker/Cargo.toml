@@ -1,0 +1,22 @@
+# Split out of `cardroom-module` so its tests can actually run.
+#
+# The module is a `cdylib` for `wasm32-unknown-unknown`, and linking a native
+# test harness against it fails: the SpacetimeDB bindings import `_console_log`
+# from the host, which does not exist off-wasm. So `cargo test` in the module
+# cannot build, and the hand evaluator's tests — the only real logic in there —
+# never ran, however many of them were written.
+#
+# The evaluator needs nothing from the database, so it does not have to live
+# behind that wall. Here it is an ordinary library in the examples workspace,
+# tested by a plain `cargo test`.
+[package]
+name = "cardroom-poker"
+version = "0.1.0"
+# Not the workspace's 2021: the evaluator uses let-chains, and it came from the
+# module, which is edition 2024.
+edition = "2024"
+license.workspace = true
+repository.workspace = true
+description = "Cards and hand evaluation for the cardroom example — no database, no host"
+
+[dependencies]

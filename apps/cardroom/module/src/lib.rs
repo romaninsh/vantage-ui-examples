@@ -43,7 +43,9 @@
 //!   denormalised onto the row, because no client can aggregate them.
 
 pub mod dealer;
-pub mod poker;
+/// Cards and hand evaluation, from the sibling crate that has no database in it
+/// — re-exported under the old path so `crate::poker::…` still reads naturally.
+pub use cardroom_poker as poker;
 
 use spacetimedb::{
     AnonymousViewContext, Identity, ReducerContext, ScheduleAt, SpacetimeType, Table, Timestamp,

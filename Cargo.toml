@@ -4,6 +4,9 @@ members = [
     "test-framework",
     "apps/launch-control/server",
     "apps/cardroom/client",
+    # The module itself is a standalone workspace (it builds for wasm), but the
+    # hand evaluator is plain Rust and belongs here, where `cargo test` reaches it.
+    "apps/cardroom/poker",
 ]
 
 [workspace.package]

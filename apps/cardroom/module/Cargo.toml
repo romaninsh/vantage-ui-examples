@@ -14,10 +14,18 @@ description = "SpacetimeDB module for the cardroom example — a multiplayer pok
 
 [lib]
 # `cdylib` is what `spacetime publish` compiles to wasm32-unknown-unknown.
-# `rlib` is added so the pure-logic modules (the hand evaluator) can be unit
-# tested natively with `cargo test`; it costs nothing in the published artefact.
-crate-type = ["cdylib", "rlib"]
+#
+# `rlib` used to be here too, on the theory that it let the hand evaluator be
+# unit tested natively. It never did: a native test harness has to link the
+# SpacetimeDB bindings, which import `_console_log` from the wasm host, so
+# `cargo test` failed at the linker whatever tests existed. The evaluator now
+# lives in `cardroom-poker`, where the tests genuinely run.
+crate-type = ["cdylib"]
 
 [dependencies]
 spacetimedb = "2.7"
 log = "0.4"
+# Cards and hand evaluation. A separate crate so its tests can run at all:
+# linking a native test harness against *this* crate fails on the bindings'
+# `_console_log` import, and the evaluator needs no database to be worth testing.
+cardroom-poker = { path = "../poker" }
