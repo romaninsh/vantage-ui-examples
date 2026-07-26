@@ -6,17 +6,17 @@
 //!
 //! ```sh
 //! # a fleet: outcomes only, plus a running total
-//! cargo run -p cardroom-client -- -n 5 --prefix fleet
+//! cargo run -p cardroom-client -- -n 5
 //!
 //! # one player: full hand history from that player's point of view
-//! cargo run -p cardroom-client -- -n 1 --prefix solo
+//! cargo run -p cardroom-client -- -n 1
 //! ```
 //!
-//! Run both at once and they share tables. Every run registers **new** players
-//! with fresh identities and a random tag, so repeated and concurrent runs never
-//! collide; `--prefix` is only there to make the output readable.
+//! Run both at once and they share tables. Every run registers **new** players,
+//! each with a fresh identity from the host and a name of its own.
 
 mod module_bindings;
+mod names;
 mod player;
 mod report;
 
@@ -40,14 +40,6 @@ struct Args {
     /// total — twenty streams of play-by-play is unreadable.
     #[arg(short = 'n', long = "players", default_value_t = 1)]
     players: usize,
-
-    /// Labels this run's players, e.g. `fleet-k3f9-0`.
-    ///
-    /// Every run generates fresh identities and a random tag, so two runs never
-    /// collide even with the same prefix — the prefix is only there to make the
-    /// output readable when several are going at once.
-    #[arg(long, default_value = "player")]
-    prefix: String,
 
     #[arg(long, default_value = "http://127.0.0.1:3000")]
     server: String,
@@ -96,19 +88,12 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
-    // A short random tag per run. Handles are unique in the module, so without
-    // this a second run would try to register names the first run already owns —
-    // under a different identity, which the server rightly refuses.
-    let run_tag = random_tag();
-
     println!(
-        "cardroom-client → {} / {}   {} player{} as {}-{}-*   mode: {}",
+        "cardroom-client → {} / {}   {} player{}   mode: {}",
         args.server,
         args.db,
         args.players,
         if args.players == 1 { "" } else { "s" },
-        args.prefix,
-        run_tag,
         if verbose {
             "verbose (single player)"
         } else {
@@ -116,17 +101,20 @@ async fn main() -> anyhow::Result<()> {
         }
     );
 
+    // Each player draws its own name; the number the server ends up accepting is
+    // what tells two Ingrid Marchettis apart, whether they are in this run or an
+    // earlier one.
     let mut tasks = Vec::with_capacity(args.players);
-    for index in 0..args.players {
+    for name in (0..args.players).map(|_| names::random_name()) {
         let args = args.clone();
         let fleet = Arc::clone(&fleet);
-        let tag = run_tag.clone();
         // Stagger the starts a little, so players do not all try to create the
         // same first game in the same instant.
         tokio::time::sleep(Duration::from_millis(120)).await;
         tasks.push(tokio::spawn(async move {
-            if let Err(e) = player::run(args, &tag, index, Arc::clone(&fleet)).await {
-                fleet.outcome(&format!("player{index}"), &format!("stopped: {e}"));
+            let label = name.clone();
+            if let Err(e) = player::run(args, name, Arc::clone(&fleet)).await {
+                fleet.outcome(&label, &format!("stopped: {e}"));
             }
         }));
     }
@@ -153,15 +141,3 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Four base-36 characters — enough to keep concurrent and repeated runs apart
-/// without making the handles unreadable.
-fn random_tag() -> String {
-    let mut n: u32 = rand::random::<u32>() % (36u32.pow(4));
-    let digits = b"0123456789abcdefghijklmnopqrstuvwxyz";
-    let mut out = [b'0'; 4];
-    for slot in out.iter_mut().rev() {
-        *slot = digits[(n % 36) as usize];
-        n /= 36;
-    }
-    String::from_utf8_lossy(&out).into_owned()
-}

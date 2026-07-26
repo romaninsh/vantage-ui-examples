@@ -15,14 +15,7 @@ use crate::module_bindings::*;
 use crate::report::Fleet;
 use crate::Args;
 
-pub async fn run(args: Args, run_tag: &str, index: usize, fleet: Arc<Fleet>) -> anyhow::Result<()> {
-    // A fresh handle every run. Handles are unique in the module, so reusing one
-    // across runs would collide with the account that already owns it — and the
-    // identity behind that account is not this process's. Randomising sidesteps
-    // it entirely, at the cost of leaving old accounts behind (which is fine:
-    // they are the history the dashboard reads).
-    let handle = format!("{}-{run_tag}-{index}", args.prefix);
-
+pub async fn run(args: Args, name: String, fleet: Arc<Fleet>) -> anyhow::Result<()> {
     // No saved credentials: each run is a new player, so we connect anonymously
     // and let the host mint us an identity.
     let connection = DbConnection::builder()
@@ -58,7 +51,25 @@ pub async fn run(args: Args, run_tag: &str, index: usize, fleet: Arc<Fleet>) -> 
         tokio::time::sleep(Duration::from_millis(100)).await;
     }
 
-    register_account(&connection, &handle).await?;
+    // A name may already belong to a player from an earlier run — handles are
+    // unique across every account the module has ever seen, and this client
+    // registers new accounts each time. That is not a failure, so take another
+    // name rather than giving up. (The old accounts stay behind on purpose:
+    // they are the history the dashboard reads.)
+    let mut seq = 1;
+    let mut handle = format!("{name} {seq}");
+    loop {
+        match register_account(&connection, &handle).await {
+            Ok(()) => break,
+            Err(e) if e.to_string().contains("is taken") && seq < 500 => {
+                seq += 1;
+                handle = format!("{name} {seq}");
+            }
+            // A different refusal, or five hundred of the same name already at
+            // the tables — either way, not something to paper over.
+            Err(e) => return Err(e),
+        }
+    }
 
     let me = connection.identity();
     let bankroll = connection
@@ -109,6 +120,13 @@ async fn join_table(connection: &DbConnection, game_id: u64) -> anyhow::Result<(
     let (callback, rx) = outcome_channel();
     connection.reducers().join_game_then(game_id, callback)?;
     awaited(rx, &format!("joining game {game_id}")).await
+}
+
+/// Cash out and free the seat.
+async fn leave_table(connection: &DbConnection) -> anyhow::Result<()> {
+    let (callback, rx) = outcome_channel();
+    connection.reducers().leave_game_then(callback)?;
+    awaited(rx, "leaving the table").await
 }
 
 /// Open a table, and find out whether it was created.
@@ -230,6 +248,20 @@ async fn play_until_broke(
                     continue;
                 };
 
+                // Busted: chips gone, but the bankroll may still afford a
+                // rebuy. Leaving frees the seat — a busted player who stays is
+                // never dealt in again and never asked to act, so the client
+                // sits there silently forever looking like it has hung.
+                if seat.chips <= 0 && game.status != "ended" {
+                    fleet.outcome(handle, &format!("busted out of game {}", game.game_id));
+                    match leave_table(connection).await {
+                        Ok(()) => fleet.left(),
+                        Err(e) => fleet.detail(|| format!("could not leave the table: {e}")),
+                    }
+                    tokio::time::sleep(Duration::from_millis(400)).await;
+                    continue;
+                }
+
                 if game.status == "ended" {
                     games_finished += 1;
                     fleet.outcome(
@@ -311,7 +343,7 @@ async fn play_until_broke(
                         fleet.hint(&format!(
                             "no one has joined {LONELY_LIMIT} tables in a row — a game needs at \
                              least {} players.\n            Start more in another terminal:  \
-                             cargo run -p cardroom-client -- -n 5 --prefix fleet\n            \
+                             cargo run -p cardroom-client -- -n 5\n            \
                              (waiting longer between tables now, so players finishing other \
                              games have time to find yours)",
                             min_players(connection)
@@ -410,6 +442,23 @@ fn decide(game: &Game, seat: &Seat) -> (&'static str, i64) {
     ("call", owed)
 }
 
+/// Whether a row arrived because something *just happened*, rather than because
+/// a subscription is replaying history.
+///
+/// The distinction that matters is not "did I cause this". `Event::Reducer` is
+/// only ever a reducer **this client** invoked; a transaction anyone else caused
+/// — another player acting, a turn timing out, the sweeper — arrives as
+/// `Event::Transaction`. Testing for `Reducer` alone therefore drops most of the
+/// game: pots won when an opponent closed the hand went uncounted, and the hand
+/// history showed an opponent's actions only when our own action happened to
+/// trigger them in the same transaction.
+fn is_live(event: &spacetimedb_sdk::Event<Reducer>) -> bool {
+    matches!(
+        event,
+        spacetimedb_sdk::Event::Reducer(_) | spacetimedb_sdk::Event::Transaction
+    )
+}
+
 /// Count pots this player wins, from the server's own `win` events.
 ///
 /// Only our own handle: every client sees every event, so counting them all
@@ -417,7 +466,7 @@ fn decide(game: &Game, seat: &Seat) -> (&'static str, i64) {
 fn track_chip_movement(connection: &DbConnection, handle: &str, fleet: Arc<Fleet>) {
     let me = handle.to_string();
     connection.db().game_event().on_insert(move |ctx, ev| {
-        if !matches!(ctx.event, spacetimedb_sdk::Event::Reducer(_)) {
+        if !is_live(&ctx.event) {
             return;
         }
         if ev.kind == "win" && ev.handle == me {
@@ -433,6 +482,16 @@ fn track_chip_movement(connection: &DbConnection, handle: &str, fleet: Arc<Fleet
 /// appear in `show` events, which the module writes at showdown. If this ever
 /// prints an opponent's cards early, that is a server bug, not a client feature.
 fn install_commentary(connection: &DbConnection, handle: &str, fleet: Arc<Fleet>) {
+    // Which table we are sitting at. Every other client's play arrives here too —
+    // the subscription is `SELECT * FROM game_event`, server-wide — so without
+    // this the hand history is half a dozen tables shuffled together, with two
+    // different boards and two different pots under the same "turn:" heading.
+    //
+    // Remembered rather than looked up each time, because a seat is deleted the
+    // moment its game ends and the last few events of a hand would otherwise be
+    // dropped as belonging to nobody.
+    let my_game = Arc::new(std::sync::atomic::AtomicU64::new(0));
+
     {
         let fleet = Arc::clone(&fleet);
         connection.db().my_hole_cards().on_insert(move |_ctx, row| {
@@ -446,8 +505,14 @@ fn install_commentary(connection: &DbConnection, handle: &str, fleet: Arc<Fleet>
     {
         let fleet = Arc::clone(&fleet);
         let me = handle.to_string();
+        let my_game = Arc::clone(&my_game);
         connection.db().seat().on_insert(move |ctx, seat| {
-            if !matches!(ctx.event, spacetimedb_sdk::Event::Reducer(_)) || seat.handle == me {
+            // Our own seat is what tells us which table to narrate.
+            if seat.handle == me {
+                my_game.store(seat.game_id, Ordering::Relaxed);
+                return;
+            }
+            if !is_live(&ctx.event) || seat.game_id != my_game.load(Ordering::Relaxed) {
                 return;
             }
             let seated = ctx
@@ -489,12 +554,12 @@ fn install_commentary(connection: &DbConnection, handle: &str, fleet: Arc<Fleet>
     {
         let fleet = Arc::clone(&fleet);
         let me = handle.to_string();
+        let my_game = Arc::clone(&my_game);
         connection.db().game_event().on_insert(move |ctx, ev| {
             // The initial subscription replays every historical event at once and
             // in no particular order. Narrating those would print a scrambled
-            // backlog before the first live hand; only reducer-driven events are
-            // things that just happened.
-            if !matches!(ctx.event, spacetimedb_sdk::Event::Reducer(_)) {
+            // backlog before the first live hand.
+            if !is_live(&ctx.event) || ev.game_id != my_game.load(Ordering::Relaxed) {
                 return;
             }
             let who = if ev.handle == me {

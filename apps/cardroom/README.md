@@ -40,10 +40,10 @@ docker run -d --name cardroom-stdb -p 3000:3000 \
 cd module && spacetimedb-cli publish --server local --yes cardroom
 
 # 3. deal some players in — outcomes plus a running fleet total
-cargo run -p cardroom-client -- -n 5 --prefix fleet
+cargo run -p cardroom-client -- -n 5
 
 # 4. in another terminal, one player with a full hand history
-cargo run -p cardroom-client -- -n 1 --prefix solo
+cargo run -p cardroom-client -- -n 1
 
 # 5. point vantage-ui at the inventory (in the vantage-ui repo)
 cargo run -p vantage-ui -- --config ../vantage-ui-examples/apps/cardroom/inventory
@@ -60,11 +60,10 @@ happened. Delete it and republish with the name:
     spacetimedb-cli publish --server local --yes cardroom
 ```
 
-**Every run creates new players.** Each gets a fresh identity from the host and a handle tagged with
-a random per-run string (`fleet-a1hk-0`), because handles are unique in the module — reusing one
-would collide with the account that already owns it. `--prefix` is only there to keep the output
-readable when several runs are going at once. Old accounts stay behind, which is the point: they are
-the history the dashboard reads.
+**Every run creates new players.** Each gets a fresh identity from the host and a name — `Ingrid
+Marchetti 1`. The trailing number is what keeps handles unique, which the module requires across
+every account it has ever seen: a second Ingrid Marchetti sits down as `Ingrid Marchetti 2`. Old
+accounts stay behind, which is the point: they are the history the dashboard reads.
 
 **Running one player alone will not deal a hand.** A game needs at least two. The table now *stays
 open* while it waits rather than being binned every join window, so a second player arriving a minute
@@ -82,11 +81,11 @@ opponents show at a showdown.
 ```
             dealt Js 7d
             ── hand 3 ──
-            fleet-3 posts 25 (small blind)
+            Nils Petrov 1 posts 25 (small blind)
             flop: board Ac Kc Kd  (pot 500)
             my turn — pot 500, to call 50, my chips 950 → call
-            fleet-0 shows pair with Ks Td
-            fleet-4 wins 1000 (showdown)
+            Mei Tanaka 2 shows pair with Ks Td
+            Nils Petrov 1 wins 1000 (showdown)
 ```
 
 Opponents' cards appear **only** at showdown, and that is the database's doing rather than the
