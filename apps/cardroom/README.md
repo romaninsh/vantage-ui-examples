@@ -15,6 +15,19 @@ Three parts:
   bankroll is gone.
 - `inventory/` — the YAML app: live game list, player rankings, and per-game drill-down.
 
+### `client/src/module_bindings/` is client code, not server code
+
+It looks server-ish because it is *derived* from the module, but nothing in it runs in the database.
+`spacetime generate` reads the module's schema and emits the client half of the contract: row structs
+for what this client receives into its cache, typed table handles (`ctx.db.account()`), and reducer
+**call stubs** that send `CallReducer` messages over the wire. The relationship is the one an
+OpenAPI-generated client has to its API — one schema, two derived sides.
+
+It is committed so `cargo build` works with neither the SpacetimeDB CLI nor Docker installed. The
+cost is that it can go stale, so **run `./regenerate-bindings.sh` after any change to a table, view
+or reducer** in `module/src/lib.rs`. The directory is marked `linguist-generated`, so reviews collapse
+it.
+
 ## Run
 
 ```bash
@@ -25,12 +38,53 @@ docker run -d --name cardroom-stdb -p 3000:3000 \
 # 2. publish the module
 cd module && spacetime publish --server local --yes cardroom
 
-# 3. deal some players in
-cargo run -p cardroom-client -- -n 20
+# 3. deal some players in — outcomes plus a running fleet total
+cargo run -p cardroom-client -- -n 5 --prefix fleet
 
-# 4. point vantage-ui at the inventory (in the vantage-ui repo)
+# 4. in another terminal, one player with a full hand history
+cargo run -p cardroom-client -- -n 1 --prefix solo
+
+# 5. point vantage-ui at the inventory (in the vantage-ui repo)
 cargo run -p vantage-ui -- --config ../vantage-ui-examples/apps/cardroom/inventory
 ```
+
+**Use a different `--prefix` for each process.** It names the players' saved identity tokens, so two
+runs do not fight over the same accounts — and so a restart reconnects as the same players rather
+than collecting fresh signup bonuses.
+
+## The client has two modes, because it has two jobs
+
+`-n 1` is a debugging lens: a full hand history from that player's point of view, including what
+opponents show at a showdown.
+
+```
+            dealt Js 7d
+            ── hand 3 ──
+            fleet-3 posts 25 (small blind)
+            flop: board Ac Kc Kd  (pot 500)
+            my turn — pot 500, to call 50, my chips 950 → call
+            fleet-0 shows pair with Ks Td
+            fleet-4 wins 1000 (showdown)
+```
+
+Opponents' cards appear **only** at showdown, and that is the database's doing rather than the
+client's restraint: `hole_cards` is private, and `my_hole_cards` is a view scoped to the caller. If
+this ever prints an opponent's cards early, it is a server bug.
+
+`-n 5` and above drops the play-by-play — twenty streams of it is unreadable — and prints one line
+per outcome plus a periodic fleet total:
+
+```
+[00:00:40]  players 5 (5 playing, 0 busted)  games 5  pots won 3
+            bankroll 45,000  staked 5,000  granted 50,000  ✓ conserved
+```
+
+**The `conserved` marker is the point.** Players cannot create money — the only inflow is the signup
+bonus — so `bankroll + staked` must always equal what was granted, where `staked` counts both seat
+chips and the live pots of tables we sit at. That makes the load client a continuous
+chip-conservation check on the dealer: a leak shows up as drift within seconds instead of being found
+later by reading a ledger. Drift is reported loudly and the client keeps running, because the size
+and direction of the drift is the diagnostic.
 
 The CLI on crates.io is far behind the server, so install it from the matching release tag:
 

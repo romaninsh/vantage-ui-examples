@@ -1,6 +1,10 @@
 [workspace]
 resolver = "2"
-members = ["test-framework", "apps/launch-control/server"]
+members = [
+    "test-framework",
+    "apps/launch-control/server",
+    "apps/cardroom/client",
+]
 
 [workspace.package]
 edition = "2021"
