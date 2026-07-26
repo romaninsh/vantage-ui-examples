@@ -1,0 +1,23 @@
+# Standalone workspace on purpose. This crate compiles to
+# `wasm32-unknown-unknown` and is built by `spacetime publish`, not by the
+# examples workspace; keeping it out avoids feature unification with the native
+# crates and lets it carry its own lockfile. (`launch-control/server` *is* a
+# workspace member, because it is an ordinary native binary.)
+[workspace]
+
+[package]
+name = "cardroom-module"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "SpacetimeDB module for the cardroom example — a multiplayer poker server"
+
+[lib]
+# `cdylib` is what `spacetime publish` compiles to wasm32-unknown-unknown.
+# `rlib` is added so the pure-logic modules (the hand evaluator) can be unit
+# tested natively with `cargo test`; it costs nothing in the published artefact.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+spacetimedb = "2.7"
+log = "0.4"
