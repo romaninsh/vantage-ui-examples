@@ -1,0 +1,18 @@
+[package]
+name = "cardroom-client"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Load client for the cardroom example — spawns players that register, join games and play until broke"
+
+[dependencies]
+# The official SDK, used the way it is meant to be used: one known module, with
+# bindings generated at build time by `spacetime generate`. (The Vantage driver
+# deliberately does *not* use it — a datasource is named in YAML at runtime, so
+# there is no point at which its schema is known early enough to generate from.)
+spacetimedb-sdk = "2.7"
+
+tokio = { version = "1", features = ["full"] }
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+rand = "0.8"

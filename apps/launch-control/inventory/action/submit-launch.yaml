@@ -17,7 +17,7 @@ http:
   # The hosted server's address (matches datasource/local.yaml). Hardcoded
   # rather than ${ENV} because http_request errors on an unset var. For local
   # runs, point this at http://127.0.0.1:8080/sim/launches.
-  url: "https://launch-control.vantage-ui.com/sim/launches"
+  url: "http://127.0.0.1:8080/sim/launches"
   headers:
     Content-Type: "application/json"
   body:

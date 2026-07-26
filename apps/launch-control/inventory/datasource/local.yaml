@@ -14,7 +14,7 @@
 
 description: "launch-control — self-hosted, flaky Launch Library 2 server."
 type: api-client
-url: "https://launch-control.vantage-ui.com"
+url: "http://127.0.0.1:8080"
 response_key: results
 total_key: count
 pagination:
