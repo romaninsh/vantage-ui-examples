@@ -35,8 +35,9 @@ it.
 docker run -d --name cardroom-stdb -p 3000:3000 \
     clockworklabs/spacetime:v2.7.0-hotfix3 start --listen-addr 0.0.0.0:3000
 
-# 2. publish the module
-cd module && spacetime publish --server local --yes cardroom
+# 2. publish the module — the trailing `cardroom` is the database NAME and is
+#    required; omit it and you silently get a new nameless database instead
+cd module && spacetimedb-cli publish --server local --yes cardroom
 
 # 3. deal some players in — outcomes plus a running fleet total
 cargo run -p cardroom-client -- -n 5 --prefix fleet
@@ -48,9 +49,20 @@ cargo run -p cardroom-client -- -n 1 --prefix solo
 cargo run -p vantage-ui -- --config ../vantage-ui-examples/apps/cardroom/inventory
 ```
 
-**Use a different `--prefix` for each process.** It names the players' saved identity tokens, so two
-runs do not fight over the same accounts — and so a restart reconnects as the same players rather
-than collecting fresh signup bonuses.
+```admonish warning title="The database name is a positional argument"
+`spacetimedb-cli publish --server local` with no name **succeeds** — it creates a fresh, nameless
+database and prints its identity. Nothing warns you, and every later command that says `cardroom`
+then talks to a different database than the one you just published. If a publish reports
+*"Created new database with identity: …"* rather than *"…with name: cardroom"*, that is what
+happened. Delete it and republish with the name:
+
+    spacetimedb-cli delete --server local <that-identity>
+    spacetimedb-cli publish --server local --yes cardroom
+```
+
+**Use a different `--prefix` for each client process.** It names the players' saved identity tokens,
+so two runs do not fight over the same accounts — and so a restart reconnects as the same players
+rather than collecting fresh signup bonuses.
 
 ## The client has two modes, because it has two jobs
 
@@ -86,19 +98,42 @@ chip-conservation check on the dealer: a leak shows up as drift within seconds i
 later by reading a ledger. Drift is reported loudly and the client keeps running, because the size
 and direction of the drift is the diagnostic.
 
-The CLI on crates.io is far behind the server, so install it from the matching release tag:
+## Installing the CLI
+
+The `spacetimedb-cli` crate on crates.io is far behind the server (1.3.0 against a 2.7 host), and an
+old CLI generates stale-protocol bindings. Install from the tag that matches the image instead:
 
 ```bash
 cargo install --git https://github.com/clockworklabs/SpacetimeDB \
     --tag v2.7.0-hotfix3 spacetimedb-cli --locked
 ```
 
-`spacetime login` needs a TTY. Against a local host you can mint an identity over HTTP instead:
+```admonish note title="It installs as `spacetimedb-cli`, not `spacetime`"
+The official docs all say `spacetime …`, but `cargo install` names the binary after the crate. This
+README uses `spacetimedb-cli` throughout to match what you actually get. If you would rather follow
+the upstream docs verbatim, alias it:
+
+    ln -s ~/.cargo/bin/spacetimedb-cli ~/.cargo/bin/spacetime
+```
+
+`spacetimedb-cli login` needs a TTY, which makes it awkward from a script. Against a local host you
+can mint an identity over HTTP instead:
 
 ```bash
 TOKEN=$(curl -s -X POST http://127.0.0.1:3000/v1/identity | jq -r .token)
-spacetime login --token "$TOKEN"
+spacetimedb-cli login --token "$TOKEN"
 ```
+
+Publishing also prints *"Could not find wasm-opt to optimise the module"*. That is harmless — the
+module is published unoptimised, which is fine for a demo. Install
+[binaryen](https://github.com/WebAssembly/binaryen/releases) if you want it quiet.
+
+## Writes need the owner's identity
+
+SpacetimeDB restricts SQL `INSERT`/`UPDATE`/`DELETE` to the identity that **published** the database.
+Any other valid token is refused with *"not authorized to run SQL DML statements"*. Reducers are the
+write path open to everyone else, which is the idiomatic route anyway — they enforce the module's own
+rules, and raw DML bypasses them.
 
 ## The player journey
 
