@@ -349,7 +349,8 @@ pub fn top_players(ctx: &AnonymousViewContext) -> Vec<PlayerRanking> {
             games_won: a.games_won,
         })
         .collect();
-    rows.sort_by(|a, b| b.bankroll.cmp(&a.bankroll));
+    // Descending, so the leaderboard reads top-first.
+    rows.sort_by_key(|r| std::cmp::Reverse(r.bankroll));
     rows.truncate(100);
     rows
 }

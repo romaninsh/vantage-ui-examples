@@ -343,7 +343,7 @@ pub fn handle_action(
             }
             log_event(
                 ctx,
-                &mut game,
+                &game,
                 if pay == 0 { "check" } else { "call" },
                 &handle,
                 pay,
