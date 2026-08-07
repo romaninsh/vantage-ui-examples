@@ -9,16 +9,19 @@
 # min_version: lowest Vantage UI version that can open the example. The app
 #              displays this and disables Install on older builds. Bump it when
 #              an example starts relying on a newer feature.
+# url:         the published archive. The in-app gallery lists only entries
+#              that carry one (tour-only entries stay website-only).
 apps:
   - slug: launch-control
     title: "Launch Control"
-    persona: "Web & mobile backends"
-    persona_url: "/solutions/developers/"
+    persona: "Live data"
+    persona_url: "/solutions/live-data/"
     status: "available"
     min_version: "0.15.0"
     icon: "rocket_launch"
     blurb: "A live mission-control console for global spaceflight — 15 related entities, real-time launch countdowns and a deliberately flaky API the UI rides straight through. A full Rust server plus a YAML console."
     repo_path: "apps/launch-control/inventory"
+    url: "https://vantage-ui.com/examples/launch-control.zip"
     screenshot: "images/vantage-ui-app.png"
     tour_url: "/examples/launch-control/"
     demonstrates:
@@ -28,13 +31,14 @@ apps:
 
   - slug: periscope
     title: "Periscope"
-    persona: "Internal tools (SRE)"
-    persona_url: "/solutions/internal-tools-teams/"
+    persona: "Internal tools"
+    persona_url: "/solutions/internal-tools/"
     status: "available"
     min_version: "0.20.0"
     icon: "lan"
     blurb: "A Lens-style control room for Kubernetes — nodes, namespaces and every standard workload as drillable, related tables, with capacity dashboards and vertical drill-downs. Backed by a native Kubernetes datasource: no kubectl, no proxy."
     repo_path: "apps/periscope/inventory"
+    url: "https://vantage-ui.com/examples/periscope.zip"
     screenshot: "images/changelog/0.20/01-full.webp"
     tour_url: "/examples/periscope/"
     demonstrates:
@@ -58,13 +62,14 @@ apps:
 
   - slug: bakery
     title: "Bakery franchise"
-    persona: "Internal-tools teams"
-    persona_url: "/solutions/internal-tools-teams/"
+    persona: "Internal tools"
+    persona_url: "/solutions/internal-tools/"
     status: "available"
     min_version: "0.14.0"
     icon: "storefront"
     blurb: "A back-office admin for a bakery franchise — products, clients and orders, with dashboards and an order-status workflow."
     repo_path: "apps/bakery/inventory"
+    url: "https://vantage-ui.com/examples/bakery.zip"
     screenshot: "images/vantage-ui-app.png"
     demonstrates:
       - "CRUD grids with form and confirmation dialogs"
@@ -73,8 +78,8 @@ apps:
 
   - slug: spacex
     title: "SpaceX GraphQL explorer"
-    persona: "Web & mobile backends"
-    persona_url: "/solutions/developers/"
+    persona: "Data mesh"
+    persona_url: "/solutions/data-mesh/"
     status: "coming"
     min_version: "0.14.0"
     icon: "rocket_launch"
@@ -87,8 +92,8 @@ apps:
 
   - slug: aws-console
     title: "AWS control console"
-    persona: "Internal tools (SRE)"
-    persona_url: "/solutions/internal-tools-teams/"
+    persona: "Internal tools"
+    persona_url: "/solutions/internal-tools/"
     status: "coming"
     min_version: "0.15.0"
     icon: "cloud"
