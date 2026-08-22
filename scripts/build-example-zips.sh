@@ -10,6 +10,12 @@
 #   __pycache__/       Python bytecode from helper scripts
 #   *-schema-*.json    JSON schemas — the app rewrites these on open
 #   <folder>/README.md scaffolder-written per-folder READMEs
+#   AGENTS.md          skill pointer file — reinstalled on open
+#   manifest.yaml      the app's own install record — machine-local
+#
+# Everything in that second group is also gitignored, so a CI checkout does not
+# have it to begin with; the excludes keep a local run producing the same
+# archive as CI.
 #
 # Executable helper scripts under `scripts/` ARE included (the whole point of
 # the cmd backend) — `zip` preserves their unix mode, which the installer reads
@@ -33,11 +39,15 @@ excludes=(
     '*/__pycache__/*'
     '*.DS_Store'
     'inventory/**/*-schema-*.json'
+    'inventory/AGENTS.md'
+    'inventory/manifest.yaml'
     'inventory/datasource/README.md'
     'inventory/table/README.md'
     'inventory/page/README.md'
     'inventory/menu/README.md'
     'inventory/action/README.md'
+    'inventory/view/README.md'
+    'inventory/form/README.md'
 )
 
 built=0

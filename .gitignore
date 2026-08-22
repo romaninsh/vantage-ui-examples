@@ -8,20 +8,33 @@
 # Per-model redb caches — regenerated at runtime by vantage-ui. Ignore
 # everywhere, not just under inventory/, so no app can leak them into git.
 **/.cache/
-**/inventory/**/*-schema-*.json
 # Installed agent-skill bundles (reproducible — installed under .agents/skills,
-# treated like vendored deps; AGENTS.md describing them is committed).
+# treated like vendored deps).
 **/.agents/
 
 # Per-app local secrets — inventory/.env can hold real credentials (AWS keys,
 # tokens). Never commit; .env.example documents the shape.
 **/inventory/.env
-# Per-folder READMEs the scaffolder writes into datasource/table/page/menu/action
-**/inventory/datasource/README.md
-**/inventory/table/README.md
-**/inventory/page/README.md
-**/inventory/menu/README.md
-**/inventory/action/README.md
+# Everything vantage-ui rewrites on open, from the running build: the JSON
+# schemas, the per-kind folder README, and the AGENTS.md pointer file. Commit
+# them and they go stale the moment the build moves, so every version bump
+# becomes a diff nobody wrote. Matched without an `inventory/` prefix because
+# apps use both layouts — apps/<app>/inventory/<kind>/ and apps/<app>/<kind>/.
+#
+# Kind folders are listed one by one rather than globbed as */README.md: apps
+# also keep hand-written READMEs a level down (periscope/cluster/,
+# launch-control/server/), and those must stay tracked. A new kind folder
+# needs a line here.
+**/*-schema-*.json
+**/AGENTS.md
+**/manifest.yaml
+**/datasource/README.md
+**/table/README.md
+**/page/README.md
+**/menu/README.md
+**/action/README.md
+**/view/README.md
+**/form/README.md
 
 # Downloaded app binary / DMG (CI fetches these at runtime)
 /vantage.dmg
