@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Employee months
+id_column: rid
+columns:
+  # Synthetic row identity: the marts have composite grains and no PK, and
+  # vantage dedupes rows by id — so the id must cover the full grain.
+  # (Projected in the query below; column-level `expr:` is not wired for
+  # the Postgres driver yet.)
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string }
+  - { name: employee_id, type: string }
+  - { name: full_name, type: string, flags: [title] }
+  - { name: job_function, type: string }
+  - { name: seniority_code, type: string }
+  - { name: seniority_rank, type: int }
+  - { name: work_type, type: string }
+  - { name: location_region, type: string }
+  - { name: city, type: string }
+  - { name: lob_id, type: string }
+  - { name: lob_name, type: string }
+  - { name: resource_org, type: string }
+  - { name: team_org_id, type: string }
+  - { name: team_code, type: string }
+  - { name: team_name, type: string }
+  - { name: section_id, type: string }
+  - { name: department_id, type: string }
+  - { name: division_id, type: string }
+  - { name: org_path, type: string }
+  - { name: tokens, type: int }
+  - { name: spend_usd, type: float }
+  - { name: models_used, type: int }
+  - { name: apps_used, type: int }
+  - { name: had_spike, type: bool }
+  - { name: top_platform_id, type: string }
+  - { name: top_model_id, type: string }
+  - { name: top_tier_share, type: float }
+postgres:
+  rhai: |
+    select().from("mart_employee_month")
+        .expression(expr("coalesce(month_key,'') || ':' || coalesce(employee_id,'') || ':' || coalesce(full_name,'') || ':' || coalesce(job_function,'') || ':' || coalesce(seniority_code,'') || ':' || coalesce(work_type,'') || ':' || coalesce(location_region,'') || ':' || coalesce(city,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(team_org_id,'') || ':' || coalesce(team_code,'') || ':' || coalesce(team_name,'') || ':' || coalesce(section_id,'') || ':' || coalesce(department_id,'') || ':' || coalesce(division_id,'') || ':' || coalesce(org_path,'') || ':' || coalesce(top_platform_id,'') || ':' || coalesce(top_model_id,'')").alias("rid"))
+        .field("month_key")
+        .field("employee_id")
+        .field("full_name")
+        .field("job_function")
+        .field("seniority_code")
+        .field("seniority_rank")
+        .field("work_type")
+        .field("location_region")
+        .field("city")
+        .field("lob_id")
+        .field("lob_name")
+        .field("resource_org")
+        .field("team_org_id")
+        .field("team_code")
+        .field("team_name")
+        .field("section_id")
+        .field("department_id")
+        .field("division_id")
+        .field("org_path")
+        .field("tokens")
+        .field("spend_usd")
+        .field("models_used")
+        .field("apps_used")
+        .field("had_spike")
+        .field("top_platform_id")
+        .field("top_model_id")
+        .field("top_tier_share")

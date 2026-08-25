@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Watch · team efficiency
+id_column: org_id
+columns:
+  - { name: org_id, type: string, flags: [id, hidden] }
+  - { name: level, type: string }
+  - { name: org_name, type: string, flags: [title] }
+  - { name: unit_meta, type: string }
+  - { name: users_display, type: string }
+  - { name: spend_display, type: string }
+  - { name: per_user_display, type: string }
+  - { name: vs_median_display, type: string }
+  - { name: quadrant, type: string }
+  - { name: tier_display, type: string }
+  - { name: excess_display, type: string }
+postgres:
+  # Prototype semantics (src/ TeamEfficiencyPanel): medians across L6 teams
+  # as the single yardstick; vs-median ratio; four quadrants; SIGNED excess
+  # = spend x (tier - median)/1 x (1 - base_rate/top_rate) — only the rate
+  # gap is recoverable, negative means below benchmark. Flat rows (the
+  # manager tree waits on the expandable grid, VAN-209).
+  rhai: |
+    let scoped = select().from("mart_team_month")
+        .expression(expr("org_id").alias("org_id"))
+        .expression(expr("'L' || max(org_level)").alias("level"))
+        .expression(expr("max(org_name)").alias("org_name"))
+        .expression(expr("max(lob_name)").alias("lob_name"))
+        .expression(expr("sum(spend_usd)").alias("spend"))
+        .expression(expr("max(active)").alias("active"))
+        .expression(expr("sum(spend_usd) / NULLIF(max(active), 0)").alias("per_user"))
+        .expression(expr("round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4)").alias("top_tier_share"))
+        .group_by(expr("org_id"));
+    select().from_as(scoped, "s")
+        .field("org_id")
+        .field("level")
+        .field("org_name")
+        .expression(expr("lob_name").alias("unit_meta"))
+        .expression(expr("to_char(active, 'FM999,999,999')").alias("users_display"))
+        .expression(expr("CASE WHEN abs(spend) >= 1e6 THEN (CASE WHEN (spend) < 0 THEN '−' ELSE '' END) || '$' || to_char(abs(spend) / 1e6, 'FM999,990.00') || 'M' ELSE (CASE WHEN (spend) < 0 THEN '−' ELSE '' END) || '$' || to_char(round(abs(spend)), 'FM999,999,999') END").alias("spend_display"))
+        .expression(expr("'$' || to_char(round(coalesce(per_user, 0)), 'FM999,999')").alias("per_user_display"))
+        .expression(expr("to_char(round(per_user / NULLIF((SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY s / NULLIF(a, 0))::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf), 0), 1), 'FM999,990.0') || 'x'").alias("vs_median_display"))
+        .expression(expr("CASE WHEN per_user >= (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY s / NULLIF(a, 0))::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf) THEN (CASE WHEN top_tier_share >= (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf) THEN 'Heavy and pricey' ELSE 'Heavy but lean' END) ELSE (CASE WHEN top_tier_share >= (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf) THEN 'Light but pricey' ELSE 'Light and lean' END) END").alias("quadrant"))
+        .expression(expr("to_char(round(100.0 * coalesce(top_tier_share, 0)), 'FM990') || '%'").alias("tier_display"))
+        .expression(expr("CASE WHEN abs(round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0)) >= 1e6 THEN (CASE WHEN (round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0)) < 0 THEN '−' ELSE '' END) || '$' || to_char(abs(round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0)) / 1e6, 'FM999,990.00') || 'M' ELSE (CASE WHEN (round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0)) < 0 THEN '−' ELSE '' END) || '$' || to_char(round(abs(round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0))), 'FM999,999,999') END").alias("excess_display"))
+        .order_by(expr("round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0)"), "desc")

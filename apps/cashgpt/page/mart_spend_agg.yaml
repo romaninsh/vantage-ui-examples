@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Spend cube (coarse)
+body:
+  - kind: binder
+    name: mart_spend_agg
+    observe: mart_spend_agg
+    params:
+      default_sort: { column: month_key, direction: desc }

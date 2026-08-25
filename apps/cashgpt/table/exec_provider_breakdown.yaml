@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Exec · exec_provider_breakdown
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rank, type: int, flags: [hidden] }
+  - { name: member, type: string, flags: [title] }
+  - { name: mom, type: string }
+  - { name: total_display, type: string }
+  - { name: share, type: string }
+  - { name: share_pct, type: float }
+postgres:
+  # Reference: BreakdownList beside the provider trajectory — MoM compares
+  # the scope's last two months; rising spend is bad (▲ paints red).
+  # Rows sort by slot rank so colours line up with the chart.
+  rhai: |
+    select().from("mart_spend_agg")
+            .expression(expr("(provider_group) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))
+            .expression(expr("coalesce(month_key, {})", ["Year to date"]).alias("month_key"))
+            .expression(expr("CASE WHEN provider_group = 'Anthropic' THEN 1 WHEN provider_group = 'OpenAI' THEN 2 WHEN provider_group = 'GitHub' THEN 3 WHEN provider_group = 'Other' THEN 4 WHEN provider_group = 'Amazon' THEN 5 WHEN provider_group = 'Meta' THEN 6 ELSE 99 END").alias("rank"))
+            .expression(expr("provider_group").alias("member"))
+            .expression(expr("CASE WHEN (SELECT v FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) t WHERE t.mem = provider_group AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1) IS NULL OR (SELECT v FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) t WHERE t.mem = provider_group AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1) = 0 THEN '—' ELSE (CASE WHEN (SELECT v FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) t WHERE t.mem = provider_group AND t.mk = (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) lm) ELSE month_key END)) >= (SELECT v FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) t WHERE t.mem = provider_group AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1) THEN '▲' ELSE '▼' END) || to_char(round(100.0 * abs((SELECT v FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) t WHERE t.mem = provider_group AND t.mk = (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) lm) ELSE month_key END)) - (SELECT v FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) t WHERE t.mem = provider_group AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1)) / (SELECT v FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) t WHERE t.mem = provider_group AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1), 1), 'FM990.0') || '%' END").alias("mom"))
+            .expression(expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M'").alias("total_display"))
+            .expression(expr("to_char(round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(v) FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) t) ELSE (SELECT sum(v) FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) t WHERE t.mk = month_key) END, 0), 1), 'FM990.0') || '%'").alias("share"))
+            .expression(expr("round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(v) FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) t) ELSE (SELECT sum(v) FROM (SELECT month_key AS mk, provider_group AS mem, sum(spend_usd) AS v FROM mart_spend_agg GROUP BY 1, 2) t WHERE t.mk = month_key) END, 0), 1)").alias("share_pct"))
+            .group_by(expr("provider_group"))
+            .group_by(expr("ROLLUP(month_key)"))
+            .order_by(expr("CASE WHEN provider_group = 'Anthropic' THEN 1 WHEN provider_group = 'OpenAI' THEN 2 WHEN provider_group = 'GitHub' THEN 3 WHEN provider_group = 'Other' THEN 4 WHEN provider_group = 'Amazon' THEN 5 WHEN provider_group = 'Meta' THEN 6 ELSE 99 END"), "asc")

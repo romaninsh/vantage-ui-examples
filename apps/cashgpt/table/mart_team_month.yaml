@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Team months
+id_column: rid
+columns:
+  # Synthetic row identity: the marts have composite grains and no PK, and
+  # vantage dedupes rows by id — so the id must cover the full grain.
+  # (Projected in the query below; column-level `expr:` is not wired for
+  # the Postgres driver yet.)
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: org_id, type: string }
+  - { name: org_name, type: string, flags: [title] }
+  - { name: org_level, type: int }
+  - { name: lob_id, type: string }
+  - { name: lob_name, type: string }
+  - { name: resource_org, type: string }
+  - { name: work_type, type: string }
+  - { name: city, type: string }
+  - { name: headcount, type: int }
+  - { name: month_key, type: string }
+  - { name: active, type: int }
+  - { name: spend_usd, type: float }
+  - { name: top_tier_share, type: float }
+postgres:
+  rhai: |
+    select().from("mart_team_month")
+        .expression(expr("coalesce(org_id,'') || ':' || coalesce(org_name,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(work_type,'') || ':' || coalesce(city,'') || ':' || coalesce(month_key,'')").alias("rid"))
+        .field("org_id")
+        .field("org_name")
+        .field("org_level")
+        .field("lob_id")
+        .field("lob_name")
+        .field("resource_org")
+        .field("work_type")
+        .field("city")
+        .field("headcount")
+        .field("month_key")
+        .field("active")
+        .field("spend_usd")
+        .field("top_tier_share")

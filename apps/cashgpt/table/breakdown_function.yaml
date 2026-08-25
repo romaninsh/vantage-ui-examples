@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Breakdown · function
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string, flags: [hidden] }
+  - { name: member, type: string, flags: [title] }
+  - { name: spend, type: float }
+  - { name: total_display, type: string }
+  - { name: share, type: string }
+  - { name: share_pct, type: float }
+postgres:
+  # Reference: overview.breakdown (GROUPING SETS), one axis per view — pie
+  # plus side legend; share divides HERE against the scope total.
+  rhai: |
+    let lob = if "lob" in args { args.lob } else { "" };
+    let rorg = if "rorg" in args { args.rorg } else { "" };
+    let drv = if "driver" in args { args.driver } else { "" };
+    let plat = if "platform" in args { args.platform } else { "" };
+    let mdl = if "model" in args { args.model } else { "" };
+    let jf = if "jobfn" in args { args.jobfn } else { "" };
+    let m = "mart_people_agg";
+    let g = "({} = '' OR lob_id = {}) AND ({} = '' OR resource_org = {}) AND ({} = '' OR usage_driver = {}) AND ({} = '' OR job_function = {})";
+    let ga = [lob, lob, rorg, rorg, drv, drv, jf, jf];
+    if plat != "" || mdl != "" { m = "mart_fact_agg"; g += " AND ({} = '' OR platform_id = {}) AND ({} = '' OR model_id = {})"; ga += [plat, plat, mdl, mdl]; }
+    let cor = "(SELECT sum(spend_usd) FROM " + m + " t WHERE " + g + " AND t.month_key = " + m + ".month_key)";
+    let tot = "(SELECT sum(spend_usd) FROM " + m + " WHERE " + g + ")";
+    select().from(m)
+        .where(expr(g, ga))
+        .expression(expr("(job_function) || ':' || coalesce(month_key, {})", ["All months"]).alias("rid"))
+        .expression(expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
+        .expression(expr("job_function").alias("member"))
+        .expression(expr("round(sum(spend_usd))").alias("spend"))
+        .expression(expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M'").alias("total_display"))
+        .expression(expr("to_char(round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN " + tot + " ELSE " + cor + " END, 0), 1), 'FM990.0') || '%'", ga + ga).alias("share"))
+        .expression(expr("round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN " + tot + " ELSE " + cor + " END, 0), 1)", ga + ga).alias("share_pct"))
+        .group_by(expr("job_function"))
+        .group_by(expr("ROLLUP(month_key)"))
+        .order_by(expr("sum(spend_usd)"), "desc")

@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Apps · unit volume
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string }
+  - { name: consumer_lob_name, type: string }
+  - { name: users_display, type: string }
+  - { name: tokens_display, type: string }
+  - { name: spend_display, type: string }
+postgres:
+  # Reference: apps.unitVolume — month by month, by consuming line of
+  # business; tokens quoted in millions like the client renders them.
+  rhai: |
+    let app = if "app" in args { args.app } else { "" };
+    let mo = if "month" in args { args.month } else { "" };
+    select().from("mart_app_month")
+        .where(expr("app_id = {}", [app]))
+        .where(expr("({} = '' OR month_key = {})", [mo, mo]))
+        .expression(expr("month_key || ':' || consumer_lob_id").alias("rid"))
+        .expression(expr("month_key").alias("month_key"))
+        .expression(expr("consumer_lob_name").alias("consumer_lob_name"))
+        .expression(expr("to_char(sum(users), 'FM999,999,999')").alias("users_display"))
+        .expression(expr("to_char(round(sum(tokens) / 1e6), 'FM999,999,999') || 'M'").alias("tokens_display"))
+        .expression(expr("CASE WHEN sum(spend_usd) >= 1e6 THEN '$' || to_char((sum(spend_usd)) / 1e6, 'FM999,990.00') || 'M' WHEN sum(spend_usd) >= 1e3 THEN '$' || to_char(round((sum(spend_usd)) / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(sum(spend_usd)), 'FM999,990') END").alias("spend_display"))
+        .group_by(expr("month_key"))
+        .group_by(expr("consumer_lob_id"))
+        .group_by(expr("consumer_lob_name"))
+        .order_by(expr("month_key"), "asc")
+        .order_by(expr("sum(spend_usd)"), "desc")

@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: App model mix / month
+id_column: rid
+columns:
+  # Synthetic row identity: the marts have composite grains and no PK, and
+  # vantage dedupes rows by id — so the id must cover the full grain.
+  # (Projected in the query below; column-level `expr:` is not wired for
+  # the Postgres driver yet.)
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string }
+  - { name: app_id, type: string }
+  - { name: provider_group, type: string }
+  - { name: model_id, type: string }
+  - { name: model_name, type: string, flags: [title] }
+  - { name: model_tier, type: string }
+  - { name: platform_id, type: string }
+  - { name: tokens, type: int }
+  - { name: spend_usd, type: float }
+postgres:
+  rhai: |
+    select().from("mart_app_model_month")
+        .expression(expr("coalesce(month_key,'') || ':' || coalesce(app_id,'') || ':' || coalesce(provider_group,'') || ':' || coalesce(model_id,'') || ':' || coalesce(model_name,'') || ':' || coalesce(model_tier,'') || ':' || coalesce(platform_id,'')").alias("rid"))
+        .field("month_key")
+        .field("app_id")
+        .field("provider_group")
+        .field("model_id")
+        .field("model_name")
+        .field("model_tier")
+        .field("platform_id")
+        .field("tokens")
+        .field("spend_usd")

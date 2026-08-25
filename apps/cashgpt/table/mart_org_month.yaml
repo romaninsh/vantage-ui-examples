@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Org rollups / month
+id_column: rid
+columns:
+  # Synthetic row identity: the marts have composite grains and no PK, and
+  # vantage dedupes rows by id — so the id must cover the full grain.
+  # (Projected in the query below; column-level `expr:` is not wired for
+  # the Postgres driver yet.)
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: org_id, type: string }
+  - { name: parent_org_id, type: string }
+  - { name: org_level, type: int }
+  - { name: org_name, type: string, flags: [title] }
+  - { name: org_path, type: string }
+  - { name: team_code, type: string }
+  - { name: lob_id, type: string }
+  - { name: lob_name, type: string }
+  - { name: resource_org, type: string }
+  - { name: work_type, type: string }
+  - { name: site_code, type: string }
+  - { name: city, type: string }
+  - { name: location_region, type: string }
+  - { name: headcount, type: int }
+  - { name: month_key, type: string }
+  - { name: active, type: int }
+  - { name: spend_usd, type: float }
+  - { name: tokens, type: int }
+  - { name: spend_per_active, type: float }
+  - { name: adoption_rate, type: float }
+  - { name: top_tier_share, type: float }
+  - { name: use_cases, type: int }
+  - { name: has_children, type: bool }
+postgres:
+  rhai: |
+    select().from("mart_org_month")
+        .expression(expr("coalesce(org_id,'') || ':' || coalesce(parent_org_id,'') || ':' || coalesce(org_name,'') || ':' || coalesce(org_path,'') || ':' || coalesce(team_code,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(work_type,'') || ':' || coalesce(site_code,'') || ':' || coalesce(city,'') || ':' || coalesce(location_region,'') || ':' || coalesce(month_key,'')").alias("rid"))
+        .field("org_id")
+        .field("parent_org_id")
+        .field("org_level")
+        .field("org_name")
+        .field("org_path")
+        .field("team_code")
+        .field("lob_id")
+        .field("lob_name")
+        .field("resource_org")
+        .field("work_type")
+        .field("site_code")
+        .field("city")
+        .field("location_region")
+        .field("headcount")
+        .field("month_key")
+        .field("active")
+        .field("spend_usd")
+        .field("tokens")
+        .field("spend_per_active")
+        .field("adoption_rate")
+        .field("top_tier_share")
+        .field("use_cases")
+        .field("has_children")

@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Manager picker
+id_column: org_id
+columns:
+  - { name: org_id, type: string, flags: [id, hidden] }
+  - { name: full_name, type: string, flags: [title] }
+  - { name: org_name, type: string }
+  - { name: lob_name, type: string }
+  - { name: city, type: string }
+  - { name: headcount, type: int }
+postgres:
+  # Reference: manager.search — anyone who heads a level-5 section. The
+  # name search is the grid's quicksearch (ILIKE server-side, same intent
+  # as the reference's trigram term).
+  rhai: |
+    select().from("dim_employee")
+        .inner_join("dim_org_unit", "o", expr("o.org_id = dim_employee.heads_org_id"))
+        .where(expr("o.org_level = 5"))
+        .expression(expr("o.org_id").alias("org_id"))
+        .expression(expr("dim_employee.full_name").alias("full_name"))
+        .expression(expr("o.org_name").alias("org_name"))
+        .expression(expr("dim_employee.lob_name").alias("lob_name"))
+        .expression(expr("dim_employee.city").alias("city"))
+        .expression(expr("o.headcount").alias("headcount"))
+        .order_by(expr("o.headcount"), "desc")

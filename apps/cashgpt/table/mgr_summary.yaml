@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Manager · summary
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: who_line, type: string }
+  - { name: spend_display, type: string }
+  - { name: active_display, type: string }
+  - { name: active_sub, type: string }
+  - { name: per_user_display, type: string }
+  - { name: tier_display, type: string }
+postgres:
+  # Reference: manager.summary — the chosen manager's whole org from
+  # mart_org_month, month-scoped. The card line quotes the picker row
+  # (name — section · lob · city). Spend formats adaptively where the
+  # reference reused usdM and would print $0.00M at section scale —
+  # display drift, not intent.
+  rhai: |
+    let org = if "org" in args { args.org } else { "" };
+    let mo = if "month" in args { args.month } else { "" };
+    select().from("mart_org_month")
+        .inner_join("dim_org_unit", "o", expr("o.org_id = mart_org_month.org_id"))
+        .where(expr("mart_org_month.org_id = {}", [org]))
+        .where(expr("({} = '' OR mart_org_month.month_key = {})", [mo, mo]))
+        .group_by(expr("o.org_id"))
+        .expression(expr("o.org_id").alias("rid"))
+        .expression(expr("(SELECT e.full_name FROM dim_employee e WHERE e.heads_org_id = o.org_id LIMIT 1) || ' — ' || max(o.org_name) || ' · ' || max(mart_org_month.lob_name) || ' · ' || (SELECT e.city FROM dim_employee e WHERE e.heads_org_id = o.org_id LIMIT 1)").alias("who_line"))
+        .expression(expr("CASE WHEN sum(mart_org_month.spend_usd) >= 1e6 THEN '$' || to_char((sum(mart_org_month.spend_usd)) / 1e6, 'FM999,990.00') || 'M' WHEN sum(mart_org_month.spend_usd) >= 1e3 THEN '$' || to_char(round((sum(mart_org_month.spend_usd)) / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(sum(mart_org_month.spend_usd)), 'FM999,990') END").alias("spend_display"))
+        .expression(expr("to_char(max(mart_org_month.active), 'FM999,999,999')").alias("active_display"))
+        .expression(expr("'active of ' || to_char(max(o.headcount), 'FM999,999,999')").alias("active_sub"))
+        .expression(expr("'$' || to_char(round(sum(mart_org_month.spend_usd) / NULLIF(max(mart_org_month.active), 0)), 'FM999,999')").alias("per_user_display"))
+        .expression(expr("to_char(round(100.0 * sum(mart_org_month.spend_usd * mart_org_month.top_tier_share) / NULLIF(sum(mart_org_month.spend_usd), 0)), 'FM990') || '%'").alias("tier_display"))

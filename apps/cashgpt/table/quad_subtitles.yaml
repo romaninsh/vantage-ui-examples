@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Quad subtitles
+id_column: month_key
+columns:
+  - { name: month_key, type: string, flags: [id] }
+  - { name: fn_sub, type: string }
+  - { name: title_sub, type: string }
+  - { name: lob_sub, type: string }
+  - { name: suite_sub, type: string }
+postgres:
+  # Reference: overview.meta — the quads' subtitle figures (member counts,
+  # headcount, active-now, apps as use cases), formatted HERE so the label
+  # only renders. One row per scope; the ROLLUP row is "All months".
+  # Guards mirror the reference's mart-aware envelope: people-mart counts
+  # honour lob/rorg/driver/function, spend-mart counts honour
+  # lob/rorg/driver/platform/model, the active count honours the person
+  # dimensions; the employee/app totals are org-wide like the reference.
+  rhai: |
+    let lob = if "lob" in args { args.lob } else { "" };
+    let rorg = if "rorg" in args { args.rorg } else { "" };
+    let drv = if "driver" in args { args.driver } else { "" };
+    let plat = if "platform" in args { args.platform } else { "" };
+    let mdl = if "model" in args { args.model } else { "" };
+    let jf = if "jobfn" in args { args.jobfn } else { "" };
+    let pg = "({} = '' OR lob_id = {}) AND ({} = '' OR resource_org = {}) AND ({} = '' OR usage_driver = {}) AND ({} = '' OR job_function = {})";
+    let pga = [lob, lob, rorg, rorg, drv, drv, jf, jf];
+    let sg = "({} = '' OR lob_id = {}) AND ({} = '' OR resource_org = {}) AND ({} = '' OR usage_driver = {}) AND ({} = '' OR platform_id = {}) AND ({} = '' OR model_id = {})";
+    let sga = [lob, lob, rorg, rorg, drv, drv, plat, plat, mdl, mdl];
+    let ag = "({} = '' OR lob_id = {}) AND ({} = '' OR resource_org = {}) AND ({} = '' OR job_function = {})";
+    let aga = [lob, lob, rorg, rorg, jf, jf];
+    select().from("mart_spend_agg")
+        .where(expr(sg, sga))
+        .expression(expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
+        .expression(expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT job_function) FROM mart_people_agg WHERE " + pg + ") ELSE (SELECT count(DISTINCT job_function) FROM mart_people_agg t WHERE " + pg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' job functions'", pga + pga).alias("fn_sub"))
+        .expression(expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT seniority_code) FROM mart_people_agg WHERE " + pg + ") ELSE (SELECT count(DISTINCT seniority_code) FROM mart_people_agg t WHERE " + pg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' title tiers · ' || to_char((SELECT sum(headcount) FROM silver.dim_org_unit WHERE org_level = 2), 'FM999,999,999') || ' employees · ' || to_char((SELECT sum(users) FROM mart_active_month a WHERE " + ag + " AND a.month_key = CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(month_key) FROM mart_active_month) ELSE mart_spend_agg.month_key END), 'FM999,999,999') || ' active'", pga + pga + aga).alias("title_sub"))
+        .expression(expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT lob_id) FROM mart_spend_agg WHERE " + sg + ") ELSE (SELECT count(DISTINCT lob_id) FROM mart_spend_agg t WHERE " + sg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' billable orgs'", sga + sga).alias("lob_sub"))
+        .expression(expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT kind) FROM mart_spend_agg WHERE " + sg + ") ELSE (SELECT count(DISTINCT kind) FROM mart_spend_agg t WHERE " + sg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' suites · ' || to_char((SELECT count(*) FROM silver.dim_app), 'FM999') || ' use cases'", sga + sga).alias("suite_sub"))
+        .group_by(expr("ROLLUP(month_key)"))

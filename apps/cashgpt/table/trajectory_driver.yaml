@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Trajectory · driver (chart)
+id_column: month_key
+columns:
+  - { name: month_key, type: string, flags: [id, hidden] }
+  - { name: month, type: string }
+  - { name: "Developer", type: float }
+  - { name: "Productivity", type: float }
+  - { name: "Application", type: float }
+postgres:
+  # Reference: overview.trajectory — month × member spend, pivoted; series
+  # order = the reference slotOrder (first-seen: Jan spend ranking).
+  rhai: |
+    let lob = if "lob" in args { args.lob } else { "" };
+    let rorg = if "rorg" in args { args.rorg } else { "" };
+    let drv = if "driver" in args { args.driver } else { "" };
+    let plat = if "platform" in args { args.platform } else { "" };
+    let mdl = if "model" in args { args.model } else { "" };
+    let jf = if "jobfn" in args { args.jobfn } else { "" };
+    let m = "mart_spend_agg";
+    let g = "({} = '' OR lob_id = {}) AND ({} = '' OR resource_org = {}) AND ({} = '' OR usage_driver = {}) AND ({} = '' OR platform_id = {}) AND ({} = '' OR model_id = {})";
+    let ga = [lob, lob, rorg, rorg, drv, drv, plat, plat, mdl, mdl];
+    if jf != "" { m = "mart_fact_agg"; g += " AND ({} = '' OR job_function = {})"; ga += [jf, jf]; }
+    select().from(m)
+            .where(expr(g, ga))
+            .field("month_key")
+            .expression(expr("to_char(to_date(month_key || '-01', 'YYYY-MM-DD'), 'Mon')").alias("month"))
+            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE initcap(usage_driver) = {}), 0)", ["Developer"]).alias("Developer"))
+            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE initcap(usage_driver) = {}), 0)", ["Productivity"]).alias("Productivity"))
+            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE initcap(usage_driver) = {}), 0)", ["Application"]).alias("Application"))
+            .group_by(ident("month_key"))
+            .order_by(ident("month_key"), "asc")

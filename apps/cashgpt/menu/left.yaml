@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+items:
+  - page: individual
+    label: Individual
+    icon: Gauge
+  - page: apps
+    label: "Use Cases & Apps"
+    icon: Layers
+  - page: manager
+    label: Manager Console
+    icon: Network
+  - page: dashboard
+    label: Overview
+    icon: ChartPie
+  - page: executive
+    label: Executive Brief
+    icon: Briefcase
+  - page: watchtower
+    label: Watchtower
+    icon: Gauge
+  - section: Marts
+    children:
+      - { page: mart_active_month, label: "Active people / month" }
+      - { page: mart_app_model_month, label: "App model mix / month" }
+      - { page: mart_app_month, label: "Apps / month" }
+      - { page: mart_employee_month, label: "Employee months" }
+      - { page: mart_fact_agg, label: "Fact cube (full width)" }
+      - { page: mart_filter_totals, label: "Filter totals" }
+      - { page: mart_lob_channel, label: "LOB channels" }
+      - { page: mart_org_month, label: "Org rollups / month" }
+      - { page: mart_peer_benchmark, label: "Peer benchmarks" }
+      - { page: mart_people_agg, label: "People cube" }
+      - { page: mart_spend_agg, label: "Spend cube (coarse)" }
+      - { page: mart_team_month, label: "Team months" }
+      - { page: mart_watch_month, label: "Watchtower months" }

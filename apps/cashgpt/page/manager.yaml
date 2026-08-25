@@ -1,0 +1,261 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Manager Console
+body:
+  # Reference: ManagerConsolePage header. The name search lives on the
+  # picker grid below (quicksearch bar), not here.
+  - kind: column
+    frame: true
+    children:
+      - kind: row
+        children:
+          - kind: column
+            children:
+              - kind: label
+                params:
+                  text: "Manager console"
+                  style: heading
+                  icon: Network
+              - kind: label
+                params:
+                  text: "One manager's whole organisation — everyone below them in the tree, not just their direct reports."
+                  style: muted
+          - kind: column
+            width: 240
+            children:
+              - kind: select
+                name: mmonth
+                query:
+                  datasource: warehouse
+                  rhai: |
+                    select().from("mart_spend_agg")
+                        .field("month_key")
+                        .expression(expr("to_char(to_date(month_key || '-01', 'YYYY-MM-DD'), 'Mon YYYY')").alias("label"))
+                        .group_by(ident("month_key"))
+                        .order_by(ident("month_key"), "desc")
+                params:
+                  label: Month
+                  all_label: "All months"
+
+  # Reference: the picker — section heads by headcount; the reference hides
+  # it after a pick, here it stays (the grid IS the "Change" affordance).
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Section heads"
+          style: heading
+          icon: Network
+      - kind: label
+        params:
+          text: "level-5 sections by headcount — search by name, section, line of business or city; pick a row to open the console"
+          style: muted
+      - kind: grid
+        name: mgrs
+        observe: mgr_picker
+        height: 300
+        params:
+          search: true
+          columns:
+            full_name: { label: Manager }
+            org_name: { label: Section }
+            lob_name: { label: "Line of business" }
+            city: { label: City }
+            headcount: { label: People }
+
+  # Reference: the chosen card — manager line + spend / active-of /
+  # per-user / top-tier stats (no sparks or deltas on this page).
+  - kind: column
+    frame: true
+    when: 'mgrs.selected_id != ""'
+    children:
+      - kind: label
+        observe:
+          script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+        params:
+          text: "…"
+          style: heading
+          column: who_line
+      - kind: row
+        children:
+          - kind: column
+            frame: true
+            children:
+              - kind: stat
+                name: mgr_spend
+                observe:
+                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                params:
+                  label: "Spend"
+                  icon: CreditCard
+                  color: blue
+                  column: spend_display
+          - kind: column
+            frame: true
+            children:
+              - kind: stat
+                name: mgr_active
+                observe:
+                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                params:
+                  label: "Active people"
+                  icon: Network
+                  color: green
+                  column: active_display
+                  change_text: active_sub
+          - kind: column
+            frame: true
+            children:
+              - kind: stat
+                name: mgr_per_user
+                observe:
+                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                params:
+                  label: "Per active user"
+                  icon: Gauge
+                  color: yellow
+                  column: per_user_display
+          - kind: column
+            frame: true
+            children:
+              - kind: stat
+                name: mgr_tier
+                observe:
+                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                params:
+                  label: "Top tier"
+                  icon: Layers
+                  color: cyan
+                  column: tier_display
+
+  # Reference: "Spend trajectory by platform|usage driver" — same panel as
+  # the Overview trajectory, scoped to the manager's tree. Stack order is
+  # the fixed global series order (the reference re-ranks per org — needs
+  # per-scope series discovery, VAN-204 territory).
+  - kind: column
+    frame: true
+    when: 'mgrs.selected_id != ""'
+    children:
+      - kind: row
+        children:
+          - kind: column
+            children:
+              - kind: label
+                params:
+                  text: "Spend trajectory"
+                  style: heading
+                  icon: TrendingUp
+              - kind: label
+                observe:
+                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_traj_subtitle"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                params:
+                  text: "…"
+                  style: muted
+                  column: line
+          - kind: column
+            width: 220
+            children:
+              - kind: select
+                name: mtraj
+                appearance: chips
+                params:
+                  options: [Platform, "Usage driver"]
+                  default: Platform
+      - kind: row
+        when: 'mtraj.value == "Platform"'
+        children:
+          - kind: column
+            children:
+              - kind: chart
+                observe:
+                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_traj_platform"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                height: 280
+                params:
+                  x: month
+                  chart_type: stacked_bar
+                  label: ""
+                  series: ["Azure OpenAI", "Claude", "Google Vertex AI", "Databricks Mosaic AI", "GitHub Copilot", "Amazon Bedrock"]
+                  palette:
+                    colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300"]
+                    order: grouped
+          - kind: column
+            width: 400
+            children:
+              - kind: list
+                name: mgr_breakdown_platform
+                observe:
+                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_traj_platform_breakdown"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                height: 280
+                params:
+                  text: 'member + "   " + total_display + "  ·  " + share'
+                  label: |
+                    if mom == "—" { "—" }
+                    else { #{ text: mom, color: if "▲" in mom { "danger" } else { "success" } } }
+                  bar: share_pct
+                  slot: rank
+                  palette:
+                    colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300"]
+                    order: grouped
+      - kind: row
+        when: 'mtraj.value == "Usage driver"'
+        children:
+          - kind: column
+            children:
+              - kind: chart
+                observe:
+                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_traj_driver"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                height: 280
+                params:
+                  x: month
+                  chart_type: stacked_bar
+                  label: ""
+                  series: [Productivity, Application, Developer]
+                  palette:
+                    colors: ["#d95926", "#199e70", "#3987e5"]
+                    order: grouped
+          - kind: column
+            width: 400
+            children:
+              - kind: list
+                name: mgr_breakdown_driver
+                observe:
+                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_traj_driver_breakdown"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                height: 280
+                params:
+                  text: 'member + "   " + total_display + "  ·  " + share'
+                  label: |
+                    if mom == "—" { "—" }
+                    else { #{ text: mom, color: if "▲" in mom { "danger" } else { "success" } } }
+                  bar: share_pct
+                  slot: rank
+                  palette:
+                    colors: ["#d95926", "#199e70", "#3987e5"]
+                    order: grouped
+
+  # Reference: "Top users by cost" — 25 highest spenders in the tree.
+  - kind: column
+    frame: true
+    when: 'mgrs.selected_id != ""'
+    children:
+      - kind: label
+        params:
+          text: "Top users by cost"
+          style: heading
+          icon: ChartBar
+      - kind: label
+        params:
+          text: "the 25 highest spenders in the selected manager's org"
+          style: muted
+      - kind: grid
+        name: mgr_top
+        observe:
+          script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_top_users"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+        height: 420
+        params:
+          columns:
+            full_name: { label: User }
+            role: { label: "Role · grade" }
+            team: { label: Team }
+            spend_display: { label: Spend }
+            active_months: { label: "Months active" }
+            tier_display: { label: "Top tier" }

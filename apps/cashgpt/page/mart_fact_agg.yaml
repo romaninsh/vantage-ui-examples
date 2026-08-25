@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Fact cube (full width)
+body:
+  - kind: binder
+    name: mart_fact_agg
+    observe: mart_fact_agg
+    params:
+      default_sort: { column: month_key, direction: desc }

@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: LOB channels
+id_column: rid
+columns:
+  # Synthetic row identity: the marts have composite grains and no PK, and
+  # vantage dedupes rows by id — so the id must cover the full grain.
+  # (Projected in the query below; column-level `expr:` is not wired for
+  # the Postgres driver yet.)
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: org_id, type: string }
+  - { name: org_level, type: int }
+  - { name: month_key, type: string }
+  - { name: channel, type: string }
+  - { name: spend_usd, type: float }
+  - { name: users, type: int }
+postgres:
+  rhai: |
+    select().from("mart_lob_channel")
+        .expression(expr("coalesce(org_id,'') || ':' || coalesce(month_key,'') || ':' || coalesce(channel,'')").alias("rid"))
+        .field("org_id")
+        .field("org_level")
+        .field("month_key")
+        .field("channel")
+        .field("spend_usd")
+        .field("users")

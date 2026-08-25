@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Peer benchmarks
+body:
+  - kind: binder
+    name: mart_peer_benchmark
+    observe: mart_peer_benchmark
+    params:
+      default_sort: { column: month_key, direction: desc }

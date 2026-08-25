@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Active people / month
+body:
+  - kind: binder
+    name: mart_active_month
+    observe: mart_active_month
+    params:
+      default_sort: { column: month_key, direction: desc }

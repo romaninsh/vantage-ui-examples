@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Person · cost over time
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month, type: string }
+  - { name: model_name, type: string }
+  - { name: spend, type: float }
+postgres:
+  # Reference: individual.costOverTime — one person is a few dozen rows
+  # behind an index on employee_id, so this reads the fact directly. One
+  # line per model; the chart's `group:` keeps the top 8 by total.
+  rhai: |
+    let person = if "person" in args { args.person } else { "" };
+    select().from_as("fct_usage", "u")
+        .inner_join("dim_model", "m", expr("m.model_id = u.model_id"))
+        .where(expr("u.employee_id = {}", [person]))
+        .expression(expr("u.month_key || ':' || m.model_name").alias("rid"))
+        .expression(expr("to_char(to_date(u.month_key || '-01', 'YYYY-MM-DD'), 'Mon')").alias("month"))
+        .expression(expr("m.model_name").alias("model_name"))
+        .expression(expr("round(sum(u.spend_usd), 2)").alias("spend"))
+        .group_by(expr("u.month_key"))
+        .group_by(expr("m.model_name"))
+        .order_by(expr("u.month_key"), "asc")

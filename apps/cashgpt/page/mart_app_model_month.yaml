@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: App model mix / month
+body:
+  - kind: binder
+    name: mart_app_model_month
+    observe: mart_app_model_month
+    params:
+      default_sort: { column: month_key, direction: desc }

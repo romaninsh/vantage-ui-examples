@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Apps · metrics
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: spend_display, type: string }
+  - { name: users_display, type: string }
+  - { name: cpu_display, type: string }
+  - { name: tokens_display, type: string }
+  - { name: lobs_display, type: string }
+  - { name: top_model, type: string }
+  - { name: rollout, type: string }
+  - { name: mom_display, type: string }
+postgres:
+  # Reference: apps.metrics — spend/tokens/lobs/rollout from the consume
+  # scope; users are PEAK monthly active (never a distinct over the fact);
+  # cost/user divides in SQL; the MoM trend deliberately ignores the month
+  # filter (reference: `trend` binds no months). usdM verbatim.
+  rhai: |
+    let app = if "app" in args { args.app } else { "" };
+    let mo = if "month" in args { args.month } else { "" };
+    let peak = "(SELECT max(x.u) FROM (SELECT mm.month_key, sum(mm.users) AS u FROM mart_app_month mm WHERE mm.app_id = {} AND ({} = '' OR mm.month_key = {}) GROUP BY 1) x)";
+    select().from("mart_app_month")
+        .where(expr("app_id = {}", [app]))
+        .where(expr("({} = '' OR month_key = {})", [mo, mo]))
+        .expression(expr("'m'").alias("rid"))
+        .expression(expr("'$' || to_char(coalesce(sum(spend_usd), 0) / 1e6, 'FM999,990.00') || 'M'").alias("spend_display"))
+        .expression(expr("to_char(" + peak + ", 'FM999,999,999')", [app, mo, mo]).alias("users_display"))
+        .expression(expr("'$' || to_char(round(coalesce(sum(spend_usd) / NULLIF(" + peak + ", 0), 0)), 'FM999,999')", [app, mo, mo]).alias("cpu_display"))
+        .expression(expr("to_char(coalesce(sum(tokens), 0) / 1e9, 'FM999999990.0') || 'B'").alias("tokens_display"))
+        .expression(expr("to_char(count(DISTINCT consumer_lob_id), 'FM99')").alias("lobs_display"))
+        .expression(expr("coalesce((SELECT t.model_name FROM (SELECT amm.model_name, sum(amm.spend_usd) AS s FROM mart_app_model_month amm WHERE amm.app_id = {} AND ({} = '' OR amm.month_key = {}) GROUP BY 1 ORDER BY 2 DESC LIMIT 1) t), '—')", [app, mo, mo]).alias("top_model"))
+        .expression(expr("coalesce(max(rollout_status), '—')").alias("rollout"))
+        .expression(expr("coalesce((SELECT to_char(round(100.0 * (t.spend / NULLIF(lag(t.spend) OVER (ORDER BY t.month_key), 0) - 1), 1), 'FM990.0') || '%' FROM (SELECT mm.month_key, sum(mm.spend_usd) AS spend FROM mart_app_month mm WHERE mm.app_id = {} GROUP BY 1) t ORDER BY t.month_key DESC LIMIT 1), '—')", [app]).alias("mom_display"))

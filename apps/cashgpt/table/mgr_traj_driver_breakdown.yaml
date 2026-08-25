@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Manager trajectory breakdown
+id_column: member
+columns:
+  - { name: member, type: string, flags: [id, title] }
+  - { name: rank, type: int, flags: [hidden] }
+  - { name: mom, type: string }
+  - { name: total_display, type: string }
+  - { name: share, type: string }
+  - { name: share_pct, type: float }
+postgres:
+  # Reference: the BreakdownList beside the manager trajectory — per-member
+  # total, share of the scope, and MoM of the last two months in scope
+  # ('—' when a single month is picked or the previous month is 0). Totals
+  # format adaptively where the reference reused usdMillions and would
+  # print $0.00M at section scale — display drift, not intent.
+  rhai: |
+    let org = if "org" in args { args.org } else { "" };
+    let mo = if "month" in args { args.month } else { "" };
+    let mm = "(SELECT u2.month_key AS mk, initcap(a2.usage_driver) AS mem, sum(u2.spend_usd) AS v FROM fct_usage u2 JOIN mart_employee_month e ON e.employee_id = u2.employee_id AND e.month_key = u2.month_key JOIN dim_app a2 ON a2.app_id = u2.app_id WHERE (e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%') AND ({} = '' OR u2.month_key = {}) GROUP BY 1, 2)";
+    let ma = [org, org, mo, mo];
+    select().from("fct_usage")
+        .inner_join("mart_employee_month", "e", expr("e.employee_id = fct_usage.employee_id AND e.month_key = fct_usage.month_key"))
+        .inner_join("dim_app", "a", expr("a.app_id = fct_usage.app_id"))
+        .where(expr("(e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%')", [org, org]))
+        .where(expr("({} = '' OR fct_usage.month_key = {})", [mo, mo]))
+        .expression(expr("initcap(a.usage_driver)").alias("member"))
+        .expression(expr("CASE WHEN a.usage_driver = 'Productivity' THEN 1 WHEN a.usage_driver = 'Application' THEN 2 WHEN a.usage_driver = 'Developer' THEN 3 ELSE 99 END").alias("rank"))
+        .expression(expr("CASE WHEN (SELECT t.v FROM " + mm + " t WHERE t.mem = initcap(a.usage_driver) AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1) IS NULL OR (SELECT t.v FROM " + mm + " t WHERE t.mem = initcap(a.usage_driver) AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1) = 0 THEN '—' ELSE (CASE WHEN coalesce((SELECT t.v FROM " + mm + " t WHERE t.mem = initcap(a.usage_driver) AND t.mk = (SELECT max(t2.mk) FROM " + mm + " t2)), 0) >= (SELECT t.v FROM " + mm + " t WHERE t.mem = initcap(a.usage_driver) AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1) THEN '▲' ELSE '▼' END) || to_char(abs(round(100.0 * (coalesce((SELECT t.v FROM " + mm + " t WHERE t.mem = initcap(a.usage_driver) AND t.mk = (SELECT max(t2.mk) FROM " + mm + " t2)), 0) - (SELECT t.v FROM " + mm + " t WHERE t.mem = initcap(a.usage_driver) AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1)) / (SELECT t.v FROM " + mm + " t WHERE t.mem = initcap(a.usage_driver) AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1), 1)), 'FM990.0') || '%' END", ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma).alias("mom"))
+        .expression(expr("CASE WHEN sum(fct_usage.spend_usd) >= 1e6 THEN '$' || to_char((sum(fct_usage.spend_usd)) / 1e6, 'FM999,990.00') || 'M' WHEN sum(fct_usage.spend_usd) >= 1e3 THEN '$' || to_char(round((sum(fct_usage.spend_usd)) / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(sum(fct_usage.spend_usd)), 'FM999,990') END").alias("total_display"))
+        .expression(expr("to_char(round(100.0 * sum(fct_usage.spend_usd) / NULLIF((SELECT sum(t.v) FROM " + mm + " t), 0), 1), 'FM990.0') || '%'", ma).alias("share"))
+        .expression(expr("round(100.0 * sum(fct_usage.spend_usd) / NULLIF((SELECT sum(t.v) FROM " + mm + " t), 0), 1)", ma).alias("share_pct"))
+        .group_by(expr("a.usage_driver"))
+        .order_by(expr("sum(fct_usage.spend_usd)"), "desc")

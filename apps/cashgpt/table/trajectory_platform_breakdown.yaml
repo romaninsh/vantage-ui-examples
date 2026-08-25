@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Trajectory breakdown · platform
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rank, type: int, flags: [hidden] }
+  - { name: member, type: string, flags: [title] }
+  - { name: mom, type: string }
+  - { name: total_display, type: string }
+  - { name: share, type: string }
+  - { name: share_pct, type: float }
+postgres:
+  # GROUP BY the RAW column — correlated subqueries may only reference
+  # grouping columns, and an expression group (initcap(...)) makes the
+  # raw column illegal in them. Display casing happens in projection.
+  rhai: |
+    let lob = if "lob" in args { args.lob } else { "" };
+    let rorg = if "rorg" in args { args.rorg } else { "" };
+    let drv = if "driver" in args { args.driver } else { "" };
+    let plat = if "platform" in args { args.platform } else { "" };
+    let mdl = if "model" in args { args.model } else { "" };
+    let jf = if "jobfn" in args { args.jobfn } else { "" };
+    let m = "mart_spend_agg";
+    let g = "({} = '' OR lob_id = {}) AND ({} = '' OR resource_org = {}) AND ({} = '' OR usage_driver = {}) AND ({} = '' OR platform_id = {}) AND ({} = '' OR model_id = {})";
+    let ga = [lob, lob, rorg, rorg, drv, drv, plat, plat, mdl, mdl];
+    if jf != "" { m = "mart_fact_agg"; g += " AND ({} = '' OR job_function = {})"; ga += [jf, jf]; }
+    let monthly = "(SELECT month_key AS mk, platform_name AS mem, sum(spend_usd) AS v FROM " + m + " WHERE " + g + " GROUP BY 1, 2)";
+    select().from(m)
+            .where(expr(g, ga))
+            .expression(expr("(platform_name) || ':' || coalesce(month_key, {})", ["All months"]).alias("rid"))
+            .expression(expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
+            .expression(expr("CASE WHEN platform_name = 'Azure OpenAI' THEN 1 WHEN platform_name = 'Claude' THEN 2 WHEN platform_name = 'Google Vertex AI' THEN 3 WHEN platform_name = 'Databricks Mosaic AI' THEN 4 WHEN platform_name = 'GitHub Copilot' THEN 5 WHEN platform_name = 'Amazon Bedrock' THEN 6 ELSE 99 END").alias("rank"))
+            .expression(expr("platform_name").alias("member"))
+            .expression(expr("CASE WHEN (SELECT v FROM " + monthly + " t WHERE t.mem = platform_name AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1) IS NULL OR (SELECT v FROM " + monthly + " t WHERE t.mem = platform_name AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1) = 0 THEN '—' ELSE (CASE WHEN (SELECT v FROM " + monthly + " t WHERE t.mem = platform_name AND t.mk = (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END)) >= (SELECT v FROM " + monthly + " t WHERE t.mem = platform_name AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1) THEN '▲' ELSE '▼' END) || to_char(round(100.0 * abs((SELECT v FROM " + monthly + " t WHERE t.mem = platform_name AND t.mk = (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END)) - (SELECT v FROM " + monthly + " t WHERE t.mem = platform_name AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1)) / (SELECT v FROM " + monthly + " t WHERE t.mem = platform_name AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1), 1), 'FM990.0') || '%' END", ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga).alias("mom"))
+            .expression(expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M'").alias("total_display"))
+            .expression(expr("to_char(round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(v) FROM " + monthly + " t) ELSE (SELECT sum(v) FROM " + monthly + " t WHERE t.mk = month_key) END, 0), 1), 'FM990.0') || '%'", ga + ga).alias("share"))
+            .expression(expr("round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(v) FROM " + monthly + " t) ELSE (SELECT sum(v) FROM " + monthly + " t WHERE t.mk = month_key) END, 0), 1)", ga + ga).alias("share_pct"))
+            .group_by(expr("platform_name"))
+            .group_by(expr("ROLLUP(month_key)"))
+        .order_by(expr("sum(spend_usd)"), "desc")

@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Org rollups / month
+body:
+  - kind: binder
+    name: mart_org_month
+    observe: mart_org_month
+    params:
+      default_sort: { column: month_key, direction: desc }

@@ -1,0 +1,398 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Executive Brief
+body:
+  # Reference: ExecutiveBriefPage header + the Period control (defined in the
+  # reference but never rendered due to a slot-name drift; here it works).
+  - kind: column
+    frame: true
+    children:
+      - kind: row
+        children:
+          - kind: column
+            children:
+              - kind: label
+                params:
+                  text: "Executive brief — AI token usage"
+                  style: heading
+                  icon: TrendingUp
+              - kind: label
+                params:
+                  text: "Where the bank's AI spend went, who owns it, and what it bought."
+                  style: muted
+          - kind: column
+            width: 260
+            children:
+              - kind: select
+                name: period
+                query:
+                  datasource: warehouse
+                  rhai: |
+                    select().from("mart_spend_agg")
+                        .field("month_key")
+                        .expression(expr("to_char(to_date(month_key || '-01', 'YYYY-MM-DD'), 'FMMonth YYYY')").alias("label"))
+                        .group_by(ident("month_key"))
+                        .order_by(ident("month_key"), "desc")
+                params:
+                  label: Period
+                  all_label: "Year to date"
+
+  # Islands — reference KPIS (5): latest month spend (growth red), spend in
+  # period, top-tier share (cost-weighted), active people (growth green),
+  # tokens consumed with the blended rate.
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: ex_latest
+            observe:
+              script: 'scenery("exec_islands").where("month_key", "${period.value}")'
+            params:
+              label: "Latest month spend"
+              icon: TrendingUp
+              color: green
+              column: latest_display
+              change: latest_change
+              change_text: latest_text
+              change_good: down
+              spark: spend_spark
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: ex_period
+            observe:
+              script: 'scenery("exec_islands").where("month_key", "${period.value}")'
+            params:
+              label: "Spend in period"
+              icon: CreditCard
+              color: blue
+              column: period_display
+              change_text: period_note
+              spark: spend_spark
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: ex_tier
+            observe:
+              script: 'scenery("exec_islands").where("month_key", "${period.value}")'
+            params:
+              label: "Top tier share"
+              icon: Layers
+              color: cyan
+              column: tier_display
+              change_text: tier_note
+              spark: tier_spark
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: ex_people
+            observe:
+              script: 'scenery("exec_islands").where("month_key", "${period.value}")'
+            params:
+              label: "Active people"
+              icon: Network
+              color: blue
+              column: people_display
+              change: people_change
+              change_text: people_text
+              spark: people_spark
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: ex_tokens
+            observe:
+              script: 'scenery("exec_islands").where("month_key", "${period.value}")'
+            params:
+              label: "Tokens consumed"
+              icon: Gauge
+              color: yellow
+              column: tokens_display
+              change_text: tokens_note
+              spark: tokens_spark
+
+  # Reference: "AI token spend trajectory by provider" — stacked bars with
+  # the breakdown list beside (Provider | MoM | Total | share). Stack order
+  # is the reverse of list order (largest on top); colours follow the
+  # entity's slot (total-desc, per toSeries).
+  - kind: column
+    frame: true
+    children:
+      - kind: row
+        children:
+          - kind: column
+            children:
+              - kind: label
+                params:
+                  text: "AI token spend trajectory by provider"
+                  style: heading
+                  icon: TrendingUp
+              - kind: label
+                observe:
+                  script: 'scenery("exec_subtitles").where("month_key", "${period.value}")'
+                params:
+                  text: "…"
+                  style: muted
+                  column: prov_sub
+      - kind: row
+        children:
+          - kind: column
+            children:
+              - kind: chart
+                observe:
+                  script: 'if "${period.value}" == "Year to date" { scenery("exec_provider_chart").sort("month_key", "asc") } else { scenery("exec_provider_chart").where("month_key", "${period.value}") }'
+                height: 300
+                params:
+                  x: month
+                  chart_type: stacked_bar
+                  label: ""
+                  series: [Meta, Amazon, Other, GitHub, OpenAI, Anthropic]
+                  palette:
+                    colors: ["#008300", "#d55181", "#c98500", "#199e70", "#d95926", "#3987e5"]
+                    order: grouped
+          - kind: column
+            width: 420
+            children:
+              - kind: list
+                name: exec_prov_list
+                observe:
+                  script: 'scenery("exec_provider_breakdown").where("month_key", "${period.value}")'
+                height: 300
+                params:
+                  text: 'member + "   " + total_display + "  ·  " + share'
+                  label: |
+                    if mom == "—" { "—" }
+                    else { #{ text: mom, color: if "▲" in mom { "danger" } else { "success" } } }
+                  bar: share_pct
+                  slot: rank
+                  palette:
+                    colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+                    order: grouped
+
+  # Reference: "Cost ownership" — costOwnershipSql's documented intent (the
+  # reference registered no SQL and rendered an empty shell). Band derives
+  # from the CONSUMER's LOB; a grid stands in for StackedBarList (VAN-207).
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Cost ownership"
+          style: heading
+          icon: CreditCard
+      - kind: label
+        params:
+          text: "who consumes it, split by LLM suite"
+          style: muted
+      - kind: grid
+        name: exec_ownership_grid
+        observe:
+          script: 'scenery("exec_ownership").where("month_key", "${period.value}")'
+        height: 190
+        params:
+          columns:
+            band: { label: "Consumer band" }
+            Coding: { label: Coding }
+            Domain: { label: Domain }
+            Agent: { label: Agent }
+            Assistant: { label: Assistant }
+            Analysis: { label: Analysis }
+            Research: { label: Research }
+            Total: { label: Total }
+
+  # Reference: "Consolidated spend by line of business" — lobTableSql's
+  # intent (also never registered): the channel split per LOB. Row expansion
+  # (lobChildren) is skipped — silently broken in the reference, VAN-209 here.
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Consolidated spend by line of business"
+          style: heading
+          icon: Network
+      - kind: label
+        observe:
+          script: 'scenery("exec_subtitles").where("month_key", "${period.value}")'
+        params:
+          text: "…"
+          style: muted
+          column: lob_sub
+      - kind: grid
+        name: exec_lob_grid
+        observe:
+          script: 'scenery("exec_lob_table").where("month_key", "${period.value}")'
+        height: 420
+        params:
+          columns:
+            lob_name: { label: "Line of business" }
+            cc_app: { label: "Claude Code" }
+            copilot: { label: "GitHub Copilot" }
+            llm_suite: { label: "LLM suite" }
+            other: { label: Other }
+            spend: { label: Spend }
+            people: { label: People }
+            cost_per_user: { label: "Cost / user" }
+
+  # Pair: "Spend by reasoning tier" (raw lowercase tier keys, fixed order)
+  # and "Code AI by line of business" (coding+agent kinds only).
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params:
+              text: "Spend by reasoning tier"
+              style: heading
+              icon: Layers
+          - kind: list
+            name: exec_tier_list
+            observe:
+              script: 'scenery("exec_tier").where("month_key", "${period.value}")'
+            height: 180
+            params:
+              text: member
+              label: total_display
+              bar: bar_pct
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params:
+              text: "Code AI by line of business"
+              style: heading
+              icon: ChartBar
+          - kind: list
+            name: exec_code_ai_list
+            observe:
+              script: 'scenery("exec_code_ai").where("month_key", "${period.value}")'
+            height: 180
+            params:
+              text: member
+              label: total_display
+              bar: bar_pct
+
+  # Reference: "LLM suite by line of business" — the LOB × suite matrix;
+  # a grid stands in for StackedBarList (VAN-207).
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "LLM suite by line of business"
+          style: heading
+          icon: Layers
+      - kind: grid
+        name: exec_suite_grid
+        observe:
+          script: 'scenery("exec_suite_by_lob").where("month_key", "${period.value}")'
+        height: 420
+        params:
+          columns:
+            lob_name: { label: "Line of business" }
+            Coding: { label: Coding }
+            Domain: { label: Domain }
+            Agent: { label: Agent }
+            Assistant: { label: Assistant }
+            Analysis: { label: Analysis }
+            Research: { label: Research }
+            Total: { label: Total }
+
+  # Reference: the three "Model choice by …" matrices — the modelChoice
+  # contract (rows × fixed tier columns top/high/base/untiered) the page
+  # expects but the reference server never served.
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Model choice by reasoning tier"
+          style: heading
+          icon: ChartBar
+      - kind: label
+        params:
+          text: "top 12 models"
+          style: muted
+      - kind: grid
+        name: exec_choice_model_grid
+        observe:
+          script: 'scenery("exec_choice_model").where("month_key", "${period.value}").limit(12)'
+        height: 380
+        params:
+          columns:
+            member: { label: Model }
+            top: { label: Top }
+            high: { label: High }
+            base: { label: Base }
+            untiered: { label: Untiered }
+            Total: { label: Total }
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params:
+              text: "Model choice by line of business"
+              style: heading
+              icon: Network
+          - kind: grid
+            name: exec_choice_lob_grid
+            observe:
+              script: 'scenery("exec_choice_lob").where("month_key", "${period.value}")'
+            height: 380
+            params:
+              columns:
+                member: { label: "Line of business" }
+                top: { label: Top }
+                high: { label: High }
+                base: { label: Base }
+                untiered: { label: Untiered }
+                Total: { label: Total }
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params:
+              text: "Model choice by use case"
+              style: heading
+              icon: Layers
+          - kind: grid
+            name: exec_choice_kind_grid
+            observe:
+              script: 'scenery("exec_choice_kind").where("month_key", "${period.value}")'
+            height: 380
+            params:
+              columns:
+                member: { label: "Use case" }
+                top: { label: Top }
+                high: { label: High }
+                base: { label: Base }
+                untiered: { label: Untiered }
+                Total: { label: Total }
+
+  # Reference: "Spend by product" — productLines with the documented grain
+  # fix (per app across the scope, not per app-month) and the consuming-LOB
+  # count the reference's meta text wanted but never selected.
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Spend by product"
+          style: heading
+          icon: CreditCard
+      - kind: list
+        name: exec_products_list
+        observe:
+          script: 'scenery("exec_products").where("month_key", "${period.value}")'
+        height: 420
+        params:
+          text: 'rank_display + " " + member + "   ·   " + meta'
+          label: total_display
+          bar: bar_pct

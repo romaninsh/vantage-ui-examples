@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Exec · exec_tier
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rank, type: int, flags: [hidden] }
+  - { name: member, type: string, flags: [title] }
+  - { name: total_display, type: string }
+  - { name: bar_pct, type: float }
+postgres:
+  # Reference: exec.reasoningTier collapsed over months, fixed order
+  # top/high/base/untiered, RAW lowercase tier keys as labels.
+  rhai: |
+    select().from("mart_spend_agg")
+            .expression(expr("(model_tier) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))
+            .expression(expr("coalesce(month_key, {})", ["Year to date"]).alias("month_key"))
+            .expression(expr("model_tier").alias("member"))
+            .expression(expr("CASE model_tier WHEN 'top' THEN 1 WHEN 'high' THEN 2 WHEN 'base' THEN 3 ELSE 4 END").alias("rank"))
+            .expression(expr("CASE WHEN (sum(spend_usd)) >= 1e6 THEN '$' || to_char((sum(spend_usd)) / 1e6, 'FM999,990.00') || 'M' WHEN (sum(spend_usd)) >= 1e3 THEN '$' || to_char(round((sum(spend_usd)) / 1e3), 'FM999,999') || 'K' ELSE '$' || to_char(round(coalesce((sum(spend_usd)), 0)), 'FM999,999') END").alias("total_display"))
+            .expression(expr("round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(s) FROM (SELECT sum(spend_usd) AS s FROM mart_spend_agg GROUP BY model_tier) x) ELSE (SELECT max(s) FROM (SELECT t.month_key AS mk, t.model_tier, sum(t.spend_usd) AS s FROM mart_spend_agg t GROUP BY 1, 2) x WHERE x.mk = mart_spend_agg.month_key) END, 0), 1)").alias("bar_pct"))
+            .group_by(expr("model_tier"))
+            .group_by(expr("ROLLUP(month_key)"))
+            .order_by(expr("CASE model_tier WHEN 'top' THEN 1 WHEN 'high' THEN 2 WHEN 'base' THEN 3 ELSE 4 END"), "asc")

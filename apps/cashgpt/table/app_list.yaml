@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Apps · catalogue
+id_column: app_id
+columns:
+  - { name: app_id, type: string, flags: [id, hidden] }
+  - { name: app_name, type: string, flags: [title] }
+  - { name: owner_lob_name, type: string }
+  - { name: spend_display, type: string }
+  - { name: status, type: string }
+  - { name: kind, type: string }
+  - { name: audience, type: string }
+postgres:
+  # Reference: apps.list — the picker with its status and audience tabs;
+  # month guard rides the JOIN (an app with no spend in scope still lists).
+  rhai: |
+    let mo = if "month" in args { args.month } else { "" };
+    let st = if "status" in args { args.status } else { "" };
+    let au = if "audience" in args { args.audience } else { "" };
+    select().from_as("dim_app", "a")
+        .left_join("mart_app_month", "m", expr("m.app_id = a.app_id AND ({} = '' OR m.month_key = {})", [mo, mo]))
+        .where(expr("({} = '' OR a.status = {})", [st, st]))
+        .where(expr("({} = '' OR a.audience = {})", [au, au]))
+        .expression(expr("a.app_id").alias("app_id"))
+        .expression(expr("a.app_name").alias("app_name"))
+        .expression(expr("a.owner_lob_name").alias("owner_lob_name"))
+        .expression(expr("CASE WHEN coalesce(sum(m.spend_usd), 0) >= 1e6 THEN '$' || to_char((coalesce(sum(m.spend_usd), 0)) / 1e6, 'FM999,990.00') || 'M' WHEN coalesce(sum(m.spend_usd), 0) >= 1e3 THEN '$' || to_char(round((coalesce(sum(m.spend_usd), 0)) / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(coalesce(sum(m.spend_usd), 0)), 'FM999,990') END").alias("spend_display"))
+        .expression(expr("a.status").alias("status"))
+        .expression(expr("a.kind").alias("kind"))
+        .expression(expr("a.audience").alias("audience"))
+        .group_by(expr("a.app_id"))
+        .group_by(expr("a.app_name"))
+        .group_by(expr("a.owner_lob_name"))
+        .group_by(expr("a.status"))
+        .group_by(expr("a.kind"))
+        .group_by(expr("a.audience"))
+        .order_by(expr("coalesce(sum(m.spend_usd), 0)"), "desc")

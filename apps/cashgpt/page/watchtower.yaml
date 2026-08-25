@@ -1,0 +1,195 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Watchtower
+body:
+  # Reference: WatchtowerPage header.
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Watchtower — individual spend against peers"
+          style: heading
+          icon: Gauge
+      - kind: label
+        params:
+          text: "Everyone measured against the people doing the same job beside them. The peer average excludes the person themselves."
+          style: muted
+
+  # Panel-parameter card — reference places this BELOW the islands, but
+  # scope publishes flow top-down at mount, so the controls init first. The
+  # σ / minimum-spend thresholds live on the outliers grid below as
+  # server-pushed gte filter chips.
+  - kind: column
+    frame: true
+    children:
+      - kind: row
+        children:
+          - kind: column
+            children:
+              - kind: label
+                params: { text: "Month", style: muted }
+              - kind: select
+                name: wmonth
+                appearance: chips
+                params:
+                  options: [Jan, Feb, Mar, Apr, May, Jun, Jul]
+                  default: Jul
+          - kind: column
+            children:
+              - kind: label
+                params: { text: "Peer group", style: muted }
+              - kind: select
+                name: wpeer
+                appearance: chips
+                params:
+                  options: [Team, "Job title", "Grade in LOB"]
+                  default: Team
+
+  # Islands — WatchIsland: no delta anywhere, notes only (the reference
+  # passes no series either, so the cards are traceless by design).
+  # Islands 3/4 are month totals — they do not react to the peer tab.
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: w_outlier
+            observe:
+              script: 'let m = switch "${wmonth.value}" { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch "${wpeer.value}" { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+            params:
+              label: "Peer outlier"
+              icon: Gauge
+              color: red
+              column: outlier_display
+              change_text: outlier_note
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: w_platform
+            observe:
+              script: 'let m = switch "${wmonth.value}" { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch "${wpeer.value}" { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+            params:
+              label: "Top platform share"
+              icon: Layers
+              color: cyan
+              column: platform_display
+              change_text: platform_note
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: w_mom
+            observe:
+              script: 'let m = switch "${wmonth.value}" { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch "${wpeer.value}" { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+            params:
+              label: "MoM spend velocity"
+              icon: TrendingUp
+              color: blue
+              column: mom_display
+              change_text: mom_note_static
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: w_projected
+            observe:
+              script: 'let m = switch "${wmonth.value}" { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch "${wpeer.value}" { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+            params:
+              label: "Projected next month"
+              icon: CreditCard
+              color: yellow
+              column: projected_display
+              change_text: projected_note_static
+
+  # Reference: "Spend outliers" — leave-one-out peer stats per person; the
+  # peer-group tab swaps the column triples (here: the scenery). σ ≥ 3 is
+  # the reference's default threshold, raisable/lowerable via the chips.
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Spend outliers"
+          style: heading
+          icon: Network
+      - kind: label
+        params:
+          text: "people at or above the σ threshold · showing the top 200"
+          style: muted
+      - kind: grid
+        name: w_outliers
+        observe:
+          script: 'let m = switch "${wmonth.value}" { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; if "${wpeer.value}" == "Job title" { scenery("watch_outliers_function").where("month_key", m).limit(200) } else if "${wpeer.value}" == "Grade in LOB" { scenery("watch_outliers_grade").where("month_key", m).limit(200) } else { scenery("watch_outliers_team").where("month_key", m).limit(200) }'
+        height: 480
+        params:
+          filters:
+            - { label: "≥3σ", column: sigma, op: gte, value: 3, default: true }
+            - { label: "≥4σ", column: sigma, op: gte, value: 4, default: false }
+            - { label: "spend ≥ $1K", column: spend_usd, op: gte, value: 1000, default: false }
+            - { label: "spend ≥ $5K", column: spend_usd, op: gte, value: 5000, default: false }
+          columns:
+            full_name: { label: User }
+            role_team: { label: "Role · team" }
+            manager_name: { label: Manager }
+            spend_display: { label: Spend }
+            peer_mean_display: { label: "Peer average" }
+            multiple_display: { label: "× vs peers" }
+            band:
+              label: "How unusual"
+              color:
+                red: ["extremely unusual"]
+                yellow: ["very unusual"]
+            sigma_display: { label: "σ" }
+            top_platform: { label: "Top platform" }
+            peers: { label: Peers }
+
+  # Reference: "Team efficiency and top-tier overuse" — medians over the
+  # scoped set itself, quadrant ties to the worse side, excess = spend the
+  # unit would have saved at the median tier mix. Global-filter free here,
+  # like the page arrives without the Overview's filter bar.
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Team efficiency and top-tier overuse"
+          style: heading
+          icon: ChartBar
+      - kind: label
+        observe:
+          script: 'scenery("watch_eff_subtitle")'
+        params:
+          text: "…"
+          style: muted
+          column: line
+      - kind: select
+        name: wquad
+        appearance: chips
+        params:
+          options: [All, "Heavy & pricey", "Heavy & lean", "Light & pricey", "Light & lean"]
+          default: All
+      - kind: grid
+        name: w_team
+        observe:
+          script: 'let g = switch "${wquad.value}" { "Heavy & pricey" => "Heavy and pricey", "Heavy & lean" => "Heavy but lean", "Light & pricey" => "Light but pricey", "Light & lean" => "Light and lean", _ => "" }; if g == "" { scenery("watch_team_efficiency").limit(150) } else { scenery("watch_team_efficiency").where("quadrant", g).limit(150) }'
+        height: 480
+        params:
+          columns:
+            level: { label: "" }
+            org_name: { label: Manager }
+            unit_meta: { label: "Line of business" }
+            users_display: { label: Users }
+            spend_display: { label: "Total spend" }
+            per_user_display: { label: "$ / user" }
+            vs_median_display: { label: "vs median" }
+            quadrant:
+              label: Quadrant
+              color:
+                red: ["Heavy and pricey"]
+                yellow: ["Heavy but lean"]
+                magenta: ["Light but pricey"]
+                green: ["Light and lean"]
+            tier_display: { label: "Top tier %" }
+            excess_display: { label: "Excess $" }
