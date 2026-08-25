@@ -1,0 +1,12 @@
+Needs a live PostgreSQL warehouse: the `warehouse` datasource auto-connects on
+startup, so without one the app logs a connect ERROR and the shared "clean
+startup" check fails. The dataset is a 500k-employee simulation (gold marts over
+a silver star schema), far too large to ship or seed on a CI runner.
+
+It also needs a vantage-ui build carrying the 0.36 dashboard grammar
+(`args`/`search:`/`group:`/`placeholder:` on selects, grids and charts). The
+published-binary runner pins an older release, which fails schema validation on
+every page here.
+
+Run it explicitly against a local warehouse and a matching build:
+  cargo run -p test-framework -- apps/cashgpt
