@@ -12,6 +12,15 @@ postgres:
   # Reference: ISLANDS[2]. Value divides in SQL; series is USERS, not cost.
   # Identical-content rule: every figure, delta and note matches the Vue
   # reference; all derived in SQL — the client renders, never computes.
+  #
+  # NOT FILTERED BY driver / platform / model, and that is the reference's
+  # own rule (`personParams` + `personDegraded`): all three vary WITHIN a
+  # person-month, so they are not columns on the person-grain mart and no
+  # honest predicate exists here. The reference paints a "not filtered by
+  # …" badge in that case; we have no component for one yet (VAN-211), so
+  # picking those filters leaves this island at its unfiltered value while
+  # its neighbours narrow. Do not "fix" it by joining a wider mart — that
+  # would double-count a person across their platforms.
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
     let rorg = if "rorg" in args { args.rorg } else { "" };

@@ -9,10 +9,14 @@ columns:
   - { name: lob_sub, type: string }
 postgres:
   # Panel subtitles, formatted in SQL and read by observing labels.
+  # Counts come from the outer aggregate, not a subquery: the reference
+  # quotes the number of series it is rendering for the selected period,
+  # so an unscoped count reports the year's providers on a single month.
+  # ROLLUP then yields the per-month and year-to-date figures alike.
   rhai: |
     select().from("mart_spend_agg")
             .expression(expr("coalesce(month_key, {})", ["Year to date"]).alias("rid"))
             .expression(expr("coalesce(month_key, {})", ["Year to date"]).alias("month_key"))
-            .expression(expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M across ' || (SELECT count(DISTINCT provider_group) FROM mart_spend_agg) || ' providers'").alias("prov_sub"))
-            .expression(expr("(SELECT count(DISTINCT lob_id) FROM mart_spend_agg) || ' lines of business'").alias("lob_sub"))
+            .expression(expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M across ' || count(DISTINCT provider_group) || ' providers'").alias("prov_sub"))
+            .expression(expr("count(DISTINCT lob_id) || ' lines of business'").alias("lob_sub"))
             .group_by(expr("ROLLUP(month_key)"))

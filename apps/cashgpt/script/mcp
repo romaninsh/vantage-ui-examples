@@ -7,18 +7,43 @@ Usage:
   script/mcp data '<rhai>' [--cache] [--limit N]   # run_data_script
   script/mcp call <tool> ['<json-args>']    # any tool, raw JSON args
 
-Handles the session handshake (cached in /tmp per port, re-inits on
+Handles the session handshake (cached per user + port, re-inits on
 failure) and SSE unwrapping; prints the tool result JSON.
 """
 
 import json
 import os
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 
 BASE = os.environ.get("VANTAGE_MCP", "http://127.0.0.1:14488/mcp")
-SID_FILE = f"/tmp/vantage-mcp-sid-{BASE.split(':')[-1].split('/')[0]}"
+_PORT = BASE.split(":")[-1].split("/")[0]
+
+# Per-user 0700 directory rather than a world-writable /tmp path: the
+# session file is opened for writing, and a predictable name lets another
+# local user pre-create a symlink there and have this script truncate a
+# file on their behalf. `XDG_RUNTIME_DIR` is already per-user and 0700
+# where it exists; otherwise carve out our own under the temp dir.
+def _sid_path():
+    runtime = os.environ.get("XDG_RUNTIME_DIR")
+    base = runtime or os.path.join(tempfile.gettempdir(), f"vantage-mcp-{os.getuid()}")
+    if base is not runtime:
+        os.makedirs(base, mode=0o700, exist_ok=True)
+        os.chmod(base, 0o700)
+    return os.path.join(base, f"vantage-mcp-sid-{_PORT}")
+
+
+SID_FILE = _sid_path()
+
+
+def _write_sid(sid):
+    """Create-or-truncate without following a symlink, mode 0600."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(SID_FILE, flags, 0o600)
+    with os.fdopen(fd, "w") as fh:
+        fh.write(sid)
 
 
 def post(payload, sid=None, timeout=60):
@@ -54,7 +79,7 @@ def new_session():
     if not sid:
         sys.exit("no session id from initialize — is the app running?")
     post({"jsonrpc": "2.0", "method": "notifications/initialized"}, sid, timeout=5)
-    open(SID_FILE, "w").write(sid)
+    _write_sid(sid)
     return sid
 
 

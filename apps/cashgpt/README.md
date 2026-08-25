@@ -43,9 +43,13 @@ how you check any figure a panel quotes.
 
 The warehouse lives in a local Postgres container:
 
-```
+```text
 postgres://cashgpt:cashgpt@localhost:55432/cashgpt
 ```
+
+Those are throwaway container credentials for a generated dataset, not a
+secret — but they are also the only thing in this app you should expect to
+change. Point the URL at your own instance and nothing else needs editing.
 
 The app reads the `gold` schema (pre-aggregated marts) with `silver` on the
 search path for dimension lookups; it never writes. Point
