@@ -9,7 +9,11 @@
 # everywhere, not just under inventory/, so no app can leak them into git.
 **/.cache/
 # Installed agent-skill bundles (reproducible — installed under .agents/skills,
-# treated like vendored deps).
+# treated like vendored deps). vantage-ui reinstalls them from the running
+# build, so a committed copy is churn: `apps/vantage-github` carried 15 of
+# them and every open rewrote a handful. A rule alone could not stop that —
+# gitignore does not apply to already-tracked files, so they had to be
+# `git rm --cached`-ed as well. Same applies if any reappear.
 **/.agents/
 
 # Per-app local secrets — inventory/.env can hold real credentials (AWS keys,
