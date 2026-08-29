@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Spend cube (coarse)
+id_column: rid
+columns:
+  # Synthetic row identity: the marts have composite grains and no PK, and
+  # vantage dedupes rows by id — so the id must cover the full grain.
+  # (Projected in the query below; column-level `expr:` is not wired for
+  # the Postgres driver yet.)
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string }
+  - { name: lob_id, type: string }
+  - { name: lob_name, type: string }
+  - { name: resource_org, type: string }
+  - { name: platform_id, type: string }
+  - { name: platform_name, type: string }
+  - { name: model_id, type: string }
+  - { name: model_name, type: string, flags: [title] }
+  - { name: provider_group, type: string }
+  - { name: model_tier, type: string }
+  - { name: kind, type: string }
+  - { name: usage_driver, type: string }
+  - { name: tokens, type: int }
+  - { name: spend_usd, type: float }
+postgres:
+  rhai: |
+    select().from("mart_spend_agg")
+        .expression(expr("coalesce(month_key,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(platform_id,'') || ':' || coalesce(platform_name,'') || ':' || coalesce(model_id,'') || ':' || coalesce(model_name,'') || ':' || coalesce(provider_group,'') || ':' || coalesce(model_tier,'') || ':' || coalesce(kind,'') || ':' || coalesce(usage_driver,'')").alias("rid"))
+        .field("month_key")
+        .field("lob_id")
+        .field("lob_name")
+        .field("resource_org")
+        .field("platform_id")
+        .field("platform_name")
+        .field("model_id")
+        .field("model_name")
+        .field("provider_group")
+        .field("model_tier")
+        .field("kind")
+        .field("usage_driver")
+        .field("tokens")
+        .field("spend_usd")

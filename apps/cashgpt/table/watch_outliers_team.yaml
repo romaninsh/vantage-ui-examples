@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Watch · outliers (team)
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string, flags: [hidden] }
+  - { name: full_name, type: string, flags: [title] }
+  - { name: role_team, type: string }
+  - { name: manager_name, type: string, optional: true }
+  - { name: spend_display, type: string }
+  - { name: peer_mean_display, type: string }
+  - { name: multiple_display, type: string }
+  - { name: band, type: string }
+  - { name: sigma_display, type: string }
+  - { name: sigma, type: float, flags: [hidden] }
+  - { name: spend_usd, type: float, flags: [hidden] }
+  - { name: top_platform, type: string, optional: true }
+  - { name: peers, type: int }
+postgres:
+  # Reference: watch outliers, team peer definition. Leave-one-out stats
+  # arrive precomputed in mart_peer_benchmark; joins to dims replicate the
+  # reference's manager/top-platform lookups.
+  rhai: |
+    select().from("mart_peer_benchmark")
+        .where(expr("team_sigma IS NOT NULL AND team_sigma >= 2"))
+        .expression(expr("employee_id || ':' || month_key").alias("rid"))
+        .field("month_key")
+        .field("full_name")
+        .expression(expr("job_function || ' · ' || team_name").alias("role_team"))
+        .expression(expr("(SELECT e.full_name FROM silver.dim_employee e WHERE e.heads_org_id = mart_peer_benchmark.team_org_id)").alias("manager_name"))
+        .expression(expr("'$' || to_char(round(spend_usd), 'FM999,999,999')").alias("spend_display"))
+        .expression(expr("'$' || to_char(round(coalesce(team_mean, 0)), 'FM999,999,999')").alias("peer_mean_display"))
+        .expression(expr("CASE WHEN team_multiple IS NULL OR round(team_multiple) = 0 THEN '—' ELSE to_char(round(team_multiple), 'FM999,999') || '×' END").alias("multiple_display"))
+        .expression(expr("CASE WHEN team_sigma >= 4 THEN 'extremely unusual' WHEN team_sigma >= 3 THEN 'very unusual' ELSE 'unusual' END").alias("band"))
+        .expression(expr("to_char(team_sigma, 'FM999,999,990.0') || 'σ'").alias("sigma_display"))
+        .expression(expr("team_sigma").alias("sigma"))
+        .field("spend_usd")
+        .expression(expr("(SELECT p.platform_name FROM silver.dim_platform p WHERE p.platform_id = mart_peer_benchmark.top_platform_id)").alias("top_platform"))
+        .expression(expr("team_peers").alias("peers"))
+        .order_by(expr("team_sigma"), "desc")

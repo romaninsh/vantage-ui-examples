@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Cost per user (KPI)
+id_column: month_key
+columns:
+  - { name: month_key, type: string, flags: [id] }
+  - { name: display, type: string, flags: [title] }
+  - { name: change, type: string, optional: true }
+  - { name: change_text, type: string }
+  - { name: spark, type: string }
+postgres:
+  # Reference: ISLANDS[2]. Value divides in SQL; series is USERS, not cost.
+  # Identical-content rule: every figure, delta and note matches the Vue
+  # reference; all derived in SQL — the client renders, never computes.
+  #
+  # NOT FILTERED BY driver / platform / model, and that is the reference's
+  # own rule (`personParams` + `personDegraded`): all three vary WITHIN a
+  # person-month, so they are not columns on the person-grain mart and no
+  # honest predicate exists here. The reference paints a "not filtered by
+  # …" badge in that case; we have no component for one yet (VAN-211), so
+  # picking those filters leaves this island at its unfiltered value while
+  # its neighbours narrow. Do not "fix" it by joining a wider mart — that
+  # would double-count a person across their platforms.
+  rhai: |
+    let lob = if "lob" in args { args.lob } else { "" };
+    let rorg = if "rorg" in args { args.rorg } else { "" };
+    let jf = if "jobfn" in args { args.jobfn } else { "" };
+    let g = "({} = '' OR lob_id = {}) AND ({} = '' OR resource_org = {}) AND ({} = '' OR job_function = {})";
+    let ga = [lob, lob, rorg, rorg, jf, jf];
+    let monthly = "(SELECT month_key AS mk, sum(spend_usd) / nullif(sum(users), 0) AS c, sum(users) AS u FROM mart_active_month WHERE " + g + " GROUP BY 1)";
+    select().from("mart_active_month")
+            .where(expr(g, ga))
+            .expression(expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
+            .expression(expr("'$' || to_char(round(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT c FROM " + monthly + " t WHERE t.mk = ((SELECT max(mk) FROM " + monthly + " lm))) ELSE sum(spend_usd) / nullif(sum(users), 0) END), 'FM999,999')", ga + ga).alias("display"))
+            .expression(expr("CASE WHEN (SELECT c FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END))) IS NULL THEN NULL ELSE (CASE WHEN CASE WHEN GROUPING(month_key) = 1 THEN (SELECT c FROM " + monthly + " t WHERE t.mk = ((SELECT max(mk) FROM " + monthly + " lm))) ELSE sum(spend_usd) / nullif(sum(users), 0) END >= (SELECT c FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END))) THEN '+' ELSE '' END) || to_char(round(100.0 * (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT c FROM " + monthly + " t WHERE t.mk = ((SELECT max(mk) FROM " + monthly + " lm))) ELSE sum(spend_usd) / nullif(sum(users), 0) END - (SELECT c FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END)))) / nullif((SELECT c FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END))), 0), 1), 'FM990.0') || '%' END", ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga).alias("change"))
+            .expression(expr("CASE WHEN (SELECT c FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END))) IS NULL THEN 'first month' ELSE 'vs previous month · ' || to_char(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT u FROM " + monthly + " t WHERE t.mk = ((SELECT max(mk) FROM " + monthly + " lm))) ELSE sum(users) END, 'FM999,999,999') || ' active' END", ga + ga + ga + ga + ga).alias("change_text"))
+            .expression(expr("(SELECT string_agg(t.u::text, ',' ORDER BY t.mk) FROM " + monthly + " t)", ga).alias("spark"))
+            .group_by(expr("ROLLUP(month_key)"))

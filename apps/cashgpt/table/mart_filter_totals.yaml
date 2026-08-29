@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Filter totals
+id_column: rid
+columns:
+  # Synthetic row identity: the marts have composite grains and no PK, and
+  # vantage dedupes rows by id — so the id must cover the full grain.
+  # (Projected in the query below; column-level `expr:` is not wired for
+  # the Postgres driver yet.)
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: dimension, type: string }
+  - { name: member_key, type: string }
+  - { name: member_label, type: string, flags: [title] }
+  - { name: spend_usd, type: float }
+  - { name: tokens, type: int }
+postgres:
+  rhai: |
+    select().from("mart_filter_totals")
+        .expression(expr("coalesce(dimension,'') || ':' || coalesce(member_key,'') || ':' || coalesce(member_label,'')").alias("rid"))
+        .field("dimension")
+        .field("member_key")
+        .field("member_label")
+        .field("spend_usd")
+        .field("tokens")

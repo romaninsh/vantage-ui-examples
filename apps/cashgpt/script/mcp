@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+"""Query the running Vantage app's MCP server (http://127.0.0.1:14488/mcp).
+
+Usage:
+  script/mcp tools                          # list tool names
+  script/mcp logs [substr]                  # recent WARN/ERROR (+ filter)
+  script/mcp data '<rhai>' [--cache] [--limit N]   # run_data_script
+  script/mcp call <tool> ['<json-args>']    # any tool, raw JSON args
+
+Handles the session handshake (cached per user + port, re-inits on
+failure) and SSE unwrapping; prints the tool result JSON.
+"""
+
+import json
+import os
+import sys
+import tempfile
+import urllib.error
+import urllib.request
+
+BASE = os.environ.get("VANTAGE_MCP", "http://127.0.0.1:14488/mcp")
+_PORT = BASE.split(":")[-1].split("/")[0]
+
+# Per-user 0700 directory rather than a world-writable /tmp path: the
+# session file is opened for writing, and a predictable name lets another
+# local user pre-create a symlink there and have this script truncate a
+# file on their behalf. `XDG_RUNTIME_DIR` is already per-user and 0700
+# where it exists; otherwise carve out our own under the temp dir.
+def _sid_path():
+    runtime = os.environ.get("XDG_RUNTIME_DIR")
+    base = runtime or os.path.join(tempfile.gettempdir(), f"vantage-mcp-{os.getuid()}")
+    if base is not runtime:
+        os.makedirs(base, mode=0o700, exist_ok=True)
+        os.chmod(base, 0o700)
+    return os.path.join(base, f"vantage-mcp-sid-{_PORT}")
+
+
+SID_FILE = _sid_path()
+
+
+def _write_sid(sid):
+    """Create-or-truncate without following a symlink, mode 0600."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(SID_FILE, flags, 0o600)
+    with os.fdopen(fd, "w") as fh:
+        fh.write(sid)
+
+
+def post(payload, sid=None, timeout=60):
+    req = urllib.request.Request(BASE, data=json.dumps(payload).encode(), method="POST")
+    req.add_header("Content-Type", "application/json")
+    req.add_header("Accept", "application/json, text/event-stream")
+    if sid:
+        req.add_header("Mcp-Session-Id", sid)
+    resp = urllib.request.urlopen(req, timeout=timeout)
+    body = resp.read().decode()
+    new_sid = resp.headers.get("mcp-session-id")
+    # SSE framing: take the last `data:` line; plain JSON passes through.
+    # Notifications return an empty body — surface as None.
+    datas = [l[5:].strip() for l in body.splitlines() if l.startswith("data:")]
+    payloads = [d for d in datas if d] or ([body.strip()] if body.strip() else [])
+    parsed = json.loads(payloads[-1]) if payloads else None
+    return parsed, new_sid
+
+
+def session():
+    if os.path.exists(SID_FILE):
+        return open(SID_FILE).read().strip()
+    return new_session()
+
+
+def new_session():
+    init = {
+        "jsonrpc": "2.0", "id": 1, "method": "initialize",
+        "params": {"protocolVersion": "2025-03-26", "capabilities": {},
+                   "clientInfo": {"name": "mcp-helper", "version": "1.0"}},
+    }
+    _, sid = post(init)
+    if not sid:
+        sys.exit("no session id from initialize — is the app running?")
+    post({"jsonrpc": "2.0", "method": "notifications/initialized"}, sid, timeout=5)
+    _write_sid(sid)
+    return sid
+
+
+def rpc(method, params, retry=True):
+    sid = session()
+    try:
+        resp, _ = post({"jsonrpc": "2.0", "id": 2, "method": method, "params": params}, sid)
+    except urllib.error.HTTPError as e:
+        if retry and e.code in (400, 404):  # stale session — re-handshake once
+            os.unlink(SID_FILE)
+            return rpc(method, params, retry=False)
+        raise
+    if "error" in resp:
+        sys.exit(f"MCP error: {resp['error'].get('message')}")
+    return resp["result"]
+
+
+def tool(name, args):
+    result = rpc("tools/call", {"name": name, "arguments": args})
+    text = result["content"][0]["text"]
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return text
+
+
+def main():
+    argv = sys.argv[1:]
+    if not argv:
+        sys.exit(__doc__)
+    cmd, rest = argv[0], argv[1:]
+
+    if cmd == "tools":
+        for t in rpc("tools/list", {})["tools"]:
+            print(t["name"])
+        return
+
+    if cmd == "logs":
+        d = tool("list_logs", {})
+        substr = rest[0] if rest else ""
+        for e in d.get("entries", []):
+            line = f"{e['level']} {e['target']} {e['message']}"
+            if substr.lower() in line.lower():
+                print(line)
+        return
+
+    if cmd == "data":
+        args = {"script": rest[0]}
+        if "--cache" in rest:
+            args["mode"] = "cache"
+        if "--limit" in rest:
+            args["limit"] = int(rest[rest.index("--limit") + 1])
+        print(json.dumps(tool("run_data_script", args), indent=1))
+        return
+
+    if cmd == "call":
+        args = json.loads(rest[1]) if len(rest) > 1 else {}
+        print(json.dumps(tool(rest[0], args), indent=1))
+        return
+
+    sys.exit(__doc__)
+
+
+if __name__ == "__main__":
+    main()

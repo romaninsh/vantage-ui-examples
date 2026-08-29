@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Watchtower months
+body:
+  - kind: binder
+    name: mart_watch_month
+    observe: mart_watch_month
+    params:
+      default_sort: { column: month_key, direction: desc }

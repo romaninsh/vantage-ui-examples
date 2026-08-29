@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: People cube
+body:
+  - kind: binder
+    name: mart_people_agg
+    observe: mart_people_agg
+    params:
+      default_sort: { column: month_key, direction: desc }

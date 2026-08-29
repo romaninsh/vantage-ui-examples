@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Active people / month
+id_column: rid
+columns:
+  # Synthetic row identity: the marts have composite grains and no PK, and
+  # vantage dedupes rows by id — so the id must cover the full grain.
+  # (Projected in the query below; column-level `expr:` is not wired for
+  # the Postgres driver yet.)
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string }
+  - { name: lob_id, type: string }
+  - { name: lob_name, type: string, flags: [title] }
+  - { name: resource_org, type: string }
+  - { name: job_function, type: string }
+  - { name: seniority_code, type: string }
+  - { name: users, type: int }
+  - { name: spend_usd, type: float }
+  - { name: tokens, type: int }
+postgres:
+  rhai: |
+    select().from("mart_active_month")
+        .expression(expr("coalesce(month_key,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(job_function,'') || ':' || coalesce(seniority_code,'')").alias("rid"))
+        .field("month_key")
+        .field("lob_id")
+        .field("lob_name")
+        .field("resource_org")
+        .field("job_function")
+        .field("seniority_code")
+        .field("users")
+        .field("spend_usd")
+        .field("tokens")

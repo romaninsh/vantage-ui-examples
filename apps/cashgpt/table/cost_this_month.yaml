@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Cost this month (KPI)
+id_column: month_key
+columns:
+  - { name: month_key, type: string, flags: [id] }
+  - { name: display, type: string, flags: [title] }
+  - { name: change, type: string, optional: true }
+  - { name: change_text, type: string }
+  - { name: spark, type: string }
+postgres:
+  # Reference: OverviewPage ISLANDS[0]. The all-row reports the LATEST month.
+  # Identical-content rule: every figure, delta and note matches the Vue
+  # reference; all derived in SQL — the client renders, never computes.
+  rhai: |
+    let lob = if "lob" in args { args.lob } else { "" };
+    let rorg = if "rorg" in args { args.rorg } else { "" };
+    let drv = if "driver" in args { args.driver } else { "" };
+    let plat = if "platform" in args { args.platform } else { "" };
+    let mdl = if "model" in args { args.model } else { "" };
+    let jf = if "jobfn" in args { args.jobfn } else { "" };
+    let m = "mart_spend_agg";
+    let g = "({} = '' OR lob_id = {}) AND ({} = '' OR resource_org = {}) AND ({} = '' OR usage_driver = {}) AND ({} = '' OR platform_id = {}) AND ({} = '' OR model_id = {})";
+    let ga = [lob, lob, rorg, rorg, drv, drv, plat, plat, mdl, mdl];
+    if jf != "" { m = "mart_fact_agg"; g += " AND ({} = '' OR job_function = {})"; ga += [jf, jf]; }
+    let monthly = "(SELECT month_key AS mk, sum(spend_usd) AS v FROM " + m + " WHERE " + g + " GROUP BY 1)";
+    select().from(m)
+            .where(expr(g, ga))
+            .expression(expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
+            .expression(expr("'$' || to_char((CASE WHEN GROUPING(month_key) = 1 THEN (SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(mk) FROM " + monthly + " lm))) ELSE sum(spend_usd) END) / 1e6, 'FM999,990.00') || 'M'", ga + ga).alias("display"))
+            .expression(expr("CASE WHEN (SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END))) IS NULL THEN NULL ELSE (CASE WHEN CASE WHEN GROUPING(month_key) = 1 THEN (SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(mk) FROM " + monthly + " lm))) ELSE sum(spend_usd) END >= (SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END))) THEN '+' ELSE '' END) || to_char(round(100.0 * (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(mk) FROM " + monthly + " lm))) ELSE sum(spend_usd) END - (SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END)))) / nullif((SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END))), 0), 1), 'FM990.0') || '%' END", ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga).alias("change"))
+            .expression(expr("CASE WHEN (SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END))) IS NULL THEN 'first month' ELSE 'vs ' || to_char(to_date(((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END)) || '-01', 'YYYY-MM-DD'), 'FMMonth') || ' · ' || (CASE WHEN CASE WHEN GROUPING(month_key) = 1 THEN (SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(mk) FROM " + monthly + " lm))) ELSE sum(spend_usd) END >= (SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END))) THEN '+' ELSE '−' END) || '$' || to_char(abs(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(mk) FROM " + monthly + " lm))) ELSE sum(spend_usd) END - (SELECT v FROM " + monthly + " t WHERE t.mk = ((SELECT max(t.mk) FROM " + monthly + " t WHERE t.mk < CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END)))) / 1e6, 'FM990.00') || 'M' END", ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga).alias("change_text"))
+            .expression(expr("(SELECT string_agg(round(t.v)::text, ',' ORDER BY t.mk) FROM " + monthly + " t)", ga).alias("spark"))
+            .group_by(expr("ROLLUP(month_key)"))

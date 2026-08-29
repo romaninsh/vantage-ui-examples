@@ -1,0 +1,527 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Overview
+body:
+  # Global scope: one month, or the whole period. Options come from a
+  # one-shot query on the select itself.
+  - kind: column
+    frame: true
+    children:
+      - kind: row
+        children:
+          - kind: select
+            name: month
+            query:
+              datasource: warehouse
+              rhai: |
+                select().from("mart_spend_agg")
+                    .field("month_key")
+                    .expression(expr("to_char(to_date(month_key || '-01', 'YYYY-MM-DD'), 'Mon YYYY')").alias("label"))
+                    .expression(expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M'").alias("detail"))
+                    .group_by(ident("month_key"))
+                    .order_by(ident("month_key"), "desc")
+            params:
+              label: Month
+              all_label: "All months"
+          - kind: select
+            name: lob
+            query:
+              datasource: warehouse
+              rhai: |
+                select().from("mart_filter_totals")
+                    .where(ident("dimension") == "lob")
+                    .field("member_key")
+                    .expression(expr("member_label").alias("label"))
+                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(expr("spend_usd"), "desc")
+            params:
+              label: "Billable Org"
+              all_label: "All billable orgs"
+          - kind: select
+            name: rorg
+            query:
+              datasource: warehouse
+              rhai: |
+                select().from("mart_filter_totals")
+                    .where(ident("dimension") == "resource_org")
+                    .field("member_key")
+                    .expression(expr("member_label").alias("label"))
+                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(expr("spend_usd"), "desc")
+            params:
+              label: "Resource Org"
+              all_label: "All resource orgs"
+          - kind: select
+            name: driver
+            query:
+              datasource: warehouse
+              rhai: |
+                select().from("mart_filter_totals")
+                    .where(ident("dimension") == "usage_driver")
+                    .field("member_key")
+                    .expression(expr("member_label").alias("label"))
+                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(expr("spend_usd"), "desc")
+            params:
+              label: "Usage Driver"
+              all_label: "All usage drivers"
+          - kind: select
+            name: platform
+            query:
+              datasource: warehouse
+              rhai: |
+                select().from("mart_filter_totals")
+                    .where(ident("dimension") == "platform")
+                    .field("member_key")
+                    .expression(expr("member_label").alias("label"))
+                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(expr("spend_usd"), "desc")
+            params:
+              label: "Platform"
+              all_label: "All platforms"
+          - kind: select
+            name: model
+            query:
+              datasource: warehouse
+              rhai: |
+                select().from("mart_filter_totals")
+                    .where(ident("dimension") == "model")
+                    .field("member_key")
+                    .expression(expr("member_label").alias("label"))
+                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(expr("spend_usd"), "desc")
+            params:
+              label: "Model"
+              all_label: "All models"
+          - kind: select
+            name: jobfn
+            query:
+              datasource: warehouse
+              rhai: |
+                select().from("mart_filter_totals")
+                    .where(ident("dimension") == "job_function")
+                    .field("member_key")
+                    .expression(expr("member_label").alias("label"))
+                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(expr("spend_usd"), "desc")
+            params:
+              label: "Job Function"
+              all_label: "All job functions"
+
+  # KPI islands — identical content to the Vue reference (OverviewPage
+  # ISLANDS): Cost this month / Year to date / Cost per user / Unattributed
+  # spend. Cost-like deltas paint growth red (change_good: down).
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: island_month_cost
+            observe:
+              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("cost_this_month").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+            params:
+              label: "Cost this month"
+              icon: TrendingUp
+              color: green
+              column: display
+              change: change
+              change_text: change_text
+              change_good: down
+              spark: spark
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: island_ytd
+            observe:
+              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("ytd_spend").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+            params:
+              label: "Year to date"
+              icon: CreditCard
+              color: blue
+              column: display
+              change_text: change_text
+              spark: spark
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: island_cpu
+            observe:
+              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("cost_per_user").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+            params:
+              label: "Cost per user"
+              icon: Gauge
+              color: yellow
+              column: display
+              change: change
+              change_text: change_text
+              change_good: down
+              spark: spark
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: island_unattributed
+            observe:
+              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("unattributed_spend").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+            params:
+              label: "Unattributed spend"
+              icon: Network
+              color: cyan
+              column: display
+              change_text: change_text
+              spark: spark
+
+  # Spend trajectory — reference: TrajectoryPanel (stacked monthly bars,
+  # platform | usage-driver segmented toggle, breakdown list beside).
+  # Palette pins the reference's exact --series-1..8 (dark). Totals line
+  # (VAN-204 remainder) and in-panel pinning (VAN-210) stay queued.
+  - kind: column
+    frame: true
+    children:
+      - kind: row
+        children:
+          - kind: column
+            children:
+              - kind: label
+                params:
+                  text: "Spend trajectory"
+                  style: heading
+                  icon: TrendingUp
+              - kind: label
+                params:
+                  text: "January – July 2026 · monthly spend, stacked"
+                  style: muted
+          - kind: column
+            width: 220
+            children:
+              - kind: select
+                name: traj
+                appearance: chips
+                params:
+                  options: [Platform, "Usage driver"]
+                  default: Platform
+      - kind: row
+        when: 'traj.value == "Platform"'
+        children:
+          - kind: column
+            children:
+              - kind: chart
+                observe:
+                  script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = if "${month.value}" == "All months" { scenery("trajectory_platform").sort("month_key", "asc") } else { scenery("trajectory_platform").where("month_key", "${month.value}") }; s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                height: 300
+                params:
+                  x: month
+                  chart_type: stacked_bar
+                  label: ""
+                  # Bottom→top = ascending overall total (reference: stack order
+                  # is the reverse of list order — largest on top). Colours
+                  # follow the ENTITY's slot, so they travel with the member.
+                  series: ["Databricks Mosaic AI", "Google Vertex AI", "GitHub Copilot", "Azure OpenAI", "Amazon Bedrock", "Claude"]
+                  palette:
+                    colors: ["#c98500", "#199e70", "#d55181", "#3987e5", "#008300", "#d95926"]
+                    order: grouped
+          - kind: column
+            width: 420
+            children:
+              - kind: list
+                name: traj_breakdown_platform
+                observe:
+                  script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("trajectory_platform_breakdown").where("month_key", "${month.value}").sort("share_pct", "desc"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                height: 300
+                params:
+                  text: 'member + "   " + total_display + "  ·  " + share'
+                  label: |
+                    if mom == "—" { "—" }
+                    else { #{ text: mom, color: if "▲" in mom { "danger" } else { "success" } } }
+                  bar: share_pct
+                  slot: rank
+                  palette:
+                    colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+                    order: grouped
+      - kind: row
+        when: 'traj.value == "Usage driver"'
+        children:
+          - kind: column
+            children:
+              - kind: chart
+                observe:
+                  script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = if "${month.value}" == "All months" { scenery("trajectory_driver").sort("month_key", "asc") } else { scenery("trajectory_driver").where("month_key", "${month.value}") }; s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                height: 300
+                params:
+                  x: month
+                  chart_type: stacked_bar
+                  label: ""
+                  series: [Productivity, Application, Developer]
+                  palette:
+                    colors: ["#d95926", "#199e70", "#3987e5"]
+                    order: grouped
+          - kind: column
+            width: 420
+            children:
+              - kind: list
+                name: traj_breakdown_driver
+                observe:
+                  script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("trajectory_driver_breakdown").where("month_key", "${month.value}").sort("share_pct", "desc"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                height: 300
+                params:
+                  text: 'member + "   " + total_display + "  ·  " + share'
+                  label: |
+                    if mom == "—" { "—" }
+                    else { #{ text: mom, color: if "▲" in mom { "danger" } else { "success" } } }
+                  bar: share_pct
+                  slot: rank
+                  palette:
+                    colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+                    order: grouped
+
+  # Spend by AI model — reference: ModelSpendPanel (ranked BarList, "Show
+  # top" 10/20/30/50, the tail always folds into Other). Single-hue bars
+  # like the reference; hover-share is VAN-210 territory.
+  - kind: column
+    frame: true
+    children:
+      - kind: row
+        children:
+          - kind: column
+            children:
+              - kind: label
+                params:
+                  text: "Spend by AI model"
+                  style: heading
+                  icon: ChartBar
+              - kind: label
+                params:
+                  text: "ranked by spend · the tail beyond the pick folds into Other"
+                  style: muted
+          - kind: column
+            width: 240
+            children:
+              - kind: select
+                name: topn
+                appearance: chips
+                params:
+                  options: ["10", "20", "30", "50"]
+                  default: "20"
+      - kind: list
+        name: models_list
+        observe:
+          script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("models_top${topn.value}").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+        height: 420
+        params:
+          text: 'rank_display + " " + member'
+          label: 'total_display + "  ·  " + share'
+          bar: bar_pct
+
+  # Org explorer — reference: overview.orgExplorer, flat at the LOB level
+  # until the expand-in-place tree grid lands (VAN-209).
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Org explorer"
+          style: heading
+          icon: Network
+      - kind: label
+        params:
+          text: "lines of business · spend, peak active, cost per person, top-tier share"
+          style: muted
+      - kind: grid
+        name: org_grid
+        observe:
+          script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("org_lobs").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+        height: 340
+        params:
+          columns:
+            org_name: { label: "Line of business" }
+            headcount: { label: Headcount }
+            active: { label: Active }
+            spend_display: { label: Spend }
+            per_active_display: { label: "$ / person" }
+            top_tier_display: { label: "Top tier" }
+
+  # Breakdown quads — reference: overview.breakdown's four axes (function,
+  # title, billable org, LLM suite): pie + side legend + meta subtitle,
+  # half width each, all scoped by the month dropdown.
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Spend by function", style: heading, icon: ChartBar }
+          - kind: label
+            observe:
+              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+            params:
+              text: "…"
+              style: muted
+              column: fn_sub
+          - kind: row
+            children:
+              - kind: column
+                width: 280
+                children:
+                  - kind: chart
+                    observe:
+                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_function").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                    height: 280
+                    params:
+                      x: member
+                      y: spend
+                      chart_type: pie
+                      label: ""
+                      value_labels: false
+                      palette:
+                        colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+                        order: grouped
+              - kind: column
+                children:
+                  - kind: list
+                    name: legend_breakdown_function
+                    observe:
+                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_function").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                    height: 280
+                    params:
+                      text: member
+                      label: 'total_display + "  ·  " + share'
+                      bar: share_pct
+                      palette:
+                        colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+                        order: grouped
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Spend by title", style: heading, icon: Gauge }
+          - kind: label
+            observe:
+              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+            params:
+              text: "…"
+              style: muted
+              column: title_sub
+          - kind: row
+            children:
+              - kind: column
+                width: 280
+                children:
+                  - kind: chart
+                    observe:
+                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_title").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                    height: 280
+                    params:
+                      x: member
+                      y: spend
+                      chart_type: pie
+                      label: ""
+                      value_labels: false
+                      palette:
+                        colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+                        order: grouped
+              - kind: column
+                children:
+                  - kind: list
+                    name: legend_breakdown_title
+                    observe:
+                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_title").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                    height: 280
+                    params:
+                      text: member
+                      label: 'total_display + "  ·  " + share'
+                      bar: share_pct
+                      palette:
+                        colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+                        order: grouped
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Spend by billable org", style: heading, icon: CreditCard }
+          - kind: label
+            observe:
+              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+            params:
+              text: "…"
+              style: muted
+              column: lob_sub
+          - kind: row
+            children:
+              - kind: column
+                width: 280
+                children:
+                  - kind: chart
+                    observe:
+                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_lob").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                    height: 280
+                    params:
+                      x: member
+                      y: spend
+                      chart_type: pie
+                      label: ""
+                      value_labels: false
+                      palette:
+                        colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+                        order: grouped
+              - kind: column
+                children:
+                  - kind: list
+                    name: legend_breakdown_lob
+                    observe:
+                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_lob").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                    height: 280
+                    params:
+                      text: member
+                      label: 'total_display + "  ·  " + share'
+                      bar: share_pct
+                      palette:
+                        colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+                        order: grouped
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Spend by LLM suite", style: heading, icon: Layers }
+          - kind: label
+            observe:
+              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+            params:
+              text: "…"
+              style: muted
+              column: suite_sub
+          - kind: row
+            children:
+              - kind: column
+                width: 280
+                children:
+                  - kind: chart
+                    observe:
+                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_suite").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                    height: 280
+                    params:
+                      x: member
+                      y: spend
+                      chart_type: pie
+                      label: ""
+                      value_labels: false
+                      palette:
+                        colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+                        order: grouped
+              - kind: column
+                children:
+                  - kind: list
+                    name: legend_breakdown_suite
+                    observe:
+                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_suite").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                    height: 280
+                    params:
+                      text: member
+                      label: 'total_display + "  ·  " + share'
+                      bar: share_pct
+                      palette:
+                        colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+                        order: grouped

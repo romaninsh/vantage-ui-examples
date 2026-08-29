@@ -1,0 +1,214 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Use Cases & Apps
+body:
+  # Reference: AppsPage header with the status / audience tabs.
+  - kind: column
+    frame: true
+    children:
+      - kind: row
+        children:
+          - kind: column
+            children:
+              - kind: label
+                params:
+                  text: "Use cases & apps"
+                  style: heading
+                  icon: Layers
+              - kind: label
+                params:
+                  text: "The products that consume tokens, and who actually uses them — which is rarely the team that built them."
+                  style: muted
+          - kind: column
+            width: 240
+            children:
+              - kind: select
+                name: amonth
+                query:
+                  datasource: warehouse
+                  rhai: |
+                    select().from("mart_spend_agg")
+                        .field("month_key")
+                        .expression(expr("to_char(to_date(month_key || '-01', 'YYYY-MM-DD'), 'Mon YYYY')").alias("label"))
+                        .group_by(ident("month_key"))
+                        .order_by(ident("month_key"), "desc")
+                params:
+                  label: Month
+                  all_label: "All months"
+      - kind: row
+        children:
+          - kind: select
+            name: astatus
+            appearance: chips
+            params:
+              options: [All, Production, Pilot, Development, Sunset]
+              default: All
+          - kind: select
+            name: aaud
+            appearance: chips
+            params:
+              options: [All, Internal, "Customer facing"]
+              default: All
+
+  # Reference: the app tiles — a grid stands in for the tile wall (VAN-206).
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Apps"
+          style: heading
+          icon: Layers
+      - kind: label
+        params:
+          text: "by spend in scope — pick a row to open the app"
+          style: muted
+      - kind: grid
+        name: appsel
+        observe:
+          script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_list"); s.args(#{ month: M, status: ST, audience: AU })'
+        height: 260
+        params:
+          columns:
+            app_name: { label: App }
+            owner_lob_name: { label: Owner }
+            spend_display: { label: Spend }
+            status: { label: Status }
+            kind: { label: Kind }
+            audience: { label: Audience }
+
+  # Reference: the eight headline metrics for the selected app.
+  - kind: row
+    when: 'appsel.selected_id != ""'
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: am_spend
+            observe:
+              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+            params: { label: "Spend", icon: CreditCard, color: blue, column: spend_display }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: am_users
+            observe:
+              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+            params: { label: "Peak monthly users", icon: Network, color: green, column: users_display }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: am_cpu
+            observe:
+              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+            params: { label: "Cost per user", icon: Gauge, color: yellow, column: cpu_display }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: am_tokens
+            observe:
+              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+            params: { label: "Tokens", icon: Layers, color: cyan, column: tokens_display }
+  - kind: row
+    when: 'appsel.selected_id != ""'
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: am_lobs
+            observe:
+              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+            params: { label: "Consuming lines of business", icon: Network, color: blue, column: lobs_display }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: am_model
+            observe:
+              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+            params: { label: "Most-used model", icon: ChartBar, color: magenta, column: top_model }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: am_rollout
+            observe:
+              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+            params: { label: "Rollout state", icon: Gauge, color: green, column: rollout }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: am_mom
+            observe:
+              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+            params: { label: "Month on month", icon: TrendingUp, color: red, column: mom_display }
+
+  # Reference: the provider / consumer pair — owner is not consumer.
+  - kind: row
+    when: 'appsel.selected_id != ""'
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Model usage by provider", style: heading, icon: Layers }
+          - kind: list
+            name: app_providers
+            observe:
+              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_provider_mix"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+            height: 220
+            params:
+              text: provider_group
+              label: 'total_display + "  ·  " + share'
+              bar: share_pct
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Distribution by consumer", style: heading, icon: Network }
+          - kind: label
+            params: { text: "who uses it — not who owns it", style: muted }
+          - kind: list
+            name: app_consumers
+            observe:
+              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_consumer_mix"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+            height: 220
+            params:
+              text: member
+              label: 'total_display + "  ·  " + share'
+              bar: share_pct
+
+  # Reference: "How the app is being used" — unit volume table.
+  - kind: column
+    frame: true
+    when: 'appsel.selected_id != ""'
+    children:
+      - kind: label
+        params:
+          text: "How the app is being used"
+          style: heading
+          icon: ChartBar
+      - kind: label
+        observe:
+          script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_unit_subtitle"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+        params:
+          text: "…"
+          style: muted
+          column: line
+      - kind: grid
+        name: app_units
+        observe:
+          script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_unit_volume"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+        height: 420
+        params:
+          columns:
+            month_key: { label: Month }
+            consumer_lob_name: { label: Consumer }
+            users_display: { label: Users }
+            tokens_display: { label: Tokens }
+            spend_display: { label: Spend }

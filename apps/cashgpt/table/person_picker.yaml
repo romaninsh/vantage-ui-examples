@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: People picker
+id_column: employee_id
+columns:
+  - { name: employee_id, type: string, flags: [id, hidden] }
+  - { name: full_name, type: string, flags: [title] }
+  - { name: role, type: string }
+  - { name: lob_name, type: string }
+  - { name: city, type: string }
+postgres:
+  # Reference: individual.search — everyone, ordered by name; the term is
+  # the grid's quicksearch (server-side ILIKE over these columns).
+  rhai: |
+    select().from("dim_employee")
+        .field("employee_id")
+        .field("full_name")
+        .expression(expr("job_function || ' · ' || seniority_code").alias("role"))
+        .field("lob_name")
+        .field("city")
+        .order_by(ident("full_name"), "asc")

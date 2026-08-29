@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+type: postgres
+description: "cashgpt LLM-spend warehouse — pre-aggregated gold.mart_* tables over a 500k-employee simulation (silver holds the atomic star schema; this app reads gold only)."
+# Throwaway container credentials for a locally generated dataset, kept
+# inline so the example runs with no setup step. Anything with real data
+# belongs in an env-backed URL instead.
+url: "postgres://cashgpt:cashgpt@localhost:55432/cashgpt?options=-c%20search_path%3Dgold,silver"
+
+# rebuild: subtitle scope

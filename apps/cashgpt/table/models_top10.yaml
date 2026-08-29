@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Models · top 10 (list)
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rank, type: int, flags: [hidden] }
+  - { name: rank_display, type: string, flags: [hidden] }
+  - { name: member, type: string, flags: [title] }
+  - { name: provider_group, type: string }
+  - { name: total_display, type: string }
+  - { name: share, type: string }
+  - { name: bar_pct, type: float }
+postgres:
+  # Reference: overview.models via topNWithTail — top 10 by spend plus an
+  # OTHER row folding the tail (a top-N that drops the tail reads as the
+  # whole picture). Two-level: rank in a derived table, regroup outside.
+  rhai: |
+    let lob = if "lob" in args { args.lob } else { "" };
+    let rorg = if "rorg" in args { args.rorg } else { "" };
+    let drv = if "driver" in args { args.driver } else { "" };
+    let plat = if "platform" in args { args.platform } else { "" };
+    let mdl = if "model" in args { args.model } else { "" };
+    let jf = if "jobfn" in args { args.jobfn } else { "" };
+    let m = "mart_spend_agg";
+    let g = "({} = '' OR lob_id = {}) AND ({} = '' OR resource_org = {}) AND ({} = '' OR usage_driver = {}) AND ({} = '' OR platform_id = {}) AND ({} = '' OR model_id = {})";
+    let ga = [lob, lob, rorg, rorg, drv, drv, plat, plat, mdl, mdl];
+    if jf != "" { m = "mart_fact_agg"; g += " AND ({} = '' OR job_function = {})"; ga += [jf, jf]; }
+    let inner = select().from(m)
+        .where(expr(g, ga))
+        .expression(expr("coalesce(month_key, {})", ["All months"]).alias("scope"))
+        .expression(expr("model_name").alias("model_name"))
+        .expression(expr("max(provider_group)").alias("provider_group"))
+        .expression(expr("sum(spend_usd)").alias("v"))
+        .expression(expr("row_number() OVER (PARTITION BY GROUPING(month_key), month_key ORDER BY sum(spend_usd) DESC)").alias("rk"))
+        .group_by(expr("model_name"))
+        .group_by(expr("ROLLUP(month_key)"));
+    select().from_as(inner, "m")
+        .expression(expr("scope || ':' || CASE WHEN rk <= 10 THEN model_name ELSE 'Other' END").alias("rid"))
+        .expression(expr("scope").alias("month_key"))
+        .expression(expr("CASE WHEN rk <= 10 THEN model_name ELSE 'Other' END").alias("member"))
+        .expression(expr("min(rk)").alias("rank"))
+        .expression(expr("CASE WHEN CASE WHEN rk <= 10 THEN model_name ELSE 'Other' END = 'Other' THEN '' ELSE to_char(min(rk), 'FM99') || '.' END").alias("rank_display"))
+        .expression(expr("CASE WHEN CASE WHEN rk <= 10 THEN model_name ELSE 'Other' END = 'Other' THEN '' ELSE max(provider_group) END").alias("provider_group"))
+        .expression(expr("'$' || to_char(sum(v) / 1e6, 'FM999,990.00') || 'M'").alias("total_display"))
+        .expression(expr("round(100.0 * sum(v) / nullif(max(sum(v)) OVER (PARTITION BY scope), 0), 1)").alias("bar_pct"))
+        .expression(expr("to_char(round(100.0 * sum(v) / nullif(sum(sum(v)) OVER (PARTITION BY scope), 0), 1), 'FM990.0') || '%'").alias("share"))
+        .group_by(expr("scope"))
+        .group_by(expr("CASE WHEN rk <= 10 THEN model_name ELSE 'Other' END"))
+        .order_by(expr("scope"), "asc")
+        .order_by(expr("min(rk)"), "asc")

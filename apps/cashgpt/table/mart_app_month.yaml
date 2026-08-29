@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Apps / month
+id_column: rid
+columns:
+  # Synthetic row identity: the marts have composite grains and no PK, and
+  # vantage dedupes rows by id — so the id must cover the full grain.
+  # (Projected in the query below; column-level `expr:` is not wired for
+  # the Postgres driver yet.)
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string }
+  - { name: app_id, type: string }
+  - { name: app_name, type: string, flags: [title] }
+  - { name: kind, type: string }
+  - { name: usage_driver, type: string }
+  - { name: status, type: string }
+  - { name: audience, type: string }
+  - { name: primary_unit, type: string }
+  - { name: launched_month, type: string }
+  - { name: owner_lob_id, type: string }
+  - { name: owner_lob_name, type: string }
+  - { name: owner_department, type: string }
+  - { name: consumer_lob_id, type: string }
+  - { name: consumer_lob_name, type: string }
+  - { name: users, type: int }
+  - { name: teams, type: int }
+  - { name: tokens, type: int }
+  - { name: spend_usd, type: float }
+  - { name: rollout_status, type: string }
+postgres:
+  rhai: |
+    select().from("mart_app_month")
+        .expression(expr("coalesce(month_key,'') || ':' || coalesce(app_id,'') || ':' || coalesce(app_name,'') || ':' || coalesce(kind,'') || ':' || coalesce(usage_driver,'') || ':' || coalesce(status,'') || ':' || coalesce(audience,'') || ':' || coalesce(primary_unit,'') || ':' || coalesce(launched_month,'') || ':' || coalesce(owner_lob_id,'') || ':' || coalesce(owner_lob_name,'') || ':' || coalesce(owner_department,'') || ':' || coalesce(consumer_lob_id,'') || ':' || coalesce(consumer_lob_name,'') || ':' || coalesce(rollout_status,'')").alias("rid"))
+        .field("month_key")
+        .field("app_id")
+        .field("app_name")
+        .field("kind")
+        .field("usage_driver")
+        .field("status")
+        .field("audience")
+        .field("primary_unit")
+        .field("launched_month")
+        .field("owner_lob_id")
+        .field("owner_lob_name")
+        .field("owner_department")
+        .field("consumer_lob_id")
+        .field("consumer_lob_name")
+        .field("users")
+        .field("teams")
+        .field("tokens")
+        .field("spend_usd")
+        .field("rollout_status")

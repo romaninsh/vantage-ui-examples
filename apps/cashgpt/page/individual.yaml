@@ -1,0 +1,151 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Individual
+body:
+  # Reference: IndividualPage header; the name search is the picker grid's
+  # quicksearch below.
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Individual"
+          style: heading
+          icon: Gauge
+      - kind: label
+        params:
+          text: "One person's usage, month by month and model by model."
+          style: muted
+
+  # Reference: the people picker — 500,000 people, so the dropdown fronts
+  # the scenery lazily: nothing is fetched until it opens, the menu pulls
+  # only its visible window, and typing searches on the SERVER (the
+  # reference's trigram term, as the grid quicksearch rail).
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "People"
+          style: heading
+          icon: Network
+      - kind: row
+        children:
+          - kind: column
+            width: 420
+            children:
+              - kind: select
+                name: person
+                observe: person_picker
+                params:
+                  label: Person
+                  placeholder: "Search people by name…"
+                  column: full_name
+          - kind: column
+            children:
+              - kind: label
+                params:
+                  text: "type to search all 500,000 people — the list never prefetches"
+                  style: muted
+
+  # Reference: the chosen card — identity lines + total spend / active
+  # months / behaviour profile / peak-vs-peers.
+  - kind: column
+    frame: true
+    when: 'person.value != ""'
+    children:
+      - kind: label
+        observe:
+          script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+        params:
+          text: "…"
+          style: heading
+          column: who_line
+      - kind: label
+        observe:
+          script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+        params:
+          text: "…"
+          style: muted
+          column: where_line
+      - kind: row
+        children:
+          - kind: column
+            frame: true
+            children:
+              - kind: stat
+                name: p_spend
+                observe:
+                  script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+                params: { label: "Total spend", icon: CreditCard, color: blue, column: spend_display }
+          - kind: column
+            frame: true
+            children:
+              - kind: stat
+                name: p_months
+                observe:
+                  script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+                params: { label: "Active months", icon: Gauge, color: green, column: months_display }
+          - kind: column
+            frame: true
+            children:
+              - kind: stat
+                name: p_profile
+                observe:
+                  script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+                params: { label: "Behaviour", icon: Network, color: yellow, column: profile_display }
+          - kind: column
+            frame: true
+            children:
+              - kind: stat
+                name: p_peak
+                observe:
+                  script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+                params: { label: "Peak vs peers", icon: TrendingUp, color: red, column: peak_display }
+
+  # Reference: "Personal cost over time" — one line per model (top 8), so
+  # a switch from one flagship to the next is visible. The data picks the
+  # lines (`group:`), never a static pivot.
+  - kind: column
+    frame: true
+    when: 'person.value != ""'
+    children:
+      - kind: label
+        params:
+          text: "Personal cost over time"
+          style: heading
+          icon: TrendingUp
+      - kind: label
+        params:
+          text: "monthly spend per model — the top 8 models by total"
+          style: muted
+      - kind: chart
+        observe:
+          script: 'let s = scenery("person_cost_time"); s.args(#{ person: "${person.value}" })'
+        height: 320
+        params:
+          x: month
+          y: spend
+          group: model_name
+          chart_type: line
+          label: ""
+          labels: true
+
+  # Reference: "Spend by AI model" — to the cent, provider · tier meta.
+  - kind: column
+    frame: true
+    when: 'person.value != ""'
+    children:
+      - kind: label
+        params:
+          text: "Spend by AI model"
+          style: heading
+          icon: ChartBar
+      - kind: list
+        name: p_models
+        observe:
+          script: 'let s = scenery("person_model_mix"); s.args(#{ person: "${person.value}" })'
+        height: 320
+        params:
+          text: 'model_name + "   ·   " + meta'
+          label: total_display
+          bar: share_pct

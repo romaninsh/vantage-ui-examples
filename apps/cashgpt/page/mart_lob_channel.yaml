@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: LOB channels
+body:
+  - kind: binder
+    name: mart_lob_channel
+    observe: mart_lob_channel
+    params:
+      default_sort: { column: month_key, direction: desc }

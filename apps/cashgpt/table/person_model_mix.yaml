@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Person · model mix
+id_column: model_name
+columns:
+  - { name: model_name, type: string, flags: [id, title] }
+  - { name: meta, type: string }
+  - { name: total_display, type: string }
+  - { name: share_pct, type: float }
+postgres:
+  # Reference: individual.modelMix — every model the person touched,
+  # provider · tier as the meta line, spend to the cent.
+  rhai: |
+    let person = if "person" in args { args.person } else { "" };
+    select().from_as("fct_usage", "u")
+        .inner_join("dim_model", "m", expr("m.model_id = u.model_id"))
+        .where(expr("u.employee_id = {}", [person]))
+        .expression(expr("m.model_name").alias("model_name"))
+        .expression(expr("m.provider_group || ' · ' || m.model_tier").alias("meta"))
+        .expression(expr("'$' || to_char(sum(u.spend_usd), 'FM999,999,990.00')").alias("total_display"))
+        .expression(expr("round(100.0 * sum(u.spend_usd) / NULLIF((SELECT sum(t.spend_usd) FROM fct_usage t WHERE t.employee_id = {}), 0), 1)", [person]).alias("share_pct"))
+        .group_by(expr("m.model_name"))
+        .group_by(expr("m.provider_group"))
+        .group_by(expr("m.model_tier"))
+        .order_by(expr("sum(u.spend_usd)"), "desc")

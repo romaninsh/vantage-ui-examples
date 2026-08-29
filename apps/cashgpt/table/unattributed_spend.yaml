@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Unattributed spend (KPI)
+id_column: month_key
+columns:
+  - { name: month_key, type: string, flags: [id] }
+  - { name: display, type: string, flags: [title] }
+  - { name: change_text, type: string }
+  - { name: spark, type: string }
+postgres:
+  # Reference: ISLANDS[3]. LB-07/08/09 — the platform-and-data lines of business.
+  # Identical-content rule: every figure, delta and note matches the Vue
+  # reference; all derived in SQL — the client renders, never computes.
+  rhai: |
+    let lob = if "lob" in args { args.lob } else { "" };
+    let rorg = if "rorg" in args { args.rorg } else { "" };
+    let drv = if "driver" in args { args.driver } else { "" };
+    let plat = if "platform" in args { args.platform } else { "" };
+    let mdl = if "model" in args { args.model } else { "" };
+    let jf = if "jobfn" in args { args.jobfn } else { "" };
+    let m = "mart_spend_agg";
+    let g = "({} = '' OR lob_id = {}) AND ({} = '' OR resource_org = {}) AND ({} = '' OR usage_driver = {}) AND ({} = '' OR platform_id = {}) AND ({} = '' OR model_id = {})";
+    let ga = [lob, lob, rorg, rorg, drv, drv, plat, plat, mdl, mdl];
+    if jf != "" { m = "mart_fact_agg"; g += " AND ({} = '' OR job_function = {})"; ga += [jf, jf]; }
+    let umonthly = "(SELECT month_key AS mk, coalesce(sum(spend_usd) FILTER (WHERE lob_id IN ('LB-07','LB-08','LB-09')), 0) AS v FROM " + m + " WHERE " + g + " GROUP BY 1)";
+    let monthly = "(SELECT month_key AS mk, sum(spend_usd) AS v FROM " + m + " WHERE " + g + " GROUP BY 1)";
+    select().from(m)
+            .where(expr(g, ga))
+            .expression(expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
+            .expression(expr("'$' || to_char((CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(t.v) FROM " + umonthly + " t) ELSE coalesce(sum(spend_usd) FILTER (WHERE lob_id IN ('LB-07','LB-08','LB-09')), 0) END) / 1e6, 'FM999,990.00') || 'M'", ga).alias("display"))
+            .expression(expr("to_char(100.0 * (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(t.v) FROM " + umonthly + " t) ELSE coalesce(sum(spend_usd) FILTER (WHERE lob_id IN ('LB-07','LB-08','LB-09')), 0) END) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(t.v) FROM " + monthly + " t) ELSE sum(spend_usd) END, 0), 'FM990.0') || '% of year-to-date spend'", ga + ga).alias("change_text"))
+            .expression(expr("(SELECT string_agg(round(t.v)::text, ',' ORDER BY t.mk) FROM " + umonthly + " t)", ga).alias("spark"))
+            .group_by(expr("ROLLUP(month_key)"))

@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Fact cube (full width)
+id_column: rid
+columns:
+  # Synthetic row identity: the marts have composite grains and no PK, and
+  # vantage dedupes rows by id — so the id must cover the full grain.
+  # (Projected in the query below; column-level `expr:` is not wired for
+  # the Postgres driver yet.)
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string }
+  - { name: lob_id, type: string }
+  - { name: lob_name, type: string }
+  - { name: resource_org, type: string }
+  - { name: job_function, type: string }
+  - { name: seniority_code, type: string }
+  - { name: app_id, type: string }
+  - { name: app_name, type: string, flags: [title] }
+  - { name: kind, type: string }
+  - { name: usage_driver, type: string }
+  - { name: platform_id, type: string }
+  - { name: platform_name, type: string }
+  - { name: model_id, type: string }
+  - { name: model_name, type: string }
+  - { name: provider_group, type: string }
+  - { name: family, type: string }
+  - { name: model_tier, type: string }
+  - { name: tokens, type: int }
+  - { name: spend_usd, type: float }
+  - { name: list_spend_usd, type: float }
+  - { name: fact_rows, type: int }
+postgres:
+  rhai: |
+    select().from("mart_fact_agg")
+        .expression(expr("coalesce(month_key,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(job_function,'') || ':' || coalesce(seniority_code,'') || ':' || coalesce(app_id,'') || ':' || coalesce(app_name,'') || ':' || coalesce(kind,'') || ':' || coalesce(usage_driver,'') || ':' || coalesce(platform_id,'') || ':' || coalesce(platform_name,'') || ':' || coalesce(model_id,'') || ':' || coalesce(model_name,'') || ':' || coalesce(provider_group,'') || ':' || coalesce(family,'') || ':' || coalesce(model_tier,'')").alias("rid"))
+        .field("month_key")
+        .field("lob_id")
+        .field("lob_name")
+        .field("resource_org")
+        .field("job_function")
+        .field("seniority_code")
+        .field("app_id")
+        .field("app_name")
+        .field("kind")
+        .field("usage_driver")
+        .field("platform_id")
+        .field("platform_name")
+        .field("model_id")
+        .field("model_name")
+        .field("provider_group")
+        .field("family")
+        .field("model_tier")
+        .field("tokens")
+        .field("spend_usd")
+        .field("list_spend_usd")
+        .field("fact_rows")

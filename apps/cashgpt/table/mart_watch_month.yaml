@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Watchtower months
+id_column: rid
+columns:
+  # Synthetic row identity: the marts have composite grains and no PK, and
+  # vantage dedupes rows by id — so the id must cover the full grain.
+  # (Projected in the query below; column-level `expr:` is not wired for
+  # the Postgres driver yet.)
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string }
+  - { name: peer_group, type: string }
+  - { name: worst_name, type: string, flags: [title] }
+  - { name: worst_spend, type: float }
+  - { name: worst_multiple, type: float }
+  - { name: worst_sigma, type: float }
+  - { name: month_spend, type: float }
+  - { name: month_active, type: int }
+  - { name: prev_spend, type: float }
+  - { name: spend_three_back, type: float }
+postgres:
+  rhai: |
+    select().from("mart_watch_month")
+        .expression(expr("coalesce(month_key,'') || ':' || coalesce(peer_group,'') || ':' || coalesce(worst_name,'')").alias("rid"))
+        .field("month_key")
+        .field("peer_group")
+        .field("worst_name")
+        .field("worst_spend")
+        .field("worst_multiple")
+        .field("worst_sigma")
+        .field("month_spend")
+        .field("month_active")
+        .field("prev_spend")
+        .field("spend_three_back")

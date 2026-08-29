@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Manager · trajectory subtitle
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: line, type: string }
+postgres:
+  # Reference subtitle: "$X across {org}" — the scope grand total beside
+  # the section's name (adaptive usd; the reference's usdMillions would
+  # print $0.00M at this scale).
+  rhai: |
+    let org = if "org" in args { args.org } else { "" };
+    let mo = if "month" in args { args.month } else { "" };
+    select().from_as("mart_employee_month", "e")
+        .where(expr("(e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%')", [org, org]))
+        .where(expr("({} = '' OR e.month_key = {})", [mo, mo]))
+        .expression(expr("'sub'").alias("rid"))
+        .expression(expr("CASE WHEN sum(e.spend_usd) >= 1e6 THEN '$' || to_char((sum(e.spend_usd)) / 1e6, 'FM999,990.00') || 'M' WHEN sum(e.spend_usd) >= 1e3 THEN '$' || to_char(round((sum(e.spend_usd)) / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(sum(e.spend_usd)), 'FM999,990') END || ' across ' || (SELECT org_name FROM dim_org_unit WHERE org_id = {})", [org]).alias("line"))

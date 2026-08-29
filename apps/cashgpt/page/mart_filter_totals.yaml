@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Filter totals
+body:
+  - kind: binder
+    name: mart_filter_totals
+    observe: mart_filter_totals

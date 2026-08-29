@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Exec · provider trajectory (chart)
+id_column: month_key
+columns:
+  - { name: month_key, type: string, flags: [id, hidden] }
+  - { name: month, type: string }
+  - { name: "Anthropic", type: float }
+  - { name: "OpenAI", type: float }
+  - { name: "GitHub", type: float }
+  - { name: "Other", type: float }
+  - { name: "Amazon", type: float }
+  - { name: "Meta", type: float }
+postgres:
+  # Reference: exec.providerTrajectory — month × provider_group spend,
+  # pivoted; slot order (colour) is total-desc per toSeries.
+  rhai: |
+    select().from("mart_spend_agg")
+            .field("month_key")
+            .expression(expr("to_char(to_date(month_key || '-01', 'YYYY-MM-DD'), 'Mon')").alias("month"))
+            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Anthropic"]).alias("Anthropic"))
+            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["OpenAI"]).alias("OpenAI"))
+            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["GitHub"]).alias("GitHub"))
+            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Other"]).alias("Other"))
+            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Amazon"]).alias("Amazon"))
+            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Meta"]).alias("Meta"))
+            .group_by(ident("month_key"))
+            .order_by(ident("month_key"), "asc")

@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Person · summary
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: who_line, type: string }
+  - { name: where_line, type: string }
+  - { name: spend_display, type: string }
+  - { name: months_display, type: string }
+  - { name: profile_display, type: string }
+  - { name: peak_display, type: string }
+postgres:
+  # Reference: individual.summary — identity from the dims, usage totals
+  # from the person-month mart, behaviour profile, and the peak
+  # peer-multiple from the benchmark mart. usdExact for spend.
+  rhai: |
+    let person = if "person" in args { args.person } else { "" };
+    select().from_as("dim_employee", "e")
+        .inner_join("dim_org_unit", "o", expr("o.org_id = e.team_org_id"))
+        .where(expr("e.employee_id = {}", [person]))
+        .expression(expr("e.employee_id").alias("rid"))
+        .expression(expr("e.full_name || ' — ' || e.job_function || ' · ' || e.seniority_code || ' · ' || o.org_name").alias("who_line"))
+        .expression(expr("e.city || ', ' || e.country || ' · manager ' || coalesce((SELECT m.full_name FROM dim_employee m WHERE m.heads_org_id = e.team_org_id LIMIT 1), '—')").alias("where_line"))
+        .expression(expr("'$' || to_char(round(coalesce((SELECT sum(u.spend_usd) FROM mart_employee_month u WHERE u.employee_id = e.employee_id), 0)), 'FM999,999,999')").alias("spend_display"))
+        .expression(expr("to_char(coalesce((SELECT count(*) FROM mart_employee_month u WHERE u.employee_id = e.employee_id), 0), 'FM99')").alias("months_display"))
+        .expression(expr("coalesce((SELECT b.profile_code FROM dim_employee_behaviour b WHERE b.employee_id = e.employee_id), '—')").alias("profile_display"))
+        .expression(expr("coalesce((SELECT to_char(round(max(pb.team_multiple)), 'FM999,999,999') || '×' FROM mart_peer_benchmark pb WHERE pb.employee_id = e.employee_id), '—')").alias("peak_display"))

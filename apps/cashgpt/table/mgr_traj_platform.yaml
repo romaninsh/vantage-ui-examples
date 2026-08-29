@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Manager trajectory (chart)
+id_column: month_key
+columns:
+  - { name: month_key, type: string, flags: [id, hidden] }
+  - { name: month, type: string }
+  - { name: "Azure OpenAI", type: float }
+  - { name: "Claude", type: float }
+  - { name: "Google Vertex AI", type: float }
+  - { name: "Databricks Mosaic AI", type: float }
+  - { name: "GitHub Copilot", type: float }
+  - { name: "Amazon Bedrock", type: float }
+postgres:
+  # Reference: manager.trajectory — the fact joined to the manager's people
+  # by org_path prefix, month x member, pivoted for the stacked chart.
+  rhai: |
+    let org = if "org" in args { args.org } else { "" };
+    let mo = if "month" in args { args.month } else { "" };
+    select().from("fct_usage")
+        .inner_join("mart_employee_month", "e", expr("e.employee_id = fct_usage.employee_id AND e.month_key = fct_usage.month_key"))
+        .inner_join("dim_platform", "p", expr("p.platform_id = fct_usage.platform_id"))
+        .where(expr("(e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%')", [org, org]))
+        .where(expr("({} = '' OR fct_usage.month_key = {})", [mo, mo]))
+        .expression(expr("fct_usage.month_key").alias("month_key"))
+        .expression(expr("to_char(to_date(fct_usage.month_key || '-01', 'YYYY-MM-DD'), 'Mon')").alias("month"))
+        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["Azure OpenAI"]).alias("Azure OpenAI"))
+        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["Claude"]).alias("Claude"))
+        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["Google Vertex AI"]).alias("Google Vertex AI"))
+        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["Databricks Mosaic AI"]).alias("Databricks Mosaic AI"))
+        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["GitHub Copilot"]).alias("GitHub Copilot"))
+        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["Amazon Bedrock"]).alias("Amazon Bedrock"))
+        .group_by(expr("fct_usage.month_key"))
+        .order_by(expr("fct_usage.month_key"), "asc")
