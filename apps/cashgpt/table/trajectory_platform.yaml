@@ -14,6 +14,7 @@ columns:
 postgres:
   # Reference: overview.trajectory — month × member spend, pivoted; series
   # order = the reference slotOrder (first-seen: Jan spend ranking).
+  # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
     let rorg = if "rorg" in args { args.rorg } else { "" };

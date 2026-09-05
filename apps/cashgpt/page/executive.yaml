@@ -47,7 +47,7 @@ body:
           - kind: stat
             name: ex_latest
             observe:
-              script: 'scenery("exec_islands").where("month_key", "${period.value}")'
+              script: 'scenery("exec_islands").where("month_key", period.value)'
             params:
               label: "Latest month spend"
               icon: TrendingUp
@@ -63,7 +63,7 @@ body:
           - kind: stat
             name: ex_period
             observe:
-              script: 'scenery("exec_islands").where("month_key", "${period.value}")'
+              script: 'scenery("exec_islands").where("month_key", period.value)'
             params:
               label: "Spend in period"
               icon: CreditCard
@@ -77,7 +77,7 @@ body:
           - kind: stat
             name: ex_tier
             observe:
-              script: 'scenery("exec_islands").where("month_key", "${period.value}")'
+              script: 'scenery("exec_islands").where("month_key", period.value)'
             params:
               label: "Top tier share"
               icon: Layers
@@ -91,7 +91,7 @@ body:
           - kind: stat
             name: ex_people
             observe:
-              script: 'scenery("exec_islands").where("month_key", "${period.value}")'
+              script: 'scenery("exec_islands").where("month_key", period.value)'
             params:
               label: "Active people"
               icon: Network
@@ -106,7 +106,7 @@ body:
           - kind: stat
             name: ex_tokens
             observe:
-              script: 'scenery("exec_islands").where("month_key", "${period.value}")'
+              script: 'scenery("exec_islands").where("month_key", period.value)'
             params:
               label: "Tokens consumed"
               icon: Gauge
@@ -133,7 +133,7 @@ body:
                   icon: TrendingUp
               - kind: label
                 observe:
-                  script: 'scenery("exec_subtitles").where("month_key", "${period.value}")'
+                  script: 'scenery("exec_subtitles").where("month_key", period.value)'
                 params:
                   text: "…"
                   style: muted
@@ -144,7 +144,7 @@ body:
             children:
               - kind: chart
                 observe:
-                  script: 'if "${period.value}" == "Year to date" { scenery("exec_provider_chart").sort("month_key", "asc") } else { scenery("exec_provider_chart").where("month_key", "${period.value}") }'
+                  script: 'if period.value == "Year to date" { scenery("exec_provider_chart").sort("month_key", "asc") } else { scenery("exec_provider_chart").where("month_key", period.value) }'
                 height: 300
                 params:
                   x: month
@@ -160,13 +160,13 @@ body:
               - kind: list
                 name: exec_prov_list
                 observe:
-                  script: 'scenery("exec_provider_breakdown").where("month_key", "${period.value}")'
+                  script: 'scenery("exec_provider_breakdown").where("month_key", period.value)'
                 height: 300
                 params:
-                  text: 'member + "   " + total_display + "  ·  " + share'
+                  text: '${ member + "   " + total_display + "  ·  " + share }'
                   label: |
-                    if mom == "—" { "—" }
-                    else { #{ text: mom, color: if "▲" in mom { "danger" } else { "success" } } }
+                    ${ if mom == "—" { "—" }
+                       else { #{ text: mom, color: if "▲" in mom { "danger" } else { "success" } } } }
                   bar: share_pct
                   slot: rank
                   palette:
@@ -191,7 +191,7 @@ body:
       - kind: grid
         name: exec_ownership_grid
         observe:
-          script: 'scenery("exec_ownership").where("month_key", "${period.value}")'
+          script: 'scenery("exec_ownership").where("month_key", period.value)'
         height: 190
         params:
           columns:
@@ -217,7 +217,7 @@ body:
           icon: Network
       - kind: label
         observe:
-          script: 'scenery("exec_subtitles").where("month_key", "${period.value}")'
+          script: 'scenery("exec_subtitles").where("month_key", period.value)'
         params:
           text: "…"
           style: muted
@@ -225,7 +225,7 @@ body:
       - kind: grid
         name: exec_lob_grid
         observe:
-          script: 'scenery("exec_lob_table").where("month_key", "${period.value}")'
+          script: 'scenery("exec_lob_table").where("month_key", period.value)'
         height: 420
         params:
           columns:
@@ -253,11 +253,11 @@ body:
           - kind: list
             name: exec_tier_list
             observe:
-              script: 'scenery("exec_tier").where("month_key", "${period.value}")'
+              script: 'scenery("exec_tier").where("month_key", period.value)'
             height: 180
             params:
-              text: member
-              label: total_display
+              text: '${ member }'
+              label: '${ total_display }'
               bar: bar_pct
       - kind: column
         frame: true
@@ -270,11 +270,11 @@ body:
           - kind: list
             name: exec_code_ai_list
             observe:
-              script: 'scenery("exec_code_ai").where("month_key", "${period.value}")'
+              script: 'scenery("exec_code_ai").where("month_key", period.value)'
             height: 180
             params:
-              text: member
-              label: total_display
+              text: '${ member }'
+              label: '${ total_display }'
               bar: bar_pct
 
   # Reference: "LLM suite by line of business" — the LOB × suite matrix;
@@ -290,7 +290,7 @@ body:
       - kind: grid
         name: exec_suite_grid
         observe:
-          script: 'scenery("exec_suite_by_lob").where("month_key", "${period.value}")'
+          script: 'scenery("exec_suite_by_lob").where("month_key", period.value)'
         height: 420
         params:
           columns:
@@ -321,7 +321,7 @@ body:
       - kind: grid
         name: exec_choice_model_grid
         observe:
-          script: 'scenery("exec_choice_model").where("month_key", "${period.value}").limit(12)'
+          script: 'scenery("exec_choice_model").where("month_key", period.value).limit(12)'
         height: 380
         params:
           columns:
@@ -344,7 +344,7 @@ body:
           - kind: grid
             name: exec_choice_lob_grid
             observe:
-              script: 'scenery("exec_choice_lob").where("month_key", "${period.value}")'
+              script: 'scenery("exec_choice_lob").where("month_key", period.value)'
             height: 380
             params:
               columns:
@@ -365,7 +365,7 @@ body:
           - kind: grid
             name: exec_choice_kind_grid
             observe:
-              script: 'scenery("exec_choice_kind").where("month_key", "${period.value}")'
+              script: 'scenery("exec_choice_kind").where("month_key", period.value)'
             height: 380
             params:
               columns:
@@ -390,9 +390,9 @@ body:
       - kind: list
         name: exec_products_list
         observe:
-          script: 'scenery("exec_products").where("month_key", "${period.value}")'
+          script: 'scenery("exec_products").where("month_key", period.value)'
         height: 420
         params:
-          text: 'rank_display + " " + member + "   ·   " + meta'
-          label: total_display
+          text: '${ rank_display + " " + member + "   ·   " + meta }'
+          label: '${ total_display }'
           bar: bar_pct

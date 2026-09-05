@@ -15,6 +15,7 @@ postgres:
   # Reference: overview.orgExplorer, flattened to the LOB level (org_level 2)
   # until the tree grid lands (VAN-209). Active never sums across months —
   # the All row takes the PEAK month, like the mart comments demand.
+  # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
     let rorg = if "rorg" in args { args.rorg } else { "" };

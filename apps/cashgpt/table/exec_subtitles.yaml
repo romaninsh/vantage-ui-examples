@@ -13,6 +13,7 @@ postgres:
   # quotes the number of series it is rendering for the selected period,
   # so an unscoped count reports the year's providers on a single month.
   # ROLLUP then yields the per-month and year-to-date figures alike.
+  # language=rhai
   rhai: |
     select().from("mart_spend_agg")
             .expression(expr("coalesce(month_key, {})", ["Year to date"]).alias("rid"))

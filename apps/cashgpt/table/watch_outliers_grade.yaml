@@ -21,6 +21,7 @@ postgres:
   # Reference: watch outliers, grade peer definition. Leave-one-out stats
   # arrive precomputed in mart_peer_benchmark; joins to dims replicate the
   # reference's manager/top-platform lookups.
+  # language=rhai
   rhai: |
     select().from("mart_peer_benchmark")
         .where(expr("grade_sigma IS NOT NULL AND grade_sigma >= 2"))

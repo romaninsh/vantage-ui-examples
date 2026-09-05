@@ -14,6 +14,7 @@ postgres:
   # Reference: individual.summary — identity from the dims, usage totals
   # from the person-month mart, behaviour profile, and the peak
   # peer-multiple from the benchmark mart. usdExact for spend.
+  # language=rhai
   rhai: |
     let person = if "person" in args { args.person } else { "" };
     select().from_as("dim_employee", "e")

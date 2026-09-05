@@ -32,6 +32,7 @@ columns:
   - { name: use_cases, type: int }
   - { name: has_children, type: bool }
 postgres:
+  # language=rhai
   rhai: |
     select().from("mart_org_month")
         .expression(expr("coalesce(org_id,'') || ':' || coalesce(parent_org_id,'') || ':' || coalesce(org_name,'') || ':' || coalesce(org_path,'') || ':' || coalesce(team_code,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(work_type,'') || ':' || coalesce(site_code,'') || ':' || coalesce(city,'') || ':' || coalesce(location_region,'') || ':' || coalesce(month_key,'')").alias("rid"))

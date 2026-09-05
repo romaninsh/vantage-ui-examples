@@ -13,6 +13,7 @@ columns:
 postgres:
   # Reference: overview.breakdown (GROUPING SETS), one axis per view — pie
   # plus side legend; share divides HERE against the scope total.
+  # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
     let rorg = if "rorg" in args { args.rorg } else { "" };

@@ -28,6 +28,7 @@ columns:
   - { name: spend_usd, type: float }
   - { name: rollout_status, type: string }
 postgres:
+  # language=rhai
   rhai: |
     select().from("mart_app_month")
         .expression(expr("coalesce(month_key,'') || ':' || coalesce(app_id,'') || ':' || coalesce(app_name,'') || ':' || coalesce(kind,'') || ':' || coalesce(usage_driver,'') || ':' || coalesce(status,'') || ':' || coalesce(audience,'') || ':' || coalesce(primary_unit,'') || ':' || coalesce(launched_month,'') || ':' || coalesce(owner_lob_id,'') || ':' || coalesce(owner_lob_name,'') || ':' || coalesce(owner_department,'') || ':' || coalesce(consumer_lob_id,'') || ':' || coalesce(consumer_lob_name,'') || ':' || coalesce(rollout_status,'')").alias("rid"))

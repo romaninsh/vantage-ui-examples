@@ -15,6 +15,7 @@ postgres:
   # Reference: BreakdownList beside the provider trajectory — MoM compares
   # the scope's last two months; rising spend is bad (▲ paints red).
   # Rows sort by slot rank so colours line up with the chart.
+  # language=rhai
   rhai: |
     select().from("mart_spend_agg")
             .expression(expr("(provider_group) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))

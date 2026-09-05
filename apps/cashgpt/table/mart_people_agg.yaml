@@ -20,6 +20,7 @@ columns:
   - { name: tokens, type: int }
   - { name: spend_usd, type: float }
 postgres:
+  # language=rhai
   rhai: |
     select().from("mart_people_agg")
         .expression(expr("coalesce(month_key,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(job_function,'') || ':' || coalesce(seniority_code,'') || ':' || coalesce(kind,'') || ':' || coalesce(usage_driver,'') || ':' || coalesce(model_tier,'')").alias("rid"))

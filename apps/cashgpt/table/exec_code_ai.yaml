@@ -11,6 +11,7 @@ columns:
 postgres:
   # Reference: suiteByLob filtered to kind IN ('coding','agent'), summed
   # per LOB, sorted by value desc — the Code AI half-panel.
+  # language=rhai
   rhai: |
     select().from("mart_spend_agg")
             .expression(expr("(lob_id) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))

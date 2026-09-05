@@ -11,6 +11,7 @@ postgres:
   # Reference: ISLANDS[3]. LB-07/08/09 — the platform-and-data lines of business.
   # Identical-content rule: every figure, delta and note matches the Vue
   # reference; all derived in SQL — the client renders, never computes.
+  # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
     let rorg = if "rorg" in args { args.rorg } else { "" };

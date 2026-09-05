@@ -10,6 +10,7 @@ columns:
 postgres:
   # Reference: individual.modelMix — every model the person touched,
   # provider · tier as the meta line, spend to the cent.
+  # language=rhai
   rhai: |
     let person = if "person" in args { args.person } else { "" };
     select().from_as("fct_usage", "u")

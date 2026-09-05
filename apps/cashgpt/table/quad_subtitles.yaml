@@ -16,6 +16,7 @@ postgres:
   # honour lob/rorg/driver/function, spend-mart counts honour
   # lob/rorg/driver/platform/model, the active count honours the person
   # dimensions; the employee/app totals are org-wide like the reference.
+  # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
     let rorg = if "rorg" in args { args.rorg } else { "" };

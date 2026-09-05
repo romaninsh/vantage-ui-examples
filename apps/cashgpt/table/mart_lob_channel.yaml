@@ -15,6 +15,7 @@ columns:
   - { name: spend_usd, type: float }
   - { name: users, type: int }
 postgres:
+  # language=rhai
   rhai: |
     select().from("mart_lob_channel")
         .expression(expr("coalesce(org_id,'') || ':' || coalesce(month_key,'') || ':' || coalesce(channel,'')").alias("rid"))

@@ -16,6 +16,7 @@ postgres:
   # (name — section · lob · city). Spend formats adaptively where the
   # reference reused usdM and would print $0.00M at section scale —
   # display drift, not intent.
+  # language=rhai
   rhai: |
     let org = if "org" in args { args.org } else { "" };
     let mo = if "month" in args { args.month } else { "" };

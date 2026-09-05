@@ -15,6 +15,7 @@ postgres:
   # GROUP BY the RAW column — correlated subqueries may only reference
   # grouping columns, and an expression group (initcap(...)) makes the
   # raw column illegal in them. Display casing happens in projection.
+  # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
     let rorg = if "rorg" in args { args.rorg } else { "" };

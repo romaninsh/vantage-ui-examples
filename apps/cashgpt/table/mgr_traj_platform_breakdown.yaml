@@ -15,6 +15,7 @@ postgres:
   # ('—' when a single month is picked or the previous month is 0). Totals
   # format adaptively where the reference reused usdMillions and would
   # print $0.00M at section scale — display drift, not intent.
+  # language=rhai
   rhai: |
     let org = if "org" in args { args.org } else { "" };
     let mo = if "month" in args { args.month } else { "" };

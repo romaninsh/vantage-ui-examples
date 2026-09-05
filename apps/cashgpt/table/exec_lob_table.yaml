@@ -17,6 +17,7 @@ postgres:
   # Reference: lobTableSql (defined, never registered) — channel split per
   # LOB; users is PEAK monthly, never a sum; cost/user divides HERE.
   # Pinned to mart_fact_agg (the only mart carrying app_name).
+  # language=rhai
   rhai: |
     select().from("mart_fact_agg")
             .expression(expr("(lob_id) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))
