@@ -14,6 +14,7 @@ postgres:
   # Reference: manager.topUsers — 25 highest spenders in the org, months
   # scoped; active_months counts the months in scope (count(*) over the
   # person-month mart, exactly the reference's count).
+  # language=rhai
   rhai: |
     let org = if "org" in args { args.org } else { "" };
     let mo = if "month" in args { args.month } else { "" };

@@ -11,6 +11,7 @@ columns:
 postgres:
   # Reference: individual.search — everyone, ordered by name; the term is
   # the grid's quicksearch (server-side ILIKE over these columns).
+  # language=rhai
   rhai: |
     select().from("dim_employee")
         .field("employee_id")

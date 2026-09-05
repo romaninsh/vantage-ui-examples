@@ -8,6 +8,7 @@ columns:
 postgres:
   # Prototype subtitle figures, formatted here: the medians, the signed
   # L4-level recoverable total, and the total spend it is measured against.
+  # language=rhai
   rhai: |
     select().from("mart_team_month")
         .expression(expr("'eff'").alias("rid"))

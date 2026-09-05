@@ -34,8 +34,8 @@ body:
           - kind: chart
             table:
               script: |
-                if "${namespace.value}" == "All namespaces" { scenery("pod_metrics") }
-                else { scenery("pod_metrics").where("namespace", "${namespace.value}") }
+                if namespace.value == "All namespaces" { scenery("pod_metrics") }
+                else { scenery("pod_metrics").where("namespace", namespace.value) }
             params:
               x: name
               y: cpuMillicores
@@ -44,8 +44,8 @@ body:
           - kind: chart
             table:
               script: |
-                if "${namespace.value}" == "All namespaces" { scenery("pod_metrics") }
-                else { scenery("pod_metrics").where("namespace", "${namespace.value}") }
+                if namespace.value == "All namespaces" { scenery("pod_metrics") }
+                else { scenery("pod_metrics").where("namespace", namespace.value) }
             params:
               x: name
               y: memBytes

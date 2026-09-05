@@ -11,6 +11,7 @@ postgres:
   # Reference: individual.costOverTime — one person is a few dozen rows
   # behind an index on employee_id, so this reads the fact directly. One
   # line per model; the chart's `group:` keeps the top 8 by total.
+  # language=rhai
   rhai: |
     let person = if "person" in args { args.person } else { "" };
     select().from_as("fct_usage", "u")

@@ -14,6 +14,7 @@ columns:
 postgres:
   # Reference: exec.providerTrajectory — month × provider_group spend,
   # pivoted; slot order (colour) is total-desc per toSeries.
+  # language=rhai
   rhai: |
     select().from("mart_spend_agg")
             .field("month_key")

@@ -118,7 +118,7 @@ body:
           - kind: stat
             name: island_month_cost
             observe:
-              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("cost_this_month").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("cost_this_month").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
             params:
               label: "Cost this month"
               icon: TrendingUp
@@ -134,7 +134,7 @@ body:
           - kind: stat
             name: island_ytd
             observe:
-              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("ytd_spend").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("ytd_spend").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
             params:
               label: "Year to date"
               icon: CreditCard
@@ -148,7 +148,7 @@ body:
           - kind: stat
             name: island_cpu
             observe:
-              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("cost_per_user").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("cost_per_user").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
             params:
               label: "Cost per user"
               icon: Gauge
@@ -164,7 +164,7 @@ body:
           - kind: stat
             name: island_unattributed
             observe:
-              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("unattributed_spend").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("unattributed_spend").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
             params:
               label: "Unattributed spend"
               icon: Network
@@ -209,7 +209,7 @@ body:
             children:
               - kind: chart
                 observe:
-                  script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = if "${month.value}" == "All months" { scenery("trajectory_platform").sort("month_key", "asc") } else { scenery("trajectory_platform").where("month_key", "${month.value}") }; s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                  script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = if month.value == "All months" { scenery("trajectory_platform").sort("month_key", "asc") } else { scenery("trajectory_platform").where("month_key", month.value) }; s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                 height: 300
                 params:
                   x: month
@@ -228,13 +228,13 @@ body:
               - kind: list
                 name: traj_breakdown_platform
                 observe:
-                  script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("trajectory_platform_breakdown").where("month_key", "${month.value}").sort("share_pct", "desc"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                  script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("trajectory_platform_breakdown").where("month_key", month.value).sort("share_pct", "desc"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                 height: 300
                 params:
-                  text: 'member + "   " + total_display + "  ·  " + share'
+                  text: '${ member + "   " + total_display + "  ·  " + share }'
                   label: |
-                    if mom == "—" { "—" }
-                    else { #{ text: mom, color: if "▲" in mom { "danger" } else { "success" } } }
+                    ${ if mom == "—" { "—" }
+                       else { #{ text: mom, color: if "▲" in mom { "danger" } else { "success" } } } }
                   bar: share_pct
                   slot: rank
                   palette:
@@ -247,7 +247,7 @@ body:
             children:
               - kind: chart
                 observe:
-                  script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = if "${month.value}" == "All months" { scenery("trajectory_driver").sort("month_key", "asc") } else { scenery("trajectory_driver").where("month_key", "${month.value}") }; s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                  script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = if month.value == "All months" { scenery("trajectory_driver").sort("month_key", "asc") } else { scenery("trajectory_driver").where("month_key", month.value) }; s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                 height: 300
                 params:
                   x: month
@@ -263,13 +263,13 @@ body:
               - kind: list
                 name: traj_breakdown_driver
                 observe:
-                  script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("trajectory_driver_breakdown").where("month_key", "${month.value}").sort("share_pct", "desc"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                  script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("trajectory_driver_breakdown").where("month_key", month.value).sort("share_pct", "desc"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                 height: 300
                 params:
-                  text: 'member + "   " + total_display + "  ·  " + share'
+                  text: '${ member + "   " + total_display + "  ·  " + share }'
                   label: |
-                    if mom == "—" { "—" }
-                    else { #{ text: mom, color: if "▲" in mom { "danger" } else { "success" } } }
+                    ${ if mom == "—" { "—" }
+                       else { #{ text: mom, color: if "▲" in mom { "danger" } else { "success" } } } }
                   bar: share_pct
                   slot: rank
                   palette:
@@ -307,11 +307,11 @@ body:
       - kind: list
         name: models_list
         observe:
-          script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("models_top${topn.value}").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+          script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("models_top" + topn.value).where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
         height: 420
         params:
-          text: 'rank_display + " " + member'
-          label: 'total_display + "  ·  " + share'
+          text: '${ rank_display + " " + member }'
+          label: '${ total_display + "  ·  " + share }'
           bar: bar_pct
 
   # Org explorer — reference: overview.orgExplorer, flat at the LOB level
@@ -331,7 +331,7 @@ body:
       - kind: grid
         name: org_grid
         observe:
-          script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("org_lobs").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+          script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("org_lobs").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
         height: 340
         params:
           columns:
@@ -354,7 +354,7 @@ body:
             params: { text: "Spend by function", style: heading, icon: ChartBar }
           - kind: label
             observe:
-              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
             params:
               text: "…"
               style: muted
@@ -366,7 +366,7 @@ body:
                 children:
                   - kind: chart
                     observe:
-                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_function").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                      script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("breakdown_function").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                     height: 280
                     params:
                       x: member
@@ -382,7 +382,7 @@ body:
                   - kind: list
                     name: legend_breakdown_function
                     observe:
-                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_function").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                      script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("breakdown_function").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                     height: 280
                     params:
                       text: member
@@ -398,7 +398,7 @@ body:
             params: { text: "Spend by title", style: heading, icon: Gauge }
           - kind: label
             observe:
-              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
             params:
               text: "…"
               style: muted
@@ -410,7 +410,7 @@ body:
                 children:
                   - kind: chart
                     observe:
-                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_title").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                      script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("breakdown_title").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                     height: 280
                     params:
                       x: member
@@ -426,7 +426,7 @@ body:
                   - kind: list
                     name: legend_breakdown_title
                     observe:
-                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_title").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                      script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("breakdown_title").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                     height: 280
                     params:
                       text: member
@@ -444,7 +444,7 @@ body:
             params: { text: "Spend by billable org", style: heading, icon: CreditCard }
           - kind: label
             observe:
-              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
             params:
               text: "…"
               style: muted
@@ -456,7 +456,7 @@ body:
                 children:
                   - kind: chart
                     observe:
-                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_lob").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                      script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("breakdown_lob").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                     height: 280
                     params:
                       x: member
@@ -472,7 +472,7 @@ body:
                   - kind: list
                     name: legend_breakdown_lob
                     observe:
-                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_lob").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                      script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("breakdown_lob").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                     height: 280
                     params:
                       text: member
@@ -488,7 +488,7 @@ body:
             params: { text: "Spend by LLM suite", style: heading, icon: Layers }
           - kind: label
             observe:
-              script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("quad_subtitles").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
             params:
               text: "…"
               style: muted
@@ -500,7 +500,7 @@ body:
                 children:
                   - kind: chart
                     observe:
-                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_suite").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                      script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("breakdown_suite").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                     height: 280
                     params:
                       x: member
@@ -516,7 +516,7 @@ body:
                   - kind: list
                     name: legend_breakdown_suite
                     observe:
-                      script: 'let L = "${lob.value}"; if L == "All billable orgs" { L = "" } let R = "${rorg.value}"; if R == "All resource orgs" { R = "" } let D = "${driver.value}"; if D == "All usage drivers" { D = "" } let P = "${platform.value}"; if P == "All platforms" { P = "" } let MD = "${model.value}"; if MD == "All models" { MD = "" } let F = "${jobfn.value}"; if F == "All job functions" { F = "" } let s = scenery("breakdown_suite").where("month_key", "${month.value}"); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+                      script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("breakdown_suite").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
                     height: 280
                     params:
                       text: member

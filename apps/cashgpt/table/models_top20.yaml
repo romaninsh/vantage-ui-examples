@@ -16,6 +16,7 @@ postgres:
   # Reference: overview.models via topNWithTail — top 20 by spend plus an
   # OTHER row folding the tail (a top-N that drops the tail reads as the
   # whole picture). Two-level: rank in a derived table, regroup outside.
+  # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
     let rorg = if "rorg" in args { args.rorg } else { "" };

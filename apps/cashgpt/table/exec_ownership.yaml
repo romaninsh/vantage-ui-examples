@@ -17,6 +17,7 @@ postgres:
   # Reference: costOwnershipSql (defined but never registered — the panel
   # renders empty in the reference; this is its documented intent). Band
   # derives from the CONSUMER's LOB; suites pivot to columns.
+  # language=rhai
   rhai: |
     select().from("mart_spend_agg")
             .expression(expr("(CASE WHEN lob_id IN ('LB-07','LB-08','LB-09') THEN 'Technology' WHEN lob_id IN ('LB-11','LB-12','LB-13') THEN 'Corporate functions' ELSE 'Business lines' END) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))

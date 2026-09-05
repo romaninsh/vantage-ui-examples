@@ -19,6 +19,7 @@ columns:
   - { name: prev_spend, type: float }
   - { name: spend_three_back, type: float }
 postgres:
+  # language=rhai
   rhai: |
     select().from("mart_watch_month")
         .expression(expr("coalesce(month_key,'') || ':' || coalesce(peer_group,'') || ':' || coalesce(worst_name,'')").alias("rid"))

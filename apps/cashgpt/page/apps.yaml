@@ -65,7 +65,7 @@ body:
       - kind: grid
         name: appsel
         observe:
-          script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_list"); s.args(#{ month: M, status: ST, audience: AU })'
+          script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_list"); s.args(#{ month: M, status: ST, audience: AU })'
         height: 260
         params:
           columns:
@@ -86,7 +86,7 @@ body:
           - kind: stat
             name: am_spend
             observe:
-              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+              script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: appsel.selected_id, month: M })'
             params: { label: "Spend", icon: CreditCard, color: blue, column: spend_display }
       - kind: column
         frame: true
@@ -94,7 +94,7 @@ body:
           - kind: stat
             name: am_users
             observe:
-              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+              script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: appsel.selected_id, month: M })'
             params: { label: "Peak monthly users", icon: Network, color: green, column: users_display }
       - kind: column
         frame: true
@@ -102,7 +102,7 @@ body:
           - kind: stat
             name: am_cpu
             observe:
-              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+              script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: appsel.selected_id, month: M })'
             params: { label: "Cost per user", icon: Gauge, color: yellow, column: cpu_display }
       - kind: column
         frame: true
@@ -110,7 +110,7 @@ body:
           - kind: stat
             name: am_tokens
             observe:
-              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+              script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: appsel.selected_id, month: M })'
             params: { label: "Tokens", icon: Layers, color: cyan, column: tokens_display }
   - kind: row
     when: 'appsel.selected_id != ""'
@@ -121,7 +121,7 @@ body:
           - kind: stat
             name: am_lobs
             observe:
-              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+              script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: appsel.selected_id, month: M })'
             params: { label: "Consuming lines of business", icon: Network, color: blue, column: lobs_display }
       - kind: column
         frame: true
@@ -129,7 +129,7 @@ body:
           - kind: stat
             name: am_model
             observe:
-              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+              script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: appsel.selected_id, month: M })'
             params: { label: "Most-used model", icon: ChartBar, color: magenta, column: top_model }
       - kind: column
         frame: true
@@ -137,7 +137,7 @@ body:
           - kind: stat
             name: am_rollout
             observe:
-              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+              script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: appsel.selected_id, month: M })'
             params: { label: "Rollout state", icon: Gauge, color: green, column: rollout }
       - kind: column
         frame: true
@@ -145,7 +145,7 @@ body:
           - kind: stat
             name: am_mom
             observe:
-              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+              script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_metrics"); s.args(#{ app: appsel.selected_id, month: M })'
             params: { label: "Month on month", icon: TrendingUp, color: red, column: mom_display }
 
   # Reference: the provider / consumer pair — owner is not consumer.
@@ -160,7 +160,7 @@ body:
           - kind: list
             name: app_providers
             observe:
-              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_provider_mix"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+              script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_provider_mix"); s.args(#{ app: appsel.selected_id, month: M })'
             height: 220
             params:
               text: provider_group
@@ -176,7 +176,7 @@ body:
           - kind: list
             name: app_consumers
             observe:
-              script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_consumer_mix"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+              script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_consumer_mix"); s.args(#{ app: appsel.selected_id, month: M })'
             height: 220
             params:
               text: member
@@ -195,7 +195,7 @@ body:
           icon: ChartBar
       - kind: label
         observe:
-          script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_unit_subtitle"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+          script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_unit_subtitle"); s.args(#{ app: appsel.selected_id, month: M })'
         params:
           text: "…"
           style: muted
@@ -203,7 +203,7 @@ body:
       - kind: grid
         name: app_units
         observe:
-          script: 'let M = "${amonth.value}"; if M == "All months" { M = "" } let ST = switch "${astatus.value}" { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch "${aaud.value}" { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_unit_volume"); s.args(#{ app: "${appsel.selected_id}", month: M })'
+          script: 'let M = amonth.value; if M == "All months" { M = "" } let ST = switch astatus.value { "Production" => "production", "Pilot" => "pilot", "Development" => "development", "Sunset" => "sunset", _ => "" }; let AU = switch aaud.value { "Internal" => "internal", "Customer facing" => "customer_facing", _ => "" }; let s = scenery("app_unit_volume"); s.args(#{ app: appsel.selected_id, month: M })'
         height: 420
         params:
           columns:

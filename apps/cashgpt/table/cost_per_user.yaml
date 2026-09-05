@@ -21,6 +21,7 @@ postgres:
   # picking those filters leaves this island at its unfiltered value while
   # its neighbours narrow. Do not "fix" it by joining a wider mart — that
   # would double-count a person across their platforms.
+  # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
     let rorg = if "rorg" in args { args.rorg } else { "" };

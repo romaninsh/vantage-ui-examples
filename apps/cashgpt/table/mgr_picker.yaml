@@ -13,6 +13,7 @@ postgres:
   # Reference: manager.search — anyone who heads a level-5 section. The
   # name search is the grid's quicksearch (ILIKE server-side, same intent
   # as the reference's trigram term).
+  # language=rhai
   rhai: |
     select().from("dim_employee")
         .inner_join("dim_org_unit", "o", expr("o.org_id = dim_employee.heads_org_id"))

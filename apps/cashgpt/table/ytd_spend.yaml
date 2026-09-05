@@ -11,6 +11,7 @@ postgres:
   # Reference: ISLANDS[1]. No delta — a cumulative total has nothing to be up against. Spark is cumulative.
   # Identical-content rule: every figure, delta and note matches the Vue
   # reference; all derived in SQL — the client renders, never computes.
+  # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
     let rorg = if "rorg" in args { args.rorg } else { "" };

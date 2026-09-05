@@ -14,6 +14,7 @@ columns:
 postgres:
   # Reference: manager.trajectory — the fact joined to the manager's people
   # by org_path prefix, month x member, pivoted for the stacked chart.
+  # language=rhai
   rhai: |
     let org = if "org" in args { args.org } else { "" };
     let mo = if "month" in args { args.month } else { "" };

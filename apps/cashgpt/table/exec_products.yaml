@@ -14,6 +14,7 @@ postgres:
   # Reference: exec.productLines with the documented grain fix — grouped
   # per app across the scope (the reference emitted one bar per app-MONTH,
   # drift C) plus the missing consuming-LOB count for the meta text.
+  # language=rhai
   rhai: |
     select().from("mart_app_month")
             .expression(expr("(app_id) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))

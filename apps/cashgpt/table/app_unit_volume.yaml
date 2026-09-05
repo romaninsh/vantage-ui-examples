@@ -12,6 +12,7 @@ columns:
 postgres:
   # Reference: apps.unitVolume — month by month, by consuming line of
   # business; tokens quoted in millions like the client renders them.
+  # language=rhai
   rhai: |
     let app = if "app" in args { args.app } else { "" };
     let mo = if "month" in args { args.month } else { "" };

@@ -71,7 +71,7 @@ body:
     children:
       - kind: label
         observe:
-          script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+          script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
         params:
           text: "…"
           style: heading
@@ -84,7 +84,7 @@ body:
               - kind: stat
                 name: mgr_spend
                 observe:
-                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
                 params:
                   label: "Spend"
                   icon: CreditCard
@@ -96,7 +96,7 @@ body:
               - kind: stat
                 name: mgr_active
                 observe:
-                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
                 params:
                   label: "Active people"
                   icon: Network
@@ -109,7 +109,7 @@ body:
               - kind: stat
                 name: mgr_per_user
                 observe:
-                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
                 params:
                   label: "Per active user"
                   icon: Gauge
@@ -121,7 +121,7 @@ body:
               - kind: stat
                 name: mgr_tier
                 observe:
-                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
                 params:
                   label: "Top tier"
                   icon: Layers
@@ -147,7 +147,7 @@ body:
                   icon: TrendingUp
               - kind: label
                 observe:
-                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_traj_subtitle"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_traj_subtitle"); s.args(#{ org: mgrs.selected_id, month: M })'
                 params:
                   text: "…"
                   style: muted
@@ -168,7 +168,7 @@ body:
             children:
               - kind: chart
                 observe:
-                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_traj_platform"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_traj_platform"); s.args(#{ org: mgrs.selected_id, month: M })'
                 height: 280
                 params:
                   x: month
@@ -184,7 +184,7 @@ body:
               - kind: list
                 name: mgr_breakdown_platform
                 observe:
-                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_traj_platform_breakdown"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_traj_platform_breakdown"); s.args(#{ org: mgrs.selected_id, month: M })'
                 height: 280
                 params:
                   text: 'member + "   " + total_display + "  ·  " + share'
@@ -203,7 +203,7 @@ body:
             children:
               - kind: chart
                 observe:
-                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_traj_driver"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_traj_driver"); s.args(#{ org: mgrs.selected_id, month: M })'
                 height: 280
                 params:
                   x: month
@@ -219,7 +219,7 @@ body:
               - kind: list
                 name: mgr_breakdown_driver
                 observe:
-                  script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_traj_driver_breakdown"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_traj_driver_breakdown"); s.args(#{ org: mgrs.selected_id, month: M })'
                 height: 280
                 params:
                   text: 'member + "   " + total_display + "  ·  " + share'
@@ -249,7 +249,7 @@ body:
       - kind: grid
         name: mgr_top
         observe:
-          script: 'let M = "${mmonth.value}"; if M == "All months" { M = "" } let s = scenery("mgr_top_users"); s.args(#{ org: "${mgrs.selected_id}", month: M })'
+          script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_top_users"); s.args(#{ org: mgrs.selected_id, month: M })'
         height: 420
         params:
           columns:

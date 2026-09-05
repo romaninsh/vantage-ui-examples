@@ -12,6 +12,7 @@ postgres:
   # Reference: OverviewPage ISLANDS[0]. The all-row reports the LATEST month.
   # Identical-content rule: every figure, delta and note matches the Vue
   # reference; all derived in SQL — the client renders, never computes.
+  # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
     let rorg = if "rorg" in args { args.rorg } else { "" };

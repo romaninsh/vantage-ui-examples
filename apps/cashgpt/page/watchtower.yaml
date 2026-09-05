@@ -56,7 +56,7 @@ body:
           - kind: stat
             name: w_outlier
             observe:
-              script: 'let m = switch "${wmonth.value}" { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch "${wpeer.value}" { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+              script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
             params:
               label: "Peer outlier"
               icon: Gauge
@@ -69,7 +69,7 @@ body:
           - kind: stat
             name: w_platform
             observe:
-              script: 'let m = switch "${wmonth.value}" { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch "${wpeer.value}" { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+              script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
             params:
               label: "Top platform share"
               icon: Layers
@@ -82,7 +82,7 @@ body:
           - kind: stat
             name: w_mom
             observe:
-              script: 'let m = switch "${wmonth.value}" { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch "${wpeer.value}" { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+              script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
             params:
               label: "MoM spend velocity"
               icon: TrendingUp
@@ -95,7 +95,7 @@ body:
           - kind: stat
             name: w_projected
             observe:
-              script: 'let m = switch "${wmonth.value}" { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch "${wpeer.value}" { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+              script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
             params:
               label: "Projected next month"
               icon: CreditCard
@@ -121,7 +121,7 @@ body:
       - kind: grid
         name: w_outliers
         observe:
-          script: 'let m = switch "${wmonth.value}" { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; if "${wpeer.value}" == "Job title" { scenery("watch_outliers_function").where("month_key", m).limit(200) } else if "${wpeer.value}" == "Grade in LOB" { scenery("watch_outliers_grade").where("month_key", m).limit(200) } else { scenery("watch_outliers_team").where("month_key", m).limit(200) }'
+          script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; if wpeer.value == "Job title" { scenery("watch_outliers_function").where("month_key", m).limit(200) } else if wpeer.value == "Grade in LOB" { scenery("watch_outliers_grade").where("month_key", m).limit(200) } else { scenery("watch_outliers_team").where("month_key", m).limit(200) }'
         height: 480
         params:
           filters:
@@ -173,7 +173,7 @@ body:
       - kind: grid
         name: w_team
         observe:
-          script: 'let g = switch "${wquad.value}" { "Heavy & pricey" => "Heavy and pricey", "Heavy & lean" => "Heavy but lean", "Light & pricey" => "Light but pricey", "Light & lean" => "Light and lean", _ => "" }; if g == "" { scenery("watch_team_efficiency").limit(150) } else { scenery("watch_team_efficiency").where("quadrant", g).limit(150) }'
+          script: 'let g = switch wquad.value { "Heavy & pricey" => "Heavy and pricey", "Heavy & lean" => "Heavy but lean", "Light & pricey" => "Light but pricey", "Light & lean" => "Light and lean", _ => "" }; if g == "" { scenery("watch_team_efficiency").limit(150) } else { scenery("watch_team_efficiency").where("quadrant", g).limit(150) }'
         height: 480
         params:
           columns:
