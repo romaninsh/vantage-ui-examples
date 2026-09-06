@@ -1,0 +1,82 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Orders
+body:
+  - kind: binder
+    name: orders
+    observe: bakery-surreal/order
+    params:
+      columns:
+        id: { pin: true, label: ID }
+        bakery: { label: Bakery }
+        created_at: { label: Created }
+        status:
+          label: Status
+          color:
+            success: [paid]
+            yellow: [in_production, ready]
+            red: [cancelled]
+            muted: [placed]
+          labels:
+            placed: Placed
+            confirmed: Confirmed
+            in_production: In production
+            ready: Ready
+            delivered: Delivered
+            picked_up: Picked up
+            paid: Paid
+            cancelled: Cancelled
+      # Lifecycle transitions. `when:` gates each entry on the row's
+      # current status so the menu only shows the legal next steps.
+      row_actions:
+        - label: "Mark confirmed"
+          icon: Check
+          when: 'row.status == "placed"'
+          # language=rhai
+          action: |
+            row.status = "confirmed";
+            row.save();
+        - label: "Start production"
+          icon: Factory
+          when: 'row.status == "confirmed"'
+          # language=rhai
+          action: |
+            row.status = "in_production";
+            row.save();
+        - label: "Mark ready"
+          icon: Package
+          when: 'row.status == "in_production"'
+          # language=rhai
+          action: |
+            row.status = "ready";
+            row.save();
+        - label: "Mark delivered"
+          icon: Truck
+          when: 'row.status == "ready"'
+          # language=rhai
+          action: |
+            row.status = "delivered";
+            row.save();
+        - label: "Mark picked up"
+          icon: Hand
+          when: 'row.status == "ready"'
+          # language=rhai
+          action: |
+            row.status = "picked_up";
+            row.save();
+        - label: "Mark paid"
+          icon: DollarSign
+          when: 'row.status == "delivered" || row.status == "picked_up"'
+          # language=rhai
+          action: |
+            row.status = "paid";
+            row.save();
+        - label: "Cancel order"
+          icon: X
+          when: 'row.status != "paid" && row.status != "cancelled" && row.status != "delivered" && row.status != "picked_up"'
+          # language=rhai
+          action: |
+            let r = actions.cancel_order();
+            row.status              = "cancelled";
+            row.cancellation_reason = r.reason;
+            row.cancellation_note   = r.note;
+            row.save();

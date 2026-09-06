@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+
+title: Hill Valley Bakeries
+
+items:
+  - label: Dashboard
+    page: dashboard
+    icon: LayoutGrid
+  - label: Bakeries
+    page: bakeries
+    icon: Inbox
+  - label: Clients
+    page: clients
+    icon: User
+  - label: Products
+    page: products
+    icon: Star
+  - label: Orders
+    page: orders
+    icon: ChevronRight

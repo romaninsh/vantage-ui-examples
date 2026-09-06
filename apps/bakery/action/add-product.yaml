@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./action-schema-1.json
+
+kind: form
+description: Create a new product for one of the bakery locations.
+dialog:
+  title: "Add product"
+  confirm_label: "Add"
+form:
+  table: bakery-surreal/product
+  fields:
+    - name
+    - { name: bakery, widget: dropdown }
+    - price
+    - calories
+    - { name: "inventory.stock", type: int, label: Stock, required: false }

@@ -65,16 +65,16 @@ apps:
     persona: "Internal tools"
     persona_url: "/solutions/internal-tools/"
     status: "available"
-    min_version: "0.14.0"
+    min_version: "0.38.0"
     icon: "storefront"
-    blurb: "A back-office admin for a bakery franchise — products, clients and orders, with dashboards and an order-status workflow."
-    repo_path: "apps/bakery/inventory"
+    blurb: "A back-office admin for a bakery franchise — bakeries, clients, products and orders over SurrealDB, with a query-sourced dashboard and one action of every kind, up to a multi-step import wizard."
+    repo_path: "apps/bakery"
     url: "https://vantage-ui.com/examples/bakery.zip"
     screenshot: "images/vantage-ui-app.png"
     demonstrates:
-      - "CRUD grids with form and confirmation dialogs"
+      - "Every action kind in one app: form, confirm, terminal, HTTP and wizard"
       - "Charts and a dashboard built from query-sourced tables"
-      - "Right-click order-status workflow"
+      - "A wizard whose background worker is an included .rhai file"
 
   - slug: spacex
     title: "SpaceX GraphQL explorer"

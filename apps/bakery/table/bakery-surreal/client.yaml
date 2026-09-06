@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./bakery-surreal-schema-1.json
+
+name: client
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [title, searchable] }
+  email: { type: string, flags: [searchable] }
+  contact_details: { type: string }
+  is_paying_client: { type: bool }
+  balance: { type: decimal }
+  bakery: { type: string, references: bakery }
+  metadata: { type: string }
+  password_hash: { type: string }

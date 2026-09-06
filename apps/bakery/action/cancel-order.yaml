@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./action-schema-1.json
+
+kind: form
+description: |
+  Mark an order as cancelled. The reason and (optional) note are
+  written to the order row alongside the status change.
+dialog:
+  title: "Cancel order"
+  confirm_label: "Cancel order"
+  cancel_label: "Keep order"
+  confirm_style: danger
+form:
+  fields:
+    - { name: reason, type: string, label: Reason,
+        choices: [customer_request, payment_failed, out_of_stock, other] }
+    - { name: note,   type: string, label: Note, required: false, multiline: true }
