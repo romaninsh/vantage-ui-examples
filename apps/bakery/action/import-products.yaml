@@ -1,0 +1,78 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# Demo of `kind: wizard` — the CSV-import flow the chtags client asked
+# for, over bakery data: pick a CSV of products, check the preview,
+# fill in the NEW bakery they belong to (a shared servo — nothing saves
+# until the last step), then import every row under a commanded id
+# (`product:<sku>` straight from the file).
+#
+# Try it with the bundled `import-products.csv` at the project root.
+kind: wizard
+description: |
+  Import a CSV of products and create the bakery that sells them.
+dialog:
+  title: "Import products from CSV"
+  size: xl
+servos:
+  bakery: { table: bakery }
+steps:
+  - name: pick
+    title: "Choose a file"
+    body:
+      - kind: csv_file
+        name: source
+        accept: [csv]
+        id_column: sku
+        label: "Choose a product CSV…"
+        # `product.price`/`calories` are ints, so the CSV reads them as
+        # ints. `sku` is left undeclared (string) — `0042-CRSN` only
+        # looks numeric, and guessing from the data would eat the zeros.
+        columns:
+          price: int
+          calories: int
+
+  - name: preview
+    title: "Check the data"
+    body:
+      - kind: label
+        params:
+          text: "Rows found: ${wizard.steps.pick.source.row_count}"
+          style: heading
+      - kind: grid
+        observe: "${wizard.steps.pick.source.vista}"
+
+  - name: details
+    title: "New bakery"
+    body:
+      - kind: form
+        servo: bakery
+
+  # One step, two halves. The body renders the step's `state:` — a
+  # heading, a progress bar, a Start button, a log — and the `worker`
+  # script runs on a background thread beside it: it blocks in
+  # `step.wait("confirmed")` until the button's UI-thread `action`
+  # flips the variable, then writes, moving the bar as rows land.
+  # Next enables when the worker exits without error.
+  - name: import
+    title: "Import"
+    state:
+      status: "Ready to import."
+      progress: 0
+      total: 0
+      imported: 0
+      confirmed: false
+      finished: false
+    body:
+      - kind: label
+        params: { text: "${state.status}", style: heading }
+      - kind: progress
+        params: { value: "${state.progress}", total: "${state.total}" }
+      - kind: button
+        when: "!state.confirmed"
+        params: { label: "Start import", style: primary, action: "state.confirmed = true" }
+      - kind: label
+        when: "state.finished"
+        params: { text: "Imported ${state.imported} products." }
+      - kind: log
+    # The worker lives next to this file; `!include` splices it in and the
+    # catalog reloads it on edit like the YAML itself.
+    worker: !include import-products.rhai

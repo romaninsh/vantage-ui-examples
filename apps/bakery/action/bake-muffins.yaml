@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./action-schema-1.json
+
+kind: terminal
+description: |
+  Bake a fresh batch of muffins in the test oven.
+
+  This streams live output from the bakery's animated baker — preheating,
+  multiple trays baking at once, progress bars, colours and emoji. Click
+  Run to start. The baker is stubborn: Stop sends Ctrl+C (it refuses to
+  pull half-baked muffins), and Stop again kills it.
+dialog:
+  title: "Bake muffins 🧁"
+terminal:
+  command: python3
+  # Resolved against the vista root (examples/surreal-bakery).
+  args: ["scripts/bake-muffins.py"]

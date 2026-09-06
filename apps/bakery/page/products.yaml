@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Products
+body:
+  - kind: binder
+    name: products
+    observe: bakery-surreal/product
+    params:
+      toolbar:
+        - label: "Add product"
+          icon: Plus
+          # language=rhai
+          action: |
+            let r = actions.add_product();
+            let p = tables.product.create();
+            p.set(r);
+            p.save();
+        - label: "Import products"
+          icon: Upload
+          # language=rhai
+          action: |
+            actions.import_products();
+        - label: "Bake muffins"
+          icon: Play
+          # language=rhai
+          action: |
+            actions.bake_muffins();

@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+name: order_totals
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id] }
+  created_at: { type: datetime }
+  total: { type: int }
+
+surreal:
+  # language=rhai
+  rhai: |
+    select().from("order")
+        .field("id").field("created_at")
+        .expression(ident("lines").fold(0, |acc, l| acc + l["quantity"] * l["price"]).alias("total"))
+        .order_by(ident("total"), "desc")

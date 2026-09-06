@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=./action-schema-1.json
+
+kind: confirm
+description: Permanently delete a product. Cannot be undone.
+dialog:
+  title: "Delete product?"
+  description: "This will permanently delete '${row.name}'. Cannot be undone."
+  confirm_label: Delete
+  cancel_label: Cancel
+  confirm_style: danger

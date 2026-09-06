@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Bakeries
+body:
+  - kind: binder
+    name: bakeries
+    observe: bakery-surreal/bakery

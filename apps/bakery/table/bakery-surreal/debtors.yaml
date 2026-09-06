@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./table-schema-1.json
+
+name: debtors
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [title] }
+  balance: { type: decimal }
+
+surreal:
+  base: client
+  inherit:
+    columns: [id, name, balance]
+  # language=rhai
+  rhai: |
+    base.where(ident("balance") < 0).order_by(ident("balance"), "asc")

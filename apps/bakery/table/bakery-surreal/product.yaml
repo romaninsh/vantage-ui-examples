@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./bakery-surreal-schema-1.json
+
+name: product
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [title, searchable] }
+  calories: { type: int }
+  price: { type: int }
+  bakery: { type: string, references: bakery }
+  is_deleted: { type: bool }
+  inventory: { type: string }

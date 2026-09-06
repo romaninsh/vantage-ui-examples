@@ -1,5 +1,0 @@
-# Page: products
-title: Products
-body:
-  - kind: crud
-    table: products
