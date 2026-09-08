@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=../table-schema-1.json
+#
+# A demand for payment, raised monthly per trade account.
+#
+# `total` is stored: an issued invoice is a frozen document, and editing an
+# order in March must not change what was billed in January. What is still
+# owed is not frozen, so `paid`, `outstanding` and `settlement` are `expr:`
+# columns — correlated subqueries over `payment` that the backend projects
+# as `(<expr>) AS <name>` and re-evaluates on every read.
+#
+# SurrealQL cannot reference an alias from the same projection, so all three
+# repeat the payments subquery. They can reference the stored `total`,
+# though, which is the point: deriving it instead cost five seconds a page
+# open, because it meant folding the line arrays of every attached order.
+
+name: invoice
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id] }
+  number: { type: string, flags: [title, searchable] }
+  bakery: { type: string, references: bakery }
+  bakery.name: { type: string }
+  client: { type: string, references: client }
+  client.name: { type: string }
+  issued_at: { type: datetime }
+  due_at: { type: datetime }
+  # Only the states a human sets. Whether it is paid, part paid or overdue
+  # is read from the payments and the due date, never stored.
+  status:
+    type: string
+    enum: [draft, issued, void]
+
+  total: { type: int, unit: { currency: "£", minor_units: true } }
+  paid:
+    type: int
+    unit: { currency: "£", minor_units: true }
+    expr: 'expr("(SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0")'
+  outstanding:
+    type: int
+    unit: { currency: "£", minor_units: true }
+    expr: 'expr("total - ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0)")'
+  settlement:
+    type: string
+    enum: [settled, part_paid, overdue, open]
+    expr: 'expr("IF total - ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0) <= 0 THEN ''settled'' ELSE IF ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0) > 0 THEN ''part_paid'' ELSE IF due_at < time::now() THEN ''overdue'' ELSE ''open'' END")'
+
+references:
+  orders:
+    table: order
+    kind: has_many
+    foreign_key: invoice
+  payments:
+    table: payment
+    kind: has_many
+    foreign_key: invoice

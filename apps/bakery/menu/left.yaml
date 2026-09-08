@@ -1,8 +1,11 @@
 # yaml-language-server: $schema=./menu-schema-1.json
 
-title: Hill Valley Bakeries
+title: Breg
 
 items:
+  - label: Welcome
+    page: readme
+    icon: BookOpen
   - label: Dashboard
     page: dashboard
     icon: LayoutGrid
@@ -18,3 +21,9 @@ items:
   - label: Orders
     page: orders
     icon: ChevronRight
+  - label: Invoices
+    page: invoices
+    icon: Receipt
+  - label: Payments
+    page: payments
+    icon: CreditCard

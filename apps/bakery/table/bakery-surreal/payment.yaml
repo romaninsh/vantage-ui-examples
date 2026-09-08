@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../table-schema-1.json
+#
+# Money received against one invoice. Several may settle one invoice, which
+# is how instalments and part payments are modelled. One payment spanning
+# several invoices would need an allocation table between the two; this
+# example stops short of that deliberately.
+
+name: payment
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id] }
+  invoice: { type: string, references: invoice }
+  invoice.number: { type: string, flags: [title] }
+  paid_at: { type: datetime }
+  amount: { type: int, unit: { currency: "£", minor_units: true } }
+  method:
+    type: string
+    enum: [bank_transfer, card, cash, cheque]

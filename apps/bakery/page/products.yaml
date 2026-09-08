@@ -5,6 +5,13 @@ body:
     name: products
     observe: bakery-surreal/product
     params:
+      # `bakery.name` reads through the reference to the shop's title, so
+      # the grid shows "Breg Briggate, Leeds" rather than `bakery:leeds`.
+      columns:
+        name: { label: Product, pin: true }
+        bakery.name: { label: Shop }
+        price: { label: Price }
+        calories: { label: kcal }
       toolbar:
         - label: "Add product"
           icon: Plus

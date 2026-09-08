@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=./table-schema-1.json
+# yaml-language-server: $schema=../table-schema-1.json
 
 name: product_units
 datasource: bakery-surreal
@@ -18,7 +18,7 @@ surreal:
                 .from("order")
                 .split("lines")
                 .subquery())
-        .expression(ident("line")["product"].alias("product"))
+        .expression(ident("line")["product"]["name"].alias("product"))
         .expression(sum(ident("line")["quantity"]).alias("units"))
         .group_by(ident("product"))
         .order_by(ident("units"), "desc")

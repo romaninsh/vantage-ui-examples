@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=./bakery-surreal-schema-1.json
+# yaml-language-server: $schema=../table-schema-1.json
 
 name: product
 datasource: bakery-surreal
@@ -7,7 +7,9 @@ columns:
   id: { type: string, flags: [id] }
   name: { type: string, flags: [title, searchable] }
   calories: { type: int }
-  price: { type: int }
+  # Held in pence so totals stay exact integers; shown as money.
+  price: { type: int, unit: { currency: "£", minor_units: true } }
   bakery: { type: string, references: bakery }
+  bakery.name: { type: string }
   is_deleted: { type: bool }
   inventory: { type: string }

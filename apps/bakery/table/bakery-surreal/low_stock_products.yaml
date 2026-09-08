@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=./table-schema-1.json
+# yaml-language-server: $schema=../table-schema-1.json
 
 name: low_stock_products
 datasource: bakery-surreal

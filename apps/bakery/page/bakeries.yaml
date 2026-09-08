@@ -4,3 +4,7 @@ body:
   - kind: binder
     name: bakeries
     observe: bakery-surreal/bakery
+    params:
+      columns:
+        name: { label: Shop, pin: true }
+        profit_margin: { label: "Margin %" }

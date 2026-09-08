@@ -1,29 +1,86 @@
 # yaml-language-server: $schema=./page-schema-1.json
+#
+# Every tile here reads a query-sourced table: the aggregation happens in
+# SurrealDB and the page only renders. See table/bakery-surreal/ for the
+# four `rhai:` blocks behind them.
 title: Dashboard
 body:
   - kind: column
     children:
+      - kind: label
+        params:
+          text: "Breg"
+          style: heading
+          icon: Croissant
+      - kind: label
+        params:
+          text: "Trade over the last 90 days, and what needs attention today."
+          style: muted
+
       - kind: row
         children:
-          - kind: chart
-            observe: bakery-surreal/revenue_by_day
-            params:
-              x: day
-              y: revenue
-              label: Revenue (last 90 days)
-              chart_type: line
-          - kind: chart
-            observe: bakery-surreal/product_units
-            params:
-              x: product
-              y: units
-              label: Top products by units sold
-              chart_type: bar
+          - kind: column
+            frame: true
+            children:
+              - kind: chart
+                observe: bakery-surreal/revenue_by_day
+                height: 260
+                params:
+                  x: day
+                  y: revenue
+                  label: "Revenue, last 90 days"
+                  chart_type: line
+          - kind: column
+            frame: true
+            children:
+              - kind: chart
+                observe: bakery-surreal/product_units
+                height: 260
+                params:
+                  x: product
+                  y: units
+                  label: "Top products by units sold"
+                  chart_type: bar
+
+      # Three lists that each answer one question. Without a `text:`/`label:`
+      # a list falls back to the row's `[title]` column alone, which is why
+      # these carry both — the number is the point of the tile.
       - kind: row
         children:
-          - kind: list
-            observe: bakery-surreal/order_totals
-          - kind: list
-            observe: bakery-surreal/debtors
-          - kind: list
-            observe: bakery-surreal/low_stock_products
+          - kind: column
+            frame: true
+            children:
+              - kind: label
+                params: { text: "Largest orders", style: heading, icon: Receipt }
+              - kind: list
+                observe: bakery-surreal/order_totals
+                height: 220
+                params:
+                  text: '${ id }'
+                  label: '${ total_display }'
+
+          - kind: column
+            frame: true
+            children:
+              - kind: label
+                params: { text: "Owed by accounts", style: heading, icon: CreditCard }
+              - kind: list
+                observe: bakery-surreal/client_balances
+                height: 220
+                params:
+                  text: '${ name }'
+                  # Red only once the due date has passed. An account with a
+                  # balance inside its terms is not a problem to chase.
+                  label: '${ #{ text: owed_display, color: if overdue > 0 { "danger" } else { "warning" } } }'
+
+          - kind: column
+            frame: true
+            children:
+              - kind: label
+                params: { text: "Low stock", style: heading, icon: Package }
+              - kind: list
+                observe: bakery-surreal/low_stock_products
+                height: 220
+                params:
+                  text: '${ name }'
+                  label: '${ if stock == 0 { #{ text: "out", color: "danger" } } else { #{ text: stock + " left", color: "warning" } } }'

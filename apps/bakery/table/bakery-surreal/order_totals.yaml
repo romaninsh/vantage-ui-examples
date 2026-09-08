@@ -1,17 +1,31 @@
-# yaml-language-server: $schema=./table-schema-1.json
+# yaml-language-server: $schema=../table-schema-1.json
 
 name: order_totals
 datasource: bakery-surreal
 
 columns:
-  id: { type: string, flags: [id] }
+  id: { type: string, flags: [id, title] }
   created_at: { type: datetime }
+  # Pence, so the sort is exact. `total_display` is what a tile shows.
   total: { type: int }
+  total_display: { type: string }
 
 surreal:
+  # Two nested SELECTs: the inner folds each order's lines into a pence
+  # total, the outer formats it. The money string is built here rather than
+  # in the client, so every tile quoting it agrees.
   # language=rhai
   rhai: |
-    select().from("order")
-        .field("id").field("created_at")
-        .expression(ident("lines").fold(0, |acc, l| acc + l["quantity"] * l["price"]).alias("total"))
+    select()
+        .from(
+            select()
+                .field("id").field("created_at")
+                .expression(ident("lines").fold(0, |acc, l| acc + l["quantity"] * l["price"]).alias("total"))
+                .from("order")
+                .subquery())
+        .field("id").field("created_at").field("total")
+        // Integer pounds and pence, not a float: casting a float to string
+        // in SurrealDB yields "357.9f" — the suffix and the lost trailing
+        // zero are both wrong on a price.
+        .expression(expr("string::concat('£', total / 100, '.', IF total % 100 < 10 THEN '0' ELSE '' END, total % 100)").alias("total_display"))
         .order_by(ident("total"), "desc")

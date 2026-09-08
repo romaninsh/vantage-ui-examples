@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+#
+# The app's own README, rendered. `!include` splices the file in as the
+# template's text, so this page and the repository never say different
+# things.
+title: Welcome
+body:
+  - kind: column
+    children:
+      - kind: markdown
+        text: !include ../README.md

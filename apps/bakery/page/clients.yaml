@@ -5,6 +5,20 @@ body:
     name: clients
     observe: bakery-surreal/client
     params:
+      # The funnel button left of the quicksearch opens a form built from
+      # these columns: a shop picker over the reference, and a name field
+      # the user can type an operator into (`~smith` matches the pattern).
+      # Applied filters show as chips and survive a reopen.
+      filter: [bakery, "~name"]
+      columns:
+        name: { label: Account, pin: true }
+        bakery.name: { label: Shop }
+        email: { label: Email }
+        contact_details: { label: Phone }
+        is_paying_client: { label: "On account" }
+        order_count: { label: Orders }
+        invoice_count: { label: Invoices }
+        balance: { label: Owed }
       row_actions:
         - label: Send password reset
           icon: Mail
