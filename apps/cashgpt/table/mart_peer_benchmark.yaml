@@ -41,6 +41,7 @@ columns:
   - { name: func_sigma, type: float }
   - { name: grade_sigma, type: float }
 postgres:
+  # language=rhai
   rhai: |
     select().from("mart_peer_benchmark")
         .expression(expr("coalesce(month_key,'') || ':' || coalesce(employee_id,'') || ':' || coalesce(full_name,'') || ':' || coalesce(team_org_id,'') || ':' || coalesce(team_name,'') || ':' || coalesce(team_code,'') || ':' || coalesce(job_function,'') || ':' || coalesce(seniority_code,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(org_path,'') || ':' || coalesce(department_id,'') || ':' || coalesce(section_id,'') || ':' || coalesce(top_platform_id,'') || ':' || coalesce(top_model_id,'')").alias("rid"))

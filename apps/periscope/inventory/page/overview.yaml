@@ -37,8 +37,8 @@ body:
           - kind: chart
             table:
               script: |
-                if "${namespace.value}" == "All namespaces" { scenery("deployments") }
-                else { scenery("deployments").where("namespace", "${namespace.value}") }
+                if namespace.value == "All namespaces" { scenery("deployments") }
+                else { scenery("deployments").where("namespace", namespace.value) }
             params:
               x: name
               y: replicas
@@ -47,8 +47,8 @@ body:
           - kind: chart
             table:
               script: |
-                if "${namespace.value}" == "All namespaces" { scenery("pods") }
-                else { scenery("pods").where("namespace", "${namespace.value}") }
+                if namespace.value == "All namespaces" { scenery("pods") }
+                else { scenery("pods").where("namespace", namespace.value) }
             params:
               x: name
               y: restarts

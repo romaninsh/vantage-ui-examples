@@ -30,6 +30,7 @@ columns:
   - { name: list_spend_usd, type: float }
   - { name: fact_rows, type: int }
 postgres:
+  # language=rhai
   rhai: |
     select().from("mart_fact_agg")
         .expression(expr("coalesce(month_key,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(job_function,'') || ':' || coalesce(seniority_code,'') || ':' || coalesce(app_id,'') || ':' || coalesce(app_name,'') || ':' || coalesce(kind,'') || ':' || coalesce(usage_driver,'') || ':' || coalesce(platform_id,'') || ':' || coalesce(platform_name,'') || ':' || coalesce(model_id,'') || ':' || coalesce(model_name,'') || ':' || coalesce(provider_group,'') || ':' || coalesce(family,'') || ':' || coalesce(model_tier,'')").alias("rid"))

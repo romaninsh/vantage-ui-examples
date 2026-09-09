@@ -17,6 +17,7 @@ postgres:
   # Reference: exec.suiteByLob — LOB × suite spend matrix; suite columns
   # pinned to overall-spend order (the reference let first-appearance
   # order pick colours, an accident its parity doc regrets).
+  # language=rhai
   rhai: |
     select().from("mart_spend_agg")
             .expression(expr("(lob_id) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))

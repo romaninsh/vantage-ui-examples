@@ -12,6 +12,7 @@ columns:
 postgres:
   # Reference: exec.reasoningTier collapsed over months, fixed order
   # top/high/base/untiered, RAW lowercase tier keys as labels.
+  # language=rhai
   rhai: |
     select().from("mart_spend_agg")
             .expression(expr("(model_tier) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))

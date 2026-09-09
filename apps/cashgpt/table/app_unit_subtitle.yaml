@@ -8,6 +8,7 @@ columns:
 postgres:
   # Reference subtitle: "{primary_unit} per month, by consuming line of
   # business" — the unit is a property of the app.
+  # language=rhai
   rhai: |
     let app = if "app" in args { args.app } else { "" };
     select().from_as("dim_app", "a")

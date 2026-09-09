@@ -15,6 +15,7 @@ postgres:
   # Reference: the modelChoice contract (axis rows × fixed tier columns
   # top/high/base/untiered) the page expects but the server never served.
   # All 13 lines of business.
+  # language=rhai
   rhai: |
     select().from("mart_spend_agg")
             .expression(expr("(lob_id) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))

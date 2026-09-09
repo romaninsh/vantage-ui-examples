@@ -1,5 +1,0 @@
-# Page: clients
-title: Clients
-body:
-  - kind: crud
-    table: clients

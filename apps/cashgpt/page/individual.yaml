@@ -55,14 +55,14 @@ body:
     children:
       - kind: label
         observe:
-          script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+          script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
         params:
           text: "…"
           style: heading
           column: who_line
       - kind: label
         observe:
-          script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+          script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
         params:
           text: "…"
           style: muted
@@ -75,7 +75,7 @@ body:
               - kind: stat
                 name: p_spend
                 observe:
-                  script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+                  script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
                 params: { label: "Total spend", icon: CreditCard, color: blue, column: spend_display }
           - kind: column
             frame: true
@@ -83,7 +83,7 @@ body:
               - kind: stat
                 name: p_months
                 observe:
-                  script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+                  script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
                 params: { label: "Active months", icon: Gauge, color: green, column: months_display }
           - kind: column
             frame: true
@@ -91,7 +91,7 @@ body:
               - kind: stat
                 name: p_profile
                 observe:
-                  script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+                  script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
                 params: { label: "Behaviour", icon: Network, color: yellow, column: profile_display }
           - kind: column
             frame: true
@@ -99,7 +99,7 @@ body:
               - kind: stat
                 name: p_peak
                 observe:
-                  script: 'let s = scenery("person_summary"); s.args(#{ person: "${person.value}" })'
+                  script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
                 params: { label: "Peak vs peers", icon: TrendingUp, color: red, column: peak_display }
 
   # Reference: "Personal cost over time" — one line per model (top 8), so
@@ -120,7 +120,7 @@ body:
           style: muted
       - kind: chart
         observe:
-          script: 'let s = scenery("person_cost_time"); s.args(#{ person: "${person.value}" })'
+          script: 'let s = scenery("person_cost_time"); s.args(#{ person: person.value })'
         height: 320
         params:
           x: month
@@ -143,9 +143,9 @@ body:
       - kind: list
         name: p_models
         observe:
-          script: 'let s = scenery("person_model_mix"); s.args(#{ person: "${person.value}" })'
+          script: 'let s = scenery("person_model_mix"); s.args(#{ person: person.value })'
         height: 320
         params:
-          text: 'model_name + "   ·   " + meta'
-          label: total_display
+          text: '${ model_name + "   ·   " + meta }'
+          label: '${ total_display }'
           bar: share_pct

@@ -19,6 +19,7 @@ postgres:
   # totals so they do not vary with the peer-group tab, exactly as the
   # reference behaves. Projection is NULL (a dash) when no 3-month history
   # exists — the reference formula fabricated 0.63x month_spend there.
+  # language=rhai
   rhai: |
     select().from("mart_watch_month")
         .expression(expr("month_key || ':' || peer_group").alias("rid"))

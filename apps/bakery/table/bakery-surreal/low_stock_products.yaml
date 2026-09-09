@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../table-schema-1.json
+
+name: low_stock_products
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [title] }
+  stock: { type: int }
+
+surreal:
+  # language=rhai
+  rhai: |
+    select().from("product")
+        .field("id").field("name")
+        .expression(ident("inventory")["stock"].alias("stock"))
+        .where(ident("inventory")["stock"] < 10)
+        .where(ident("is_deleted") == false)
+        .order_by(ident("inventory")["stock"], "asc")

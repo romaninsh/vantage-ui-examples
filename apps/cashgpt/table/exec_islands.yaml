@@ -24,6 +24,7 @@ postgres:
   # Reference: exec.islands + ExecutiveBriefPage KPIS — five tiles from one
   # row per scope. Latest/prev month figures switch on GROUPING(); sparks
   # are the full monthly series. All formatting is here; stats render.
+  # language=rhai
   rhai: |
     select().from("mart_spend_agg")
             .expression(expr("coalesce(month_key, {})", ["Year to date"]).alias("month_key"))

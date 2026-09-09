@@ -15,4 +15,4 @@ body:
         params: { options: [all, upcoming, previous], default: all }
       - kind: crud
         table:
-          script: 'scenery(if "${range.value}" == "all" { "launches" } else { "launches_${range.value}" }).sort("net", if "${range.value}" == "upcoming" { "asc" } else { "desc" })'
+          script: 'scenery(if range.value == "all" { "launches" } else { "launches_" + range.value }).sort("net", if range.value == "upcoming" { "asc" } else { "desc" })'

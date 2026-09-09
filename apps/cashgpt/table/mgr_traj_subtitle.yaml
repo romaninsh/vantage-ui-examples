@@ -9,6 +9,7 @@ postgres:
   # Reference subtitle: "$X across {org}" — the scope grand total beside
   # the section's name (adaptive usd; the reference's usdMillions would
   # print $0.00M at this scale).
+  # language=rhai
   rhai: |
     let org = if "org" in args { args.org } else { "" };
     let mo = if "month" in args { args.month } else { "" };

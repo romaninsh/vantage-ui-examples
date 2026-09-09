@@ -13,6 +13,7 @@ columns:
 postgres:
   # Reference: apps.list — the picker with its status and audience tabs;
   # month guard rides the JOIN (an app with no spend in scope still lists).
+  # language=rhai
   rhai: |
     let mo = if "month" in args { args.month } else { "" };
     let st = if "status" in args { args.status } else { "" };

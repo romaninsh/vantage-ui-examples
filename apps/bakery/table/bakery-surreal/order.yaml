@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=../table-schema-1.json
+
+name: order
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id] }
+  bakery: { type: string, references: bakery }
+  # `record<client>` in the database. It was missing here, so orders could
+  # not say who placed them.
+  client: { type: string, references: client }
+  invoice: { type: string, references: invoice }
+  # Implicit references: one hop through the relation, projected by the
+  # SELECT and read-only. A page names these to show a title instead of a
+  # record id — the page cannot invent them, the table has to declare them.
+  client.name: { type: string }
+  bakery.name: { type: string }
+  invoice.number: { type: string }
+  is_deleted: { type: bool }
+  created_at: { type: datetime }
+  # `array<object>` of { product, quantity, price }. There is no array column
+  # type, and the raw JSON is unreadable in a cell, so it stays out of the
+  # grid — `order_totals` folds it into a number instead.
+  lines: { type: string, flags: [hidden] }
+  # A closed set, and the database asserts it too. Declaring it here is what
+  # turns the form field into a dropdown instead of free text.
+  status:
+    type: string
+    enum: [placed, confirmed, in_production, ready, delivered, picked_up, cancelled]
+  cancellation_reason: { type: string }
+  cancellation_note: { type: string }

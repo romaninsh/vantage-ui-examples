@@ -22,6 +22,7 @@ columns:
   - { name: spend_usd, type: float }
   - { name: top_tier_share, type: float }
 postgres:
+  # language=rhai
   rhai: |
     select().from("mart_team_month")
         .expression(expr("coalesce(org_id,'') || ':' || coalesce(org_name,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(work_type,'') || ':' || coalesce(city,'') || ':' || coalesce(month_key,'')").alias("rid"))

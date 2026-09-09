@@ -20,6 +20,7 @@ postgres:
   # = spend x (tier - median)/1 x (1 - base_rate/top_rate) — only the rate
   # gap is recoverable, negative means below benchmark. Flat rows (the
   # manager tree waits on the expandable grid, VAN-209).
+  # language=rhai
   rhai: |
     let scoped = select().from("mart_team_month")
         .expression(expr("org_id").alias("org_id"))
