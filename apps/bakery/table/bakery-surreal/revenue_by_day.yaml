@@ -9,31 +9,36 @@ columns:
   revenue: { type: float }
 
 surreal:
-  # Daily revenue over the last 90 days, in three nested SELECTs:
-  #   L1  per-order `day` bucket (time::format) + `total` (fold over lines)
-  #   L2  GROUP BY day -> summed `revenue`  (day is now scalar)
-  #   L3  synthesize a record-id `id` from the scalar day
-  # A query-sourced table's id MUST be a real record id (the vista calls
-  # Thing::from_cbor on it) — a plain string fails. `day` stays a string
-  # for the chart x-axis: a CBOR datetime would render as an empty label.
+  # Revenue per 30 SECONDS over the last 10 minutes — this app runs in
+  # real time, so the chart is a live ticker. Buckets are GENERATED
+  # (array::range over a minute-anchored start), not derived from the
+  # orders that exist: a bucket with no sales is a real row at zero,
+  # so a quiet stretch draws empty bands instead of a gap. Each bucket
+  # sums the orders that landed inside its own 30 seconds via a
+  # correlated subquery — raw sums, no smoothing: the dashboard draws
+  # this as BARS, where a discrete little sum per band is the point.
+  # `day` keeps its name (the chart x binding) but carries HH:MM:SS;
+  # the chart's `x_label` script collapses it to minutes.
+  # A query-sourced table's id MUST be a real record id (the vista
+  # calls Thing::from_cbor on it) — type::record over the bucket.
   # language=rhai
   rhai: |
+    let b = if "bakery" in args { args.bakery } else { "" };
+    // Prices are pence, so the sum is pence and the chart wants
+    // pounds. Divided here, not in the client: the y-axis should
+    // read what the database said.
+    let revenue = if b == "" {
+        expr("math::fixed(<float>math::sum((SELECT VALUE lines.fold(0, |$a, $v| $a + $v.quantity * $v.price) FROM order WHERE created_at >= $parent.bucket AND created_at < $parent.bucket + 30s)) / 100, 2)")
+    } else {
+        expr("math::fixed(<float>math::sum((SELECT VALUE lines.fold(0, |$a, $v| $a + $v.quantity * $v.price) FROM order WHERE bakery.name = {} AND created_at >= $parent.bucket AND created_at < $parent.bucket + 30s)) / 100, 2)", [b])
+    };
     select()
         .from(
             select()
-                .field("day")
-                // Prices are pence, so the sum is pence and the chart wants
-                // pounds. Divided here, not in the client: the y-axis should
-                // read what the database said.
-                .expression(expr("math::fixed(<float>math::sum(total) / 100, 2)").alias("revenue"))
-                .from(
-                    select()
-                        .expression(expr("time::format(created_at, '%Y-%m-%d')").alias("day"))
-                        .expression(ident("lines").fold(0, |acc, l| acc + l["quantity"] * l["price"]).alias("total"))
-                        .from("order")
-                        .where(expr("created_at > time::now() - 90d"))
-                        .subquery())
-                .group_by(ident("day"))
+                .expression(expr("time::format(bucket, '%H:%M:%S')").alias("day"))
+                .expression(revenue.alias("revenue"))
+                .from(expr("array::range(0, 22).map(|$i| { bucket: time::floor(time::now(), 1m) - 10m + duration::from_secs($i * 30) })"))
+                .where(expr("bucket <= time::now()"))
                 .subquery())
         .expression(fx("type::record", [expr("'revenue_by_day'"), ident("day")]).alias("id"))
         .field("day")

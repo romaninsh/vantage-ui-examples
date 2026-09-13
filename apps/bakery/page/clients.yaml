@@ -5,11 +5,28 @@ body:
     name: clients
     observe: bakery-surreal/client
     params:
+      # Newest first. No timestamp on this table, so the id is the
+      # insertion proxy — promo signups sort above the seeded accounts.
+      default_sort: { column: id, direction: desc }
       # The funnel button left of the quicksearch opens a form built from
       # these columns: a shop picker over the reference, and a name field
       # the user can type an operator into (`~smith` matches the pattern).
       # Applied filters show as chips and survive a reopen.
       filter: [bakery, "~name"]
+      # The one button on this page that's an event, not a chore —
+      # hence the sparkles and the accent colour (a theme name, so it
+      # adapts to light/dark).
+      toolbar:
+        - label: "More clients"
+          icon: Sparkles
+          color: magenta
+          # If the grid is narrowed to one bakery, the campaign form
+          # starts on that bakery.
+          # language=rhai
+          action: |
+            let b = ();
+            for t in grid.filters() { if t.column == "bakery" { b = t.value; } }
+            if b == () { actions.magic_promotion(); } else { actions.magic_promotion(#{ bakery: b }); }
       columns:
         name: { label: Account, pin: true }
         bakery.name: { label: Shop }

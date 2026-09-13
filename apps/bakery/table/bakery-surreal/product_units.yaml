@@ -6,20 +6,40 @@ datasource: bakery-surreal
 id_column: product
 columns:
   product: { type: string, flags: [id, title] }
-  units: { type: int }
+  # Two stacked layers per product: what's on the shelf and what has
+  # sold — the dashboard's stacked bar reads both.
+  stock: { type: int }
+  sales: { type: int }
 
 surreal:
+  # Per product: current shelf stock plus total units sold. Grouped by
+  # NAME so the "All bakeries" view aggregates the chain; a bakery
+  # filter narrows both sides. The sold sum SPLITs order lines first:
+  # inside an array filter (`lines[WHERE …]`) `$parent` is the order,
+  # not the product row, so correlating there always misses — the
+  # subquery WHERE is the level where `$parent` is the product.
   # language=rhai
   rhai: |
+    let b = if "bakery" in args { args.bakery } else { "" };
+    let sold = if b == "" {
+        expr("math::sum((SELECT VALUE lines.quantity FROM (SELECT lines FROM order SPLIT lines) WHERE lines.product = $parent.id)) ?? 0")
+    } else {
+        expr("math::sum((SELECT VALUE lines.quantity FROM (SELECT lines FROM order WHERE bakery.name = {} SPLIT lines) WHERE lines.product = $parent.id)) ?? 0", [b])
+    };
+    let per_product = select()
+        .from("product")
+        .expression(expr("name").alias("product"))
+        .expression(expr("inventory.stock ?? 0").alias("stock1"))
+        .expression(sold.alias("sold1"));
+    if b != "" {
+        per_product = per_product.where(expr("bakery.name = {}", [b]));
+    }
     select()
-        .from(
-            select()
-                .expression(ident("lines").alias("line"))
-                .from("order")
-                .split("lines")
-                .subquery())
-        .expression(ident("line")["product"]["name"].alias("product"))
-        .expression(sum(ident("line")["quantity"]).alias("units"))
+        .from(per_product.subquery())
+        .field("product")
+        .expression(sum(ident("stock1")).alias("stock"))
+        .expression(sum(ident("sold1")).alias("sales"))
         .group_by(ident("product"))
-        .order_by(ident("units"), "desc")
-        .limit(10, 0)
+        .order_by(ident("sales"), "desc")
+        // Five bars is what fits before the x labels start colliding.
+        .limit(5, 0)

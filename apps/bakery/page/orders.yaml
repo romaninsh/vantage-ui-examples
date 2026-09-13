@@ -5,6 +5,8 @@ body:
     name: orders
     observe: bakery-surreal/order
     params:
+      # Newest first — the row a campaign just wrote lands on top.
+      default_sort: { column: created_at, direction: desc }
       # A record id is noise on a page. Naming a column list drops `id` and
       # the raw foreign keys, and a dotted name reads through the reference
       # to the target's own title — no column declared on the table.

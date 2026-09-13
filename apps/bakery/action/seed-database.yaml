@@ -2,21 +2,54 @@
 #
 # Runs the one-shot `seed` service from composer.yaml: a container
 # carrying python + the surreal CLI, so seeding needs nothing installed
-# on the host. `--wipe` inside the service's command means re-running
-# refreshes the dataset rather than duplicating it.
+# on the host. `kind: command` = a form in front of the terminal — the
+# size the user picks lands in the argv as `${form.size}`. Always
+# `--wipe`s first, so re-running refreshes rather than duplicates
+# (want an empty database instead? that's `reset_database`).
+#
+# No `-p`: Vantage exports COMPOSE_PROJECT_NAME to action children, so
+# this lands on the stack this installation owns.
 
-kind: terminal
+kind: command
 description: |
-  Load (or refresh) the demo dataset: 6 shops, ~4,000 orders, a year of
-  invoices and payments. Needs the services running — start them from
-  the Services indicator or the setup wizard first.
+  Stock the shelves: bakeries and their product catalogues. Clients
+  (and their orders, invoices, payments) are deliberately NOT seeded —
+  sign them with the ✨ magic promotion on the Clients page. Needs the
+  services running.
 dialog:
-  title: "Seed the database"
+  title: "Seed the catalog"
+  confirm_label: "Seed"
+form:
+  fields:
+    - name: size
+      type: string
+      label: "Dataset size"
+      choices: [xs, m, xl]
+      default: m
+    - name: with_clients
+      type: bool
+      label: "Also generate clients (and their orders, invoices, payments)"
+      required: false
+      default: "false"
 terminal:
   command: docker
   # --no-deps: the seeder reaches surrealdb over the compose network
   # (`surrealdb:8000`), so it must not try to (re)create the service —
-  # that path republishes host ports and collides with anything else
-  # sitting on 8000. Services must already be running (the panel says).
+  # that path republishes host ports.
   args:
-    ["compose", "-f", "composer.yaml", "--profile", "seed", "run", "--rm", "--no-deps", "seed"]
+    [
+      "compose",
+      "-f",
+      "composer.yaml",
+      "--profile",
+      "seed",
+      "run",
+      "--rm",
+      "--no-deps",
+      "seed",
+      "seed.py",
+      "${form.size}",
+      "--with-clients",
+      "${form.with_clients}",
+      "--wipe",
+    ]

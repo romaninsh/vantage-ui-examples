@@ -25,11 +25,12 @@ steps:
           1. **Services** — start the database container. Vantage
              manages it from here on: it stops when you quit and
              resumes when you come back.
-          2. **Seed** — load the demo dataset (shops, products, a year
-             of orders, invoices and payments).
+          2. **Seed the catalog** — bakeries and products. Clients stay
+             empty on purpose: sign them with the **✨ More clients**
+             campaign on the Clients page and watch them arrive live.
 
-          Every step is skippable — if you already run SurrealDB on
-          port 8000, click straight through and just seed.
+          Every step is skippable — if you already run your own
+          SurrealDB, click straight through.
 
   - name: services
     title: "Services"
@@ -41,16 +42,21 @@ steps:
           engine (Docker Desktop, colima, OrbStack) must be running —
           the panel above will say so if it isn't.
 
-  # A wizard-step button cannot dispatch an action yet (steps run in
-  # the scope-only env — same limit as page buttons), so this step
-  # points at the toolbar action instead of carrying its own button.
-  # Give it one (`actions.seed_database()`) once buttons can dispatch.
   - name: seed
-    title: "Seed data"
+    title: "Seed the catalog"
     body:
       - kind: markdown
         text: |
-          Last step: load the demo dataset — press **Finish**, then use
-          **Seed database** on the Products page toolbar. It runs in a
-          container (nothing to install), takes a minute, and re-running
-          refreshes the data rather than duplicating it.
+          Stock the shelves: bakeries and their product catalogues,
+          generated in a container (nothing to install). Clients are
+          deliberately left out — you sign those yourself with the
+          **✨ More clients** button on the Clients page, and watch
+          the grid fill live while the campaign runs.
+      - kind: button
+        params:
+          label: "Seed the catalog"
+          icon: Database
+          style: primary
+          # language=rhai
+          action: |
+            actions.seed_database();

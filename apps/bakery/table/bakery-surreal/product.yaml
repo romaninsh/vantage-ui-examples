@@ -13,3 +13,8 @@ columns:
   bakery.name: { type: string }
   is_deleted: { type: bool }
   inventory: { type: string }
+  # The embedded object's counter, lifted into a real column so the
+  # grid can show and sort it — the restock oven writes it live.
+  stock:
+    type: int
+    expr: 'expr("inventory.stock")'

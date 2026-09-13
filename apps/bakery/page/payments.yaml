@@ -5,6 +5,8 @@ body:
     name: payments
     observe: bakery-surreal/payment
     params:
+      # Newest first — the row a campaign just wrote lands on top.
+      default_sort: { column: paid_at, direction: desc }
       columns:
         invoice.number: { label: Invoice, pin: true }
         paid_at: { label: Received }

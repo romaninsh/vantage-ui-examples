@@ -1,8 +1,9 @@
 # yaml-language-server: $schema=./page-schema-1.json
 #
-# Every tile here reads a query-sourced table: the aggregation happens in
-# SurrealDB and the page only renders. See table/bakery-surreal/ for the
-# four `rhai:` blocks behind them.
+# Every tile reads a query-sourced table (the aggregation happens in
+# SurrealDB; the page only renders), and every tile narrows to the
+# bakery picked in the dropdown: the select's value rides into each
+# table's rhai as `args.bakery` (empty = the whole chain).
 title: Dashboard
 body:
   - kind: column
@@ -14,8 +15,23 @@ body:
           icon: Croissant
       - kind: label
         params:
-          text: "Trade over the last 90 days, and what needs attention today."
+          text: "Live trade — this dashboard moves while your campaigns, ovens and collectors run."
           style: muted
+
+      - kind: row
+        children:
+          - kind: column
+            width: 260
+            children:
+              - kind: select
+                name: bakery
+                observe: bakery-surreal/bakery
+                params:
+                  column: name
+                  label: "Bakery"
+                  all_label: "All bakeries"
+          - kind: column
+            children: []
 
       - kind: row
         children:
@@ -23,24 +39,42 @@ body:
             frame: true
             children:
               - kind: chart
-                observe: bakery-surreal/revenue_by_day
+                observe:
+                  # language=rhai
+                  script: 'let b = bakery.value; if b == "All bakeries" { b = "" } scenery("bakery-surreal/revenue_by_day").args(#{ bakery: b })'
                 height: 260
                 params:
                   x: day
                   y: revenue
-                  label: "Revenue, last 90 days"
-                  chart_type: line
+                  label: "Revenue, last 10 minutes"
+                  # Bars, not a line: at 5s resolution each bucket is a
+                  # discrete little sum and a line just saws between them.
+                  chart_type: bar
+                  # 5-second buckets; the label script collapses the
+                  # ticks to one HH:MM per minute (repeats stay blank).
+                  # language=rhai
+                  x_label: "x.sub_string(0, 5)"
+                  # Query-sourced: no live feed to ride, so poll — the
+                  # campaigns write in real time.
+                  refresh_interval: 5
           - kind: column
             frame: true
             children:
               - kind: chart
-                observe: bakery-surreal/product_units
+                observe:
+                  # language=rhai
+                  script: 'let b = bakery.value; if b == "All bakeries" { b = "" } scenery("bakery-surreal/product_units").args(#{ bakery: b })'
                 height: 260
                 params:
                   x: product
-                  y: units
-                  label: "Top products by units sold"
-                  chart_type: bar
+                  # Bottom layer = shelf stock (yellow), top = units
+                  # sold (light green): one bar answers "have we got
+                  # it, and does it move?".
+                  series: [stock, sales]
+                  palette: { colors: ["#eab308", "#86efac"] }
+                  label: "Stock & sales by product"
+                  chart_type: stacked_bar
+                  refresh_interval: 5
 
       # Three lists that each answer one question. Without a `text:`/`label:`
       # a list falls back to the row's `[title]` column alone, which is why
@@ -50,25 +84,68 @@ body:
           - kind: column
             frame: true
             children:
-              - kind: label
-                params: { text: "Largest orders", style: heading, icon: Receipt }
+              # Title left, the fix-it button in the title's free space.
+              - kind: row
+                children:
+                  - kind: label
+                    params: { text: "Latest orders", style: heading, icon: Receipt }
+                  - kind: column
+                    width: 104
+                    children:
+                      - kind: button
+                        params:
+                          label: "Promote"
+                          icon: Sparkles
+                          color: magenta
+                          size: xs
+                          # The dropdown's pick prefills the campaign form
+                          # (the form matches it by the bakery's name).
+                          # language=rhai
+                          action: |
+                            let b = bakery.value;
+                            if b == "All bakeries" { actions.magic_promotion(); } else { actions.magic_promotion(#{ bakery: b }); }
               - kind: list
-                observe: bakery-surreal/order_totals
+                observe:
+                  # language=rhai
+                  script: 'let b = bakery.value; if b == "All bakeries" { b = "" } scenery("bakery-surreal/order_totals").args(#{ bakery: b })'
                 height: 220
                 params:
-                  text: '${ id }'
+                  refresh_interval: 5
+                  text: '${ client + " · " + product }'
+                  # Which branch took the order — the query fills `branch`
+                  # only on the "All bakeries" read, so this line vanishes
+                  # when the dropdown already says it.
+                  sub: '${ branch }'
                   label: '${ total_display }'
 
           - kind: column
             frame: true
             children:
-              - kind: label
-                params: { text: "Owed by accounts", style: heading, icon: CreditCard }
+              - kind: row
+                children:
+                  - kind: label
+                    params: { text: "Owed by accounts", style: heading, icon: CreditCard }
+                  - kind: column
+                    width: 90
+                    children:
+                      - kind: button
+                        params:
+                          label: "Chase"
+                          icon: Sparkles
+                          color: magenta
+                          size: xs
+                          # language=rhai
+                          action: |
+                            actions.chase_payments();
               - kind: list
-                observe: bakery-surreal/client_balances
+                observe:
+                  # language=rhai
+                  script: 'let b = bakery.value; if b == "All bakeries" { b = "" } scenery("bakery-surreal/client_balances").args(#{ bakery: b })'
                 height: 220
                 params:
+                  refresh_interval: 5
                   text: '${ name }'
+                  sub: '${ branch }'
                   # Red only once the due date has passed. An account with a
                   # balance inside its terms is not a problem to chase.
                   label: '${ #{ text: owed_display, color: if overdue > 0 { "danger" } else { "warning" } } }'
@@ -76,11 +153,30 @@ body:
           - kind: column
             frame: true
             children:
-              - kind: label
-                params: { text: "Low stock", style: heading, icon: Package }
+              - kind: row
+                children:
+                  - kind: label
+                    params: { text: "Low stock", style: heading, icon: Package }
+                  - kind: column
+                    width: 96
+                    children:
+                      - kind: button
+                        params:
+                          label: "Restock"
+                          icon: Sparkles
+                          color: magenta
+                          size: xs
+                          # language=rhai
+                          action: |
+                            let b = bakery.value;
+                            if b == "All bakeries" { actions.restock(); } else { actions.restock(#{ bakery: b }); }
               - kind: list
-                observe: bakery-surreal/low_stock_products
+                observe:
+                  # language=rhai
+                  script: 'let b = bakery.value; if b == "All bakeries" { b = "" } scenery("bakery-surreal/low_stock_products").args(#{ bakery: b })'
                 height: 220
                 params:
+                  refresh_interval: 5
                   text: '${ name }'
+                  sub: '${ branch }'
                   label: '${ if stock == 0 { #{ text: "out", color: "danger" } } else { #{ text: stock + " left", color: "warning" } } }'

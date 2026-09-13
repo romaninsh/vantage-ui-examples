@@ -5,6 +5,9 @@ body:
     name: products
     observe: bakery-surreal/product
     params:
+      # Newest first. No timestamp on this table, so the id is the
+      # insertion proxy (hand-added products sort above the catalogue).
+      default_sort: { column: id, direction: desc }
       # `bakery.name` reads through the reference to the shop's title, so
       # the grid shows "Breg Briggate, Leeds" rather than `bakery:leeds`.
       columns:
@@ -12,6 +15,8 @@ body:
         bakery.name: { label: Shop }
         price: { label: Price }
         calories: { label: kcal }
+        stock: { label: Stock }
+      filter: [bakery, "~name"]
       toolbar:
         - label: "Add product"
           icon: Plus
@@ -26,22 +31,14 @@ body:
           # language=rhai
           action: |
             actions.import_products();
-        - label: "Bake muffins"
-          icon: Play
+        # Magic-branded like "More clients" on the Clients page: same
+        # sparkles, same accent — one look for every ✨ process button.
+        - label: "Restock the ovens"
+          icon: Sparkles
+          color: magenta
+          # If the grid is narrowed to one bakery, the form starts there.
           # language=rhai
           action: |
-            actions.bake_muffins();
-        # Setup lives on a grid toolbar because only toolbar/row bodies
-        # can dispatch actions today (a standalone `kind: button` runs
-        # in the scope-only env). Move to the Welcome page once buttons
-        # can dispatch.
-        - label: "Set up services"
-          icon: Rocket
-          # language=rhai
-          action: |
-            actions.setup();
-        - label: "Seed database"
-          icon: Database
-          # language=rhai
-          action: |
-            actions.seed_database();
+            let b = ();
+            for t in grid.filters() { if t.column == "bakery" { b = t.value; } }
+            if b == () { actions.restock(); } else { actions.restock(#{ bakery: b }); }

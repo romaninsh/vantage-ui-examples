@@ -479,6 +479,15 @@ def main():
         epilog=__doc__,
     )
     ap.add_argument("tier", nargs="?", choices=list(TIERS), help="data volume")
+    ap.add_argument("--no-clients", action="store_true",
+                    help="catalog only: shops + products, no accounts and "
+                         "nothing downstream of them (orders, invoices, "
+                         "payments) — clients arrive via the magic "
+                         "promotion (scripts/promotion.py)")
+    ap.add_argument("--with-clients", choices=["true", "false"], default=None,
+                    help="explicit form of --no-clients for form-driven "
+                         "callers: 'false' skips accounts (and their "
+                         "downstream), 'true' seeds everything")
     ap.add_argument("--wipe", action="store_true", help="clear the tables before seeding")
     ap.add_argument("--wipe-only", action="store_true", help="clear the tables and exit")
     ap.add_argument("--seed", type=int, default=None, help="RNG seed for reproducibility")
@@ -490,6 +499,8 @@ def main():
     ap.add_argument("--ns", default=os.environ.get("SURREAL_NS", "bakery"))
     ap.add_argument("--db", default=os.environ.get("SURREAL_DB", "v2"))
     args = ap.parse_args()
+    if args.with_clients is not None:
+        args.no_clients = args.with_clients == "false"
 
     conn = dict(endpoint=args.endpoint, user=args.user, password=args.password,
                 ns=args.ns, db=args.db)
@@ -506,33 +517,44 @@ def main():
         ap.error("a tier (xs|m|xl) is required unless --wipe-only is given")
 
     cfg = TIERS[args.tier]
-    print(f"Seeding tier '{args.tier}': {cfg['shops']} shops, {cfg['clients']} accounts, "
-          f"{cfg['orders']} orders over {cfg['days']} days"
-          + ("  [DRY RUN]" if args.dry_run else ""))
+    if args.no_clients:
+        print(f"Seeding tier '{args.tier}' catalog: {cfg['shops']} shops + products "
+              f"(no accounts — sign clients with the magic promotion)"
+              + ("  [DRY RUN]" if args.dry_run else ""))
+    else:
+        print(f"Seeding tier '{args.tier}': {cfg['shops']} shops, {cfg['clients']} accounts, "
+              f"{cfg['orders']} orders over {cfg['days']} days"
+              + ("  [DRY RUN]" if args.dry_run else ""))
 
     shop_rows, shops = gen_shops(cfg["shops"])
     product_rows, product_pool = gen_products(shops)
-    client_rows, client_pool = gen_clients(cfg["clients"], shops)
-    orders, edge_rows = gen_orders(cfg["orders"], cfg["days"], shops,
-                                   client_pool, product_pool)
-    invoice_rows, payment_rows, attach = gen_billing(orders, cfg["days"])
 
     emit("shops", "bakery", shop_rows, conn, args.dry_run, args.chunk)
     emit("products", "product", product_rows, conn, args.dry_run, args.chunk)
-    emit("accounts", "client", client_rows, conn, args.dry_run, args.chunk)
-    emit("orders", "order", [o.sql for o in orders], conn, args.dry_run, args.chunk)
-    emit("edges", "placed", edge_rows, conn, args.dry_run, args.chunk, relation=True)
-    emit("invoices", "invoice", invoice_rows, conn, args.dry_run, args.chunk)
-    emit("payments", "payment", payment_rows, conn, args.dry_run, args.chunk)
 
-    # Attaching orders to their invoice is an UPDATE per order, not an
-    # INSERT, so it runs as its own batched statement block.
-    total = 0
-    for batch in chunked(attach, args.chunk):
-        run_sql("\n".join(batch), conn, args.dry_run)
-        total += len(batch)
-        print(f"  invoiced orders: {total}/{len(attach)}", end="\r", flush=True)
-    print(f"  invoiced orders: {len(attach)} done            ")
+    # Everything below hangs off client records, so --no-clients skips
+    # the lot: orders reference accounts, invoices consolidate orders,
+    # payments settle invoices.
+    if not args.no_clients:
+        client_rows, client_pool = gen_clients(cfg["clients"], shops)
+        orders, edge_rows = gen_orders(cfg["orders"], cfg["days"], shops,
+                                       client_pool, product_pool)
+        invoice_rows, payment_rows, attach = gen_billing(orders, cfg["days"])
+
+        emit("accounts", "client", client_rows, conn, args.dry_run, args.chunk)
+        emit("orders", "order", [o.sql for o in orders], conn, args.dry_run, args.chunk)
+        emit("edges", "placed", edge_rows, conn, args.dry_run, args.chunk, relation=True)
+        emit("invoices", "invoice", invoice_rows, conn, args.dry_run, args.chunk)
+        emit("payments", "payment", payment_rows, conn, args.dry_run, args.chunk)
+
+        # Attaching orders to their invoice is an UPDATE per order, not an
+        # INSERT, so it runs as its own batched statement block.
+        total = 0
+        for batch in chunked(attach, args.chunk):
+            run_sql("\n".join(batch), conn, args.dry_run)
+            total += len(batch)
+            print(f"  invoiced orders: {total}/{len(attach)}", end="\r", flush=True)
+        print(f"  invoiced orders: {len(attach)} done            ")
 
     # Last, so the bulk inserts above are not paying to maintain them.
     define_indexes(conn, args.dry_run)

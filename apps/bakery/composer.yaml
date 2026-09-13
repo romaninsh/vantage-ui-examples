@@ -18,12 +18,16 @@ services:
     # (A bind mount can't do this on colima: virtiofs only grants
     # writes to container root — measured, not assumed.)
     command: start --user root --pass root --bind 0.0.0.0:8000 rocksdb:/home/nonroot/bakery.db
-    # Loopback only: this binds root/root SurrealDB to the container's
-    # own network, not the host's — without the 127.0.0.1 prefix,
-    # compose publishes to 0.0.0.0 and the database is reachable from
-    # anyone else on the local network.
+    # `127.0.0.1::8000` — loopback-only AND an ephemeral host port:
+    # docker picks a free one, so any number of stacks (Stable +
+    # Nightly + several apps) run side by side with zero collisions.
+    # The datasource addresses the *service* (`surrealdb:8000`) and
+    # Vantage rewrites it to the port docker actually assigned; a
+    # terminal asks `docker compose -p <project> port surrealdb 8000`
+    # (the panel shows the project name). Loopback matters: root/root
+    # SurrealDB must not be reachable from the local network.
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1::8000"
     volumes:
       - bakery-db:/home/nonroot
     healthcheck:
@@ -42,15 +46,21 @@ services:
     build: seed
     volumes:
       - ./seed.py:/app/seed.py:ro
+      - ./scripts/promotion.py:/app/promotion.py:ro
+      - ./scripts/restock.py:/app/restock.py:ro
+      # Not `collections.py` — that name shadows python's stdlib module
+      # and detonates the interpreter's own imports.
+      - ./scripts/chase.py:/app/chase.py:ro
     environment:
       SURREAL_ENDPOINT: ws://surrealdb:8000
     depends_on:
       surrealdb:
         condition: service_healthy
-    # `m` = 6 shops, ~4k orders, a year of history (see seed.py's own
-    # doc). `--wipe` first, so re-running the action refreshes rather
-    # than duplicates.
-    command: ["m", "--wipe"]
+    # The image's entrypoint is bare `python3`; the script comes first
+    # in the args, so one service runs every data tool. Default:
+    # `m` = 6 shops, ~4k orders, a year of history; `--wipe` first, so
+    # re-running refreshes rather than duplicates.
+    command: ["seed.py", "m", "--wipe"]
 
 volumes:
   bakery-db:

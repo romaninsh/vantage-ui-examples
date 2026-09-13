@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=./action-schema-1.json
+#
+# Collections: work the aged-debt list. Reads every issued invoice
+# with money outstanding and persuades — some settle in full, some
+# find half, some feed the goat the paperwork. Every settlement is a
+# real payment row, so "Owed by accounts" shrinks live.
+
+kind: command
+description: |
+  Chase outstanding invoices. Pick an approach — the odds change, the
+  excuses stay priceless. Watch it here or send it to the background.
+dialog:
+  title: "Chase outstanding invoices"
+  confirm_label: "Start chasing"
+form:
+  fields:
+    - name: approach
+      label: "How hard do we lean?"
+      type: string
+      choices: [gentle, firm, calls]
+      default: firm
+    - name: limit
+      label: "Accounts to chase"
+      type: string
+      choices: ["5", "10", "20"]
+      default: "10"
+terminal:
+  command: docker
+  args:
+    [
+      "compose",
+      "-f",
+      "composer.yaml",
+      "--profile",
+      "seed",
+      "run",
+      "--rm",
+      "--no-deps",
+      "seed",
+      "chase.py",
+      "--interactive",
+      "--approach",
+      "${form.approach}",
+      "--limit",
+      "${form.limit}",
+    ]

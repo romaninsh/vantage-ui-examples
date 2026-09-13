@@ -11,6 +11,8 @@ body:
     name: invoices
     observe: bakery-surreal/invoice
     params:
+      # Newest first — the row a campaign just wrote lands on top.
+      default_sort: { column: issued_at, direction: desc }
       # Shop and state offer their own pickers; `>outstanding` fixes the
       # operator, so the field asks for a floor — "owed more than".
       filter: [bakery, settlement, ">outstanding"]
