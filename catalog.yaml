@@ -65,7 +65,10 @@ apps:
     persona: "Internal tools"
     persona_url: "/solutions/internal-tools/"
     status: "available"
-    min_version: "0.38.0"
+    # 0.40: the setup wizard's `composer: true` step — an older binary
+    # rejects the step spec at validation, so this content must not
+    # reach one.
+    min_version: "0.40.0"
     icon: "storefront"
     blurb: "A back-office admin for a bakery franchise — bakeries, clients, products and orders over SurrealDB, with a query-sourced dashboard and one action of every kind, up to a multi-step import wizard."
     repo_path: "apps/bakery"
@@ -73,6 +76,7 @@ apps:
     screenshot: "images/vantage-ui-app.png"
     demonstrates:
       - "Every action kind in one app: form, confirm, terminal, HTTP and wizard"
+      - "A composer.yaml Vantage runs for you — services start from the setup wizard, stop with the app"
       - "Charts and a dashboard built from query-sourced tables"
       - "A wizard whose background worker is an included .rhai file"
 

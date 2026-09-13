@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./action-schema-1.json
+#
+# Runs the one-shot `seed` service from composer.yaml: a container
+# carrying python + the surreal CLI, so seeding needs nothing installed
+# on the host. `--wipe` inside the service's command means re-running
+# refreshes the dataset rather than duplicating it.
+
+kind: terminal
+description: |
+  Load (or refresh) the demo dataset: 6 shops, ~4,000 orders, a year of
+  invoices and payments. Needs the services running — start them from
+  the Services indicator or the setup wizard first.
+dialog:
+  title: "Seed the database"
+terminal:
+  command: docker
+  args:
+    ["compose", "-f", "composer.yaml", "--profile", "seed", "run", "--rm", "seed"]

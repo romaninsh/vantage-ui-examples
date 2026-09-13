@@ -62,6 +62,8 @@ apps/bakery/
 ├── action/*.yaml                   # one per action kind, plus the worker .rhai
 ├── menu/left.yaml
 ├── scripts/bake-muffins.py         # what the terminal action runs
+├── composer.yaml                   # the services stack Vantage runs for you
+├── seed/Dockerfile                 # the seeder image (python + surreal CLI)
 ├── seed.py                         # the data generator
 ├── import-products.csv             # the wizard's input
 └── README.md                       # this page
@@ -69,17 +71,23 @@ apps/bakery/
 
 ## Run it
 
-The datasource connects on startup, so bring the database up first.
-
-```sh
-surreal start --user root --pass root
-python3 apps/bakery/seed.py m        # 6 shops, 90 accounts, 4000 orders, a year
-```
-
-Then open the app:
-
 ```sh
 vantage-ui apps/bakery
+```
+
+Then press **Set up services & data** on the Welcome page. The wizard
+starts the SurrealDB container from `composer.yaml` (Vantage manages it —
+stopped when you quit, resumed when you return; the Services indicator in
+the title bar shows what's running) and seeds the demo dataset through a
+one-shot container, so nothing needs installing beyond a container engine
+(Docker Desktop, colima, OrbStack).
+
+Prefer to run things yourself? The compose file is standard schema and the
+generator takes sizes:
+
+```sh
+docker compose -f apps/bakery/composer.yaml up -d
+python3 apps/bakery/seed.py m        # 6 shops, 90 accounts, 4000 orders, a year
 ```
 
 `seed.py xs` is a smoke-sized dataset and `seed.py xl` a stress one; `--wipe`

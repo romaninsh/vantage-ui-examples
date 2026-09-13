@@ -1,0 +1,47 @@
+# The bakery's services. Vantage reads this file (the Services
+# indicator in the title bar, or the setup wizard's `composer: true`
+# step) and runs the stack for you; it is standard compose schema, so
+# `docker compose -f composer.yaml up -d` from a terminal drives the
+# very same stack.
+#
+# Vantage only ever *stops* these containers (on quit and on project
+# switch) — never removes them — and the database lives on the named
+# volume below, so the seeded dataset survives across sessions.
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    # Persistent storage on the named volume: a stopped or recreated
+    # container comes back with the bakery still seeded.
+    command: start --user root --pass root --bind 0.0.0.0:8000 rocksdb:/data/bakery.db
+    ports:
+      - "8000:8000"
+    volumes:
+      - bakery-db:/data
+    healthcheck:
+      test: ["CMD", "/surreal", "isready"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  # One-shot seeder, behind a profile so a plain `up` never runs it.
+  # No host python or surreal CLI needed — the image carries both and
+  # mounts the generator from the project. The "Seed the database"
+  # action runs:
+  #   docker compose -f composer.yaml --profile seed run --rm seed
+  seed:
+    profiles: [seed]
+    build: seed
+    volumes:
+      - ./seed.py:/app/seed.py:ro
+    environment:
+      SURREAL_ENDPOINT: ws://surrealdb:8000
+    depends_on:
+      surrealdb:
+        condition: service_healthy
+    # `m` = 6 shops, ~4k orders, a year of history (see seed.py's own
+    # doc). `--wipe` first, so re-running the action refreshes rather
+    # than duplicates.
+    command: ["m", "--wipe"]
+
+volumes:
+  bakery-db:
