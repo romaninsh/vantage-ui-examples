@@ -464,6 +464,9 @@ def define_indexes(conn, dry_run):
         "DEFINE INDEX IF NOT EXISTS order_invoice   ON order   FIELDS invoice;",
         "DEFINE INDEX IF NOT EXISTS order_client    ON order   FIELDS client;",
         "DEFINE INDEX IF NOT EXISTS order_bakery    ON order   FIELDS bakery;",
+        # Not a foreign key, but the revenue ticker range-scans it 22
+        # buckets at a time, every refresh.
+        "DEFINE INDEX IF NOT EXISTS order_created   ON order   FIELDS created_at;",
         "DEFINE INDEX IF NOT EXISTS payment_invoice ON payment FIELDS invoice;",
         "DEFINE INDEX IF NOT EXISTS invoice_client  ON invoice FIELDS client;",
         "DEFINE INDEX IF NOT EXISTS invoice_bakery  ON invoice FIELDS bakery;",
@@ -479,15 +482,12 @@ def main():
         epilog=__doc__,
     )
     ap.add_argument("tier", nargs="?", choices=list(TIERS), help="data volume")
-    ap.add_argument("--no-clients", action="store_true",
-                    help="catalog only: shops + products, no accounts and "
-                         "nothing downstream of them (orders, invoices, "
-                         "payments) — clients arrive via the magic "
-                         "promotion (scripts/promotion.py)")
-    ap.add_argument("--with-clients", choices=["true", "false"], default=None,
-                    help="explicit form of --no-clients for form-driven "
-                         "callers: 'false' skips accounts (and their "
-                         "downstream), 'true' seeds everything")
+    ap.add_argument("--with-clients", choices=["true", "false"], default="true",
+                    help="'false' = catalog only: shops + products, no "
+                         "accounts and nothing downstream of them (orders, "
+                         "invoices, payments) — clients then arrive via the "
+                         "magic promotion (scripts/promotion.py). The "
+                         "true/false value is what a form checkbox posts.")
     ap.add_argument("--wipe", action="store_true", help="clear the tables before seeding")
     ap.add_argument("--wipe-only", action="store_true", help="clear the tables and exit")
     ap.add_argument("--seed", type=int, default=None, help="RNG seed for reproducibility")
@@ -499,8 +499,7 @@ def main():
     ap.add_argument("--ns", default=os.environ.get("SURREAL_NS", "bakery"))
     ap.add_argument("--db", default=os.environ.get("SURREAL_DB", "v2"))
     args = ap.parse_args()
-    if args.with_clients is not None:
-        args.no_clients = args.with_clients == "false"
+    seed_clients = args.with_clients != "false"
 
     conn = dict(endpoint=args.endpoint, user=args.user, password=args.password,
                 ns=args.ns, db=args.db)
@@ -517,13 +516,13 @@ def main():
         ap.error("a tier (xs|m|xl) is required unless --wipe-only is given")
 
     cfg = TIERS[args.tier]
-    if args.no_clients:
-        print(f"Seeding tier '{args.tier}' catalog: {cfg['shops']} shops + products "
-              f"(no accounts — sign clients with the magic promotion)"
-              + ("  [DRY RUN]" if args.dry_run else ""))
-    else:
+    if seed_clients:
         print(f"Seeding tier '{args.tier}': {cfg['shops']} shops, {cfg['clients']} accounts, "
               f"{cfg['orders']} orders over {cfg['days']} days"
+              + ("  [DRY RUN]" if args.dry_run else ""))
+    else:
+        print(f"Seeding tier '{args.tier}' catalog: {cfg['shops']} shops + products "
+              f"(no accounts — sign clients with the magic promotion)"
               + ("  [DRY RUN]" if args.dry_run else ""))
 
     shop_rows, shops = gen_shops(cfg["shops"])
@@ -532,10 +531,10 @@ def main():
     emit("shops", "bakery", shop_rows, conn, args.dry_run, args.chunk)
     emit("products", "product", product_rows, conn, args.dry_run, args.chunk)
 
-    # Everything below hangs off client records, so --no-clients skips
-    # the lot: orders reference accounts, invoices consolidate orders,
-    # payments settle invoices.
-    if not args.no_clients:
+    # Everything below hangs off client records, so a catalog-only seed
+    # skips the lot: orders reference accounts, invoices consolidate
+    # orders, payments settle invoices.
+    if seed_clients:
         client_rows, client_pool = gen_clients(cfg["clients"], shops)
         orders, edge_rows = gen_orders(cfg["orders"], cfg["days"], shops,
                                        client_pool, product_pool)

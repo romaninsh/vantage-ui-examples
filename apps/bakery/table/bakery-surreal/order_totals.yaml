@@ -23,7 +23,7 @@ surreal:
   # real time, so this tile is a ticker of what just happened.
   # language=rhai
   rhai: |
-    let b = if "bakery" in args { args.bakery } else { "" };
+    let b = args.get("bakery") ?? "";
     let branch = if b == "" { expr("bakery.name") } else { expr("''") };
     let per_order = select()
         .field("id").field("created_at")

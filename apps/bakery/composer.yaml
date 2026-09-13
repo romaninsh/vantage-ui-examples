@@ -46,6 +46,8 @@ services:
     build: seed
     volumes:
       - ./seed.py:/app/seed.py:ro
+      # The magic scripts + their shared plumbing (breg.py).
+      - ./scripts/breg.py:/app/breg.py:ro
       - ./scripts/promotion.py:/app/promotion.py:ro
       - ./scripts/restock.py:/app/restock.py:ro
       # Not `collections.py` — that name shadows python's stdlib module

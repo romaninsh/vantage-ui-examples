@@ -30,37 +30,24 @@ SURREAL_PASS, SURREAL_NS, SURREAL_DB.
 """
 
 import argparse
-import json
-import os
 import random
-import signal
-import subprocess
-import sys
 import time
 from datetime import datetime, timedelta, timezone
 
-# --- tiny ANSI toolkit (bake-muffins.py's) ---------------------------------
+import breg
+from breg import (BOLD, DIM, GOLD, LAV, MINT, PINK, RED, RESET, SKY,
+                  conn_from_env, dt_literal, esc, out, query_rows, run_sql)
 
-RESET, BOLD, DIM = "\x1b[0m", "\x1b[1m", "\x1b[2m"
+beat = breg.paced_sleep
 
-
-def c256(n):
-    return f"\x1b[38;5;{n}m"
-
-
-PINK, GOLD, MINT, SKY, LAV, RED = c256(205), c256(220), c256(114), c256(75), c256(141), c256(203)
-
-INTERACTIVE = False
-
-
-def out(s):
-    sys.stdout.write(s)
-    sys.stdout.flush()
+breg.install_sigint(
+    f"\r\n{BOLD}{SKY}📉 budget pulled{RESET} — the billboards come down "
+    f"after the current signup…\r\n")
 
 
 def say(s, pace=0.012):
     """Typewriter in interactive mode; plain print otherwise."""
-    if not INTERACTIVE:
+    if not breg.INTERACTIVE:
         print(s.replace("\r", ""))
         return
     for ch in s:
@@ -68,76 +55,6 @@ def say(s, pace=0.012):
         if pace and ch not in "\x1b[":
             time.sleep(pace if ch != " " else pace / 2)
     out("\r\n")
-
-
-def beat(seconds):
-    if INTERACTIVE:
-        time.sleep(seconds)
-
-
-# --- graceful stop ----------------------------------------------------------
-
-STOPPING = False
-
-
-def on_sigint(_s, _f):
-    global STOPPING
-    if STOPPING:
-        return
-    STOPPING = True
-    out(f"\r\n{BOLD}{SKY}📉 budget pulled{RESET} — the billboards come down "
-        f"after the current signup…\r\n")
-
-
-signal.signal(signal.SIGINT, on_sigint)
-
-# --- surreal plumbing (seed.py's helpers, trimmed) ---------------------------
-
-
-def conn_from_env():
-    return dict(
-        endpoint=os.environ.get("SURREAL_ENDPOINT", "ws://localhost:8000"),
-        user=os.environ.get("SURREAL_USER", "root"),
-        password=os.environ.get("SURREAL_PASS", "root"),
-        ns=os.environ.get("SURREAL_NS", "bakery"),
-        db=os.environ.get("SURREAL_DB", "v2"),
-    )
-
-
-def run_sql(sql, conn, want_json=False):
-    cmd = ["surreal", "sql", "--endpoint", conn["endpoint"],
-           "--user", conn["user"], "--pass", conn["password"],
-           "--ns", conn["ns"], "--db", conn["db"]]
-    if want_json:
-        cmd.append("--json")
-    res = subprocess.run(cmd, input=sql, text=True, capture_output=True)
-    blob = (res.stdout or "") + (res.stderr or "")
-    if res.returncode != 0 or "Parse error" in blob or '"status":"ERR"' in blob:
-        sys.stderr.write(blob + "\n")
-        raise SystemExit(f"surreal sql failed (exit {res.returncode}) — see above")
-    return res.stdout
-
-
-def query_rows(sql, conn):
-    """Rows of a single-statement query. `--json` prints one outer
-    array per statement, each holding its rows: `[[{...}, {...}]]`."""
-    raw = run_sql(sql, conn, want_json=True)
-    for line in raw.splitlines():
-        line = line.strip()
-        if line.startswith("["):
-            parsed = json.loads(line)
-            if parsed and isinstance(parsed[0], list):
-                return parsed[0]
-            return parsed
-    return []
-
-
-def esc(s):
-    return s.replace("\\", "\\\\").replace('"', '\\"')
-
-
-def dt_literal(d):
-    return 'd"' + d.strftime("%Y-%m-%dT%H:%M:%SZ") + '"'
 
 
 # --- the campaign -----------------------------------------------------------
@@ -183,17 +100,7 @@ def pick_hook(channels):
     return random.choice(HOOKS[random.choice(channels)])
 
 
-def paced_sleep(seconds):
-    """Interactive pacing that stays responsive to Ctrl+C."""
-    if not INTERACTIVE:
-        return
-    end = time.time() + seconds
-    while time.time() < end and not STOPPING:
-        time.sleep(min(0.2, max(0.0, end - time.time())))
-
-
 def main():
-    global INTERACTIVE
     ap = argparse.ArgumentParser()
     ap.add_argument("--bakery", required=True, help="record id, e.g. bakery:leeds")
     ap.add_argument("--slogan", default="Fresh. Local. Yours.")
@@ -205,14 +112,14 @@ def main():
                     help="override signup count (0 = derive from the media mix)")
     ap.add_argument("--interactive", action="store_true")
     args = ap.parse_args()
-    INTERACTIVE = args.interactive
+    breg.INTERACTIVE = args.interactive
 
     channels = [c.strip() for c in args.channels.split(",") if c.strip() in HOOKS]
     if not channels:
         channels = ["word-of-mouth"]
 
     conn = conn_from_env()
-    bakery = args.bakery if ":" in args.bakery else f"bakery:{args.bakery}"
+    bakery = breg.normalize_bakery(args.bakery)
 
     shops = query_rows(f"SELECT name FROM {bakery};", conn)
     if not shops:
@@ -241,14 +148,13 @@ def main():
     campaign_start = time.time()
     started = []
     for i in range(signups):
-        if STOPPING:
+        if breg.STOPPING:
             break
         if i > 0:
-            paced_sleep(gap * random.uniform(0.6, 1.4))
-            if STOPPING:
+            breg.paced_sleep(gap * random.uniform(0.6, 1.4))
+            if breg.STOPPING:
                 break
         now = datetime.now(timezone.utc)
-        when = now
         elapsed = int(time.time() - campaign_start)
         name = f"{random.choice(FIRST)} {random.choice(LAST)}"
         outfit = random.choice(OUTFITS)
@@ -283,7 +189,7 @@ def main():
                 qty = random.choices([2, 6, 12, 24], weights=[30, 40, 20, 10])[0]
                 lines.append(f"{{ product: {pid}, quantity: {qty}, price: {price} }}")
                 net += qty * price
-            placed_at = when + timedelta(seconds=random.uniform(0, 30))
+            placed_at = now + timedelta(seconds=random.uniform(0, 30))
             mishap = random.random() < 0.18
             status = "cancelled" if mishap else random.choice(
                 ["picked_up", "delivered", "delivered", "placed"])

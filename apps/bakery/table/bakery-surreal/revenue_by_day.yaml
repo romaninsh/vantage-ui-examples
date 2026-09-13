@@ -23,15 +23,13 @@ surreal:
   # calls Thing::from_cbor on it) — type::record over the bucket.
   # language=rhai
   rhai: |
-    let b = if "bakery" in args { args.bakery } else { "" };
-    // Prices are pence, so the sum is pence and the chart wants
-    // pounds. Divided here, not in the client: the y-axis should
-    // read what the database said.
-    let revenue = if b == "" {
-        expr("math::fixed(<float>math::sum((SELECT VALUE lines.fold(0, |$a, $v| $a + $v.quantity * $v.price) FROM order WHERE created_at >= $parent.bucket AND created_at < $parent.bucket + 30s)) / 100, 2)")
-    } else {
-        expr("math::fixed(<float>math::sum((SELECT VALUE lines.fold(0, |$a, $v| $a + $v.quantity * $v.price) FROM order WHERE bakery.name = {} AND created_at >= $parent.bucket AND created_at < $parent.bucket + 30s)) / 100, 2)", [b])
-    };
+    let b = args.get("bakery") ?? "";
+    // One expression for both views — `({} = '' OR bakery.name = {})`
+    // is a no-op when no bakery is picked, so the hardest query in the
+    // app exists once instead of a filtered near-copy. Prices are
+    // pence, so /100 for pounds. Divided here, not in the client: the
+    // y-axis should read what the database said.
+    let revenue = expr("math::fixed(<float>math::sum((SELECT VALUE lines.fold(0, |$a, $v| $a + $v.quantity * $v.price) FROM order WHERE ({} = '' OR bakery.name = {}) AND created_at >= $parent.bucket AND created_at < $parent.bucket + 30s)) / 100, 2)", [b, b]);
     select()
         .from(
             select()

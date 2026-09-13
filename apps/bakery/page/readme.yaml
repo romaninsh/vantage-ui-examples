@@ -2,9 +2,7 @@
 #
 # Welcome: the setup controls in a framed card, then the README —
 # `!include`d, so this page and the repository never say different
-# things. ONE markdown on the page deliberately: two markdown
-# components rendered identical text (engine follow-up), and one is
-# all this page needs anyway.
+# things.
 title: Welcome
 body:
   - kind: column

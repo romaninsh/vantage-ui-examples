@@ -15,88 +15,19 @@ Approaches change the odds, not the honesty:
 """
 
 import argparse
-import json
-import os
 import random
-import signal
-import subprocess
-import sys
 import time
 from datetime import datetime, timezone
 
-RESET, BOLD, DIM = "\x1b[0m", "\x1b[1m", "\x1b[2m"
+import breg
+from breg import (BOLD, GOLD, LAV, MINT, RED, RESET, SKY,
+                  conn_from_env, dt_literal, out, query_rows, run_sql)
 
+beat = breg.paced_sleep
 
-def c256(n):
-    return f"\x1b[38;5;{n}m"
-
-
-GOLD, MINT, SKY, RED, LAV = c256(220), c256(114), c256(75), c256(203), c256(141)
-
-INTERACTIVE = False
-STOPPING = False
-
-
-def out(s):
-    sys.stdout.write(s)
-    sys.stdout.flush()
-
-
-def on_sigint(_s, _f):
-    global STOPPING
-    if STOPPING:
-        return
-    STOPPING = True
-    out(f"\r\n{BOLD}{SKY}📞 phones down{RESET} — finishing the current "
-        f"call…\r\n")
-
-
-signal.signal(signal.SIGINT, on_sigint)
-
-
-def beat(seconds):
-    if INTERACTIVE:
-        time.sleep(seconds)
-
-
-def conn_from_env():
-    return dict(
-        endpoint=os.environ.get("SURREAL_ENDPOINT", "ws://localhost:8000"),
-        user=os.environ.get("SURREAL_USER", "root"),
-        password=os.environ.get("SURREAL_PASS", "root"),
-        ns=os.environ.get("SURREAL_NS", "bakery"),
-        db=os.environ.get("SURREAL_DB", "v2"),
-    )
-
-
-def run_sql(sql, conn, want_json=False):
-    cmd = ["surreal", "sql", "--endpoint", conn["endpoint"],
-           "--user", conn["user"], "--pass", conn["password"],
-           "--ns", conn["ns"], "--db", conn["db"]]
-    if want_json:
-        cmd.append("--json")
-    res = subprocess.run(cmd, input=sql, text=True, capture_output=True)
-    blob = (res.stdout or "") + (res.stderr or "")
-    if res.returncode != 0 or "Parse error" in blob or '"status":"ERR"' in blob:
-        sys.stderr.write(blob + "\n")
-        raise SystemExit(f"surreal sql failed (exit {res.returncode}) — see above")
-    return res.stdout
-
-
-def query_rows(sql, conn):
-    raw = run_sql(sql, conn, want_json=True)
-    for line in raw.splitlines():
-        line = line.strip()
-        if line.startswith("["):
-            parsed = json.loads(line)
-            if parsed and isinstance(parsed[0], list):
-                return parsed[0]
-            return parsed
-    return []
-
-
-def dt_literal(d):
-    return 'd"' + d.strftime("%Y-%m-%dT%H:%M:%SZ") + '"'
+breg.install_sigint(
+    f"\r\n{BOLD}{SKY}📞 phones down{RESET} — finishing the current "
+    f"call…\r\n")
 
 
 ODDS = {
@@ -131,13 +62,12 @@ WINS = [
 
 
 def main():
-    global INTERACTIVE
     ap = argparse.ArgumentParser()
     ap.add_argument("--approach", choices=list(ODDS), default="firm")
     ap.add_argument("--limit", type=int, default=10, help="accounts to chase")
     ap.add_argument("--interactive", action="store_true")
     args = ap.parse_args()
-    INTERACTIVE = args.interactive
+    breg.INTERACTIVE = args.interactive
     conn = conn_from_env()
 
     rows = query_rows(
@@ -159,7 +89,7 @@ def main():
 
     collected = 0
     for i, (iid, number, client, cid, balance) in enumerate(owed):
-        if STOPPING:
+        if breg.STOPPING:
             break
         opener = random.choice(OPENERS[args.approach])
         out(f"\r\n{SKY}{opener} {BOLD}{client}{RESET}{SKY} "

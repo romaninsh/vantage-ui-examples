@@ -15,78 +15,16 @@ Connection via env, same as seed.py / promotion.py.
 """
 
 import argparse
-import json
-import os
 import random
-import signal
-import subprocess
-import sys
 import time
 
-RESET, BOLD, DIM = "\x1b[0m", "\x1b[1m", "\x1b[2m"
+import breg
+from breg import (BOLD, DIM, GOLD, MINT, RED, RESET, SKY,
+                  conn_from_env, out, query_rows, run_sql)
 
-
-def c256(n):
-    return f"\x1b[38;5;{n}m"
-
-
-GOLD, MINT, SKY, RED = c256(220), c256(114), c256(75), c256(203)
-
-INTERACTIVE = False
-STOPPING = False
-
-
-def out(s):
-    sys.stdout.write(s)
-    sys.stdout.flush()
-
-
-def on_sigint(_s, _f):
-    global STOPPING
-    if STOPPING:
-        return
-    STOPPING = True
-    out(f"\r\n{BOLD}{SKY}🧊 stop received{RESET} — baking out the batch in the "
-        f"oven, then cooling down…\r\n")
-
-
-signal.signal(signal.SIGINT, on_sigint)
-
-
-def conn_from_env():
-    return dict(
-        endpoint=os.environ.get("SURREAL_ENDPOINT", "ws://localhost:8000"),
-        user=os.environ.get("SURREAL_USER", "root"),
-        password=os.environ.get("SURREAL_PASS", "root"),
-        ns=os.environ.get("SURREAL_NS", "bakery"),
-        db=os.environ.get("SURREAL_DB", "v2"),
-    )
-
-
-def run_sql(sql, conn, want_json=False):
-    cmd = ["surreal", "sql", "--endpoint", conn["endpoint"],
-           "--user", conn["user"], "--pass", conn["password"],
-           "--ns", conn["ns"], "--db", conn["db"]]
-    if want_json:
-        cmd.append("--json")
-    res = subprocess.run(cmd, input=sql, text=True, capture_output=True)
-    blob = (res.stdout or "") + (res.stderr or "")
-    if res.returncode != 0 or "Parse error" in blob or '"status":"ERR"' in blob:
-        sys.stderr.write(blob + "\n")
-        raise SystemExit(f"surreal sql failed (exit {res.returncode}) — see above")
-    return res.stdout
-
-
-def query_rows(sql, conn):
-    raw = run_sql(sql, conn, want_json=True)
-    for line in raw.splitlines():
-        line = line.strip()
-        if line.startswith("["):
-            parsed = json.loads(line)
-            if parsed and isinstance(parsed[0], list):
-                return parsed[0]
-            return parsed
-    return []
+breg.install_sigint(
+    f"\r\n{BOLD}{SKY}🧊 stop received{RESET} — baking out the batch in the "
+    f"oven, then cooling down…\r\n")
 
 
 def lowest_stock(bakery, conn, n=8):
@@ -98,7 +36,7 @@ def lowest_stock(bakery, conn, n=8):
 
 def bake_bar(name, seconds):
     """One oven cycle, redrawn in place. Non-interactive: instant."""
-    if not INTERACTIVE:
+    if not breg.INTERACTIVE:
         return
     steps = 24
     for k in range(steps + 1):
@@ -111,16 +49,15 @@ def bake_bar(name, seconds):
 
 
 def main():
-    global INTERACTIVE
     ap = argparse.ArgumentParser()
     ap.add_argument("--bakery", required=True, help="record id, e.g. bakery:leeds")
     ap.add_argument("--batches", type=int, default=8,
                     help="oven runs; 0 = keep baking until stopped")
     ap.add_argument("--interactive", action="store_true")
     args = ap.parse_args()
-    INTERACTIVE = args.interactive
+    breg.INTERACTIVE = args.interactive
     conn = conn_from_env()
-    bakery = args.bakery if ":" in args.bakery else f"bakery:{args.bakery}"
+    bakery = breg.normalize_bakery(args.bakery)
 
     shops = query_rows(f"SELECT name FROM {bakery};", conn)
     if not shops:
@@ -129,7 +66,7 @@ def main():
         f"restocking the emptiest shelves first\r\n\r\n")
 
     baked = 0
-    while not STOPPING and (args.batches == 0 or baked < args.batches):
+    while not breg.STOPPING and (args.batches == 0 or baked < args.batches):
         shelves = lowest_stock(bakery, conn)
         if not shelves:
             out(f"{RED}no products found — seed the catalog first{RESET}\r\n")
@@ -142,8 +79,7 @@ def main():
         baked += 1
         out(f"  {MINT}✓ batch {baked}{RESET} — {qty} × {name} "
             f"{DIM}(shelf: {stock} → {stock + qty}){RESET}\r\n")
-        if INTERACTIVE:
-            time.sleep(random.uniform(0.4, 1.2))
+        breg.paced_sleep(random.uniform(0.4, 1.2))
 
     out(f"\r\n{BOLD}{SKY}🧊 ovens cooling{RESET} — {baked} batch(es) on the "
         f"shelves.\r\n")
