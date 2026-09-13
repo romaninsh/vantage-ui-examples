@@ -6,18 +6,18 @@
 #
 # Vantage only ever *stops* these containers (on quit and on project
 # switch) — never removes them — and the database lives on the named
-# volume below, so the seeded dataset survives across sessions.
+# volume below, which survives even container recreation and `down`;
+# it dies only on an explicit `docker volume rm` / `down --volumes`.
 services:
   surrealdb:
     image: surrealdb/surrealdb:latest
-    # The image runs as `nonroot`, but a fresh named volume is mounted
-    # root-owned — RocksDB then can't create its directory and the
-    # container exits. Root inside a local dev container is fine; the
-    # alternative is an init container just to chown /data.
-    user: "0:0"
-    # Persistent storage on the named volume: a stopped or recreated
-    # container comes back with the bakery still seeded.
-    command: start --user root --pass root --bind 0.0.0.0:8000 rocksdb:/data/bakery.db
+    # The volume mounts at /home/nonroot — the one path the image
+    # already owns as its stock `nonroot` user. Docker copies that
+    # ownership into a fresh named volume, so the service runs
+    # unprivileged with no chown-init and no `user:` override.
+    # (A bind mount can't do this on colima: virtiofs only grants
+    # writes to container root — measured, not assumed.)
+    command: start --user root --pass root --bind 0.0.0.0:8000 rocksdb:/home/nonroot/bakery.db
     # Loopback only: this binds root/root SurrealDB to the container's
     # own network, not the host's — without the 127.0.0.1 prefix,
     # compose publishes to 0.0.0.0 and the database is reachable from
@@ -25,7 +25,7 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
-      - bakery-db:/data
+      - bakery-db:/home/nonroot
     healthcheck:
       test: ["CMD", "/surreal", "isready"]
       interval: 2s
