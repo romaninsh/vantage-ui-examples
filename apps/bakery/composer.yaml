@@ -10,6 +10,11 @@
 services:
   surrealdb:
     image: surrealdb/surrealdb:latest
+    # The image runs as `nonroot`, but a fresh named volume is mounted
+    # root-owned — RocksDB then can't create its directory and the
+    # container exits. Root inside a local dev container is fine; the
+    # alternative is an init container just to chown /data.
+    user: "0:0"
     # Persistent storage on the named volume: a stopped or recreated
     # container comes back with the bakery still seeded.
     command: start --user root --pass root --bind 0.0.0.0:8000 rocksdb:/data/bakery.db

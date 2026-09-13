@@ -31,3 +31,17 @@ body:
           # language=rhai
           action: |
             actions.bake_muffins();
+        # Setup lives on a grid toolbar because only toolbar/row bodies
+        # can dispatch actions today (a standalone `kind: button` runs
+        # in the scope-only env). Move to the Welcome page once buttons
+        # can dispatch.
+        - label: "Set up services"
+          icon: Rocket
+          # language=rhai
+          action: |
+            actions.setup();
+        - label: "Seed database"
+          icon: Database
+          # language=rhai
+          action: |
+            actions.seed_database();

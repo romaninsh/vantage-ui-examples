@@ -7,16 +7,10 @@ title: Welcome
 body:
   - kind: column
     children:
-      # First-run door: start the services, seed the data — both steps
-      # skippable (see action/setup.yaml). Harmless once everything
-      # already runs.
-      - kind: button
-        params:
-          label: "Set up services & data"
-          icon: Play
-          style: primary
-          # language=rhai
-          action: |
-            actions.setup();
+      # The setup wizard opens from the Products page toolbar for now:
+      # a standalone `kind: button` runs in the scope-only ScriptEnv,
+      # which has no `actions` namespace — only grid toolbar/row
+      # bodies dispatch actions today. Move the entry point here once
+      # buttons can dispatch.
       - kind: markdown
         text: !include ../README.md

@@ -41,18 +41,16 @@ steps:
           engine (Docker Desktop, colima, OrbStack) must be running —
           the panel above will say so if it isn't.
 
+  # A wizard-step button cannot dispatch an action yet (steps run in
+  # the scope-only env — same limit as page buttons), so this step
+  # points at the toolbar action instead of carrying its own button.
+  # Give it one (`actions.seed_database()`) once buttons can dispatch.
   - name: seed
     title: "Seed data"
     body:
       - kind: markdown
         text: |
-          Load the demo dataset. Re-running refreshes it — the seeder
-          wipes the generated tables first.
-      - kind: button
-        params:
-          label: "Seed the database"
-          icon: Database
-          style: primary
-          # language=rhai
-          action: |
-            actions.seed_database();
+          Last step: load the demo dataset — press **Finish**, then use
+          **Seed database** on the Products page toolbar. It runs in a
+          container (nothing to install), takes a minute, and re-running
+          refreshes the data rather than duplicating it.

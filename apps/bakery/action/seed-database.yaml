@@ -14,5 +14,9 @@ dialog:
   title: "Seed the database"
 terminal:
   command: docker
+  # --no-deps: the seeder reaches surrealdb over the compose network
+  # (`surrealdb:8000`), so it must not try to (re)create the service —
+  # that path republishes host ports and collides with anything else
+  # sitting on 8000. Services must already be running (the panel says).
   args:
-    ["compose", "-f", "composer.yaml", "--profile", "seed", "run", "--rm", "seed"]
+    ["compose", "-f", "composer.yaml", "--profile", "seed", "run", "--rm", "--no-deps", "seed"]
