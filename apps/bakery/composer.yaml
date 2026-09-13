@@ -13,8 +13,12 @@ services:
     # Persistent storage on the named volume: a stopped or recreated
     # container comes back with the bakery still seeded.
     command: start --user root --pass root --bind 0.0.0.0:8000 rocksdb:/data/bakery.db
+    # Loopback only: this binds root/root SurrealDB to the container's
+    # own network, not the host's — without the 127.0.0.1 prefix,
+    # compose publishes to 0.0.0.0 and the database is reachable from
+    # anyone else on the local network.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - bakery-db:/data
     healthcheck:
