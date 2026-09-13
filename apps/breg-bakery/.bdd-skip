@@ -1,11 +1,12 @@
 Needs a live SurrealDB: the `bakery-surreal` datasource auto-connects on
 startup, so without one the app logs a connect ERROR and the shared "clean
-startup" check fails. The published-binary BDD runner has no database.
+startup" check fails. The published-binary BDD runner has no database — and
+the app's own composer.yaml wants a container engine, which CI also lacks.
 
 Run it explicitly against a local instance:
   surreal start --user root --pass root
-  python3 apps/bakery/seed.py
-  cargo run -p test-framework -- apps/bakery
+  python3 apps/breg-bakery/seed.py
+  cargo run -p test-framework -- apps/breg-bakery
 
 Until this app carried the surreal catalog it was the suite's only fully
 offline example; `faker-demo` is now the one app that starts with no external

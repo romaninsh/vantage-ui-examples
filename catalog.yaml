@@ -60,8 +60,8 @@ apps:
       - "A SQLite prototype: books, members, loans and a dashboard"
       - "A story that grows toward the cloud, APIs and a barcode scanner"
 
-  - slug: bakery
-    title: "Bakery franchise"
+  - slug: breg-bakery
+    title: "Breg bakery franchise"
     persona: "Internal tools"
     persona_url: "/solutions/internal-tools/"
     status: "available"
@@ -70,15 +70,15 @@ apps:
     # reach one.
     min_version: "0.40.0"
     icon: "storefront"
-    blurb: "A back-office admin for a bakery franchise — bakeries, clients, products and orders over SurrealDB, with a query-sourced dashboard and one action of every kind, up to a multi-step import wizard."
-    repo_path: "apps/bakery"
-    url: "https://vantage-ui.com/examples/bakery.zip"
+    blurb: "A live back-office for the Breg bakery chain — Vantage runs SurrealDB for you, ✨ magic processes sign clients, restock ovens and chase invoices in real time, and the dashboard moves while they run."
+    repo_path: "apps/breg-bakery"
+    url: "https://vantage-ui.com/examples/breg-bakery.zip"
     screenshot: "images/vantage-ui-app.png"
     demonstrates:
-      - "Every action kind in one app: form, confirm, terminal, HTTP and wizard"
       - "A composer.yaml Vantage runs for you — services start from the setup wizard, stop with the app"
-      - "Charts and a dashboard built from query-sourced tables"
-      - "A wizard whose background worker is an included .rhai file"
+      - "Commands in containers, promoted to background jobs you stop from the Services sheet"
+      - "A real-time dashboard: query-sourced charts and tiles, narrowed by one dropdown"
+      - "Every action kind in one app, from a confirm up to the setup wizard"
 
   - slug: spacex
     title: "SpaceX GraphQL explorer"

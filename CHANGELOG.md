@@ -6,8 +6,9 @@ Notable changes to the Vantage UI example apps.
 
 ### Changed
 
-- **Bakery becomes "Breg"** — a live real-time demo of Vantage 0.40's container
-  composer (`apps/bakery/`): Vantage starts SurrealDB itself from
+- **Bakery becomes "Breg"** — renamed to `apps/breg-bakery/` (slug
+  `breg-bakery`), and reworked into a live real-time demo of Vantage 0.40's
+  container composer: Vantage starts SurrealDB itself from
   `composer.yaml` (nonroot, named volume, ephemeral loopback port; the
   datasource names the service and Vantage resolves the port).
   - A setup wizard seeds the catalog inside the composer stack — no host
