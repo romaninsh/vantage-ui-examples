@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=./action-schema-1.json
+#
+# First-run setup, three skippable steps: what you're getting, the
+# composer panel to start the services, and the seed. Someone who
+# already runs their own SurrealDB on 8000 clicks Next twice and seeds;
+# someone with everything running never opens this at all.
+
+kind: wizard
+description: |
+  Start the bakery's local services and load the demo dataset.
+dialog:
+  title: "Set up the bakery"
+  size: xl
+steps:
+  - name: welcome
+    title: "Welcome"
+    body:
+      - kind: markdown
+        text: |
+          # Breg needs a database
+
+          This example runs against a local **SurrealDB**. The next two
+          steps get you there without installing anything by hand:
+
+          1. **Services** — start the database container. Vantage
+             manages it from here on: it stops when you quit and
+             resumes when you come back.
+          2. **Seed the catalog** — bakeries and products. Clients stay
+             empty on purpose: sign them with the **✨ More clients**
+             campaign on the Clients page and watch them arrive live.
+
+          Every step is skippable — if you already run your own
+          SurrealDB, click straight through.
+
+  - name: services
+    title: "Services"
+    composer: true
+    body:
+      - kind: markdown
+        text: |
+          Press **Start** and wait for the green dot. The container
+          engine (Docker Desktop, colima, OrbStack) must be running —
+          the panel above will say so if it isn't.
+
+  - name: seed
+    title: "Seed the catalog"
+    body:
+      - kind: markdown
+        text: |
+          Stock the shelves: bakeries and their product catalogues,
+          generated in a container (nothing to install). Clients are
+          deliberately left out — you sign those yourself with the
+          **✨ More clients** button on the Clients page, and watch
+          the grid fill live while the campaign runs.
+      - kind: button
+        params:
+          label: "Seed the catalog"
+          icon: Database
+          style: primary
+          # language=rhai
+          action: |
+            actions.seed_database();

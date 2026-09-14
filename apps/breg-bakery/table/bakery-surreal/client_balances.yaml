@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=../table-schema-1.json
+#
+# What each account owes: the unsettled part of its issued invoices. This
+# replaces the stored `client.balance`, which nothing kept up to date and
+# which was therefore wrong between a payment landing and someone noticing.
+
+name: client_balances
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [title, searchable] }
+  bakery: { type: string, references: bakery }
+  bakery.name: { type: string }
+  owed: { type: int, unit: { currency: "£", minor_units: true } }
+  overdue: { type: int, unit: { currency: "£", minor_units: true } }
+  # A grid renders `owed` as money from its `unit`. A list label is a string,
+  # so it needs one built here.
+  owed_display: { type: string }
+  # The branch the account belongs to — filled only on the unfiltered
+  # ("All bakeries") read, so the dashboard's `sub:` line appears exactly
+  # when the row's branch isn't already implied by the filter.
+  branch: { type: string }
+
+surreal:
+  # language=rhai
+  rhai: |
+    let b = args.get("bakery") ?? "";
+    let branch = if b == "" { expr("bakery.name") } else { expr("''") };
+    let per_client = select()
+        .field("id").field("name").field("bakery")
+        .expression(branch.alias("branch"))
+        .expression(expr("(SELECT VALUE math::sum(owed) FROM (SELECT total - ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0) AS owed FROM invoice WHERE client = $parent.id AND status = 'issued') WHERE owed > 0 GROUP ALL)[0] ?? 0").alias("owed"))
+        .expression(expr("(SELECT VALUE math::sum(owed) FROM (SELECT total - ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0) AS owed FROM invoice WHERE client = $parent.id AND status = 'issued' AND due_at < time::now()) WHERE owed > 0 GROUP ALL)[0] ?? 0").alias("overdue"))
+        .from("client");
+    if b != "" {
+        per_client = per_client.where(expr("bakery.name = {}", [b]));
+    }
+    select()
+        .from(per_client.subquery())
+        .expression(expr("*"))
+        .expression(expr("string::concat('£', owed / 100, '.', IF owed % 100 < 10 THEN '0' ELSE '' END, owed % 100)").alias("owed_display"))
+        .where(ident("owed") > 0)
+        .order_by(ident("owed"), "desc")

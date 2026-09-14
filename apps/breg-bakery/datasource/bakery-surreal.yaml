@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+
+type: surreal-db
+# `surrealdb` is the composer.yaml service name, not a DNS host:
+# Vantage resolves it to the ephemeral loopback port the running stack
+# actually got, so nothing here pins a host port. Running your own
+# server instead? Point this at it, e.g. cbor://root:root@localhost:8000.
+url: cbor://root:root@surrealdb:8000
+namespace: bakery
+database: v2

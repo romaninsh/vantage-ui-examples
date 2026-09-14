@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+
+title: Breg
+
+items:
+  - label: Welcome
+    page: readme
+    icon: BookOpen
+  - label: Dashboard
+    page: dashboard
+    icon: LayoutGrid
+  - label: Bakeries
+    page: bakeries
+    icon: Inbox
+  - label: Clients
+    page: clients
+    icon: User
+  - label: Products
+    page: products
+    icon: Star
+  - label: Orders
+    page: orders
+    icon: ChevronRight
+  - label: Invoices
+    page: invoices
+    icon: Receipt
+  - label: Payments
+    page: payments
+    icon: CreditCard

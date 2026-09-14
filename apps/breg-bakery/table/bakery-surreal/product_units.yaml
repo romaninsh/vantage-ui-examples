@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=../table-schema-1.json
+
+name: product_units
+datasource: bakery-surreal
+
+id_column: product
+columns:
+  product: { type: string, flags: [id, title] }
+  # Two stacked layers per product: what's on the shelf and what has
+  # sold — the dashboard's stacked bar reads both.
+  stock: { type: int }
+  sales: { type: int }
+
+surreal:
+  # Per product: current shelf stock plus total units sold. Grouped by
+  # NAME so the "All bakeries" view aggregates the chain; a bakery
+  # filter narrows both sides. The sold sum SPLITs order lines first:
+  # inside an array filter (`lines[WHERE …]`) `$parent` is the order,
+  # not the product row, so correlating there always misses — the
+  # subquery WHERE is the level where `$parent` is the product.
+  # language=rhai
+  rhai: |
+    let b = args.get("bakery") ?? "";
+    // `({} = '' OR …)` keeps ONE copy of the correlated sum for both
+    // the filtered and the all-bakeries view.
+    let sold = expr("math::sum((SELECT VALUE lines.quantity FROM (SELECT lines FROM order WHERE ({} = '' OR bakery.name = {}) AND status != 'cancelled' SPLIT lines) WHERE lines.product = $parent.id)) ?? 0", [b, b]);
+    let per_product = select()
+        .from("product")
+        .expression(expr("name").alias("product"))
+        .expression(expr("inventory.stock ?? 0").alias("stock1"))
+        .expression(sold.alias("sold1"));
+    if b != "" {
+        per_product = per_product.where(expr("bakery.name = {}", [b]));
+    }
+    select()
+        .from(per_product.subquery())
+        .field("product")
+        .expression(sum(ident("stock1")).alias("stock"))
+        .expression(sum(ident("sold1")).alias("sales"))
+        .group_by(ident("product"))
+        .order_by(ident("sales"), "desc")
+        // Five bars is what fits before the x labels start colliding.
+        .limit(5, 0)

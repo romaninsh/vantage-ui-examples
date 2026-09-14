@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=../table-schema-1.json
+
+name: bakery
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [title, searchable] }
+  profit_margin: { type: int }
+
+references:
+  clients:
+    table: client
+    kind: has_many
+    foreign_key: bakery
+  products:
+    table: product
+    kind: has_many
+    foreign_key: bakery
+  orders:
+    table: order
+    kind: has_many
+    foreign_key: bakery
+  invoices:
+    table: invoice
+    kind: has_many
+    foreign_key: bakery

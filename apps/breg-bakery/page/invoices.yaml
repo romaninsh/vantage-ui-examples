@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=./page-schema-1.json
+#
+# The billing side of the process: orders are fulfilled, one invoice per
+# account per month collects them, payments come in against it. The money
+# columns are `expr:` roll-ups on the table, so an invoice cannot disagree
+# with its own orders — and the row stays editable, unlike a derived table.
+# Right-click a row for its orders and payments.
+title: Invoices
+body:
+  - kind: binder
+    name: invoices
+    observe: bakery-surreal/invoice
+    params:
+      # Newest first — the row a campaign just wrote lands on top.
+      default_sort: { column: issued_at, direction: desc }
+      # Shop and state offer their own pickers; `>outstanding` fixes the
+      # operator, so the field asks for a floor — "owed more than".
+      filter: [bakery, settlement, ">outstanding"]
+      columns:
+        number: { label: Invoice, pin: true }
+        client.name: { label: Account }
+        bakery.name: { label: Shop }
+        issued_at: { label: Issued }
+        due_at: { label: Due }
+        total: { label: Total }
+        paid: { label: Paid }
+        outstanding: { label: Outstanding }
+        settlement:
+          label: State
+          color:
+            success: [settled]
+            yellow: [part_paid]
+            red: [overdue]
+            muted: [open]
+          labels:
+            settled: Settled
+            part_paid: Part paid
+            overdue: Overdue
+            open: Open
