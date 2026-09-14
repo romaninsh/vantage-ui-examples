@@ -1,6 +1,0 @@
-# Page: pulse — placeholder (not implemented yet; framework grammar).
-title: Member Pulse
-body:
-  - kind: label
-    params:
-      text: "Member Pulse — coming soon"

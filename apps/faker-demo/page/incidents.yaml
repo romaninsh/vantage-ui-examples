@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: incidents — the `rhai` effect meets user writes. The datasource script
+# raises and escalates incidents on its own; Add, Details and the row actions
+# below write to the same in-memory store, and the script keeps ageing the
+# rows you changed. Nothing survives a restart — that is the point of faker.
+title: Incidents
+body:
+  - kind: label
+    params: { text: "Club incidents", style: heading, icon: TriangleAlert }
+  - kind: label
+    params: { text: "A new incident about every 30 seconds. Open ones age and climb a severity level every 20 minutes until someone acknowledges them.", style: muted }
+  - kind: binder
+    name: incidents
+    observe: incident
+    params:
+      default_sort: { column: age_min, direction: desc }
+      filter: [status, severity, club]
+      filters:
+        - { label: "Unresolved only", column: status, value: open, default: false }
+      columns:
+        title: { label: Incident, pin: true, width: 260 }
+        club: { label: Club }
+        severity:
+          label: Severity
+          color: { muted: [low], warning: [medium], red: [high], danger: [critical] }
+          labels: { low: Low, medium: Medium, high: High, critical: Critical }
+        status:
+          label: Status
+          color: { danger: [open], warning: [acknowledged], success: [resolved] }
+          labels: { open: Open, acknowledged: Acknowledged, resolved: Resolved }
+        age_min: { label: Open for (min) }
+        reported_by: { label: Reported by }
+      row_actions:
+        - label: Acknowledge
+          icon: Check
+          when: 'row.status == "open"'
+          action: |
+            row.status = "acknowledged";
+            row.save();
+        - label: Resolve
+          icon: CircleCheck
+          when: 'row.status != "resolved"'
+          action: |
+            row.status = "resolved";
+            row.save();
+        - label: Reopen
+          icon: RefreshCw
+          when: 'row.status == "resolved"'
+          action: |
+            row.set(#{ status: "open", age_min: 0 });
+            row.save();

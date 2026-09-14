@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: lab — a plain seeded static store. Each Lab table overrides
+# `faker.shape` (or the effect) to become a different hostile backend: flaky,
+# sluggish, slow to search, or churning under the selection. The data is the
+# same everywhere so every difference on screen comes from the backend's
+# behaviour, never from the schema.
+type: faker
+description: Backend behaviour lab (synthetic)
+effect: static
+count: 2000
+seed: 7

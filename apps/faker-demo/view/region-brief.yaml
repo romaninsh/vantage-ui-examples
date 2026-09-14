@@ -13,8 +13,9 @@ body:
       text: "${args.heading}"
   - kind: stat
     name: count
-    table: top
+    observe: top
     params:
       label: regions (counted inside the view)
+      icon: Map
 outputs:
   total: "${count.value}"

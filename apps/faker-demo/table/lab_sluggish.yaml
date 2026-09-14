@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: lab_sluggish — every read takes 0.8–2.5 s, pages of 50, read-only,
+# and one text cell in ten is a weird one (very long, empty, duplicate, unicode).
+datasource: lab
+title: Sluggish backend
+faker:
+  count: 500
+  shape:
+    capabilities: [count, fetch_page, order]
+    page_size: 50
+    latency:
+      list: 800ms..2500ms
+      window: 800ms..2500ms
+      get: 800ms..2500ms
+      count: 800ms..2500ms
+    weirdness: 0.1
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: company, type: string, flags: [title, searchable] }
+  - { name: city, type: string }
+  - { name: phone, type: string }
+  - { name: active, type: bool }

@@ -7,6 +7,10 @@
 # the lens routes, the finder observes.
 title: Log Finder
 body:
+  - kind: label
+    params: { text: "Log folders — a tree that keeps growing", style: heading, icon: Folder }
+  - kind: label
+    params: { text: "The active access-log chunk grows every second and rolls over; folder sizes are lifted in lazily per row.", style: muted }
   - kind: finder
     name: logs
     observe: folders

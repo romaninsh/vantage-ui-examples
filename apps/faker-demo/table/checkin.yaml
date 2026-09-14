@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: checkin — one row per member walking in. Values come from the column
+# names (first_name, last_name, email, city); `guest` is a bool by type.
+datasource: checkins
+title: Check-ins
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: first_name, label: First name, type: string, flags: [title, searchable] }
+  - { name: last_name, label: Last name, type: string, flags: [searchable] }
+  - { name: city, label: Club, type: string }
+  - { name: email, type: string }
+  - { name: guest, label: Guest pass, type: bool }

@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: regions — the per-region aggregate as a full grid, ranked by headcount
+# through the binding's shape. Rows repaint in place as the sim moves them.
+title: Regions
+body:
+  - kind: label
+    params: { text: "Regions — members training now", style: heading, icon: Map }
+  - kind: label
+    params: { text: "One row per region, updated in place. South West drops offline every so often.", style: muted }
+  - kind: grid
+    name: regions
+    observe: { script: 'scenery("top").sort("visitors", "desc")' }
+    params:
+      search: true
+      id_column: region
+      columns:
+        region: { label: Region, pin: true }
+        visitors: { label: Training now }
+        vs_baseline: { label: "vs normal %" }
+        live:
+          label: Telemetry
+          color: { success: [Live], danger: [Offline] }

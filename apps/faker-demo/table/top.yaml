@@ -6,6 +6,10 @@ datasource: gym-traffic
 title: Regions
 faker:
   role: aggregate
+# Dashboard figures, reduced over the eleven region rows as they move.
+aggregates:
+  training: { op: sum, column: visitors }
+  offline: { op: count, where: { live: Offline } }
 columns:
   - { name: region, type: string, flags: [id, title, searchable] }
   - { name: visitors, type: int }

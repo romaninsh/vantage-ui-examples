@@ -20,7 +20,7 @@ apps:
     min_version: "0.15.0"
     icon: "rocket_launch"
     blurb: "A live mission-control console for global spaceflight — 15 related entities, real-time launch countdowns and a deliberately flaky API the UI rides straight through. A full Rust server plus a YAML console."
-    repo_path: "apps/launch-control/inventory"
+    repo_path: "apps/launch-control"
     url: "https://vantage-ui.com/examples/launch-control.zip"
     screenshot: "images/vantage-ui-app.png"
     tour_url: "/examples/launch-control/"
@@ -37,7 +37,7 @@ apps:
     min_version: "0.20.0"
     icon: "lan"
     blurb: "A Lens-style control room for Kubernetes — nodes, namespaces and every standard workload as drillable, related tables, with capacity dashboards and vertical drill-downs. Backed by a native Kubernetes datasource: no kubectl, no proxy."
-    repo_path: "apps/periscope/inventory"
+    repo_path: "apps/periscope"
     url: "https://vantage-ui.com/examples/periscope.zip"
     screenshot: "images/changelog/0.20/01-full.webp"
     tour_url: "/examples/periscope/"
@@ -80,6 +80,24 @@ apps:
       - "A real-time dashboard: query-sourced charts and tiles, narrowed by one dropdown"
       - "Every action kind in one app, from a confirm up to the setup wizard"
 
+  - slug: faker-demo
+    title: "PristineGym (faker)"
+    persona: "Live data"
+    persona_url: "/solutions/live-data/"
+    status: "available"
+    # 0.41: list templates use `${…}` holes; earlier builds print them literally.
+    min_version: "0.41.1"
+    icon: "monitoring"
+    blurb: "A gym control panel with no backend at all — every table is generated in memory and keeps moving on its own: a live regional dashboard, a check-in stream, self-escalating incidents you can act on, and a lab of flaky, sluggish and churning backends to watch the UI cope with."
+    repo_path: "apps/faker-demo"
+    url: "https://vantage-ui.com/examples/faker-demo.zip"
+    screenshot: "images/vantage-ui-app.png"
+    demonstrates:
+      - "Zero setup: the faker datasource needs no server, network or credentials"
+      - "Live pages without polling — pulse, fifo, rhai and live_folder effects push every change"
+      - "User writes and scripted mutations sharing one in-memory table"
+      - "Backend personalities: faults, latency, slow search and churn, made visible"
+
   - slug: spacex
     title: "SpaceX GraphQL explorer"
     persona: "Data mesh"
@@ -88,7 +106,7 @@ apps:
     min_version: "0.14.0"
     icon: "rocket_launch"
     blurb: "Explore a public GraphQL API through the console — launches, rockets and capsules as browsable, drillable tables."
-    repo_path: "apps/spacex/inventory"
+    repo_path: "apps/spacex"
     screenshot: ""
     demonstrates:
       - "A read-only GraphQL datasource"
@@ -102,7 +120,7 @@ apps:
     min_version: "0.15.0"
     icon: "cloud"
     blurb: "Build the AWS console you actually need — surface only the resources you operate, by wrapping the aws CLI as tables."
-    repo_path: "apps/aws-console/inventory"
+    repo_path: "apps/aws-console"
     screenshot: ""
     demonstrates:
       - "Command-line (CLI) data sources"

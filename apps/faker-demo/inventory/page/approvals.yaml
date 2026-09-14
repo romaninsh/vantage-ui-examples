@@ -1,6 +1,0 @@
-# Page: approvals — placeholder (not implemented yet; framework grammar).
-title: Approvals
-body:
-  - kind: label
-    params:
-      text: "Approvals — coming soon"

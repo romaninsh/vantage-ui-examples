@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: feed — the raw incoming stream as a full grid: every headcount change
+# is a row, newest first, gone again after a few seconds.
+title: Live Feed
+body:
+  - kind: label
+    params: { text: "Incoming changes", style: heading, icon: Network }
+  - kind: label
+    params: { text: "The stream the dashboard is built from. Each row is one movement; rows expire after ten seconds.", style: muted }
+  - kind: grid
+    name: feed
+    observe: updates
+    params:
+      id_column: region
+      columns:
+        updated: { label: At, width: 110 }
+        region: { label: Region }
+        delta: { label: Change }
