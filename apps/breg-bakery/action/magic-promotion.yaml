@@ -1,0 +1,81 @@
+# yaml-language-server: $schema=./action-schema-1.json
+#
+# ✨ The "More clients" button on the Clients page. A form plans the ad
+# campaign, then promotion.py runs it inside the composer stack —
+# narrated live in the terminal (signups, orders, mishaps, who paid and
+# who ghosted) while the Clients grid fills in real time behind it: the
+# grid follows the change feed, so every row lands the moment the
+# script writes it.
+#
+# Form values travel as argv entries — an array, not a shell line, so
+# a slogan full of quotes and spaces needs no escaping anywhere.
+# COMPOSE_PROJECT_NAME comes from Vantage, so this hits the stack this
+# installation owns.
+
+kind: command
+description: |
+  Run a magic promotion for one bakery: billboards, half-pages, a
+  slogan — and watch the signups arrive live. The campaign runs its
+  period and ends; the clients stay.
+dialog:
+  title: "✨ Run a magic promotion"
+  confirm_label: "Launch campaign"
+form:
+  fields:
+    - name: bakery
+      label: "Which bakery gets famous?"
+      type: string
+      widget: dropdown
+      # The dropdown rows come straight from the bakery table; the
+      # submitted value is the record id promotion.py expects. NOTE:
+      # an options script ends on the table itself — no `.list()`,
+      # the engine fetches the rows.
+      # language=rhai
+      options: |
+        table("bakery-surreal/bakery").add_order("name", "asc")
+      option_value: id
+      option_label: name
+    - name: slogan
+      label: "The slogan on everything"
+      type: string
+      default: "Rise & Shine — carbs are self-care"
+      placeholder: "Something the whole office will repeat"
+    - name: channels
+      label: "Where the ads run"
+      type: string
+      widget: checklist
+      choices: ["billboard", "newspaper", "radio", "word-of-mouth"]
+      default: "billboard,newspaper"
+    - name: minutes
+      label: "Campaign length (minutes, real time)"
+      type: string
+      choices: ["1", "3", "5", "15"]
+      default: "3"
+terminal:
+  command: docker
+  # The campaign runs in real time — watch it in the dialog, or press
+  # "Run in background": signups keep landing while you browse, the
+  # Services page carries the live log and the Stop button (stop =
+  # the budget gets pulled early).
+  args:
+    [
+      "compose",
+      "-f",
+      "composer.yaml",
+      "--profile",
+      "seed",
+      "run",
+      "--rm",
+      "--no-deps",
+      "seed",
+      "promotion.py",
+      "--interactive",
+      "--bakery",
+      "${form.bakery}",
+      "--slogan",
+      "${form.slogan}",
+      "--channels",
+      "${form.channels}",
+      "--minutes",
+      "${form.minutes}",
+    ]

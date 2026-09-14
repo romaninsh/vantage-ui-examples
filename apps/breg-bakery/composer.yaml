@@ -1,0 +1,68 @@
+# The bakery's services. Vantage reads this file (the Services
+# indicator in the title bar, or the setup wizard's `composer: true`
+# step) and runs the stack for you; it is standard compose schema, so
+# `docker compose -f composer.yaml up -d` from a terminal drives the
+# very same stack.
+#
+# Vantage only ever *stops* these containers (on quit and on project
+# switch) — never removes them — and the database lives on the named
+# volume below, which survives even container recreation and `down`;
+# it dies only on an explicit `docker volume rm` / `down --volumes`.
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    # The volume mounts at /home/nonroot — the one path the image
+    # already owns as its stock `nonroot` user. Docker copies that
+    # ownership into a fresh named volume, so the service runs
+    # unprivileged with no chown-init and no `user:` override.
+    # (A bind mount can't do this on colima: virtiofs only grants
+    # writes to container root — measured, not assumed.)
+    command: start --user root --pass root --bind 0.0.0.0:8000 rocksdb:/home/nonroot/bakery.db
+    # `127.0.0.1::8000` — loopback-only AND an ephemeral host port:
+    # docker picks a free one, so any number of stacks (Stable +
+    # Nightly + several apps) run side by side with zero collisions.
+    # The datasource addresses the *service* (`surrealdb:8000`) and
+    # Vantage rewrites it to the port docker actually assigned; a
+    # terminal asks `docker compose -p <project> port surrealdb 8000`
+    # (the panel shows the project name). Loopback matters: root/root
+    # SurrealDB must not be reachable from the local network.
+    ports:
+      - "127.0.0.1::8000"
+    volumes:
+      - bakery-db:/home/nonroot
+    healthcheck:
+      test: ["CMD", "/surreal", "isready"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  # One-shot seeder, behind a profile so a plain `up` never runs it.
+  # No host python or surreal CLI needed — the image carries both and
+  # mounts the generator from the project. The "Seed the database"
+  # action runs:
+  #   docker compose -f composer.yaml --profile seed run --rm seed
+  seed:
+    profiles: [seed]
+    build: seed
+    volumes:
+      - ./seed.py:/app/seed.py:ro
+      # The magic scripts + their shared plumbing (breg.py).
+      - ./scripts/breg.py:/app/breg.py:ro
+      - ./scripts/promotion.py:/app/promotion.py:ro
+      - ./scripts/restock.py:/app/restock.py:ro
+      # Not `collections.py` — that name shadows python's stdlib module
+      # and detonates the interpreter's own imports.
+      - ./scripts/chase.py:/app/chase.py:ro
+    environment:
+      SURREAL_ENDPOINT: ws://surrealdb:8000
+    depends_on:
+      surrealdb:
+        condition: service_healthy
+    # The image's entrypoint is bare `python3`; the script comes first
+    # in the args, so one service runs every data tool. Default:
+    # `m` = 6 shops, ~4k orders, a year of history; `--wipe` first, so
+    # re-running refreshes rather than duplicates.
+    command: ["seed.py", "m", "--wipe"]
+
+volumes:
+  bakery-db:

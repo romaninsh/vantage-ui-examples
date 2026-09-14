@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=./action-schema-1.json
+#
+# The muffin baker, grown up: the same animated oven, but every batch
+# is a real `inventory.stock` update — always for whatever the shop is
+# lowest on. Watch it in the dialog or press "Run in background" and
+# stop it later from the Services page. `0` batches = bake until
+# stopped.
+
+kind: command
+description: |
+  Fire the ovens and restock the emptiest shelves, live. Send it to
+  the background and stop it from the Services page whenever.
+dialog:
+  title: "Restock the ovens"
+  confirm_label: "Fire the ovens"
+form:
+  fields:
+    - name: bakery
+      label: "Which bakery?"
+      type: string
+      widget: dropdown
+      # language=rhai
+      options: |
+        table("bakery-surreal/bakery").add_order("name", "asc")
+      option_value: id
+      option_label: name
+    - name: batches
+      label: "Oven runs (0 = until stopped)"
+      type: string
+      choices: ["4", "8", "16", "0"]
+      default: "8"
+terminal:
+  command: docker
+  args:
+    [
+      "compose",
+      "-f",
+      "composer.yaml",
+      "--profile",
+      "seed",
+      "run",
+      "--rm",
+      "--no-deps",
+      "seed",
+      "restock.py",
+      "--interactive",
+      "--bakery",
+      "${form.bakery}",
+      "--batches",
+      "${form.batches}",
+    ]

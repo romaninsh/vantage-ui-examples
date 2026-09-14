@@ -6,7 +6,7 @@
 //! apps are aggregated into a single non-zero exit code.
 //!
 //! Usage:
-//!   vantage-ui-test apps/bakery [apps/other ...]
+//!   vantage-ui-test apps/breg-bakery [apps/other ...]
 //!   vantage-ui-test --all          # every dir under apps/
 
 use std::path::{Path, PathBuf};

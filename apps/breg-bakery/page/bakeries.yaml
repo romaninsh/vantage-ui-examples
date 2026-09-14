@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Bakeries
+body:
+  - kind: binder
+    name: bakeries
+    observe: bakery-surreal/bakery
+    params:
+      # Newest first. No timestamp on this table, so the id is the
+      # insertion proxy.
+      default_sort: { column: id, direction: desc }
+      columns:
+        name: { label: Shop, pin: true }
+        profit_margin: { label: "Margin %" }

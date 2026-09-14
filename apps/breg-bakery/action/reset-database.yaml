@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./action-schema-1.json
+#
+# The seeder's `--wipe-only` mode: clear every generated table, load
+# nothing. Same containerised runner as `seed_database`, same
+# COMPOSE_PROJECT_NAME routing.
+
+kind: terminal
+description: |
+  Empty the database: clears every generated table and stops there.
+  Needs the services running.
+dialog:
+  title: "Reset the database (empty)"
+terminal:
+  command: docker
+  args:
+    [
+      "compose",
+      "-f",
+      "composer.yaml",
+      "--profile",
+      "seed",
+      "run",
+      "--rm",
+      "--no-deps",
+      "seed",
+      "seed.py",
+      "--wipe-only",
+    ]

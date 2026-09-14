@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../table-schema-1.json
+
+name: client
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [mandatory, title, searchable] }
+  # The database holds a UNIQUE index on email, so a duplicate is a write
+  # error rather than a validation message.
+  email: { type: string, flags: [mandatory, searchable] }
+  contact_details: { type: string }
+  is_paying_client: { type: bool }
+  # `record<bakery>` in SurrealDB, and not optional: a client with no bakery
+  # is rejected at write time, so the form has to insist on one.
+  bakery: { type: string, references: bakery, flags: [mandatory] }
+  bakery.name: { type: string }
+  password_hash: { type: string, flags: [hidden] }
+  # The change-handling trick behind the live roll-ups below: SurrealDB's
+  # live feed fires only for this row's OWN writes, never for the orders/
+  # invoices/payments the roll-ups read. So every writer that changes an
+  # account's numbers also stamps this field — the touch emits a live
+  # frame, the app re-reads the row, and the roll-ups recompute fresh.
+  deps_last_updated: { type: timestamp, flags: [hidden] }
+
+  # Read-only roll-ups over the account's children, projected by the SELECT.
+  # `balance` is what the account still owes: its issued invoices, less what
+  # has been paid against them. Nothing writes it, so nothing can leave it
+  # stale — the previous stored `balance` column was exactly that bug.
+  order_count:
+    type: int
+    expr: 'expr("(SELECT VALUE count() FROM order WHERE client = $parent.id GROUP ALL)[0] ?? 0")'
+  invoice_count:
+    type: int
+    expr: 'expr("(SELECT VALUE count() FROM invoice WHERE client = $parent.id GROUP ALL)[0] ?? 0")'
+  balance:
+    type: int
+    unit: { currency: "£", minor_units: true }
+    expr: 'expr("(SELECT VALUE math::sum(owed) FROM (SELECT total - ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0) AS owed FROM invoice WHERE client = $parent.id AND status = ''issued'') WHERE owed > 0 GROUP ALL)[0] ?? 0")'
+
+# What an account has done, reachable from the row: the binder turns each of
+# these into a detail tab, and right-click → "Open …" into a drill-down tab.
+references:
+  orders:
+    table: order
+    kind: has_many
+    foreign_key: client
+  invoices:
+    table: invoice
+    kind: has_many
+    foreign_key: client

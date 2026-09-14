@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=../table-schema-1.json
+
+name: order_totals
+datasource: bakery-surreal
+
+columns:
+  id: { type: string, flags: [id, title] }
+  created_at: { type: datetime }
+  # Who and (roughly) what: the account's name and the order's first
+  # line's product — enough for a ticker row without unfolding lines.
+  client: { type: string }
+  product: { type: string }
+  # Pence, so the sort is exact. `total_display` is what a tile shows.
+  total: { type: int }
+  total_display: { type: string }
+  # Branch name, filled only on the unfiltered read (see client_balances).
+  branch: { type: string }
+
+surreal:
+  # Two nested SELECTs: the inner folds each order's lines into a pence
+  # total (and reads the client/product names while it still has the
+  # row), the outer formats it. Sorted latest-first: the app runs in
+  # real time, so this tile is a ticker of what just happened.
+  # language=rhai
+  rhai: |
+    let b = args.get("bakery") ?? "";
+    let branch = if b == "" { expr("bakery.name") } else { expr("''") };
+    let per_order = select()
+        .field("id").field("created_at")
+        .expression(expr("client.name").alias("client"))
+        .expression(expr("lines[0].product.name").alias("product"))
+        .expression(ident("lines").fold(0, |acc, l| acc + l["quantity"] * l["price"]).alias("total"))
+        .expression(branch.alias("branch"))
+        .from("order");
+    if b != "" {
+        per_order = per_order.where(expr("bakery.name = {}", [b]));
+    }
+    select()
+        .from(per_order.subquery())
+        .field("id").field("created_at").field("client").field("product").field("total").field("branch")
+        // Integer pounds and pence, not a float: casting a float to string
+        // in SurrealDB yields "357.9f" — the suffix and the lost trailing
+        // zero are both wrong on a price.
+        .expression(expr("string::concat('£', total / 100, '.', IF total % 100 < 10 THEN '0' ELSE '' END, total % 100)").alias("total_display"))
+        .order_by(ident("created_at"), "desc")

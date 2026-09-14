@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Payments
+body:
+  - kind: binder
+    name: payments
+    observe: bakery-surreal/payment
+    params:
+      # Newest first — the row a campaign just wrote lands on top.
+      default_sort: { column: paid_at, direction: desc }
+      columns:
+        invoice.number: { label: Invoice, pin: true }
+        paid_at: { label: Received }
+        # `unit` on the column makes this pence render as pounds. The stored
+        # value stays an integer, so sorting and summing stay exact.
+        amount: { label: Amount }
+        method:
+          label: Method
+          labels:
+            bank_transfer: Bank transfer
+            card: Card
+            cash: Cash
+            cheque: Cheque

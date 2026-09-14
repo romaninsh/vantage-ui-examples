@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=./page-schema-1.json
+#
+# Welcome: the setup controls in a framed card, then the README —
+# `!include`d, so this page and the repository never say different
+# things.
+title: Welcome
+body:
+  - kind: column
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: row
+            children:
+              - kind: button
+                params:
+                  label: "Set up services & data"
+                  icon: Play
+                  style: primary
+                  # language=rhai
+                  action: |
+                    actions.setup();
+              - kind: button
+                params:
+                  label: "Seed the catalog"
+                  icon: Database
+                  # language=rhai
+                  action: |
+                    actions.seed_database();
+              - kind: button
+                params:
+                  label: "Reset (empty) database"
+                  icon: Trash2
+                  # language=rhai
+                  action: |
+                    actions.reset_database();
+
+      - kind: markdown
+        text: !include ../README.md

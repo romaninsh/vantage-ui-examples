@@ -42,7 +42,7 @@ sibling checkout:
 export VANTAGE_UI_BIN=/path/to/vantage-ui
 
 # run one app, or all of them
-cargo run -p test-framework -- apps/bakery
+cargo run -p test-framework -- apps/breg-bakery
 cargo run -p test-framework -- --all
 ```
 

@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Products
+body:
+  - kind: binder
+    name: products
+    observe: bakery-surreal/product
+    params:
+      # Newest first. No timestamp on this table, so the id is the
+      # insertion proxy (hand-added products sort above the catalogue).
+      default_sort: { column: id, direction: desc }
+      # `bakery.name` reads through the reference to the shop's title, so
+      # the grid shows "Breg Briggate, Leeds" rather than `bakery:leeds`.
+      columns:
+        name: { label: Product, pin: true }
+        bakery.name: { label: Shop }
+        price: { label: Price }
+        calories: { label: kcal }
+        stock: { label: Stock }
+      filter: [bakery, "~name"]
+      toolbar:
+        - label: "Add product"
+          icon: Plus
+          # language=rhai
+          action: |
+            let r = actions.add_product();
+            let p = tables.product.create();
+            p.set(r);
+            p.save();
+        - label: "Import products"
+          icon: Upload
+          # language=rhai
+          action: |
+            actions.import_products();
+        # Magic-branded like "More clients" on the Clients page: same
+        # sparkles, same accent — one look for every ✨ process button.
+        - label: "Restock the ovens"
+          icon: Sparkles
+          color: magenta
+          # If the grid is narrowed to one bakery, the form starts there.
+          # language=rhai
+          action: |
+            let b = ();
+            for t in grid.filters() { if t.column == "bakery" { b = t.value; } }
+            if b == () { actions.restock(); } else { actions.restock(#{ bakery: b }); }

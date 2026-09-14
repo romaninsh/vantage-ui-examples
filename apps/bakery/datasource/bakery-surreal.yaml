@@ -1,6 +1,0 @@
-# yaml-language-server: $schema=./datasource-schema-1.json
-
-type: surreal-db
-url: cbor://root:root@localhost:8000
-namespace: bakery
-database: v2
