@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Release browser: filter by package, then summary / PRs / pins / bumps tabs.
+title: Releases
+body:
+  - kind: select
+    name: pkg
+    observe: package
+    params:
+      all_label: All packages
+      column: name
+      default: vantage-ui
+  - kind: binder
+    name: releases
+    observe:
+      script: |
+        let v = "${pkg.value}";
+        if v == "" || v == "All packages" { scenery("release") }
+        else { scenery("release").where("package_id", v) }
+    params:
+      refresh_interval: 5
+      views: [release_summary]
+      columns:
+        version: { pin: true, width: 260 }
+        package.name: { label: Package, width: 170 }
+        status:
+          width: 120
+          color:
+            success: [published]
+            yellow: [draft]
+            muted: [unreleased]
+          labels:
+            published: Published
+            draft: Draft
+            unreleased: Unreleased
+        tag: { width: 120 }
+        published_at: { width: 230, render: "date_human(row.published_at)" }
+      default_sort: { column: published_at, direction: desc }

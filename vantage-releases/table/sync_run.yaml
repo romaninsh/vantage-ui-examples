@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Pipeline run log: one row per script execution.
+datasource: warehouse
+title: Sync Run
+columns:
+  - name: id
+    type: int
+    flags: [id, auto]
+  - name: script
+    type: string
+    flags: [mandatory, title]
+  - name: started_at
+    type: datetime
+  - name: finished_at
+    type: datetime
+    optional: true
+  - name: status
+    type: string
+    flags: [label] # running | ok | error
+  - name: detail
+    type: string
+    optional: true

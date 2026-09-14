@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Bronze layer: immutable JSON fetched from GitHub / crates.io. Newest wins.
+datasource: warehouse
+title: Raw Payload
+columns:
+  - name: id
+    type: int
+    flags: [id, auto]
+  - name: run_id
+    type: int
+    references: sync_run
+    optional: true
+  - name: kind
+    type: string
+    flags: [label] # pull_request | release | tag | cargo_toml | crate_version
+  - name: repo
+    type: string
+    flags: [mandatory, title, searchable]
+  - name: identifier
+    type: string
+    flags: [mandatory, title, searchable]
+  - name: payload
+    type: string
+    flags: [mandatory, hidden]
+  - name: fetched_at
+    type: datetime
+  - name: sync_run.script
+    type: string               # implicit reference: pipeline script

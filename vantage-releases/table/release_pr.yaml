@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Link table: which dep-repo PRs shipped in which crate release (N:N).
+datasource: warehouse
+title: Release PR
+columns:
+  - name: pr_id
+    type: int
+    references: pull_request
+    flags: [id, mandatory]
+  - name: release_id
+    type: int
+    references: release
+    flags: [mandatory]
+  - name: pull_request.title
+    type: string # implicit reference: PR title
+  - name: release.version
+    type: string # implicit reference: release version

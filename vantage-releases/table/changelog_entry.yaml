@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Rewrite-ready changelog lines derived from PRs and dependency bumps.
+datasource: warehouse
+title: Changelog Entry
+columns:
+  - name: id
+    type: int
+    flags: [id, auto]
+  - name: release_id
+    type: int
+    references: release
+    flags: [mandatory]
+  - name: kind
+    type: string
+    flags: [label] # feature | fix | deps | other
+  - name: text
+    type: string
+    flags: [mandatory, title]
+  - name: source_pr_id
+    type: int
+    references: pull_request
+    optional: true
+  - name: position
+    type: int
+    flags: [hidden]
+  - name: release.version
+    type: string # implicit reference: app release version
+  - name: pull_request.number
+    type: int # implicit reference: source PR number

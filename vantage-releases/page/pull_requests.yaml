@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# All pull requests across repos; description lives on the Summary tab.
+title: Pull Requests
+body:
+  - kind: binder
+    name: pull_requests
+    observe: pull_request
+    params:
+      refresh_interval: 5
+      views: [pr_summary]
+      columns:
+        number: { pin: true, width: 90, label: PR }
+        title: { width: 520 }
+        repo.name: { label: Repo, width: 150 }
+        author: { width: 130 }
+        state:
+          width: 110
+          color:
+            success: [merged]
+            yellow: [open]
+            muted: [closed]
+        bumps_version:
+          width: 120
+          label: Release PR
+          color: { success: ["true"] }
+          labels: { "true": version bump, "false": "-" }
+        release.version: { label: Shipped In, width: 120 }
+        merged_at: { width: 230, render: "date_human(row.merged_at)" }
+      default_sort: { column: merged_at, direction: desc }

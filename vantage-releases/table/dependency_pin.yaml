@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# What each app release pins each dependency crate to (Cargo.toml at the ref).
+datasource: warehouse
+title: Dependency Pin
+columns:
+  - name: id
+    type: int
+    flags: [id, auto]
+  - name: release_id
+    type: int
+    references: release
+    flags: [mandatory]
+  - name: dep_package_id
+    type: int
+    references: package
+    flags: [mandatory]
+  - name: pinned_version
+    type: string
+    flags: [mandatory]
+  - name: source_ref
+    type: string
+    flags: [mandatory] # tag name or HEAD
+  - name: release.version
+    type: string # implicit reference: app release version
+  - name: package.name
+    type: string # implicit reference: dependency crate name

@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# GitHub source repos: the app repo and the deps monorepo.
+title: Repositories
+body:
+  - kind: grid
+    name: repositories
+    observe: repo
+    params:
+      refresh_interval: 5
+      columns:
+        name: { pin: true, width: 260 }
+        owner: { width: 140 }
+        kind:
+          width: 130
+          color:
+            blue: [app]
+            muted: [deps]
+        url: { width: 300 }
+      default_sort: { column: name, direction: asc }

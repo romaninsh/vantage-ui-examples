@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# GitHub source repos: atk4/vantage-ui (app) and romaninsh/vantage (deps monorepo).
+datasource: warehouse
+title: Repository
+columns:
+  - name: id
+    type: int
+    flags: [id, auto]
+  - name: owner
+    type: string
+    flags: [mandatory]
+  - name: name
+    type: string
+    flags: [mandatory, title, searchable]
+  - name: kind
+    type: string
+    flags: [label] # app | deps
+  - name: url
+    type: string
+    optional: true
+references:
+  packages:
+    table: package
+    kind: has_many
+    foreign_key: repo_id
+  pull_requests:
+    table: pull_request
+    kind: has_many
+    foreign_key: repo_id

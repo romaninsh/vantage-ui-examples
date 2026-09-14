@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Rewrite-ready changelog lines per release, derived from PRs and dep bumps.
+title: Changelog Entries
+body:
+  - kind: grid
+    name: changelog_entries
+    observe: changelog_entry
+    params:
+      refresh_interval: 5
+      columns:
+        release.version: { label: Release, width: 120 }
+        kind:
+          width: 100
+          color:
+            blue: [feature]
+            yellow: [fix]
+            muted: [deps, other]
+        text: { width: 560 }
+        pull_request.number: { label: PR, width: 90 }
+        position: { width: 80 }
+      default_sort: { column: position, direction: asc }

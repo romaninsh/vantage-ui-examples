@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Pin diff between consecutive app releases: vantage-sql 0.6.13 -> 0.6.21.
+datasource: warehouse
+title: Dependency Bump
+columns:
+  - name: id
+    type: int
+    flags: [id, auto]
+  - name: release_id
+    type: int
+    references: release
+    flags: [mandatory]
+  - name: dep_package_id
+    type: int
+    references: package
+    flags: [mandatory]
+  - name: from_version
+    type: string
+    optional: true
+  - name: to_version
+    type: string
+    flags: [mandatory]
+  - name: release.version
+    type: string # implicit reference: app release version
+  - name: package.name
+    type: string # implicit reference: dependency crate name

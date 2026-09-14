@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# Package summary tab: crate identity + its release history.
+table: package
+title: Summary
+body:
+  - kind: label
+    text: "${record.name}"
+    style: heading
+  - kind: row
+    children:
+      - kind: badge
+        text: "${record.kind}"
+        color: { blue: [app], muted: [dependency] }
+      - kind: label
+        text: 'source repo: ${record["repo.name"]}'
+        style: muted
+  - kind: separator
+    label: Releases
+  - kind: list
+    ref: releases
+    empty: "No releases recorded."
+    height: 420
+    item:
+      - kind: row
+        children:
+          - kind: label
+            text: "${row.version}"
+            style: mono
+          - kind: badge
+            text: "${row.status}"
+            color:
+              { success: [published], yellow: [draft], muted: [unreleased] }
+          - kind: label
+            text: "${row.published_at}"
+            style: muted

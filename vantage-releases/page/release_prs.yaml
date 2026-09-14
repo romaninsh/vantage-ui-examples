@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# N:N links: dep-repo PRs and the crate releases they shipped in.
+title: Release Links
+body:
+  - kind: grid
+    name: release_prs
+    observe: release_pr
+    params:
+      refresh_interval: 5
+      columns:
+        pull_request.title: { label: PR, width: 420 }
+        release.version: { label: Release, width: 140 }
+      default_sort: { column: pull_request.title, direction: desc }

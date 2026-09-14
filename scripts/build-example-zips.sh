@@ -86,7 +86,7 @@ for app_dir in "$repo_root"/apps/*/; do
     if [ -d "$app_dir/inventory" ]; then
         rm -f "$zip_path"
         ( cd "$app_dir" && zip -r -X "$zip_path" inventory -x "${excludes[@]}" ) >/dev/null
-    elif [ -d "$app_dir/datasource" ] || [ -d "$app_dir/page" ]; then
+    elif [ -d "$app_dir/datasource" ] || [ -d "$app_dir/page" ] || [ -d "$app_dir/table" ]; then
         rm -f "$zip_path"
         ( cd "$repo_root/apps" \
             && zip -r -X "$zip_path" "$slug" \

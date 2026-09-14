@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Pin diff between consecutive app releases; filter by crate.
+title: Dependency Bumps
+body:
+  - kind: select
+    name: dep
+    observe: package
+    params:
+      all_label: All dependencies
+      column: name
+  - kind: grid
+    name: dependency_bumps
+    observe:
+      script: |
+        let v = "${dep.value}";
+        if v == "" || v == "All dependencies" { scenery("dependency_bump") }
+        else { scenery("dependency_bump").where("dep_package_id", v) }
+    params:
+      refresh_interval: 5
+      columns:
+        release.version: { label: Release, width: 130 }
+        package.name: { label: Dependency, width: 220 }
+        from_version: { label: From, width: 120 }
+        to_version: { label: To, width: 120 }
+      default_sort: { column: release.version, direction: desc }
