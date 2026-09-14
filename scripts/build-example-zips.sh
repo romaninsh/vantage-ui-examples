@@ -3,13 +3,11 @@
 # Build one `<slug>.zip` per example app, for the `vantage://` one-click
 # installer.
 #
-# Two layouts are supported. An app that still keeps its catalog under
-# `inventory/` ships that folder; a flattened app — kind directories directly
-# under the app root — ships the app folder itself as `<slug>/`. The installer
-# finds either, because it searches the extracted tree for the signature
+# Every app keeps its catalog folders directly under the app root and ships as
+# `<slug>/`. The installer searches the extracted tree for the signature
 # directories rather than assuming a fixed name.
 #
-# A flattened app's root is also the repo's folder for it, so the second list
+# An app's root is also the repo's folder for it, so the second list
 # below drops what only the repository needs: agent briefs, BDD opt-outs,
 # scenario folders and any companion Rust crate. Everything the app needs at
 # runtime — helper scripts, seed data, CSV inputs — ships.
@@ -45,8 +43,8 @@ mkdir -p "$out_dir"
 # zip would fail to open the output file (exit 15).
 out_dir="$(cd "$out_dir" && pwd)"
 
-# Generated or machine-local, in either layout. The patterns are rooted at
-# `*/` so they match under `inventory/` and under `<slug>/` alike.
+# Generated or machine-local. The patterns are rooted at `*/` so they match
+# at any depth under `<slug>/`.
 excludes=(
     '*/.cache/*'
     '*/.agents/*'
@@ -83,10 +81,7 @@ for app_dir in "$repo_root"/apps/*/; do
     slug="$(basename "$app_dir")"
     zip_path="$out_dir/$slug.zip"
 
-    if [ -d "$app_dir/inventory" ]; then
-        rm -f "$zip_path"
-        ( cd "$app_dir" && zip -r -X "$zip_path" inventory -x "${excludes[@]}" ) >/dev/null
-    elif [ -d "$app_dir/datasource" ] || [ -d "$app_dir/page" ] || [ -d "$app_dir/table" ]; then
+    if [ -d "$app_dir/datasource" ] || [ -d "$app_dir/page" ] || [ -d "$app_dir/table" ]; then
         rm -f "$zip_path"
         ( cd "$repo_root/apps" \
             && zip -r -X "$zip_path" "$slug" \
