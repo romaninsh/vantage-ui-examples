@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Pipeline execution log.
+title: Sync Runs
+body:
+  - kind: grid
+    name: sync_runs
+    observe: sync_run
+    params:
+      refresh_interval: 5
+      columns:
+        id: { label: Run, width: 80 }
+        script: { width: 300 }
+        started_at: { width: 230, render: 'date_human(row.started_at)' }
+        finished_at: { width: 230, render: 'date_human(row.finished_at)' }
+        status:
+          width: 100
+          color:
+            success: [ok]
+            yellow: [running]
+            red: [error]
+        detail: { width: 320 }
+      default_sort: { column: id, direction: desc }

@@ -20,7 +20,10 @@ surreal:
         .expression(ident("inventory")["stock"].alias("stock"))
         .expression(branch.alias("branch"))
         .where(ident("inventory")["stock"] < 10)
-        .where(ident("is_deleted") == false);
+        // `!= true`, not `== false`: a product added through the form
+        // or the CSV import has no `is_deleted` field at all, and a
+        // missing field must still count as not-deleted.
+        .where(ident("is_deleted") != true);
     if b != "" {
         q = q.where(expr("bakery.name = {}", [b]));
     }

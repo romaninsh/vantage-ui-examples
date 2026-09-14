@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# PR summary tab: the description lives here, not in the list.
+table: pull_request
+title: Summary
+body:
+  - kind: label
+    text: "#${record.number}  ${record.title}"
+    style: heading
+  - kind: row
+    children:
+      - kind: badge
+        text: "${record.state}"
+        color: { success: [merged], yellow: [open], muted: [closed] }
+      - kind: when
+        condition: 'record["bumps_version"] == 1 || record["bumps_version"] == "true" || record["bumps_version"] == true'
+        children:
+          - kind: badge
+            text: release PR
+            color: { blue: [release PR] }
+      - kind: label
+        text: "${record.author}"
+        style: muted
+  - kind: row
+    children:
+      - kind: stat
+        label: Created
+        value: "${record.created_at}"
+        format: datetime
+      - kind: stat
+        label: Merged
+        value: "${record.merged_at}"
+        format: datetime
+  - kind: label
+    text: 'repo: ${record["repo.name"]}   shipped in: ${record["release.version"]}'
+    style: muted
+  - kind: button
+    text: Open on GitHub
+    url: "${record.url}"
+  - kind: separator
+    label: Description
+  - kind: label
+    text: "${record.body}"

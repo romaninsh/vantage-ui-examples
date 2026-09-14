@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# A crate with its own version series: vantage-ui (app) + vantage-* dependencies.
+datasource: warehouse
+title: Package
+columns:
+  - name: id
+    type: int
+    flags: [id, auto]
+  - name: repo_id
+    type: int
+    references: repo
+    flags: [mandatory]
+  - name: name
+    type: string
+    flags: [mandatory, title, searchable]
+  - name: kind
+    type: string
+    flags: [label] # app | dependency
+  - name: repo.name
+    type: string # implicit reference: source repo name
+references:
+  releases:
+    table: release
+    kind: has_many
+    foreign_key: package_id

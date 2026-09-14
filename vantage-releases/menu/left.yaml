@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+title: Vantage Releases
+items:
+  - section: Changelog
+    children:
+      - page: releases
+        label: Releases
+        icon: Rocket
+      - page: pull_requests
+        label: Pull Requests
+        icon: GitPullRequest
+      - page: changelog_entries
+        label: Changelog Entries
+        icon: FileText
+  - section: Dependencies
+    children:
+      - page: dependency_pins
+        label: Dependency Pins
+        icon: Pin
+      - page: dependency_bumps
+        label: Dependency Bumps
+        icon: TrendingUp
+      - page: release_prs
+        label: Release Links
+        icon: Link
+  - section: Sources
+    children:
+      - page: packages
+        label: Packages
+        icon: Package
+      - page: repositories
+        label: Repositories
+        icon: GitBranch
+  - section: Pipeline
+    children:
+      - page: sync_runs
+        label: Sync Runs
+        icon: Activity
+      - page: raw_payloads
+        label: Raw Payloads
+        icon: Database

@@ -1,6 +1,6 @@
 # Smith Requirements — `<feature_key>`
 
-> You are Agent Smith. You edit YAML files in `examples/surreal-bakery/`. Read this top to bottom
+> You are Agent Smith. You edit YAML files in `apps/breg-bakery/`. Read this top to bottom
 > first. Fill in "Notes" as you work.
 
 ## What you're building

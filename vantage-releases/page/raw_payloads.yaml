@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Bronze layer browser: what was fetched, from where, when.
+title: Raw Payloads
+body:
+  - kind: grid
+    name: raw_payloads
+    observe: raw_payload
+    params:
+      refresh_interval: 5
+      columns:
+        kind:
+          width: 120
+          color:
+            blue: [pull_request]
+            green: [release]
+            yellow: [cargo_toml]
+            muted: [tag, crate_version]
+        repo: { width: 220 }
+        identifier: { label: Ident, width: 240 }
+        fetched_at: { width: 230, render: "date_human(row.fetched_at)" }
+        sync_run.script: { label: Run, width: 150 }
+      default_sort: { column: fetched_at, direction: desc }

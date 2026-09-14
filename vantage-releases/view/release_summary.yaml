@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# Release summary tab: identity, dates, existing notes, PRs, pins, bumps.
+table: release
+title: Summary
+body:
+  - kind: label
+    text: '${record["package.name"]} ${record.version}'
+    style: heading
+  - kind: row
+    children:
+      - kind: badge
+        text: "${record.status}"
+        color: { success: [published], yellow: [draft], muted: [unreleased] }
+      - kind: label
+        text: "tag: ${record.tag}"
+        style: muted
+  - kind: stat
+    label: Published
+    value: "${record.published_at}"
+    format: datetime
+  - kind: separator
+    label: Existing release notes
+  - kind: label
+    text: "${record.notes}"
+  - kind: separator
+    label: Pull requests in this release
+  - kind: list
+    ref: pull_requests
+    empty: "No PRs assigned to this release."
+    item:
+      - kind: row
+        children:
+          - kind: label
+            text: "#${row.number}  ${row.title}"
+          - kind: label
+            text: "${row.author}"
+            style: muted
+  - kind: separator
+    label: Dependency pins
+  - kind: list
+    ref: dependency_pins
+    empty: "No pins recorded."
+    item:
+      - kind: row
+        children:
+          - kind: label
+            text: '${row["package.name"]}'
+          - kind: label
+            text: "${row.pinned_version}"
+            style: mono
+  - kind: separator
+    label: Dependency bumps vs previous release
+  - kind: list
+    ref: dependency_bumps
+    empty: "No changes."
+    item:
+      - kind: row
+        children:
+          - kind: label
+            text: '${row["package.name"]}'
+          - kind: label
+            text: "${row.from_version} -> ${row.to_version}"
+            style: mono

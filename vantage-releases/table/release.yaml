@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# One row per crate version (published / draft / unreleased).
+datasource: warehouse
+title: Release
+table: release_
+columns:
+  - name: id
+    type: int
+    flags: [id, auto]
+  - name: package_id
+    type: int
+    references: package
+    flags: [mandatory]
+  - name: version
+    type: string
+    flags: [mandatory, title, searchable]
+  - name: status
+    type: string
+    flags: [label] # published | draft | unreleased
+  - name: tag
+    type: string
+    optional: true
+  - name: published_at
+    type: datetime
+    optional: true
+  - name: notes
+    type: string
+    optional: true
+    flags: [hidden]
+  - name: url
+    type: string
+    optional: true
+    flags: [hidden]
+  - name: package.name
+    type: string # implicit reference: crate name
+references:
+  pull_requests:
+    table: pull_request
+    kind: has_many
+    foreign_key: release_id
+  dependency_pins:
+    table: dependency_pin
+    kind: has_many
+    foreign_key: release_id
+  dependency_bumps:
+    table: dependency_bump
+    kind: has_many
+    foreign_key: release_id
+  changelog_entries:
+    table: changelog_entry
+    kind: has_many
+    foreign_key: release_id

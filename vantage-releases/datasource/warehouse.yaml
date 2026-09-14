@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# SQLite warehouse filled by scripts/ (see scripts/README.md)
+type: sqlite
+description: "vantage-ui releases warehouse (bronze/silver/gold)"
+url: "sqlite:data/vantage.sqlite"

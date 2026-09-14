@@ -499,6 +499,8 @@ def main():
     ap.add_argument("--ns", default=os.environ.get("SURREAL_NS", "bakery"))
     ap.add_argument("--db", default=os.environ.get("SURREAL_DB", "v2"))
     args = ap.parse_args()
+    if args.chunk <= 0:
+        ap.error("--chunk must be a positive number of rows")
     seed_clients = args.with_clients != "false"
 
     conn = dict(endpoint=args.endpoint, user=args.user, password=args.password,

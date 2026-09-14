@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Pull requests per repo; merged PRs carry the release they shipped in.
+datasource: warehouse
+title: Pull Request
+columns:
+  - name: id
+    type: int
+    flags: [id, auto]
+  - name: repo_id
+    type: int
+    references: repo
+    flags: [mandatory]
+  - name: number
+    type: int
+    flags: [mandatory]
+  - name: title
+    type: string
+    flags: [mandatory, title, searchable]
+  - name: body
+    type: string
+    optional: true
+    flags: [hidden] # full PR description - shown on the summary view
+  - name: author
+    type: string
+    optional: true
+  - name: state
+    type: string
+    flags: [label] # open | closed | merged
+  - name: labels
+    type: string
+    optional: true
+    flags: [hidden] # JSON array
+  - name: created_at
+    type: datetime
+    optional: true
+  - name: merged_at
+    type: datetime
+    optional: true
+  - name: url
+    type: string
+    optional: true
+    flags: [hidden]
+  - name: bumps_version
+    type: bool
+    flags: [label] # merge commit is a tag commit -> the release PR
+  - name: release_id
+    type: int
+    references: release
+    optional: true
+  - name: repo.name
+    type: string # implicit reference: source repo name
+  - name: release.version
+    type: string # implicit reference: version it shipped in
+references:
+  release_links:
+    table: release_pr
+    kind: has_many
+    foreign_key: pr_id

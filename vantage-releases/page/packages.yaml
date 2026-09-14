@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Tracked crates with their release history on the Summary tab.
+title: Packages
+body:
+  - kind: binder
+    name: packages
+    observe: package
+    params:
+      refresh_interval: 5
+      views: [package_summary]
+      columns:
+        name: { pin: true, width: 260 }
+        kind:
+          width: 130
+          color:
+            blue: [app]
+            muted: [dependency]
+          labels:
+            app: App crate
+            dependency: Dependency
+        repo.name: { label: Source Repo, width: 180 }
+      default_sort: { column: name, direction: asc }
