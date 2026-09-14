@@ -1,18 +1,20 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: missions — list view over `table/missions.yaml`.
-
+# Page: missions — customer programmes; the Launches tab narrows on mission_id.
 title: Missions
-
 body:
-  - kind: crud
-    table: missions
+  - kind: binder
+    name: missions
+    observe: missions
     params:
+      default_sort: { column: name, direction: asc }
       columns:
-        id: { pin: true, width: 100, label: ID }
-        name: { pin: true, width: 220, label: Name }
-        manufacturers: { width: 220, label: Manufacturers }
-        description: { width: 540, label: Description }
-        twitter: { width: 220, label: Twitter }
-        website: { width: 240, label: Website }
-        wikipedia: { width: 240, label: Wikipedia }
+        name: { label: Programme, pin: true, width: 200 }
+        manufacturers: { label: Manufacturers }
+        description: { label: Description, width: 480 }
+      row_actions:
+        - label: Copy website link
+          icon: Copy
+          copy: website
+        - label: Copy Wikipedia link
+          icon: Copy
+          copy: wikipedia

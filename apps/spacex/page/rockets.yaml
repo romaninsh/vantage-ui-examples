@@ -1,38 +1,25 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: rockets — list view over `table/rockets.yaml`.
-#
-# Context-menu right-click navigations to other entities are wired in
-# pass 2, once their pages exist.
-
+# Page: rockets — a binder: the Launches tab narrows through the relation.
 title: Rockets
-
 body:
-  - kind: crud
-    table: rockets
+  - kind: binder
+    name: rockets
+    observe: rockets
     params:
+      default_sort: { column: first_flight, direction: asc }
       columns:
-        id: { pin: true, width: 100, label: ID }
-        name: { pin: true, width: 180, label: Name }
-        type: { width: 130, label: Type }
-        company: { width: 110, label: Company }
-        country: { width: 130, label: Country }
+        name: { label: Rocket, pin: true, width: 160 }
+        type: { label: Type }
         active:
-          width: 110
-          label: Active
-          color:
-            success: ["true"]
-            red: ["false"]
-          labels:
-            "true": Active
-            "false": Retired
-        stages: { width: 80, label: Stages }
-        boosters: { width: 90, label: Boosters }
-        cost_per_launch: { width: 160, label: "Cost / launch (USD)" }
-        success_rate_pct: { width: 130, label: "Success rate (%)" }
-        first_flight: { width: 140, label: First flight }
-        description: { width: 480, label: Description }
-        wikipedia:
-          width: 260
-          label: Wikipedia
-          tooltip: "Wikipedia URL — kept as plain text, no in-grid hyperlink."
+          label: Status
+          color: { success: ["true"], muted: ["false"] }
+          labels: { "true": Active, "false": Retired }
+        stages: { label: Stages }
+        boosters: { label: Boosters }
+        cost_per_launch: { label: Cost per launch }
+        success_rate_pct: { label: "Success %" }
+        first_flight: { label: First flight }
+      row_actions:
+        - label: Copy Wikipedia link
+          icon: Copy
+          copy: wikipedia

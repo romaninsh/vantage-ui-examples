@@ -1,45 +1,39 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: launches — list view over `table/launches.yaml`.
-
+# Page: launches — the binder observes the plain table key, so every "Open
+# launches" drill-down from rockets, capsules, cores, programmes, payloads,
+# launchpads and ships lands here. The filter funnel's terms are equality
+# conditions, which the GraphQL datasource pushes to the server as
+# `launches(find: {launch_year: "2018"})`; sorting and quicksearch run on
+# the loaded rows (the generic dialect pushes equality only).
 title: Launches
-
 body:
-  - kind: crud
-    table: launches
+  - kind: label
+    params: { text: "Launches", style: heading, icon: Rocket }
+  - kind: label
+    params: { text: "Filter by year or success and the condition is sent to the API as a find: argument", style: muted }
+  - kind: binder
+    name: launches
+    observe: launches
     params:
+      default_sort: { column: launch_date_utc, direction: desc }
+      filter: [launch_year, launch_success, upcoming]
+      filters:
+        - { label: "Upcoming only", column: upcoming, value: true, default: false }
       columns:
-        id: { pin: true, width: 90, label: ID }
-        mission_name: { pin: true, width: 260, label: Mission }
-        launch_year: { width: 80, label: Year }
-        launch_date_utc: { width: 200, label: "Launch (UTC)" }
+        mission_name: { label: Mission, pin: true, width: 240 }
+        launch_date_utc: { label: Launched (UTC) }
+        launch_year: { label: Year, width: 70 }
+        rocket.rocket_name: { label: Rocket }
+        launch_site.site_name: { label: Site }
         launch_success:
-          width: 110
           label: Success
-          color:
-            success: ["true"]
-            red: ["false"]
-          labels:
-            "true": Success
-            "false": Failed
+          color: { success: ["true"], danger: ["false"] }
+          labels: { "true": Success, "false": Failed }
         upcoming:
-          width: 110
           label: Upcoming
-          color:
-            blue: ["true"]
-          labels:
-            "true": Upcoming
-            "false": Flown
+          color: { warning: ["true"] }
+          labels: { "true": Upcoming, "false": Flown }
         is_tentative:
-          width: 110
           label: Tentative
-          color:
-            warning: ["true"]
-          labels:
-            "true": Tentative
-            "false": Confirmed
-        mission_id:
-          width: 280
-          label: Mission IDs
-          tooltip: "Wire shape is `[String]` — server returns a list."
-        details: { width: 480, label: Details }
+          color: { warning: ["true"] }
+          labels: { "true": Tentative, "false": Confirmed }
