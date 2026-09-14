@@ -29,16 +29,21 @@ surreal:
     // app exists once instead of a filtered near-copy. Prices are
     // pence, so /100 for pounds. Divided here, not in the client: the
     // y-axis should read what the database said.
-    let revenue = expr("math::fixed(<float>math::sum((SELECT VALUE lines.fold(0, |$a, $v| $a + $v.quantity * $v.price) FROM order WHERE ({} = '' OR bakery.name = {}) AND created_at >= $parent.bucket AND created_at < $parent.bucket + 30s)) / 100, 2)", [b, b]);
+    let revenue = expr("math::fixed(<float>math::sum((SELECT VALUE lines.fold(0, |$a, $v| $a + $v.quantity * $v.price) FROM order WHERE ({} = '' OR bakery.name = {}) AND status != 'cancelled' AND created_at >= $parent.bucket AND created_at < $parent.bucket + 30s)) / 100, 2)", [b, b]);
+    // Sorted by the raw datetime, not the HH:MM:SS label — a window
+    // that spans midnight would put 00:xx before 23:xx otherwise. The
+    // bars keep query order, so this ORDER BY is the timeline.
     select()
         .from(
             select()
+                .field("bucket")
                 .expression(expr("time::format(bucket, '%H:%M:%S')").alias("day"))
                 .expression(revenue.alias("revenue"))
                 .from(expr("array::range(0, 22).map(|$i| { bucket: time::floor(time::now(), 1m) - 10m + duration::from_secs($i * 30) })"))
                 .where(expr("bucket <= time::now()"))
                 .subquery())
         .expression(fx("type::record", [expr("'revenue_by_day'"), ident("day")]).alias("id"))
+        .field("bucket")
         .field("day")
         .field("revenue")
-        .order_by(ident("day"), "asc")
+        .order_by(ident("bucket"), "asc")

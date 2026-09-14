@@ -16,7 +16,7 @@ Approaches change the odds, not the honesty:
 
 import argparse
 import random
-import time
+import uuid
 from datetime import datetime, timezone
 
 import breg
@@ -82,7 +82,9 @@ def main():
     owed = owed[: args.limit]
 
     full_p, part_p = ODDS[args.approach]
-    run_id = format(int(time.time()) % 36**5, "x")
+    # Collision-resistant: two runs started the same second must not
+    # fight over payment ids (a duplicate INSERT aborts the run).
+    run_id = uuid.uuid4().hex[:10]
     out(f"{BOLD}{GOLD}☎️  COLLECTIONS{RESET} — approach: {args.approach}, "
         f"{len(owed)} account(s) on the list\r\n")
     beat(0.8)

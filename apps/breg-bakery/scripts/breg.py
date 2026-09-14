@@ -13,6 +13,7 @@ copies the value at import time and never sees the Ctrl+C).
 
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -113,5 +114,13 @@ def dt_literal(d):
 
 
 def normalize_bakery(v):
-    """Accept `leeds` or `bakery:leeds` on the CLI."""
-    return v if ":" in v else f"bakery:{v}"
+    """Accept `leeds`, `Leeds` or `bakery:leeds` on the CLI.
+
+    Rejects anything outside the record-id grammar before the value is
+    interpolated into SurrealQL — the UI sends real record ids, so this
+    only ever trips on a hand-typed CLI value.
+    """
+    rid = v if ":" in v else f"bakery:{v.lower()}"
+    if not re.fullmatch(r"bakery:[a-z0-9_]+", rid):
+        raise SystemExit(f"not a bakery record id: {v!r} (expected e.g. bakery:leeds)")
+    return rid

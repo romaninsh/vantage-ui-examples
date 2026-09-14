@@ -32,6 +32,7 @@ SURREAL_PASS, SURREAL_NS, SURREAL_DB.
 import argparse
 import random
 import time
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import breg
@@ -137,7 +138,9 @@ def main():
     # grid keeps receiving rows for as long as the ad runs — and Stop
     # (Services page) is the early exit.
     gap = (args.minutes * 60.0) / max(signups, 1)
-    run_id = format(int(time.time()) % 36**5, "x")
+    # Collision-resistant: two campaigns started the same second must
+    # not fight over record ids (a duplicate INSERT aborts the run).
+    run_id = uuid.uuid4().hex[:10]
 
     say(f"{BOLD}{GOLD}📣  CAMPAIGN LIVE{RESET} for {BOLD}{shop_name}{RESET}")
     say(f'    slogan: {PINK}“{esc(args.slogan)}”{RESET}')

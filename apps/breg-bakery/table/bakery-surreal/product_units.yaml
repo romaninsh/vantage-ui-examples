@@ -23,7 +23,7 @@ surreal:
     let b = args.get("bakery") ?? "";
     // `({} = '' OR …)` keeps ONE copy of the correlated sum for both
     // the filtered and the all-bakeries view.
-    let sold = expr("math::sum((SELECT VALUE lines.quantity FROM (SELECT lines FROM order WHERE ({} = '' OR bakery.name = {}) SPLIT lines) WHERE lines.product = $parent.id)) ?? 0", [b, b]);
+    let sold = expr("math::sum((SELECT VALUE lines.quantity FROM (SELECT lines FROM order WHERE ({} = '' OR bakery.name = {}) AND status != 'cancelled' SPLIT lines) WHERE lines.product = $parent.id)) ?? 0", [b, b]);
     let per_product = select()
         .from("product")
         .expression(expr("name").alias("product"))

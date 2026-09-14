@@ -555,6 +555,13 @@ def main():
             print(f"  invoiced orders: {total}/{len(attach)}", end="\r", flush=True)
         print(f"  invoiced orders: {len(attach)} done            ")
 
+        # One touch across the accounts AFTER their orders/invoices/
+        # payments exist: the grid's computed columns (order_count,
+        # balance) refresh on the client's OWN live event, and none of
+        # the bulk inserts above fires one — a client grid already open
+        # during a re-seed would otherwise keep the stale numbers.
+        run_sql("UPDATE client SET deps_last_updated = time::now();", conn, args.dry_run)
+
     # Last, so the bulk inserts above are not paying to maintain them.
     define_indexes(conn, args.dry_run)
 
