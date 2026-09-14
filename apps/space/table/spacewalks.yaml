@@ -3,9 +3,9 @@
 # Table: spacewalks — EVAs (extravehicular activities). Each belongs to a
 # spacestation and/or expedition. `duration` is ISO 8601.
 
-datasource: ll2
+datasource: ll2c
 title: Spacewalks
-table: "spacewalks/"
+table: "spacewalks/?ordering=-start"
 
 columns:
   - { name: id, type: int, flags: [id] }

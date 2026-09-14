@@ -1,10 +1,17 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: programs — list view (standalone, no drill-down).
-
+# Page: programs — multi-launch programmes; the Launches and Events tabs
+# narrow server-side (?program=).
 title: Programs
-
 body:
-  - kind: crud
-    table: programs
-    params: {}
+  - kind: binder
+    name: programs
+    observe: programs
+    params:
+      columns:
+        name: { label: Program, pin: true, width: 260 }
+        type.name: { label: Type }
+        start_date: { label: Started, date_precision: day }
+        end_date: { label: Ended, date_precision: day }
+      row_actions:
+        - { label: "Copy info link", icon: Copy, copy: info_url }
+        - { label: "Copy Wikipedia link", icon: Copy, copy: wiki_url }

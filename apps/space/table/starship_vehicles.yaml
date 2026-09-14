@@ -10,7 +10,7 @@
 
 datasource: ll2_starship
 title: Starship vehicles
-table: ""
+table: "starship/"
 
 columns:
   - { name: id, type: int, flags: [id] }

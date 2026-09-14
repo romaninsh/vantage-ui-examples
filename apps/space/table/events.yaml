@@ -6,7 +6,7 @@
 
 datasource: ll2
 title: Events
-table: "events/"
+table: "events/?ordering=-date"
 
 columns:
   - { name: id, type: string, flags: [id] }

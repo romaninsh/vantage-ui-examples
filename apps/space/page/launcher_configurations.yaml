@@ -1,11 +1,19 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: launcher_configurations — list view. Right-click → "Open launches"
-# auto-derived from the table's has_many (?rocket__configuration__id=<id>).
-
+# Page: launcher_configurations — rocket designs; the Launches tab narrows
+# server-side (?rocket__configuration__id=).
 title: Launcher configurations
-
 body:
-  - kind: crud
-    table: launcher_configurations
-    params: {}
+  - kind: binder
+    name: launcher_configurations
+    observe: launcher_configurations
+    params:
+      columns:
+        full_name: { label: Rocket, pin: true, width: 240 }
+        manufacturer.name: { label: Manufacturer }
+        active: { label: Status, color: { success: ["true"], muted: ["false"] }, labels: { "true": Active, "false": Inactive } }
+        reusable: { label: Reusable }
+        maiden_flight: { label: Maiden flight }
+        total_launch_count: { label: Launches }
+        successful_launches: { label: Successes }
+        failed_launches: { label: Failures }
+        leo_capacity: { label: LEO (kg) }

@@ -1,10 +1,14 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: expeditions — list view. Right-click a space station → "Open
-# expeditions" narrows by space_station.
-
+# Page: expeditions — crew rotations aboard a station; the Spacewalks tab is a
+# client-filtered join.
 title: Expeditions
-
 body:
-  - kind: crud
-    table: { script: 'scenery("expeditions").sort("start", "desc")' }
+  - kind: binder
+    name: expeditions
+    observe: expeditions
+    params:
+      columns:
+        name: { label: Expedition, pin: true, width: 240 }
+        spacestation.name: { label: Station }
+        start: { label: Start, date_precision: day }
+        end: { label: End, date_precision: day }

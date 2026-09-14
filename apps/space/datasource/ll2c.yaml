@@ -17,6 +17,10 @@ description: "Launch Library 2 (dev) — client-filtered (for launch-ignoring jo
 type: api-client
 url: "https://lldev.thespacedevs.com/2.3.0"
 response_key: results
+# Without `total_key` a REST table is one GET of the server's default page
+# (10 rows here); with it, the whole collection pages in, which a client
+# filter needs to scan.
+total_key: count
 pagination:
   page_param: offset
   limit_param: limit

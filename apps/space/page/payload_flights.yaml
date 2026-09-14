@@ -1,10 +1,14 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: payload_flights — the drill target of launches → "Open payloads".
-
+# Page: payload_flights — the launch/payload join, one row per payload flown.
 title: Payload flights
-
 body:
-  - kind: crud
-    table: payload_flights
-    params: {}
+  - kind: binder
+    name: payload_flights
+    observe: payload_flights
+    params:
+      columns:
+        payload.name: { label: Payload, pin: true, width: 240 }
+        launch.name: { label: Launch, width: 320 }
+        payload.type.name: { label: Type }
+        destination: { label: Destination }
+        amount: { label: Amount }

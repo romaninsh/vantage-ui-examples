@@ -14,7 +14,7 @@
 
 datasource: ll2
 title: Launches
-table: "launches/?mode=detailed"
+table: "launches/?mode=detailed&ordering=-net"
 
 columns:
   - { name: id, type: string, flags: [id] }

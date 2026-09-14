@@ -6,7 +6,7 @@
 
 datasource: ll2
 title: Upcoming launches
-table: "launches/upcoming/?mode=detailed"
+table: "launches/upcoming/?mode=detailed&ordering=net"
 
 columns:
   - { name: id, type: string, flags: [id] }

@@ -10,7 +10,7 @@
 
 datasource: ll2
 title: Launchers
-table: "launchers/"
+table: "launchers/?ordering=-flights"
 
 columns:
   - { name: id, type: int, flags: [id] }
@@ -25,3 +25,11 @@ columns:
   - { name: last_launch_date, type: datetime }
   - { name: first_launch_date, type: datetime }
   - { name: fastest_turnaround, type: string }
+
+# `landings/?launcher__id=` is ignored by the dev API: client-filtered on
+# the booster id each landing row carries.
+references:
+  landings:
+    table: landings
+    kind: has_many
+    foreign_key: firststage.launcher.id

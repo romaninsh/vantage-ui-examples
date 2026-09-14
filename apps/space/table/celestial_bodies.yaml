@@ -20,9 +20,3 @@ columns:
   - { name: length_of_day, type: string }
   - { name: atmosphere, type: bool }
   - { name: description, type: string, flags: [searchable] }
-
-references:
-  launches:
-    table: launches
-    kind: has_many
-    foreign_key: mission__orbit__celestial_body__id

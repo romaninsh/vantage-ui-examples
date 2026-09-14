@@ -1,10 +1,16 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: payloads — browsable catalogue of satellites/landers/probes.
-
+# Page: payloads — a binder; the Flights tab lists each launch the payload
+# flew on (client-filtered join).
 title: Payloads
-
 body:
-  - kind: crud
-    table: payloads
-    params: {}
+  - kind: binder
+    name: payloads
+    observe: payloads
+    params:
+      columns:
+        name: { label: Payload, pin: true, width: 260 }
+        type.name: { label: Type }
+        manufacturer.name: { label: Manufacturer }
+        operator.name: { label: Operator }
+        mass: { label: Mass (kg) }
+        cost: { label: Cost }

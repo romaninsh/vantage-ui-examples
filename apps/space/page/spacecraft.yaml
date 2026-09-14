@@ -1,10 +1,17 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: spacecraft — crewed/cargo vehicles. Right-click → "Open flights".
-
+# Page: spacecraft — individual vehicles; the Flights tab is a client-filtered
+# join on the vehicle id.
 title: Spacecraft
-
 body:
-  - kind: crud
-    table: spacecraft
-    params: {}
+  - kind: binder
+    name: spacecraft
+    observe: spacecraft
+    params:
+      columns:
+        name: { label: Vehicle, pin: true, width: 220 }
+        serial_number: { label: Serial }
+        spacecraft_config.name: { label: Design }
+        status.name: { label: Status, color: { green: ["Active"], muted: ["Retired", "Single Use"], yellow: ["Under construction"], red: ["Destroyed"] } }
+        in_space: { label: In space }
+        flights_count: { label: Flights }
+        time_in_space: { label: Time in space }

@@ -5,7 +5,7 @@
 # serial_number for context. The dev API ignores landing filters (verified),
 # so no server-side drill relation is wired here.
 
-datasource: ll2
+datasource: ll2c
 title: Landings
 table: "landings/"
 

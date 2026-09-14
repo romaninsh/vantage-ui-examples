@@ -1,9 +1,14 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: mission_patches — list view.
-
+# Page: mission_patches — patch artwork; the image link is a copy action.
 title: Mission patches
-
 body:
-  - kind: crud
-    table: { script: 'scenery("mission_patches").sort("priority", "asc")' }
+  - kind: binder
+    name: mission_patches
+    observe: mission_patches
+    params:
+      columns:
+        name: { label: Patch, pin: true, width: 300 }
+        agency.name: { label: Agency }
+        priority: { label: Priority }
+      row_actions:
+        - { label: "Copy image link", icon: Copy, copy: image_url }

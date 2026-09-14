@@ -6,7 +6,7 @@
 
 datasource: ll2
 title: Previous launches
-table: "launches/previous/?mode=detailed"
+table: "launches/previous/?mode=detailed&ordering=-net"
 
 columns:
   - { name: id, type: string, flags: [id] }

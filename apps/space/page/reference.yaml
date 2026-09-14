@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: reference — the API's 29 config/ vocabularies behind one dropdown. The
+# pick names the table, so choosing remounts the grid over a different
+# endpoint; this replaces one page per vocabulary.
+title: Reference data
+body:
+  - kind: row
+    children:
+      - kind: select
+        name: kind
+        width: 320
+        params:
+          label: Reference table
+          options: [agency types, astronaut roles, astronaut statuses, astronaut types, celestial body types, countries, docking locations, event types, first stage types, image licenses, image variant types, infourl types, landing locations, landing types, languages, launch statuses, launcher statuses, mission types, net precisions, notice types, orbits, payload types, program types, road closure statuses, space station statuses, spacecraft configuration types, spacecraft statuses, timeline event types, vidurl types]
+          default: launch statuses
+  - kind: grid
+    observe: { script: 'scenery("config_" + kind.value.replace(" ", "_"))' }
+    height: 640

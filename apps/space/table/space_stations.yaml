@@ -23,12 +23,19 @@ columns:
   - { name: onboard_crew, type: int }
   - { name: docked_vehicles, type: int }
 
+# The dev API ignores `space_station_target__id` / `spacestation__id` (a
+# nonsense id still returns every row), so these joins are client-filtered
+# on the nested id the rows carry.
 references:
   dockings:
     table: docking_events
     kind: has_many
-    foreign_key: space_station_target__id
+    foreign_key: space_station_target.id
   expeditions:
     table: expeditions
     kind: has_many
-    foreign_key: space_station
+    foreign_key: spacestation.id
+  spacewalks:
+    table: spacewalks
+    kind: has_many
+    foreign_key: spacestation.id

@@ -1,10 +1,19 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: astronauts — list view (standalone, no drill-down).
-
+# Page: astronauts — people who have flown or trained to fly.
 title: Astronauts
-
 body:
-  - kind: crud
-    table: astronauts
-    params: {}
+  - kind: binder
+    name: astronauts
+    observe: astronauts
+    params:
+      columns:
+        name: { label: Astronaut, pin: true, width: 220 }
+        status.name: { label: Status, color: { green: ["Active"], muted: ["Retired", "Deceased", "Dismissed", "Resigned during Training"], yellow: ["In-Training", "Occasional Spaceflight"], red: ["Lost In Flight", "Lost In Training", "Died While In Active Service"] } }
+        agency.name: { label: Agency }
+        nationality: { label: Nationality }
+        in_space: { label: In space }
+        flights_count: { label: Flights }
+        spacewalks_count: { label: EVAs }
+        time_in_space: { label: Time in space }
+        first_flight: { label: First flight, date_precision: day }
+        last_flight: { label: Last flight, date_precision: day }

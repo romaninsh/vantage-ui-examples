@@ -13,7 +13,7 @@
 
 datasource: ll2
 title: Launcher configurations
-table: "launcher_configurations/"
+table: "launcher_configurations/?ordering=-total_launch_count"
 
 columns:
   - { name: id, type: string, flags: [id] }

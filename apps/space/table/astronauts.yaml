@@ -11,7 +11,7 @@
 
 datasource: ll2
 title: Astronauts
-table: "astronauts/"
+table: "astronauts/?ordering=-flights_count"
 
 columns:
   - { name: id, type: string, flags: [id] }

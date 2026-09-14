@@ -22,3 +22,7 @@ references:
     table: launches
     kind: has_many
     foreign_key: program
+  events:
+    table: events
+    kind: has_many
+    foreign_key: program

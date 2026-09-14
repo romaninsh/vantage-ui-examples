@@ -6,9 +6,9 @@
 # The `space_stations` table has a has_many here via
 # `space_station_target__id` — verified discriminating (ISS id=4 → 13 of 18).
 
-datasource: ll2
+datasource: ll2c
 title: Docking events
-table: "docking_events/"
+table: "docking_events/?ordering=-docking"
 
 columns:
   - { name: id, type: int, flags: [id] }

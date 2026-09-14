@@ -11,7 +11,7 @@
 
 datasource: ll2
 title: Locations
-table: "locations/"
+table: "locations/?ordering=-total_launch_count"
 
 columns:
   - { name: id, type: string, flags: [id] }
@@ -32,3 +32,8 @@ references:
     table: pads
     kind: has_many
     foreign_key: location__id
+  # `location__id` is ignored on launches; the plural `location__ids` works.
+  launches:
+    table: launches
+    kind: has_many
+    foreign_key: location__ids

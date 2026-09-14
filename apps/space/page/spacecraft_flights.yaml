@@ -1,10 +1,14 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: spacecraft_flights — list view. Right-clicking a spacecraft row →
-# "Open flights" narrows this list in memory (has_many on spacecraft table).
-
+# Page: spacecraft_flights — one row per crewed/cargo vehicle flight.
 title: Spacecraft flights
-
 body:
-  - kind: crud
-    table: { script: 'scenery("spacecraft_flights").sort("mission_end", "desc")' }
+  - kind: binder
+    name: spacecraft_flights
+    observe: spacecraft_flights
+    params:
+      columns:
+        spacecraft.name: { label: Vehicle, pin: true, width: 220 }
+        launch.name: { label: Launch, width: 320 }
+        destination: { label: Destination }
+        mission_end: { label: Mission end, date_precision: day }
+        duration: { label: Duration }

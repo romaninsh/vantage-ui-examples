@@ -5,7 +5,7 @@
 
 datasource: ll2
 title: Upcoming events
-table: "events/upcoming/"
+table: "events/upcoming/?ordering=date"
 
 columns:
   - { name: id, type: string, flags: [id] }

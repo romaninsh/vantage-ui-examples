@@ -1,10 +1,15 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: celestial_bodies — list view. Right-click → "Open launches" drills by
-# celestial body (mission__orbit__celestial_body__id).
-
+# Page: celestial_bodies — planets and moons the data refers to.
 title: Celestial bodies
-
 body:
-  - kind: crud
-    table: { script: 'scenery("celestial_bodies").sort("name", "asc")' }
+  - kind: binder
+    name: celestial_bodies
+    observe: celestial_bodies
+    params:
+      columns:
+        name: { label: Body, pin: true, width: 200 }
+        type.name: { label: Type }
+        diameter: { label: Diameter (km) }
+        gravity: { label: Gravity (m/s²) }
+        length_of_day: { label: Day length }
+        atmosphere: { label: Atmosphere }

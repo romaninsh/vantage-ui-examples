@@ -1,11 +1,17 @@
 # yaml-language-server: $schema=./page-schema-1.json
-
-# Page: locations — list view. Right-click → "Open pads" auto-derived
-# from the table's has_many (?location__id=<id>). Two-hop: location → pads → launches.
-
+# Page: locations — launch sites; Pads (?location__id=) and Launches
+# (?location__ids=) narrow server-side.
 title: Locations
-
 body:
-  - kind: crud
-    table: locations
-    params: {}
+  - kind: binder
+    name: locations
+    observe: locations
+    params:
+      columns:
+        name: { label: Location, pin: true, width: 300 }
+        country.name: { label: Country }
+        celestial_body.name: { label: Body }
+        active: { label: Status, color: { success: ["true"], muted: ["false"] }, labels: { "true": Active, "false": Inactive } }
+        timezone_name: { label: Timezone }
+        total_launch_count: { label: Launches }
+        total_landing_count: { label: Landings }

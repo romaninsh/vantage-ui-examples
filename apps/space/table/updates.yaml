@@ -5,7 +5,7 @@
 
 datasource: ll2
 title: Updates
-table: "updates/"
+table: "updates/?ordering=-created_on"
 
 columns:
   - { name: id, type: int, flags: [id] }

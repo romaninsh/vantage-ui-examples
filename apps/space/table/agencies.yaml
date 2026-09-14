@@ -9,7 +9,7 @@
 
 datasource: ll2
 title: Agencies
-table: "agencies/"
+table: "agencies/?ordering=-total_launch_count"
 
 columns:
   - { name: id, type: string, flags: [id] }
@@ -41,3 +41,7 @@ references:
     table: launches
     kind: has_many
     foreign_key: lsp__id
+  mission_patches:
+    table: mission_patches
+    kind: has_many
+    foreign_key: agency__id

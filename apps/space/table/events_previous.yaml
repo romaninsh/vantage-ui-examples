@@ -5,7 +5,7 @@
 
 datasource: ll2
 title: Previous events
-table: "events/previous/"
+table: "events/previous/?ordering=-date"
 
 columns:
   - { name: id, type: string, flags: [id] }

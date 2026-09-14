@@ -5,7 +5,7 @@
 
 datasource: ll2
 title: Spacecraft
-table: "spacecraft/?mode=detailed"
+table: "spacecraft/?mode=detailed&ordering=-flights_count"
 
 columns:
   - { name: id, type: string, flags: [id] }
@@ -28,7 +28,3 @@ references:
     table: spacecraft_flights
     kind: has_many
     foreign_key: spacecraft.id
-  launches:
-    table: launches
-    kind: has_many
-    foreign_key: rocket__spacecraftflight__spacecraft__id

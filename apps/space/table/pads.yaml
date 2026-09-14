@@ -11,7 +11,7 @@
 
 datasource: ll2
 title: Pads
-table: "pads/"
+table: "pads/?ordering=-total_launch_count"
 
 columns:
   - { name: id, type: string, flags: [id] }
