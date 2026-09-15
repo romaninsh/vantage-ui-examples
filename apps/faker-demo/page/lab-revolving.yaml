@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: lab-revolving — rows churn under the selection (table/lab_revolving.yaml).
+title: Revolving rows
+body:
+  - kind: markdown
+    text: |
+      ## Revolving rows
+
+      About ten rows, and **twice a second one is deleted and a new one inserted**. The
+      population stays the same size; the rows do not. This is the harshest test of selection
+      identity: what should happen to the highlighted row when it no longer exists?
+
+      Try: click a row and watch it — when it goes, the selection should go with it and the
+      label below should say so, rather than silently jumping to whichever row took its place.
+
+  - kind: column
+    frame: true
+    children:
+      - kind: grid
+        name: churn
+        observe: lab_revolving
+        height: 360
+        params:
+          columns:
+            name: { label: Member, pin: true }
+            email: { label: Email, width: 240 }
+            city: { label: City }
+            balance: { label: Balance }
+      - kind: label
+        params: { text: 'Selected: ${ if churn.selected_id == "" { "nothing" } else { churn.selected_id } }', style: muted }

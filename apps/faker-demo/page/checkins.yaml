@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: checkins — the `fifo` effect as a plain grid. Rows arrive at the top
+# once a second and leave again 20–35 s later; the grid animates both without
+# any refresh configured, because the datasource pushes every change.
+title: Check-ins
+body:
+  - kind: label
+    params: { text: "Front desk — members checking in", style: heading, icon: Users }
+  - kind: label
+    params: { text: "A new arrival every second; each row leaves again after 20–35 seconds. Nothing polls: the table pushes.", style: muted }
+  - kind: grid
+    name: checkins
+    observe: checkin
+    params:
+      search: true
+      columns:
+        first_name: { label: First name, pin: true }
+        last_name: { label: Last name }
+        city: { label: Club }
+        email: { label: Email, width: 240 }
+        guest: { label: Guest pass, width: 90 }

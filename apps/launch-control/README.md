@@ -14,7 +14,7 @@ Two halves:
   `total_payload_mass`, landing counts…) are **computed, not stored**. Latency +
   random 503s are injected on purpose. The server is dormant by default; a
   mission simulation is triggered on demand (see below), stamping `last_updated`.
-- `inventory/` — the YAML app: a launches Binder board with relation drilldowns
+- the app root (`datasource/`, `table/`, `page/`, `view/`, `action/`, `menu/`) — the YAML app: a launches Binder board with relation drilldowns
   (provider / rocket / pad → location / payloads / crew / landings → landpad),
   live-refreshing off `last_updated` and never blanking on a flaky 503.
 
@@ -28,7 +28,7 @@ cargo run -p launch-control-server -- seed
 cargo run -p launch-control-server -- serve
 
 # 3. point vantage-ui at the inventory (in the vantage-ui repo)
-cargo run -p vantage-ui -- --config ../vantage-ui-examples/apps/launch-control/inventory
+cargo run -p vantage-ui -- ../vantage-ui-examples/apps/launch-control
 ```
 
 ## Server commands

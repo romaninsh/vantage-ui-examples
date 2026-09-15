@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: capsules — Dragon capsule serial numbers (C201, C108, …).
+datasource: spacex
+title: Capsules
+references:
+  launches: { table: launches, kind: has_many, foreign_key: cap_serial }
+columns:
+  - { name: id, label: Serial, type: string, flags: [id, title, searchable] }
+  - { name: type, type: string }
+  - { name: status, type: string, enum: [active, retired, unknown, destroyed] }
+  - { name: reuse_count, label: Reuses, type: int }
+  - { name: landings, type: int }
+  - { name: original_launch, label: First launch, type: timestamp, date_precision: day }

@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: incident — the self-escalating incident log (see datasource/incidents.yaml
+# for the script that drives it). Writable: the page's Add, Details and row
+# actions change rows in the same in-memory store the script mutates.
+datasource: incidents
+title: Incidents
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: title, type: string, flags: [title, mandatory, searchable] }
+  - { name: club, type: string, flags: [searchable] }
+  - { name: severity, type: string, enum: [low, medium, high, critical], default: low }
+  - { name: status, type: string, enum: [open, acknowledged, resolved], default: open }
+  - { name: age_min, label: Open for (min), type: int }
+  - { name: reported_by, label: Reported by, type: string }

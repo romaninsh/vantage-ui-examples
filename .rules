@@ -22,7 +22,7 @@ If this file drifts from the repo (new app, new MCP tool, renamed driver), fix i
   **`vantage-ui-test`** driver binary, and the shared steps in `src/steps/`. Shared `*.feature` live
   in `test-framework/features/common/` (currently just `startup.feature`). Never copy shared steps
   per app.
-- `apps/<name>/` — one self-contained example: `inventory/` (the YAML catalog), `tests/`
+- `apps/<name>/` — one self-contained example: the YAML catalog folders at its root, `tests/`
   (app-specific `*.feature`), `README.md`, optional `docs/`.
 
 ## The example apps
@@ -33,14 +33,14 @@ If this file drifts from the repo (new app, new MCP tool, renamed driver), fix i
 - **`apps/vantage-github/`** — **self-mutating inventory**: `kind: terminal` actions run `gh` and
   generate/commit inventory files that hot-reload (not ephemeral); uses `chart_type: stacked_area`.
 
-## Inventory layout
+## Catalog layout
 
-`inventory/` holds `datasource/`, `table/`, `page/`, `menu/`, and `action/` YAML (the `action/`
+Each app root holds `datasource/`, `table/`, `page/`, `menu/`, and `action/` YAML (the `action/`
 subdir defines row/page actions — all three apps use it now).
 
 ## Adding an app
 
-1. Create `apps/<name>/inventory/` with the YAML folders above.
+1. Create `apps/<name>/` with the YAML folders above.
 2. Keep it **offline-clean** unless the app is explicitly about a remote source: launching must log no
    ERROR. Prefer a CSV datasource (opens no connection at startup) or a committed, seeded SQLite file.
    A datasource pointing at an unreachable DB logs ERROR and fails the startup test.

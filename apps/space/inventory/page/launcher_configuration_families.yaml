@@ -1,9 +1,0 @@
-# yaml-language-server: $schema=./page-schema-1.json
-
-# Page: launcher_configuration_families — list view.
-
-title: Launcher families
-
-body:
-  - kind: crud
-    table: { script: 'scenery("launcher_configuration_families").sort("name", "asc")' }

@@ -33,8 +33,8 @@ const HOSTED_URL: &str = "https://launch-control.vantage-ui.com";
 
 /// Inventory files carrying the hosted URL that BDD rewrites to localhost.
 const HOSTED_URL_FILES: &[&str] = &[
-    "apps/launch-control/inventory/datasource/local.yaml",
-    "apps/launch-control/inventory/action/submit-launch.yaml",
+    "apps/launch-control/datasource/local.yaml",
+    "apps/launch-control/action/submit-launch.yaml",
 ];
 
 /// Cargo package that builds the bundled server.

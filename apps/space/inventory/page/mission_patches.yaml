@@ -1,9 +1,0 @@
-# yaml-language-server: $schema=./page-schema-1.json
-
-# Page: mission_patches — list view.
-
-title: Mission patches
-
-body:
-  - kind: crud
-    table: { script: 'scenery("mission_patches").sort("priority", "asc")' }

@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+# Menu: left — the PristineGym control panel.
+#
+# Live Ops is the pulse sim (dashboard, its two tables, the check-in stream)
+# and the growing log tree. Incidents is where the sim and the user both write.
+# Lab holds one page per backend personality, each explaining what it shows.
+title: PristineGym
+items:
+  - page: welcome
+    label: Welcome
+    icon: BookOpen
+  - section: Live Ops
+    children:
+      - page: dashboard
+        label: Command Centre
+        icon: LayoutDashboard
+      - page: regions
+        label: Regions
+        icon: Map
+      - page: feed
+        label: Live Feed
+        icon: Network
+      - page: checkins
+        label: Check-ins
+        icon: Users
+      - page: finder
+        label: Log Finder
+        icon: Folder
+  - page: incidents
+    label: Incidents
+    icon: TriangleAlert
+  - section: Lab
+    children:
+      - page: lab-scope
+        label: Scope & wiring
+        icon: Frame
+      - page: lab-flaky
+        label: Flaky backend
+        icon: Bug
+      - page: lab-sluggish
+        label: Sluggish backend
+        icon: Timer
+      - page: lab-search
+        label: Slow search
+        icon: Search
+      - page: lab-revolving
+        label: Revolving rows
+        icon: RefreshCw

@@ -1,9 +1,0 @@
-# yaml-language-server: $schema=./page-schema-1.json
-
-# Page: updates — editorial timeline feed.
-
-title: Updates
-
-body:
-  - kind: crud
-    table: { script: 'scenery("updates").sort("created_on", "desc")' }

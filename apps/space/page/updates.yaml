@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: updates — the editors' change feed, newest first.
+title: Updates
+body:
+  - kind: binder
+    name: updates
+    observe: updates
+    params:
+      columns:
+        comment: { label: Update, pin: true, width: 520 }
+        created_by: { label: By }
+        created_on: { label: When, time_precision: minutes }

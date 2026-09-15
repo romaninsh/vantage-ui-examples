@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: lab_flaky — a backend that fails one read in five, goes away for ten
+# seconds every minute, misreports its total and skews page boundaries.
+datasource: lab
+title: Flaky backend
+faker:
+  count: 1000
+  shape:
+    capabilities: [count, fetch_window, order]
+    latency:
+      window: 100ms..300ms
+      get: 20ms..80ms
+    faults:
+      error_rate: 0.2
+      offline: 10s/60s
+      total_lie: -13
+      boundary_skew: true
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: email, type: string }
+  - { name: city, type: string }
+  - { name: balance, type: float, unit: { currency: "£" } }

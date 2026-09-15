@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: spacecraft_configuration_families — the family tree spacecraft designs
+# belong to.
+title: Spacecraft families
+body:
+  - kind: binder
+    name: spacecraft_configuration_families
+    observe: spacecraft_configuration_families
+    params:
+      columns:
+        name: { label: Family, pin: true, width: 240 }
+        manufacturer.name: { label: Manufacturer }
+        parent.name: { label: Parent }
+        maiden_flight: { label: Maiden flight }

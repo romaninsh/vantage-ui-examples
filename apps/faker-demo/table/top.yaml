@@ -1,0 +1,17 @@
+# Table: top — the derived per-region aggregate (one row per region, updated in
+# place). `visitors` is the current headcount; `vs_baseline` its % deviation
+# from the region's normal for now; `live` flips to "Offline" when telemetry
+# drops. Fed by the shared `gym-traffic` pulse sim's aggregate half.
+datasource: gym-traffic
+title: Regions
+faker:
+  role: aggregate
+# Dashboard figures, reduced over the eleven region rows as they move.
+aggregates:
+  training: { op: sum, column: visitors }
+  offline: { op: count, where: { live: Offline } }
+columns:
+  - { name: region, type: string, flags: [id, title, searchable] }
+  - { name: visitors, type: int }
+  - { name: vs_baseline, type: int }
+  - { name: live, type: string }

@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: payloads — the Launches tab narrows on payload_id.
+title: Payloads
+body:
+  - kind: binder
+    name: payloads
+    observe: payloads
+    params:
+      default_sort: { column: payload_mass_kg, direction: desc }
+      filter: [payload_type, orbit, nationality]
+      columns:
+        id: { label: Payload, pin: true, width: 220 }
+        payload_type:
+          label: Type
+          color: { blue: [Satellite], cyan: ["Dragon 1.0", "Dragon 1.1", "Dragon 2.0"], magenta: ["Crew Dragon"], muted: ["Dragon Boilerplate", Lander] }
+        nationality: { label: Nationality }
+        manufacturer: { label: Manufacturer }
+        customers: { label: Customers, width: 200 }
+        orbit: { label: Orbit }
+        payload_mass_kg: { label: "Mass (kg)" }
+        reused: { label: Reused }

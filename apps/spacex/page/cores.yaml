@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: cores — first-stage boosters; the Launches tab narrows on core_serial.
+title: Cores
+body:
+  - kind: binder
+    name: cores
+    observe: cores
+    params:
+      default_sort: { column: reuse_count, direction: desc }
+      filter: [status, block]
+      columns:
+        id: { label: Serial, pin: true }
+        status:
+          label: Status
+          color: { success: [active], muted: [inactive, retired, unknown], danger: [lost, expended] }
+          labels: { active: Active, inactive: Inactive, retired: Retired, expended: Expended, lost: Lost, unknown: Unknown }
+        block: { label: Block }
+        reuse_count: { label: Reuses }
+        rtls_landings: { label: RTLS, tooltip: "Return-to-launch-site landings / attempts" }
+        rtls_attempts: { label: "RTLS tries" }
+        asds_landings: { label: ASDS, tooltip: "Drone-ship landings / attempts" }
+        asds_attempts: { label: "ASDS tries" }
+        water_landing: { label: Water landing }
+        original_launch: { label: First launch }

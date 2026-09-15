@@ -9,7 +9,7 @@ API-driven low-code admin app.
 This repo serves a dual purpose:
 
 1. **Examples** — each folder under `apps/` is a self-contained Vantage app
-   (a YAML "inventory" catalog) you can open in Vantage UI.
+   (a YAML catalog) you can open in Vantage UI.
 2. **Tests** — a BDD suite that launches the *published* Vantage UI binary
    against each app and drives it over the app's MCP interface, asserting on
    behavior. It runs on GitHub's free public-repo CI minutes.
@@ -21,7 +21,7 @@ agreement and [`todo/`](todo/) for the roadmap.
 ## Layout
 
 ```
-apps/<name>/            # example apps (inventory + tests + docs)
+apps/<name>/            # example apps (YAML catalog + tests + docs)
 test-framework/         # the BDD engine + `vantage-ui-test` driver binary
   features/common/      # scenarios run against every app (e.g. clean startup)
   src/                  # World, MCP client, process launcher, steps, driver
@@ -46,13 +46,13 @@ cargo run -p test-framework -- apps/breg-bakery
 cargo run -p test-framework -- --all
 ```
 
-The driver launches the binary against each app's `inventory/`, waits for the
+The driver launches the binary against each app's folder, waits for the
 catalog to finish loading (observed over MCP), and asserts there are no
 ERROR-level logs.
 
 ## How it works
 
-- Each scenario spawns `vantage-ui <app>/inventory` with `VANTAGE_MCP_ADDR`
+- Each scenario spawns `vantage-ui apps/<name>` with `VANTAGE_MCP_ADDR`
   pointed at a loopback port.
 - The harness connects to the app's MCP server and polls the `list_logs` tool
   until the catalog has settled, then inspects the logs.

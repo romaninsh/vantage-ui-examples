@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: incidents — club incidents that keep happening on their own.
+#
+# The `rhai` effect seeds `count` rows, then runs the script every `interval`.
+# The script only describes change: it re-labels the generated rows on the
+# first tick, ages open incidents, escalates the ones nobody has acknowledged,
+# raises a fresh incident now and then, and retires old resolved ones so the
+# table stays readable. Rows the user adds or edits through the page live in
+# the same store and get the same treatment. `seed` makes every run identical.
+type: faker
+description: Club incidents (synthetic, self-escalating)
+effect: rhai
+count: 12
+interval: 2s
+seed: 42
+rhai: |
+  let clubs = ["London Bridge", "Manchester Piccadilly", "Leeds Central", "Bristol Harbourside",
+               "Glasgow West End", "Cardiff Bay", "Birmingham Mailbox", "Nottingham Lace Market"];
+  let titles = ["Treadmill 4 out of service", "Pool chlorine reading high", "Locker room leak",
+                "Fire door alarm", "Card reader offline", "Sauna over temperature",
+                "Member fainted in spin class", "Water fountain broken", "Lift stuck between floors",
+                "Wet floor, no sign", "Free weights left on floor", "Aircon failed in studio B"];
+  let levels = ["low", "medium", "high", "critical"];
+
+  if tick == 0 {
+    for id in ids() {
+      let status = pick(["open", "open", "open", "acknowledged", "resolved"]);
+      patch(id, #{
+        title: pick(titles),
+        club: pick(clubs),
+        severity: pick(["low", "low", "medium", "medium", "high"]),
+        status: status,
+        age_min: if status == "resolved" { rand_int(60, 600) } else { rand_int(1, 45) },
+        reported_by: fake("name"),
+      });
+    }
+  } else {
+    for id in ids() {
+      let r = get(id);
+      if r.status == "resolved" { continue; }
+      // Two seconds per tick, shown as minutes so the clock visibly moves.
+      let age = r.age_min + 1;
+      let severity = r.severity;
+      // Unacknowledged incidents climb one level every 20 minutes of age.
+      if r.status == "open" && age % 20 == 0 && severity != "critical" {
+        severity = levels[levels.index_of(severity) + 1];
+      }
+      patch(id, #{ age_min: age, severity: severity });
+    }
+    // A new incident roughly every 30 seconds.
+    if tick % 15 == 0 {
+      insert(#{ title: pick(titles), club: pick(clubs), severity: pick(["low", "low", "medium", "high"]),
+                status: "open", age_min: 0, reported_by: fake("name") });
+    }
+    // Retire the oldest resolved incidents once the list gets long.
+    if count() > 20 {
+      for id in ids() {
+        let r = get(id);
+        if r.status == "resolved" && r.age_min > 300 { delete(id); break; }
+      }
+    }
+  }

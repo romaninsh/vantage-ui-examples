@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: launchpads — launch complexes; the Launches tab narrows on site_id.
+title: Launchpads
+body:
+  - kind: binder
+    name: launchpads
+    observe: launchpads
+    params:
+      default_sort: { column: attempted_launches, direction: desc }
+      columns:
+        name: { label: Launch complex, pin: true, width: 240 }
+        status:
+          label: Status
+          color: { success: [active], muted: [inactive, "under construction"], danger: [retired, lost] }
+          labels: { active: Active, inactive: Inactive, "under construction": Under construction, retired: Retired, lost: Lost }
+        attempted_launches: { label: Attempts }
+        successful_launches: { label: Launches }
+        details: { label: Details, width: 420 }
+      row_actions:
+        - label: Copy Wikipedia link
+          icon: Copy
+          copy: wikipedia

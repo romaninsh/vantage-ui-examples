@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: checkins — members arriving at the front desk (synthetic).
+#
+# The `fifo` effect is an append-only stream with expiry: the table starts
+# empty, one row arrives per `interval` (newest first), and each row leaves
+# again after a random `retention_lo..retention_hi`. The population settles
+# around retention ÷ interval rows, so the grid keeps flowing without ever
+# growing unbounded.
+type: faker
+description: Front-desk check-ins, one arrival per second
+effect: fifo
+interval: 1s
+retention_lo: 20s
+retention_hi: 35s

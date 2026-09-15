@@ -1,0 +1,20 @@
+# Page: finder — browse the live log tree like a file manager.
+#
+# ONE element: the finder composite — breadcrumb, folder tree (expanding a
+# folder opens its per-path scenery; collapsing closes it), and the selected
+# folder's listing. The active access-log chunk grows every second, so the
+# listing visibly moves with no refresh configured anywhere: the sim pushes,
+# the lens routes, the finder observes.
+title: Log Finder
+body:
+  - kind: label
+    params: { text: "Log folders — a tree that keeps growing", style: heading, icon: Folder }
+  - kind: label
+    params: { text: "The active access-log chunk grows every second and rolls over; folder sizes are lifted in lazily per row.", style: muted }
+  - kind: finder
+    name: logs
+    observe: folders
+    params:
+      limit: 200
+  - kind: label
+    params: { text: "Selected: ${logs.selected_path} (${logs.selected_kind})" }

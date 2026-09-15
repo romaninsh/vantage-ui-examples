@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: agencies — launch providers and manufacturers. Tabs: Launches
+# (?lsp__id=) and Mission patches (?agency__id=), both narrowed server-side.
+title: Agencies
+body:
+  - kind: binder
+    name: agencies
+    observe: agencies
+    params:
+      columns:
+        name: { label: Agency, pin: true, width: 260 }
+        abbrev: { label: Abbrev }
+        type.name: { label: Type }
+        featured: { label: Featured }
+        founding_year: { label: Founded }
+        total_launch_count: { label: Launches }
+        successful_launches: { label: Successes }
+        failed_launches: { label: Failures }
+        pending_launches: { label: Pending }

@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: lab-flaky — a grid over a backend that injects faults (table/lab_flaky.yaml).
+title: Flaky backend
+body:
+  - kind: markdown
+    text: |
+      ## Flaky backend
+
+      This table answers like an API on a bad day: **one read in five fails**, it goes
+      **offline for ten seconds every minute**, its row count is **off by thirteen**, and every
+      fifth page comes back shifted by a row. The data itself is fine and seeded, so any
+      strangeness you see is the backend, not the schema.
+
+      Try: scroll fast and watch pages recover after a failed fetch; wait for the outage and
+      see the grid hold what it has instead of blanking; compare the reported total with what
+      actually loads.
+
+  - kind: column
+    frame: true
+    children:
+      - kind: grid
+        name: flaky
+        observe: lab_flaky
+        height: 420
+        params:
+          search: true
+          columns:
+            name: { label: Member, pin: true }
+            email: { label: Email, width: 240 }
+            city: { label: City }
+            balance: { label: Balance }
+      - kind: label
+        params: { text: 'Selected: ${ if flaky.selected_id == "" { "nothing" } else { flaky.selected_id } }', style: muted }

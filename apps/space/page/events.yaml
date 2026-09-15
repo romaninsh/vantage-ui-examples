@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: events — every event, or the upcoming/previous endpoint variants.
+# Programs drill into the plain binder.
+title: Events
+body:
+  - kind: select
+    name: range
+    appearance: chips
+    width: 300
+    params: { options: [all, upcoming, previous], default: all }
+  - kind: binder
+    name: events
+    when: 'range.value == "all"'
+    observe: events
+    params:
+      columns:
+        name: { label: Event, pin: true, width: 340 }
+        type.name: { label: Type }
+        date: { label: Date, time_precision: minutes }
+        location: { label: Location }
+        webcast_live: { label: Live }
+  - kind: binder
+    name: events_range
+    when: 'range.value != "all"'
+    observe: { script: 'scenery("events_" + range.value)' }
+    params:
+      columns:
+        name: { label: Event, pin: true, width: 340 }
+        type.name: { label: Type }
+        date: { label: Date, time_precision: minutes }
+        location: { label: Location }
+        webcast_live: { label: Live }

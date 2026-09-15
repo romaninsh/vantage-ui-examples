@@ -1,6 +1,0 @@
-# Page: announce — placeholder (not implemented yet; framework grammar).
-title: Send Announcement
-body:
-  - kind: label
-    params:
-      text: "Send Announcement — coming soon"

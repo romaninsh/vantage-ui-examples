@@ -1,0 +1,108 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: dashboard — the Command Centre over the `gym-traffic` pulse sim.
+#
+# Nothing here polls: the sim pushes every change, so the tiles, the donut,
+# the arrivals bars and the feed all move on their own. Stats read the
+# aggregates declared on table/top.yaml; the donut and its legend share one
+# sorted observation and the default palette, so slice N and row N match.
+title: Command Centre
+body:
+  - kind: label
+    params: { text: "${app.brand} — members training right now", style: heading, icon: LayoutDashboard }
+  - kind: label
+    params: { text: "${profile.motd}", style: muted }
+
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: top#training
+            params: { label: "Members training", icon: Activity, color: green }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: top
+            params: { label: "Regions reporting", icon: Map, color: blue }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            name: offline
+            observe: top#offline
+            params: { label: "Regions offline", icon: TriangleAlert, color: danger }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: checkin
+            params: { label: "At the front desk", icon: Users, color: cyan }
+
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Load by region", style: heading, icon: ChartPie }
+          - kind: row
+            children:
+              - kind: column
+                width: 280
+                children:
+                  - kind: chart
+                    observe: { script: 'scenery("top").sort("visitors", "desc")' }
+                    height: 280
+                    params: { x: region, y: visitors, chart_type: pie, label: "" }
+              - kind: list
+                observe: { script: 'scenery("top").sort("visitors", "desc")' }
+                height: 280
+                params:
+                  palette: {}
+                  text: '${ region }'
+                  label: '${ if live == "Live" { #{ text: visitors.to_string() + "  ·  " + (if vs_baseline >= 0 { "+" } else { "" }) + vs_baseline.to_string() + "%", color: if vs_baseline >= 0 { "green" } else { "red" } } } else { #{ text: "OFFLINE", color: "danger" } } }'
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Arrivals per minute", style: heading, icon: Timer }
+          - kind: label
+            params: { text: "The current minute's bar grows as members arrive", style: muted }
+          - kind: chart
+            # tail() follows the end of the table: the last 10 minute buckets,
+            # sliding as new minutes append (limit() would freeze on the oldest).
+            observe: { script: 'scenery("minutes").tail(10)' }
+            height: 280
+            params: { x: minute, y: attendees, chart_type: bar, value_labels: true, label: "" }
+
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Incoming changes", style: heading, icon: Network }
+          - kind: label
+            params: { text: "Every headcount movement, newest first; rows expire after a few seconds", style: muted }
+          - kind: list
+            observe: { script: 'scenery("updates").tail(15)' }
+            height: 300
+            params:
+              text: '${ updated + "   " + region }'
+              label: '${ if delta >= 0 { #{ text: "+" + delta.to_string(), color: "green" } } else { #{ text: delta.to_string(), color: "red" } } }'
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Open incidents", style: heading, icon: TriangleAlert }
+          - kind: label
+            params: { text: "Unacknowledged incidents escalate on their own — see the Incidents page", style: muted }
+          - kind: list
+            observe: { script: 'scenery("incident").sort("age_min", "desc").limit(8)' }
+            height: 300
+            params:
+              text: '${ title + "  ·  " + club }'
+              sub: '${ "open for " + age_min.to_string() + " min" }'
+              label: '${ #{ text: severity, color: if severity == "critical" { "danger" } else if severity == "high" { "red" } else if severity == "medium" { "warning" } else { "muted" } } }'

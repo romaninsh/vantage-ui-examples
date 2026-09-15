@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: welcome — the app's README, rendered in place.
+title: Welcome
+body:
+  - kind: markdown
+    width: 820
+    text: !include ../README.md

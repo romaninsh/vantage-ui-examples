@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: landpads — ground and drone-ship landing platforms. No `find:` on
+# this root field. Landing counts arrive as strings on the wire.
+datasource: spacex
+title: Landpads
+graphql:
+  filter: false
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: full_name, label: Name, type: string, flags: [title, searchable] }
+  - { name: landing_type, label: Type, type: string, enum: [ASDS, RTLS] }
+  - { name: status, type: string, enum: [active, retired, "under construction", lost] }
+  - { name: attempted_landings, label: Attempts, type: string }
+  - { name: successful_landings, label: Landings, type: string }
+  - { name: wikipedia, type: string, flags: [hidden] }

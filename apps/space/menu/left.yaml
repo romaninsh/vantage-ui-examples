@@ -1,0 +1,107 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+# Menu: left — grouped by domain. Each section opens on its own (an
+# accordion); nested sections show the same behaviour one level down.
+# With `menu: { placement: native }` in application.yaml the same tree
+# becomes the macOS menu bar: `title:` names the menu that holds the
+# loose links, each section is a menu, nested sections are submenus.
+title: Space
+items:
+  - page: welcome
+    label: Welcome
+    icon: BookOpen
+  - section: Flights
+    children:
+      - page: launches
+        label: Launches
+        icon: Rocket
+      - page: events
+        label: Events
+        icon: Calendar
+      - page: payloads
+        label: Payloads
+        icon: Package
+      - page: payload_flights
+        label: Payload flights
+        icon: Package
+      - page: mission_patches
+        label: Mission patches
+        icon: Star
+      - page: updates
+        label: Updates
+        icon: Bell
+  - section: Hardware
+    children:
+      - section: Launchers
+        children:
+          - page: launcher_configurations
+            label: Launcher configurations
+            icon: Cpu
+          - page: launcher_configuration_families
+            label: Launcher families
+            icon: Network
+          - page: launchers
+            label: Boosters
+            icon: HardDrive
+          - page: landings
+            label: Landings
+            icon: ArrowDown
+      - section: Spacecraft
+        children:
+          - page: spacecraft_configurations
+            label: Spacecraft configurations
+            icon: Bot
+          - page: spacecraft_configuration_families
+            label: Spacecraft families
+            icon: Network
+          - page: spacecraft
+            label: Spacecraft
+            icon: Bot
+          - page: spacecraft_flights
+            label: Spacecraft flights
+            icon: ArrowUp
+  - section: Providers
+    children:
+      - page: agencies
+        label: Agencies
+        icon: Building2
+      - page: astronauts
+        label: Astronauts
+        icon: User
+      - page: programs
+        label: Programs
+        icon: Target
+  - section: Places
+    children:
+      - page: celestial_bodies
+        label: Celestial bodies
+        icon: Globe
+      - page: locations
+        label: Locations
+        icon: Map
+      - page: pads
+        label: Pads
+        icon: MapPin
+      - section: Stations
+        children:
+          - page: space_stations
+            label: Space stations
+            icon: Moon
+          - page: docking_events
+            label: Docking events
+            icon: Replace
+          - page: expeditions
+            label: Expeditions
+            icon: Users
+          - page: spacewalks
+            label: Spacewalks
+            icon: ExternalLink
+  - section: Starship
+    children:
+      - page: starship_vehicles
+        label: Starship fleet
+        icon: Rocket
+  - section: Reference
+    children:
+      - page: reference
+        label: Reference data
+        icon: Bookmark

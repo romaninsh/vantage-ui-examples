@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: lab-search — server-side search that answers late and out of order (table/lab_search.yaml).
+title: Slow search
+body:
+  - kind: markdown
+    text: |
+      ## Slow search
+
+      **50,000 rows.** Windows load fast, but the backend's search adds **0.2–1.5 seconds** to
+      every query, and the delay is random — so if you type quickly, the answer to an earlier,
+      shorter query can arrive *after* the answer to the one you actually meant.
+
+      Try: type a name fast, letter by letter, and check that the rows you end up with match
+      the text in the box, not a stale reply. Then clear the box and watch the full list return.
+
+  - kind: column
+    frame: true
+    children:
+      - kind: grid
+        name: members
+        observe: lab_search
+        height: 460
+        params:
+          search: true
+          columns:
+            first_name: { label: First name, pin: true }
+            last_name: { label: Last name }
+            country: { label: Country }
+            email: { label: Email, width: 240 }

@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: ships — recovery fleet; the Launches tab narrows on `ship`.
+title: Ships
+body:
+  - kind: binder
+    name: ships
+    observe: ships
+    params:
+      default_sort: { column: successful_landings, direction: desc }
+      filter: [type, active, home_port]
+      columns:
+        name: { label: Ship, pin: true, width: 200 }
+        type: { label: Type }
+        home_port: { label: Home port }
+        active:
+          label: Status
+          color: { success: ["true"], muted: ["false"] }
+          labels: { "true": Active, "false": Retired }
+        year_built: { label: Built }
+        model: { label: Model }
+        successful_landings: { label: Landings }
+        attempted_landings: { label: Attempts }
+      row_actions:
+        - label: Copy ship page link
+          icon: Copy
+          copy: url
