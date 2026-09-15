@@ -110,11 +110,16 @@ body:
                     value: '${ if record.phase != "ascent" { record.met_seconds } else { round(record.met_seconds.to_float() + secs_since(record.last_updated) * 15.0) } }'
                     unit: s
                   # Seconds since the last server telemetry — ≈1s when healthy,
-                  # climbing if the server lags behind the 30hz client.
-                  - kind: stat
-                    label: "Latency"
-                    value: "${ round(secs_since(record.last_updated), 1) }"
-                    unit: s
+                  # climbing if the server lags behind the client. Only
+                  # meaningful while samples are still arriving; in orbit the
+                  # last sample is minutes or months old.
+                  - kind: when
+                    condition: 'record.phase == "ascent"'
+                    children:
+                      - kind: stat
+                        label: "Latency"
+                        value: "${ round(secs_since(record.last_updated), 1) }"
+                        unit: s
               - kind: progress
                 label: "Altitude to orbit (200 km)"
                 value: '${ if record.phase != "ascent" { record.altitude_km } else { record.altitude_km + record.vertical_speed_ms / 1000.0 * secs_since(record.last_updated) * 15.0 } }'

@@ -93,17 +93,15 @@ async fn list(
     let limit = parse(&params, "limit").unwrap_or(50);
     let offset = parse(&params, "offset").unwrap_or(0);
 
-    let mut vista = vista_for(&state.db, &table)?;
+    let mut vista = vista_for(&state.db, &table, &params)?;
 
     for (key, value) in &params {
-        if is_reserved(key) {
+        if is_reserved(key) || key == "has_rockets" {
             continue;
         }
-        // `add_condition_eq` resolves both stored columns and computed
-        // (`with_expression`) columns such as `has_rockets`, and errors
-        // harmlessly for unknown names — so we no longer pre-guard on
-        // `get_column` (which only knows stored columns and would skip
-        // expression filters).
+        // `add_condition_eq` resolves stored columns and errors harmlessly
+        // for unknown names. Computed (`with_expression`) columns are not
+        // resolvable this way; `has_rockets` is handled in `vista_for`.
         let _ = vista.add_condition_eq(to_column(key), Cbor::Text(value.clone()));
     }
     if let Some(text) = params.get("search") {
@@ -135,11 +133,23 @@ async fn list(
 }
 
 /// Build a Vista for a table name. One `match`; every arm yields a `Vista`.
-fn vista_for(db: &Db, table: &str) -> Result<Vista, ApiError> {
+/// `params` is consulted for filters that only the table can apply: the
+/// computed `has_rockets` column on agencies.
+fn vista_for(
+    db: &Db,
+    table: &str,
+    params: &HashMap<String, String>,
+) -> Result<Vista, ApiError> {
     let f = db.vista_factory();
     let built = match table {
         "launches" => f.from_table(Launch::table(db.clone())),
-        "agencies" => f.from_table(Agency::table(db.clone())),
+        "agencies" => {
+            let mut agencies = Agency::table(db.clone());
+            if let Some(has) = params.get("has_rockets") {
+                agencies = agencies.with_rocket_makers(has == "true");
+            }
+            f.from_table(agencies)
+        }
         "launcher_configurations" => f.from_table(LauncherConfiguration::table(db.clone())),
         "launchers" => f.from_table(Launcher::table(db.clone())),
         "pads" => f.from_table(Pad::table(db.clone())),

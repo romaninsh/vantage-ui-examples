@@ -22,6 +22,7 @@ mod payload;
 mod payload_flight;
 
 pub use agency::Agency;
+pub(crate) use agency::AgencyTableExt;
 pub use astronaut::Astronaut;
 pub use landing::Landing;
 pub use landpad::Landpad;
