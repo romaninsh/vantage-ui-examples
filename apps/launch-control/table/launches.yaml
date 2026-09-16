@@ -15,9 +15,9 @@
 
 datasource: local
 title: Launches
-# The server returns insertion order and ignores `?ordering=` — ordering
-# comes from the page's `default_sort`, imposed client-side over the Dio
-# cache after every load/refresh (the REST vista reports `can_order: false`).
+# The page's `default_sort` is sent as `?ordering=-last_updated` (the
+# datasource declares the server's sort param), so every window the grid
+# fetches is already in that order.
 table: "launches/?mode=detailed"
 
 columns:

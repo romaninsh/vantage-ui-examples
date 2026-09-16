@@ -21,6 +21,11 @@ pagination:
   page_param: offset
   limit_param: limit
   offset_based: true
+# The server sorts on `?ordering=column` (`-column` descending), so a grid's
+# sort goes into the request and the first page really is the top of the
+# sorted set — a new launch shows up at the top on the next refresh.
+ordering:
+  param: ordering
 filter_strategy: query
 # The server injects latency + random 503s; diorama's non-blanking refresh keeps
 # grids stable through them. Logging each request is handy while building.
