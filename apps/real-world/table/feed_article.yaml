@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# The RealWorld article feed, newest first, 20 articles (the API's default page).
+# args: reader — a user id ("user:jake"): only authors that user follows; "" = global feed
+#       tag    — a tag name: only articles carrying it; "" = any tag
+datasource: surrealdb
+title: Feed article
+columns:
+  id: { type: string, flags: [id] }
+  slug: { type: string }
+  title: { type: string, flags: [title] }
+  description: { type: string }
+  author_name: { type: string }
+  published: { type: string }
+  tags: { type: string }
+  favorites: { type: int }
+  comments: { type: int }
+  created_at: { type: timestamp }
+surreal:
+  # language=rhai
+  rhai: |
+    let reader = args.get("reader") ?? "";
+    let tag = args.get("tag") ?? "";
+    select()
+        .from("article")
+        .field("id")
+        .field("slug")
+        .field("title")
+        .field("description")
+        .expression(expr("author.username").alias("author_name"))
+        .expression(expr("fn::ago(created_at)").alias("published"))
+        .expression(expr("array::join(array::sort((SELECT VALUE tag.name FROM article_tag WHERE article = $parent.id)), ' · ')").alias("tags"))
+        .expression(expr("(SELECT VALUE count() FROM favorite WHERE article = $parent.id GROUP ALL)[0] ?? 0").alias("favorites"))
+        .expression(expr("(SELECT VALUE count() FROM comment WHERE article = $parent.id GROUP ALL)[0] ?? 0").alias("comments"))
+        .field("created_at")
+        .where(expr("({} = '' OR <string>author INSIDE (SELECT VALUE <string>author FROM follow WHERE <string>follower = {}))", [reader, reader]))
+        .where(expr("({} = '' OR id INSIDE (SELECT VALUE article FROM article_tag WHERE tag.name = {}))", [tag, tag]))
+        .order_by(ident("created_at"), "desc")
+        .limit(20, 0)

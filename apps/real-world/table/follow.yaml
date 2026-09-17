@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Pivot: `follower` follows `author` (Laravel `author_follower`).
+datasource: surrealdb
+title: Follow
+columns:
+  id: { type: string, flags: [id] }
+  follower: { type: string, flags: [mandatory], references: { table: user, kind: has_one, name: follower } }
+  follower.username: { type: string, label: Follower, flags: [title] }
+  author: { type: string, flags: [mandatory], references: { table: user, kind: has_one, name: author } }
+  author.username: { type: string, label: Follows }
+  since_ago: { type: string, label: Since, expr: 'expr("fn::ago(created_at)")' }
+  created_at: { type: timestamp, label: Following since, time_precision: minutes }

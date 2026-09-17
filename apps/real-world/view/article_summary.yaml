@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=./view-schema-1.json
+title: Summary
+table: article
+body:
+  - kind: row
+    gap: 8
+    children:
+      - kind: label
+        text: "${record.title}"
+        style: heading
+      - kind: badge
+        when: 'record.freshness == "new"'
+        text: "New"
+        color: { success: [New] }
+      - kind: badge
+        when: 'record.freshness == "edited"'
+        text: "Edited"
+        color: { yellow: [Edited] }
+  - kind: label
+    text: "by ${record.author_name} · published ${date_relative(record.created_at)}"
+    secondary: "${date_human(record.created_at)}"
+    style: muted
+  - kind: label
+    text: "${record.description}"
+  - kind: when
+    condition: 'record.tags != ""'
+    children:
+      - kind: label
+        text: "Tags: ${record.tags}"
+        style: muted
+  - kind: row
+    gap: 24
+    children:
+      - kind: stat
+        label: "Favorites"
+        value: "${record.favorites_count}"
+      - kind: stat
+        label: "Comments"
+        value: "${record.comments_count}"
+      - kind: stat
+        label: "Last edited"
+        value: "${record.updated_at}"
+        format: datetime
+  - kind: separator
+    label: "Comments"
+  - kind: list
+    ref: comments
+    height: 28
+    empty: "No comments yet"
+    item:
+      - kind: label
+        text: "${row.author_name}: ${row.body}"
+        secondary: "${row.posted_ago}"
+  - kind: label
+    text: "/articles/${record.slug}"
+    copy: "${record.slug}"
+    style: mono

@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./view-schema-1.json
+title: Summary
+table: comment
+body:
+  - kind: row
+    gap: 8
+    children:
+      - kind: label
+        text: "${record.author_name}"
+        secondary: "on “${record.article_title}”"
+        style: heading
+      - kind: badge
+        when: 'record.reply_kind != ""'
+        text: "Author reply"
+        color: { cyan: [Author reply] }
+  - kind: label
+    text: "${record.body}"
+  - kind: stat
+    label: "Posted"
+    value: "${record.created_at}"
+    format: datetime

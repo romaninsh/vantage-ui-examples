@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Users who never confirmed their email address.
+datasource: surrealdb
+title: Unverified user
+columns:
+  id: { type: string, flags: [id] }
+  username: { type: string, flags: [title] }
+  email: { type: string }
+  created_at: { type: timestamp }
+surreal:
+  # language=rhai
+  rhai: |
+    select()
+        .from("user")
+        .field("id")
+        .field("username")
+        .field("email")
+        .field("created_at")
+        .where(expr("email_verified_at = NONE"))
+        .order_by(ident("created_at"), "desc")

@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+title: Conduit admin
+items:
+  - page: dashboard
+    label: Dashboard
+    icon: LayoutDashboard
+  - section: Content
+    children:
+      - page: feed
+        label: Feed
+        icon: LayoutList
+      - page: articles
+        label: Articles
+        icon: Newspaper
+      - page: comments
+        label: Comments
+        icon: MessageSquare
+      - page: tags
+        label: Tags
+        icon: Tag
+      - page: article_tags
+        label: Article tags
+        icon: Tags
+  - section: Community
+    children:
+      - page: users
+        label: Users
+        icon: Users
+      - page: follows
+        label: Follows
+        icon: UserPlus
+      - page: favorites
+        label: Favorites
+        icon: Heart

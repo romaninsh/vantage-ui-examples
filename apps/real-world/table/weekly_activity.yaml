@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Articles and comments per week for the last 16 weeks, zero-filled:
+# rows { week: "2026-09-10", articles: 1, comments: 8 }.
+datasource: surrealdb
+title: Weekly activity
+columns:
+  id: { type: string, flags: [id] }
+  week: { type: string, flags: [title] }
+  articles: { type: int }
+  comments: { type: int }
+surreal:
+  # language=rhai
+  rhai: |
+    select()
+        .from(
+            select()
+                .field("bucket")
+                .expression(expr("time::format(bucket, '%Y-%m-%d')").alias("week"))
+                .from(expr("array::range(0, 16).map(|$i| { bucket: time::floor(time::now(), 1w) - duration::from_weeks(15 - $i) })"))
+                .subquery())
+        .expression(fx("type::record", [expr("'weekly_activity'"), ident("week")]).alias("id"))
+        .field("week")
+        .expression(expr("(SELECT VALUE count() FROM article WHERE created_at >= $parent.bucket AND created_at < $parent.bucket + 1w GROUP ALL)[0] ?? 0").alias("articles"))
+        .expression(expr("(SELECT VALUE count() FROM comment WHERE created_at >= $parent.bucket AND created_at < $parent.bucket + 1w GROUP ALL)[0] ?? 0").alias("comments"))
+        .order_by(ident("week"), "asc")

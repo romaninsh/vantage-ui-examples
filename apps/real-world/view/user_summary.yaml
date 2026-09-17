@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=./view-schema-1.json
+title: Profile
+table: user
+body:
+  - kind: row
+    gap: 8
+    children:
+      - kind: label
+        text: "${record.username}"
+        secondary: "${record.email}"
+        style: heading
+        copy: "${record.email}"
+      - kind: badge
+        text: '${ if record.role == "author" { "Author" } else { "Reader" } }'
+        color: { cyan: [Author], muted: [Reader] }
+      - kind: badge
+        text: '${ if record.email_status == "verified" { "Email verified" } else { "Email not verified" } }'
+        color: { success: [Email verified], warning: [Email not verified] }
+  - kind: when
+    condition: 'record.bio != ""'
+    children:
+      - kind: label
+        text: "${record.bio}"
+        style: muted
+  - kind: row
+    gap: 24
+    children:
+      - kind: stat
+        label: "Articles"
+        value: "${record.article_count}"
+      - kind: stat
+        label: "Comments"
+        value: "${record.comment_count}"
+      - kind: stat
+        label: "Favorites given"
+        value: "${record.favorite_count}"
+      - kind: stat
+        label: "Followers"
+        value: "${record.follower_count}"
+      - kind: stat
+        label: "Following"
+        value: "${record.following_count}"
+  - kind: row
+    gap: 24
+    children:
+      - kind: stat
+        label: "Joined"
+        value: "${record.created_at}"
+        format: datetime
+      - kind: stat
+        label: "Last profile change"
+        value: "${record.updated_at}"
+        format: datetime
+  - kind: separator
+    label: "Latest articles"
+  - kind: list
+    ref: articles
+    height: 28
+    empty: "Hasn't written anything yet"
+    item:
+      - kind: label
+        text: "${row.title}"
+        secondary: "${row.published_ago}"

@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Pivot: a user favorited an article (Laravel `article_favorite`).
+datasource: surrealdb
+title: Favorite
+columns:
+  id: { type: string, flags: [id] }
+  user: { type: string, flags: [mandatory], references: user }
+  user.username: { type: string, label: User, flags: [title] }
+  article: { type: string, flags: [mandatory], references: article }
+  article.title: { type: string, label: Article }
+  favorited_ago: { type: string, label: Favorited, expr: 'expr("fn::ago(created_at)")' }
+  created_at: { type: timestamp, label: Favorited on, time_precision: minutes }

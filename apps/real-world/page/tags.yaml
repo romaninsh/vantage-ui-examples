@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Tags
+body:
+  - kind: binder
+    name: tags
+    observe: tag
+    params:
+      form: tag
+      default_sort: { column: name, direction: asc }
+      columns:
+        name: { label: Tag, pin: true, width: 240 }
+        usage:
+          color: { magenta: [popular], warning: [unused] }
+          labels: { popular: Popular, unused: Unused }
+        article_count: { label: Articles, color: { muted: ["0"] } }
+        created_at: { label: Created }

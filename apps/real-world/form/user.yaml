@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./form-schema-1.json
+title: User
+table: user
+max_columns: 2
+body:
+  - username
+  - email
+  - { name: image, label: Avatar URL, span: full }
+  - { name: bio, multiline: 4, span: full }
+  - { name: email_verified_at, label: Email verified, readonly: true }
+  - kind: row
+    label: Joined / updated
+    body:
+      - { name: created_at, readonly: true }
+      - { name: updated_at, readonly: true }

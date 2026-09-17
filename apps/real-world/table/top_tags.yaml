@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Most-used tags: rows { tag: "css", articles: 7, share_pct: 12.5 } (bar length: share of the most-used tag).
+datasource: surrealdb
+title: Top tags
+columns:
+  id: { type: string, flags: [id] }
+  tag: { type: string, flags: [title] }
+  articles: { type: int }
+  share_pct: { type: float }
+surreal:
+  # language=rhai
+  rhai: |
+    select()
+        .from(
+            select()
+                .expression(expr("tag.name").alias("tag"))
+                .expression(expr("count()").alias("articles"))
+                .from("article_tag")
+                .group_by(ident("tag"))
+                .subquery())
+        .expression(fx("type::record", [expr("'top_tags'"), ident("tag")]).alias("id"))
+        .field("tag")
+        .field("articles")
+        .expression(expr("math::round(articles * 100.0 / math::max((SELECT count() AS c, tag FROM article_tag GROUP BY tag).c))").alias("share_pct"))
+        .order_by(ident("articles"), "desc")
+        .order_by(ident("tag"), "asc")
+        .limit(8, 0)

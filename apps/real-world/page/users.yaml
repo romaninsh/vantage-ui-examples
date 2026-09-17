@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Users
+body:
+  - kind: binder
+    name: users
+    observe: user
+    params:
+      form: user
+      views: [user_summary]
+      default_sort: { column: created_at, direction: desc }
+      filter: ["~username", "~email", "~bio"]
+      columns:
+        username: { label: User, pin: true, width: 260 }
+        role:
+          color: { cyan: [author], muted: [reader] }
+          labels: { author: Author, reader: Reader }
+        email_status:
+          color: { success: [verified], warning: [unverified] }
+          labels: { verified: Verified, unverified: Unverified }
+        email: { label: Email, width: 240 }
+        article_count: { label: Articles, color: { muted: ["0"] }, tooltip: "Articles this user wrote" }
+        comment_count: { label: Comments, color: { muted: ["0"] }, tooltip: "Comments this user posted" }
+        follower_count: { label: Followers, color: { muted: ["0"] }, tooltip: "Users following this user" }
+        following_count: { label: Following, color: { muted: ["0"] }, tooltip: "Users this user follows" }
+        joined_ago: { label: Joined, tooltip: "When the account was created" }
+      row_actions:
+        - label: "Mark email verified"
+          icon: BadgeCheck
+          when: 'row.email_status == "unverified"'
+          action: |
+            row.email_verified_at = now();
+            row.save();
+        - label: "Mark email unverified"
+          icon: CircleX
+          when: 'row.email_status == "verified"'
+          action: |
+            row.email_verified_at = ();
+            row.save();
+        - label: "Set password…"
+          icon: Key
+          action: |
+            let r = actions.set_password(row);
+            row.password = r.password;
+            row.save();
+        - label: "Copy email"
+          icon: Copy
+          copy: email

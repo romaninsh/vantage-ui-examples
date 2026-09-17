@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Pivot: which tags an article carries (Laravel `article_tag`).
+datasource: surrealdb
+title: Article tag
+columns:
+  id: { type: string, flags: [id] }
+  article: { type: string, flags: [mandatory], references: article }
+  article.title: { type: string, label: Article, flags: [title] }
+  tag: { type: string, flags: [mandatory], references: tag }
+  tag.name: { type: string, label: Tag }

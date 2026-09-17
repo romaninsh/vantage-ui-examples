@@ -1,0 +1,4 @@
+type: surreal-db
+url: cbor://root:root@surrealdb:8000
+namespace: app
+database: app

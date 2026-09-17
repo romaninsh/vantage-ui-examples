@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# The Conduit home feed as a reader sees it: "Global feed" or one user's follows, by tag.
+title: Feed
+body:
+  - kind: row
+    children:
+      - kind: label
+        params: { text: "Feed", style: heading, icon: LayoutList }
+      - kind: column
+        width: 260
+        children:
+          - kind: select
+            name: reader
+            observe: user
+            params: { label: "Reader", all_label: "Global feed", placeholder: "Global feed" }
+      - kind: column
+        width: 220
+        children:
+          - kind: select
+            name: tag
+            observe: tag
+            params: { label: "Tag", column: name, all_label: "All tags" }
+      - kind: column
+        width: 160
+        children:
+          - kind: stat
+            name: feed_count
+            observe:
+              script: 'let r = reader.value; if r == "Global feed" { r = "" } let t = tag.value; if t == "All tags" { t = "" } scenery("feed_article").args(#{ reader: r, tag: t })'
+            params: { label: "Articles shown", icon: Newspaper, color: cyan }
+
+  - kind: label
+    when: 'feed_count.value == 0'
+    params: { text: "No articles here yet. This reader follows no authors, or none of them wrote about this tag.", style: muted, icon: Info }
+
+  - kind: list
+    observe:
+      script: 'let r = reader.value; if r == "Global feed" { r = "" } let t = tag.value; if t == "All tags" { t = "" } scenery("feed_article").args(#{ reader: r, tag: t })'
+    item:
+      - kind: column
+        frame: true
+        children:
+          - kind: row
+            children:
+              - kind: label
+                params: { text: "${row.author_name}", style: muted, icon: User }
+              - kind: label
+                params: { text: "${row.published}", style: muted, icon: Clock }
+              - kind: label
+                params: { text: "${row.favorites} favorites · ${row.comments} comments", style: muted, icon: Heart }
+          - kind: label
+            params: { text: "${row.title}", style: heading }
+          - kind: label
+            params: { text: "${row.description}" }
+          - kind: label
+            when: 'row.tags != ""'
+            params: { text: "${row.tags}", style: muted, icon: Tags }
+          - kind: list
+            observe: { script: 'scenery("comment").where("article.slug", row.slug).sort("created_at", "asc").limit(10)' }
+            item:
+              - kind: label
+                params: { text: "${row.author_name}: ${row.body}", style: muted, icon: MessageSquare }

@@ -1,0 +1,112 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Dashboard
+body:
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: article
+            params: { label: Articles, icon: Newspaper, color: blue, delta: { column: created_at, months: 1 } }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: comment
+            params: { label: Comments, icon: MessageSquare, color: cyan, delta: { column: created_at, months: 1 } }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: user
+            params: { label: Users, icon: Users, color: green, delta: { column: created_at, months: 1 } }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: favorite
+            params: { label: Favorites, icon: Heart, color: magenta, delta: { column: created_at, months: 1 } }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: unverified_user
+            params: { label: "Unverified emails", icon: TriangleAlert, color: yellow, refresh_interval: 30 }
+
+  - kind: row
+    height: 300
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Articles and comments per week", style: heading, icon: ChartBar }
+          - kind: chart
+            observe: weekly_activity
+            height: 240
+            params:
+              label: ""
+              x: week
+              chart_type: stacked_bar
+              series: [articles, comments]
+              x_label: "x.sub_string(5, 5)"
+              palette: { colors: ["#24837B", "#BC5215"] }
+              refresh_interval: 60
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Top tags", style: heading, icon: Tags }
+          - kind: row
+            children:
+              - kind: column
+                width: 240
+                children:
+                  - kind: chart
+                    observe: { script: 'scenery("top_tags").sort("articles", "desc")' }
+                    height: 240
+                    params:
+                      x: tag
+                      y: articles
+                      chart_type: pie
+                      label: ""
+                      refresh_interval: 60
+                      palette: { colors: ["#205EA6", "#24837B", "#5E409D", "#A02F6F", "#66800B", "#AD8301", "#BC5215", "#AF3029"], order: grouped }
+              - kind: list
+                observe: { script: 'scenery("top_tags").sort("articles", "desc")' }
+                height: 240
+                params:
+                  text: '${ tag }'
+                  label: '${ articles.to_string() + " articles" }'
+                  bar: share_pct
+                  refresh_interval: 60
+                  palette: { colors: ["#205EA6", "#24837B", "#5E409D", "#A02F6F", "#66800B", "#AD8301", "#BC5215", "#AF3029"], order: grouped }
+
+  - kind: row
+    height: 320
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Latest comments", style: heading, icon: MessageSquare }
+          - kind: list
+            observe: { script: 'scenery("comment").sort("created_at", "desc").limit(8)' }
+            params:
+              text: '${ body }'
+              sub: '${ author_name + " on " + article_title }'
+              label: '${ #{ text: posted_ago, color: if posted_ago.contains("hour") || posted_ago.contains("minute") || posted_ago == "just now" { "success" } else { "muted" } } }'
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Top authors", style: heading, icon: Trophy }
+          - kind: list
+            observe: { script: 'scenery("author_stats").sort("favorites", "desc")' }
+            params:
+              text: '${ username }'
+              sub: '${ articles.to_string() + " articles · " + followers.to_string() + " followers" }'
+              label: '${ #{ text: favorites.to_string() + " ♥", color: if favorites >= 10 { "magenta" } else { "muted" } } }'
+              bar: bar_pct
+              refresh_interval: 60

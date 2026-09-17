@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: surrealdb
+title: User
+columns:
+  id: { type: string, flags: [id] }
+  username: { type: string, flags: [mandatory, title, searchable] }
+  # Pills beside the username.
+  role: { type: string, label: Role, flags: [label], enum: [author, reader], expr: 'expr("IF (SELECT VALUE count() FROM article WHERE author = $parent.id GROUP ALL)[0] > 0 THEN ''author'' ELSE ''reader'' END")' }
+  email_status: { type: string, label: Email, flags: [label], enum: [verified, unverified], expr: 'expr("IF email_verified_at != NONE THEN ''verified'' ELSE ''unverified'' END")' }
+  email: { type: string, flags: [mandatory, searchable] }
+  bio: { type: string }
+  image: { type: string, label: Avatar URL }
+  # bcrypt hash; plain text written here is hashed by the database.
+  password: { type: string, flags: [hidden] }
+  email_verified_at: { type: timestamp, label: Email verified, time_precision: minutes }
+  article_count: { type: int, label: Articles, expr: 'expr("(SELECT VALUE count() FROM article WHERE author = $parent.id GROUP ALL)[0] ?? 0")' }
+  follower_count: { type: int, label: Followers, expr: 'expr("(SELECT VALUE count() FROM follow WHERE author = $parent.id GROUP ALL)[0] ?? 0")' }
+  following_count: { type: int, label: Following, expr: 'expr("(SELECT VALUE count() FROM follow WHERE follower = $parent.id GROUP ALL)[0] ?? 0")' }
+  favorite_count: { type: int, label: Favorites, expr: 'expr("(SELECT VALUE count() FROM favorite WHERE user = $parent.id GROUP ALL)[0] ?? 0")' }
+  comment_count: { type: int, label: Comments, expr: 'expr("(SELECT VALUE count() FROM comment WHERE author = $parent.id GROUP ALL)[0] ?? 0")' }
+  joined_ago: { type: string, label: Joined, expr: 'expr("fn::ago(created_at)")' }
+  created_at: { type: timestamp, label: Joined on, date_precision: day }
+  updated_at: { type: timestamp, label: Updated, time_precision: minutes }
+references:
+  articles: { table: article, kind: has_many, foreign_key: author }
+  comments: { table: comment, kind: has_many, foreign_key: author }
+  favorites: { table: favorite, kind: has_many, foreign_key: user }
+  followers: { table: follow, kind: has_many, foreign_key: author }
+  following: { table: follow, kind: has_many, foreign_key: follower }

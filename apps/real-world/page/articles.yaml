@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Articles
+body:
+  - kind: binder
+    name: articles
+    observe: article
+    params:
+      form: article
+      views: [article_summary]
+      default_sort: { column: created_at, direction: desc }
+      filter: [author, "~title", "~description", "~slug"]
+      columns:
+        title: { label: Article, pin: true, width: 360 }
+        freshness:
+          color: { success: [new], yellow: [edited] }
+          labels: { new: New, edited: Edited }
+        author.username: { label: Author }
+        tags: { label: Tags, width: 240 }
+        favorites_count: { label: "♥", color: { muted: ["0"] }, tooltip: "Favorites" }
+        comments_count: { label: Comments, color: { muted: ["0"] } }
+        published_ago: { label: Published }
+        updated_ago: { label: Updated }
+      row_actions:
+        - label: "Copy slug"
+          icon: Copy
+          copy: slug
