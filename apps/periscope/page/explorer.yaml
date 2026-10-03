@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=./page-schema-1.json
 # Page: explorer — a vertical drill. Pick a namespace up top, its deployments
 # stack below; pick a deployment, its pods stack below that. Each level is a
-# reactive related() binding against the selection of the level above.
+# reactive scenery(...).ref(...) binding against the selection of the level above.
 title: Explorer
 body:
   - kind: grid
@@ -11,9 +11,9 @@ body:
     name: deployments
     when: '${namespaces.selected_id} != ""'
     table:
-      script: related("namespaces", "${namespaces.selected_id}", "deployments")
+      script: scenery("namespaces").where("id", "${namespaces.selected_id}").ref("deployments")
   - kind: grid
     name: pods
     when: '${deployments.selected_id} != ""'
     table:
-      script: related("deployments", "${deployments.selected_id}", "pods")
+      script: scenery("deployments").where("id", "${deployments.selected_id}").ref("pods")

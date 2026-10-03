@@ -3,7 +3,7 @@
 # A read-only widget tree bound to the selected launch (`record`), laid out as a
 # two-column dashboard. The left column carries status + a countdown that swaps
 # to live ascent telemetry once the launch lifts off; the right column lists the
-# crew and payloads (`get_ref` traversals). Everything live-refreshes off scenery
+# crew and payloads (`ref` traversals). Everything live-refreshes off scenery
 # while the simulator drives the mission. Any node that fails renders an inline
 # error chip without breaking the rest of the view.
 # yaml-language-server: $schema=./view-schema-1.json

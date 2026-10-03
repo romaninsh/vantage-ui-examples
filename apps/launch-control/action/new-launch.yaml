@@ -23,13 +23,13 @@ form:
       widget: dropdown
       option_label: name
       options: |
-        table("agencies").add_condition_eq("has_rockets", true)
+        table("agencies").where("has_rockets", true)
     - name: rocket_configuration_id
       label: "Rocket configuration"
       widget: dropdown
       option_label: full_name
       options: |
-        table("launcher_configurations").add_condition_eq("manufacturer_id", form["lsp_id"])
+        table("launcher_configurations").where("manufacturer_id", form["lsp_id"])
     - name: pad_id
       label: "Pad"
       widget: dropdown

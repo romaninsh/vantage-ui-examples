@@ -11,4 +11,4 @@ body:
     name: pods
     when: '${nodes.selected_id} != ""'
     table:
-      script: related("nodes", "${nodes.selected_id}", "pods")
+      script: scenery("nodes").where("id", "${nodes.selected_id}").ref("pods")

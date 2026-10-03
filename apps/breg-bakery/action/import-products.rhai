@@ -13,7 +13,7 @@ state.status = "Importing products…";
 // The import reports what it did: `inserted`, `skipped` (ids the
 // table already held — never overwritten), and `cancelled` when
 // the user stopped it partway.
-let result = tables.product.import_values(
+let result = table("product").import_from(
   table(source.vista),
   #{ id: "product:${row.sku}",
      name: "${row.name}",
