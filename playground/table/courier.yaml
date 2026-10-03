@@ -1,0 +1,13 @@
+# Table: courier — who rides. Six couriers share the day's orders.
+datasource: records
+title: Couriers
+faker:
+  count: 6
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: vehicle, type: string }
+  - { name: city, type: string }
+has_many:
+  - table: order
+    foreign_key: courier

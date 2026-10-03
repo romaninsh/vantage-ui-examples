@@ -1,0 +1,56 @@
+# The cashgpt warehouse as a service Vantage runs for you: postgres 17
+# with the catalogue, generators and usage simulator baked into the image
+# (warehouse/Dockerfile). Standard compose schema, so
+# `docker compose -f composer.yaml up -d` from a terminal drives the same
+# stack the Services indicator does.
+#
+# The first Start builds the image, then fills the empty volume: a
+# 500,000-employee simulation and its marts, ten minutes or so on a small
+# VM, each stage logged in the Services panel. Later starts are instant.
+services:
+  warehouse:
+    build: warehouse
+    environment:
+      POSTGRES_USER: cashgpt
+      POSTGRES_PASSWORD: cashgpt
+      POSTGRES_DB: cashgpt
+      # Simulator seed. Another seed is another company; it takes effect
+      # on a fresh volume (`docker compose -p <project> down -v`).
+      CASHGPT_SEED: "2026"
+    # The gold marts total about 1.3 GB. At the stock 128 MB shared_buffers
+    # the largest does not fit, so a dashboard's dozen concurrent panels
+    # each re-read it from disk and contend with one another.
+    command:
+      - postgres
+      - -c
+      - shared_buffers=1GB
+      - -c
+      - effective_cache_size=2GB
+      - -c
+      - work_mem=64MB
+      - -c
+      - maintenance_work_mem=512MB
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - max_parallel_workers_per_gather=2
+    # `127.0.0.1::5432`: loopback only, and an ephemeral host port picked by
+    # docker. The datasource addresses the service (`warehouse:5432`) and
+    # Vantage rewrites it to the port docker assigned;
+    # `docker compose -p <project> port warehouse 5432` shows it.
+    ports:
+      - "127.0.0.1::5432"
+    volumes:
+      - warehouse:/var/lib/postgresql/data
+    # Loopback, not the socket: while the first start fills the database
+    # the server answers on its socket only, so this reads "starting"
+    # until the warehouse is ready to query.
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "cashgpt", "-d", "cashgpt"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 30m
+
+volumes:
+  warehouse:

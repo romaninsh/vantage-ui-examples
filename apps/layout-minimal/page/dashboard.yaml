@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: dashboard — live counts from the flight table's aggregates, plus two
+# buttons that open pages from Rhai; the first names its target host.
+title: Dashboard
+body:
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: flight#total
+            params: { label: "Flights tracked", icon: Plane, color: blue }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: flight#boarding
+            params: { label: "Boarding", icon: Clock, color: yellow }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: flight#cruising
+            params: { label: "Cruising", icon: Plane, color: green }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: ops_event
+            params: { label: "Live ops events", icon: Activity, color: green }
+  - kind: row
+    children:
+      - kind: button
+        params:
+          label: Open flights
+          icon: ExternalLink
+          action: 'navigate("flights", #{}, #{ target: "main" });'
+      - kind: button
+        params:
+          label: Open ops feed
+          icon: ExternalLink
+          action: 'navigate("ops");'

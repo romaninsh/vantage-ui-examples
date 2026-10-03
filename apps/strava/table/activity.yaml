@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# All your activities (GET /athlete/activities), newest first. The
+# datasource pages them; a grid fetches pages as you scroll.
+#
+# Strava's own units stay here (metres, seconds, m/s); the pages add
+# readable figures through sugar (sugar/activity.yaml).
+datasource: strava
+title: Activities
+table: "athlete/activities"
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: sport_type, label: Sport, type: string, flags: [label] }
+  - { name: start_date_local, label: Started, type: timestamp }
+
+  # Shown as they come.
+  - { name: total_elevation_gain, label: "Climb (m)", type: float }
+  - { name: average_heartrate, label: "Avg HR", type: float }
+  - { name: max_heartrate, label: "Max HR", type: float }
+  - { name: suffer_score, label: "Effort", type: float }
+  - { name: average_cadence, label: Cadence, type: float }
+  - { name: average_watts, label: "Avg W", type: float }
+  - { name: weighted_average_watts, label: "Weighted W", type: int }
+  - { name: max_watts, label: "Max W", type: int }
+  - { name: kilojoules, label: kJ, type: float }
+  - { name: average_temp, label: "Temp (°C)", type: float }
+  - { name: kudos_count, label: Kudos, type: int }
+  - { name: comment_count, label: Comments, type: int }
+  - { name: achievement_count, label: Achievements, type: int }
+  - { name: pr_count, label: PRs, type: int }
+  - { name: total_photo_count, label: Photos, type: int }
+  - { name: athlete_count, label: Athletes, type: int }
+  - { name: gear_id, label: Gear, type: string }
+  - { name: visibility, type: string }
+
+  # Raw figures the pages show through sugar, or not at all.
+  - { name: distance, label: "Distance (m)", type: float, flags: [hidden] }
+  - { name: moving_time, label: "Moving (s)", type: int, flags: [hidden] }
+  - { name: elapsed_time, label: "Elapsed (s)", type: int, flags: [hidden] }
+  - { name: average_speed, label: "Avg speed (m/s)", type: float, flags: [hidden] }
+  - { name: max_speed, label: "Max speed (m/s)", type: float, flags: [hidden] }
+  - { name: elev_high, label: "Highest (m)", type: float, flags: [hidden] }
+  - { name: elev_low, label: "Lowest (m)", type: float, flags: [hidden] }
+  - { name: type, type: string, flags: [hidden] }
+  - { name: workout_type, label: Workout, type: int, flags: [hidden] }
+  - { name: start_date, label: "Started (UTC)", type: timestamp, flags: [hidden] }
+  - { name: timezone, type: string, flags: [hidden] }
+  - { name: utc_offset, label: "UTC offset (s)", type: float, flags: [hidden] }
+  - { name: has_heartrate, label: "Has HR", type: bool, flags: [hidden] }
+  - { name: heartrate_opt_out, label: "HR hidden", type: bool, flags: [hidden] }
+  - { name: device_watts, label: "Power meter", type: bool, flags: [hidden] }
+  - { name: photo_count, label: "Strava photos", type: int, flags: [hidden] }
+  - { name: trainer, label: Indoor, type: bool, flags: [hidden] }
+  - { name: commute, type: bool, flags: [hidden] }
+  - { name: manual, type: bool, flags: [hidden] }
+  - { name: private, type: bool, flags: [hidden] }
+  - { name: flagged, type: bool, flags: [hidden] }
+  - { name: has_kudoed, label: "You kudoed", type: bool, flags: [hidden] }
+  - { name: from_accepted_tag, label: "Tagged in", type: bool, flags: [hidden] }
+  - { name: external_id, label: "Upload file", type: string, flags: [hidden] }
+  - { name: upload_id, label: Upload, type: int, flags: [hidden] }
+  - { name: athlete.id, label: Athlete, type: int, flags: [hidden] }
+  - { name: map.summary_polyline, label: Track, type: string, flags: [hidden] }

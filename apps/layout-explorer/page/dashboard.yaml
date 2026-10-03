@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: dashboard — the home page.
+title: Dashboard
+body:
+  - kind: label
+    params: { text: "${app.brand} — catalogue explorer", style: heading, icon: LayoutDashboard }
+  - kind: label
+    params: { text: "Browse the catalogue in the tree on the left: open a category to see its subcategories, click one to list its products, and open a product for its record. Your basket stays on the right.", style: muted }
+  - kind: row
+    children:
+      - kind: stat
+        observe: category
+        params: { label: "Categories", icon: Folder, color: blue }
+      - kind: stat
+        observe: product
+        params: { label: "Products", icon: Package, color: green }
+      - kind: stat
+        observe: stock_alert
+        params: { label: "Low-stock alerts", icon: TriangleAlert, color: warning }

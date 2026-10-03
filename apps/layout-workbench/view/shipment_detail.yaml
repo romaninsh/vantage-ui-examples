@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# View: shipment_detail — the drawer under the tracking grid: the selected
+# shipment's tracking scans. The grid passes the row's id as `args.id`; the
+# shipment's facts are in the inspector on the right.
+args:
+  id: { type: string, required: true }
+body:
+  - kind: grid
+    observe: { script: 'scenery("tracking_event").where("shipment_id", args.id)' }
+    height: 160
+    params:
+      selectable: false
+      row_menu: false
+      columns:
+        scanned_at: { label: At, render: relative }
+        event: { label: Event, color: { danger: ["Address query", "Customs hold", "Damaged label", "Weather delay"], success: ["Signed for"] } }
+        city: { label: Location }

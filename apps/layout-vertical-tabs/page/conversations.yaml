@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: conversations — every chat, newest first. Click one: it opens in its
+# own vertical tab, named after the customer.
+title: Conversations
+body:
+  - kind: grid
+    name: conversations
+    observe: conversation
+    params:
+      search: true
+      default_sort: { column: started, direction: desc }
+      on_select: 'navigate("conversation", #{ id: row.id, customer: row.customer })'
+      row_actions:
+        - label: Open conversation
+          icon: ExternalLink
+          navigate: conversation
+          args: { id: "row.id", customer: "row.customer" }
+      columns:
+        customer: { label: Customer, link: customer, pin: true }
+        topic: { label: Topic }
+        channel: { label: Channel, width: 110 }
+        status: { label: Status, width: 100 }
+        started: { label: Started, render: relative }
+        last_message: { label: Last message, width: 320 }
+        unread: { label: Unread, width: 90 }
+        csat: { label: CSAT, width: 70 }

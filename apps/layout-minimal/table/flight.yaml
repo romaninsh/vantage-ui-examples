@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: flight — one row per aircraft, kept live by `builtin:flight`.
+# Columns are the simulation's own; times are wall-clock instants.
+# `aggregates:` backs the dashboard's counts.
+datasource: flights
+title: Flights
+faker: { count: 0 }
+aggregates:
+  total: { op: count }
+  boarding: { op: count, where: { phase: Boarding } }
+  cruising: { op: count, where: { phase: Cruising } }
+  landed: { op: count, where: { phase: Landed } }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: flight_no, label: Flight, type: string, flags: [title, searchable] }
+  - { name: carrier, type: string, flags: [searchable] }
+  - { name: aircraft_type, label: Aircraft, type: string }
+  - { name: registration, type: string }
+  - { name: origin, label: From, type: string, flags: [searchable] }
+  - { name: origin_city, label: From city, type: string }
+  - { name: destination, label: To, type: string, flags: [searchable] }
+  - { name: destination_city, label: To city, type: string }
+  - { name: phase, type: string, flags: [searchable] }
+  - { name: progress, type: float }
+  - { name: altitude_ft, label: Altitude, type: int, unit: ft }
+  - { name: ground_speed_kts, label: Speed, type: int, unit: kt }
+  - { name: heading, type: int }
+  - { name: distance_total_nm, label: Distance, type: float, unit: nm }
+  - { name: distance_remaining_nm, label: Remaining, type: float, unit: nm }
+  - { name: scheduled_departure, label: Departs, type: timestamp }
+  - { name: actual_departure, label: Departed, type: timestamp }
+  - { name: eta, label: ETA, type: timestamp }
+  - { name: flight_time, label: Block, type: string }
+  - { name: flight_time_min, label: Block (min), type: float }
+  - { name: delay_minutes, label: Delay, type: int }
+  - { name: gate, type: string }
+  - { name: pax, type: int }
+  - { name: seats, type: int }
+  - { name: lat, type: float }
+  - { name: lon, type: float }
+  - { name: board_order, type: float, flags: [hidden] }

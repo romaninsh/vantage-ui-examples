@@ -1,0 +1,12 @@
+# Table: arrivals — parcels arriving per minute (the last 10 buckets).
+# The sim sums only positive movements into each minute, so every bar is
+# positive and the current one grows through the minute. Oldest-first,
+# so the bar chart reads left→right in time. Fed by the `dispatch` sim.
+# (The pulse sim names these columns `minute` and `attendees`.)
+datasource: dispatch
+title: Arrivals
+faker: { count: 0 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: minute, type: string, flags: [title] }
+  - { name: attendees, type: int }

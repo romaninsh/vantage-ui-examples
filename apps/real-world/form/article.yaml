@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./form-schema-1.json
+title: Article
+table: article
+max_columns: 2
+body:
+  - { name: title, span: full }
+  - slug
+  - author
+  - { name: description, multiline: 3, span: full }
+  - { name: body, multiline: 14, span: full }
+  - kind: row
+    label: Published / updated
+    body:
+      - { name: created_at, readonly: true }
+      - { name: updated_at, readonly: true }

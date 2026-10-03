@@ -1,0 +1,482 @@
+# Northcrest Financial Group — where the bank actually sits.
+#
+# STATIC. Hand-authored. Read by scripts/silver/org-units.mjs (which gives every
+# team a primary site) and scripts/silver/employees.mjs (which places each
+# person and then draws their name from that place's name mix).
+#
+# WHY THIS EXISTS. It does not change AI spend by a cent. It changes who the
+# people are. A bank headquartered in London with its build capacity in Pune has
+# an employee list that looks nothing like a name generator's, and every
+# per-person panel on the dashboard shows names.
+#
+# A TEAM SITS SOMEWHERE, BUT NOT EVERYONE ON IT DOES. Each team draws a primary
+# site from its hiring profile; each person then lands on that site with
+# probability `co_location`, or is drawn from the wider profile otherwise. That
+# one parameter produces both facts we need: delivery teams that are entirely in
+# Bengaluru, and London-led teams with four engineers working out of Pune.
+#
+# NAME MIX IS PER SITE, NOT PER COUNTRY. London is not "British names" — it is
+# roughly three-fifths British and the rest is the actual city. Applying a
+# national stereotype to a global bank's staff list is the thing this avoids.
+#
+#   node scripts/silver/org-units.mjs && node scripts/silver/employees.mjs
+
+meta:
+  hq: UK-LON
+  # Rough regional split the expander is asserted against, +/- 2pp.
+  region_targets:
+    UK & Ireland: 0.43
+    India: 0.24
+    Europe: 0.12
+    North America: 0.09
+    Asia Pacific: 0.08
+    Greater China: 0.03
+    Middle East & Africa: 0.01
+    Latin America: 0.002
+
+# ---------------------------------------------------------------------------
+# Name cultures. Each site blends these; the pools themselves live in
+# schema/org/names.yaml so this file stays about geography.
+# ---------------------------------------------------------------------------
+cultures:
+  [british, irish, indian, chinese, chinese_diaspora, japanese, french, german,
+   polish, spanish, portuguese, italian, arabic, african, american]
+
+# ---------------------------------------------------------------------------
+# Sites. `role` is documentation — what this office is FOR — and explains why a
+# hiring profile reaches for it.
+# ---------------------------------------------------------------------------
+sites:
+
+  # ---- United Kingdom & Ireland -------------------------------------------
+  - code: UK-LON
+    city: London
+    country: United Kingdom
+    region: UK & Ireland
+    role: Group headquarters, markets, CIB
+    name_mix: { british: 0.58, indian: 0.13, african: 0.08, irish: 0.05,
+                polish: 0.04, italian: 0.03, french: 0.03, arabic: 0.03,
+                chinese: 0.02, spanish: 0.01 }
+
+  - code: UK-EDI
+    city: Edinburgh
+    country: United Kingdom
+    region: UK & Ireland
+    role: Retail operations, wealth administration
+    name_mix: { british: 0.82, indian: 0.06, polish: 0.05, irish: 0.04, african: 0.03 }
+
+  - code: UK-LDS
+    city: Leeds
+    country: United Kingdom
+    region: UK & Ireland
+    role: Retail servicing, contact centres
+    name_mix: { british: 0.76, indian: 0.11, polish: 0.05, african: 0.04, irish: 0.02, arabic: 0.02 }
+
+  - code: UK-MAN
+    city: Manchester
+    country: United Kingdom
+    region: UK & Ireland
+    role: Contact centres, technology delivery
+    name_mix: { british: 0.72, indian: 0.13, polish: 0.05, arabic: 0.04, african: 0.04, irish: 0.02 }
+
+  - code: UK-BHM
+    city: Birmingham
+    country: United Kingdom
+    region: UK & Ireland
+    role: Commercial banking, branch operations
+    name_mix: { british: 0.66, indian: 0.18, arabic: 0.06, african: 0.05, irish: 0.03, polish: 0.02 }
+
+  - code: UK-BRS
+    city: Bristol
+    country: United Kingdom
+    region: UK & Ireland
+    role: Retail operations, finance shared services
+    name_mix: { british: 0.83, indian: 0.07, polish: 0.04, african: 0.03, irish: 0.03 }
+
+  - code: UK-GLA
+    city: Glasgow
+    country: United Kingdom
+    region: UK & Ireland
+    role: Contact centres, back office
+    name_mix: { british: 0.84, indian: 0.05, polish: 0.05, irish: 0.04, african: 0.02 }
+
+  - code: UK-BFT
+    city: Belfast
+    country: United Kingdom
+    region: UK & Ireland
+    role: Technology delivery, operations
+    name_mix: { british: 0.55, irish: 0.35, indian: 0.05, polish: 0.03, african: 0.02 }
+
+  - code: IE-DUB
+    city: Dublin
+    country: Ireland
+    region: UK & Ireland
+    role: EU entity, funds and depositary services
+    name_mix: { irish: 0.62, british: 0.15, polish: 0.08, indian: 0.06, spanish: 0.04, african: 0.03, italian: 0.02 }
+
+  # ---- India ---------------------------------------------------------------
+  - code: IN-PNQ
+    city: Pune
+    country: India
+    region: India
+    role: Primary global development centre
+    name_mix: { indian: 1.00 }
+
+  - code: IN-BLR
+    city: Bengaluru
+    country: India
+    region: India
+    role: Engineering, data and AI platform
+    name_mix: { indian: 1.00 }
+
+  - code: IN-MAA
+    city: Chennai
+    country: India
+    region: India
+    role: Technology delivery, quality engineering
+    name_mix: { indian: 1.00 }
+
+  - code: IN-HYD
+    city: Hyderabad
+    country: India
+    region: India
+    role: Engineering, risk analytics
+    name_mix: { indian: 1.00 }
+
+  - code: IN-BOM
+    city: Mumbai
+    country: India
+    region: India
+    role: Markets support, global operations centre
+    name_mix: { indian: 1.00 }
+
+  - code: IN-GGN
+    city: Gurugram
+    country: India
+    region: India
+    role: Global business services, finance and HR operations
+    name_mix: { indian: 1.00 }
+
+  # ---- North America -------------------------------------------------------
+  - code: US-NYC
+    city: New York
+    country: United States
+    region: North America
+    role: Markets, CIB, Americas head office
+    name_mix: { american: 0.52, british: 0.10, indian: 0.10, chinese: 0.08,
+                spanish: 0.08, italian: 0.05, african: 0.04, arabic: 0.03 }
+
+  - code: US-CLT
+    city: Charlotte
+    country: United States
+    region: North America
+    role: Commercial banking, operations
+    name_mix: { american: 0.66, african: 0.12, indian: 0.08, spanish: 0.08, british: 0.03, chinese: 0.03 }
+
+  - code: US-CHI
+    city: Chicago
+    country: United States
+    region: North America
+    role: Derivatives clearing, treasury services
+    name_mix: { american: 0.58, spanish: 0.12, polish: 0.10, african: 0.08, indian: 0.06, chinese: 0.03, italian: 0.03 }
+
+  - code: US-JCY
+    city: Jersey City
+    country: United States
+    region: North America
+    role: Markets technology, post-trade
+    name_mix: { american: 0.44, indian: 0.24, chinese: 0.10, spanish: 0.08, african: 0.06, italian: 0.04, arabic: 0.04 }
+
+  - code: CA-TOR
+    city: Toronto
+    country: Canada
+    region: North America
+    role: Capital markets, shared services
+    name_mix: { american: 0.38, british: 0.12, indian: 0.20, chinese: 0.12, french: 0.06, african: 0.06, italian: 0.06 }
+
+  # ---- Europe --------------------------------------------------------------
+  - code: DE-FRA
+    city: Frankfurt
+    country: Germany
+    region: Europe
+    role: EU banking entity, markets
+    name_mix: { german: 0.66, polish: 0.08, italian: 0.06, arabic: 0.06, british: 0.05, indian: 0.04, french: 0.03, chinese: 0.02 }
+
+  - code: FR-PAR
+    city: Paris
+    country: France
+    region: Europe
+    role: Corporate banking, structured finance
+    name_mix: { french: 0.68, african: 0.12, arabic: 0.08, portuguese: 0.04, italian: 0.03, british: 0.03, spanish: 0.02 }
+
+  - code: PL-KRK
+    city: Krakow
+    country: Poland
+    region: Europe
+    role: European operations and control hub
+    name_mix: { polish: 0.92, british: 0.03, indian: 0.02, german: 0.02, italian: 0.01 }
+
+  - code: PT-LIS
+    city: Lisbon
+    country: Portugal
+    region: Europe
+    role: Technology delivery, nearshore operations
+    name_mix: { portuguese: 0.80, african: 0.08, spanish: 0.05, british: 0.03, indian: 0.02, french: 0.02 }
+
+  - code: ES-MAD
+    city: Madrid
+    country: Spain
+    region: Europe
+    role: Iberian corporate banking
+    name_mix: { spanish: 0.84, portuguese: 0.05, italian: 0.04, african: 0.03, british: 0.02, arabic: 0.02 }
+
+  - code: IT-MIL
+    city: Milan
+    country: Italy
+    region: Europe
+    role: Italian corporate and private banking
+    name_mix: { italian: 0.86, spanish: 0.04, african: 0.04, arabic: 0.03, british: 0.03 }
+
+  - code: CH-ZRH
+    city: Zurich
+    country: Switzerland
+    region: Europe
+    role: Private banking, wealth booking centre
+    name_mix: { german: 0.52, italian: 0.14, french: 0.14, british: 0.08, spanish: 0.04, portuguese: 0.04, indian: 0.04 }
+
+  - code: LU-LUX
+    city: Luxembourg
+    country: Luxembourg
+    region: Europe
+    role: Fund administration, EU depositary
+    name_mix: { french: 0.34, german: 0.26, portuguese: 0.14, italian: 0.10, british: 0.08, polish: 0.04, indian: 0.04 }
+
+  - code: NL-AMS
+    city: Amsterdam
+    country: Netherlands
+    region: Europe
+    role: Payments, transaction banking
+    name_mix: { german: 0.44, british: 0.14, indian: 0.10, polish: 0.08, arabic: 0.08, african: 0.06, french: 0.06, italian: 0.04 }
+
+  # ---- Asia Pacific --------------------------------------------------------
+  - code: SG-SIN
+    city: Singapore
+    country: Singapore
+    region: Asia Pacific
+    role: Asian regional head office, markets, wealth
+    name_mix: { chinese_diaspora: 0.56, indian: 0.20, british: 0.10, arabic: 0.06, african: 0.04, american: 0.04 }
+
+  - code: JP-TYO
+    city: Tokyo
+    country: Japan
+    region: Asia Pacific
+    role: Japanese markets and corporate banking
+    name_mix: { japanese: 0.88, chinese: 0.05, british: 0.03, american: 0.02, indian: 0.02 }
+
+  - code: AU-SYD
+    city: Sydney
+    country: Australia
+    region: Asia Pacific
+    role: Australian corporate banking, operations
+    name_mix: { british: 0.54, chinese: 0.14, indian: 0.12, italian: 0.06, irish: 0.06, african: 0.04, arabic: 0.04 }
+
+  - code: MY-KUL
+    city: Kuala Lumpur
+    country: Malaysia
+    region: Asia Pacific
+    role: ASEAN operations and servicing hub
+    name_mix: { arabic: 0.48, chinese_diaspora: 0.30, indian: 0.18, british: 0.04 }
+
+  # ---- Greater China -------------------------------------------------------
+  - code: CN-SHA
+    city: Shanghai
+    country: China
+    region: Greater China
+    role: China onshore banking and technology
+    name_mix: { chinese: 0.96, british: 0.02, american: 0.02 }
+
+  - code: HK-HKG
+    city: Hong Kong
+    country: Hong Kong SAR
+    region: Greater China
+    role: North Asia markets, private banking
+    name_mix: { chinese_diaspora: 0.78, british: 0.08, indian: 0.06, american: 0.04, french: 0.02, african: 0.02 }
+
+  # ---- Middle East & Africa, Latin America ---------------------------------
+  - code: AE-DXB
+    city: Dubai
+    country: United Arab Emirates
+    region: Middle East & Africa
+    role: MENA corporate banking and wealth
+    name_mix: { arabic: 0.46, indian: 0.32, british: 0.10, african: 0.06, chinese: 0.03, french: 0.03 }
+
+  - code: ZA-JNB
+    city: Johannesburg
+    country: South Africa
+    region: Middle East & Africa
+    role: Sub-Saharan corporate banking
+    name_mix: { african: 0.62, british: 0.22, indian: 0.10, portuguese: 0.03, german: 0.03 }
+
+  - code: BR-SAO
+    city: Sao Paulo
+    country: Brazil
+    region: Latin America
+    role: Latin American corporate banking
+    name_mix: { portuguese: 0.72, italian: 0.10, spanish: 0.08, japanese: 0.04, german: 0.03, arabic: 0.03 }
+
+# ---------------------------------------------------------------------------
+# Hiring profiles — how a kind of team is staffed.
+#
+# `co_location` is the probability a person sits at their team's primary site.
+# The remainder is redrawn from the profile, which is what puts a handful of
+# Pune engineers on a London-led team without breaking the idea that a team has
+# a home. Delivery profiles run looser than branch profiles because they really
+# are more distributed.
+# ---------------------------------------------------------------------------
+hiring_profiles:
+
+  - code: UK_RETAIL
+    note: Branches and contact centres. Staff sit where the customers are, so this is domestic and tightly co-located.
+    co_location: 0.97
+    mix: { UK-LDS: 0.20, UK-GLA: 0.15, UK-MAN: 0.15, UK-BHM: 0.14, UK-BRS: 0.12,
+           UK-EDI: 0.11, UK-LON: 0.08, UK-BFT: 0.05 }
+
+  - code: UK_OPS_OFFSHORE
+    note: Back-office processing. UK-managed, majority offshore — the standard shape for a UK bank's operations.
+    co_location: 0.90
+    mix: { IN-GGN: 0.21, IN-BOM: 0.16, IN-MAA: 0.09, PL-KRK: 0.13,
+           UK-LDS: 0.07, UK-GLA: 0.06, UK-BFT: 0.05, PT-LIS: 0.05,
+           MY-KUL: 0.08, SG-SIN: 0.05, HK-HKG: 0.03, US-CLT: 0.02 }
+
+  - code: TECH_INDIA_LED
+    note: >
+      The build. India is the primary development centre, not an overflow —
+      this is where most engineering headcount actually is, and it carries the
+      heaviest AI adoption in the bank.
+    co_location: 0.72
+    mix: { IN-PNQ: 0.24, IN-BLR: 0.22, IN-HYD: 0.12, IN-MAA: 0.10,
+           UK-LON: 0.11, UK-MAN: 0.05, UK-BFT: 0.04, PL-KRK: 0.05,
+           PT-LIS: 0.03, US-JCY: 0.02, SG-SIN: 0.02 }
+
+  - code: TECH_MARKETS
+    note: Trading-floor technology. Sits next to the desks it serves, so it follows the markets hubs with an India build tail.
+    co_location: 0.70
+    mix: { UK-LON: 0.30, US-JCY: 0.14, IN-PNQ: 0.14, IN-BLR: 0.10,
+           SG-SIN: 0.08, HK-HKG: 0.07, US-NYC: 0.06, IN-BOM: 0.05, JP-TYO: 0.03, CH-ZRH: 0.03 }
+
+  - code: MARKETS_FLOOR
+    note: Trading, sales and research. Follows the exchanges and the time zones.
+    co_location: 0.93
+    mix: { UK-LON: 0.38, US-NYC: 0.20, HK-HKG: 0.12, SG-SIN: 0.11,
+           JP-TYO: 0.06, DE-FRA: 0.05, CH-ZRH: 0.03, US-CHI: 0.03, AU-SYD: 0.02 }
+
+  - code: CIB_GLOBAL
+    note: Corporate and investment banking coverage. Client-facing, so it sits in the financial centres.
+    co_location: 0.92
+    mix: { UK-LON: 0.32, US-NYC: 0.18, DE-FRA: 0.09, HK-HKG: 0.08, SG-SIN: 0.07,
+           FR-PAR: 0.06, US-CLT: 0.05, AE-DXB: 0.04, IT-MIL: 0.03, ES-MAD: 0.03,
+           CA-TOR: 0.02, BR-SAO: 0.02, ZA-JNB: 0.01 }
+
+  - code: COMMERCIAL_UK
+    note: Mid-market and commercial banking. Regional UK with a US commercial arm.
+    co_location: 0.94
+    mix: { UK-BHM: 0.16, UK-MAN: 0.13, UK-LON: 0.14, UK-LDS: 0.10, UK-BRS: 0.08,
+           UK-EDI: 0.07, US-CLT: 0.13, US-CHI: 0.04, IE-DUB: 0.04,
+           SG-SIN: 0.04, HK-HKG: 0.03, ES-MAD: 0.02, IT-MIL: 0.02 }
+
+  - code: WEALTH_GLOBAL
+    note: Private banking and advice. Booking centres first, then the domestic advisory network.
+    co_location: 0.93
+    mix: { UK-LON: 0.26, CH-ZRH: 0.16, SG-SIN: 0.12, HK-HKG: 0.10, UK-EDI: 0.09,
+           LU-LUX: 0.07, AE-DXB: 0.06, US-NYC: 0.05, UK-BRS: 0.04, IT-MIL: 0.03, ES-MAD: 0.02 }
+
+  - code: PAYMENTS_GLOBAL
+    note: Transaction banking and payments. Runs where the clearing systems and the clients are, around the clock.
+    co_location: 0.88
+    mix: { UK-LON: 0.16, IN-BOM: 0.16, NL-AMS: 0.11, IN-GGN: 0.10, SG-SIN: 0.09,
+           US-NYC: 0.08, PL-KRK: 0.07, HK-HKG: 0.06, DE-FRA: 0.05, UK-BFT: 0.04,
+           MY-KUL: 0.04, AE-DXB: 0.04 }
+
+  - code: CONTROL_GLOBAL
+    note: Risk, compliance and audit. Regulated presence in every entity, with the volume work in the offshore hubs.
+    co_location: 0.86
+    mix: { UK-LON: 0.22, IN-GGN: 0.14, PL-KRK: 0.13, IN-HYD: 0.10, US-NYC: 0.07,
+           UK-EDI: 0.06, SG-SIN: 0.06, DE-FRA: 0.05, IN-BOM: 0.05, HK-HKG: 0.04,
+           IE-DUB: 0.04, US-CLT: 0.04 }
+
+  - code: CORPORATE_FUNCTIONS
+    note: Finance, HR, legal, procurement. London-headquartered with a large global business services footprint.
+    co_location: 0.87
+    mix: { UK-LON: 0.20, IN-GGN: 0.17, PL-KRK: 0.11, IN-BOM: 0.07, UK-BRS: 0.06,
+           UK-EDI: 0.05, PT-LIS: 0.05, US-CLT: 0.09, MY-KUL: 0.05, SG-SIN: 0.06,
+           IE-DUB: 0.03, HK-HKG: 0.03, CA-TOR: 0.03 }
+
+  - code: FACILITIES_LOCAL
+    note: Property, security, catering. Wherever the buildings are, which for headcount purposes means the big offices.
+    co_location: 0.98
+    mix: { UK-LON: 0.26, IN-PNQ: 0.10, UK-LDS: 0.09, IN-GGN: 0.08, UK-MAN: 0.08,
+           UK-BHM: 0.07, IN-BOM: 0.06, UK-GLA: 0.06, PL-KRK: 0.05, US-CLT: 0.05,
+           SG-SIN: 0.04, UK-EDI: 0.03, CN-SHA: 0.03 }
+
+  - code: CHINA_ONSHORE
+    note: China entity. Ring-fenced by regulation, staffed locally.
+    co_location: 0.98
+    mix: { CN-SHA: 0.86, HK-HKG: 0.14 }
+
+# ---------------------------------------------------------------------------
+# Which profile a team uses. Resolved in order: the most specific match wins.
+#
+#   1. an explicit (lob, work_type) override
+#   2. the line of business default
+#   3. the work_type default
+#   4. `default`
+# ---------------------------------------------------------------------------
+assignment:
+  default: CORPORATE_FUNCTIONS
+
+  by_work_type:
+    engineering: TECH_INDIA_LED
+    data: TECH_INDIA_LED
+    product: TECH_INDIA_LED
+    analytics: CONTROL_GLOBAL
+    control: CONTROL_GLOBAL
+    markets: MARKETS_FLOOR
+    advisory: CIB_GLOBAL
+    service: UK_RETAIL
+    ops: UK_OPS_OFFSHORE
+    people: CORPORATE_FUNCTIONS
+    facilities: FACILITIES_LOCAL
+
+  by_lob:
+    LB-05: UK_RETAIL             # Consumer Banking
+    LB-10: UK_RETAIL             # Consumer Digital
+    LB-04: COMMERCIAL_UK         # Commercial Banking
+    LB-06: WEALTH_GLOBAL         # Wealth Management
+    LB-02: PAYMENTS_GLOBAL       # Payments & Transaction Banking
+    LB-03: CIB_GLOBAL            # Corporate & Investment Banking
+    LB-01: MARKETS_FLOOR         # Global Markets
+    LB-11: CONTROL_GLOBAL        # Risk & Compliance
+    LB-12: CORPORATE_FUNCTIONS   # Finance & Treasury
+    LB-13: CORPORATE_FUNCTIONS   # Corporate Services
+
+  # A line of business default is about the BUSINESS. The engineers inside it
+  # still work the way engineers work, so these put them back on a tech profile.
+  overrides:
+    - { lob: LB-07, work_type: any,         profile: TECH_INDIA_LED }   # Enterprise Technology
+    - { lob: LB-08, work_type: any,         profile: TECH_INDIA_LED }   # Data & AI Platform
+    - { lob: LB-09, work_type: any,         profile: TECH_MARKETS }     # Global Markets Technology
+    - { lob: LB-01, work_type: engineering, profile: TECH_MARKETS }
+    - { lob: LB-01, work_type: data,        profile: TECH_MARKETS }
+    - { lob: LB-03, work_type: engineering, profile: TECH_MARKETS }
+    - { lob: LB-05, work_type: engineering, profile: TECH_INDIA_LED }
+    - { lob: LB-05, work_type: ops,         profile: UK_OPS_OFFSHORE }
+    - { lob: LB-10, work_type: engineering, profile: TECH_INDIA_LED }
+    - { lob: LB-10, work_type: data,        profile: TECH_INDIA_LED }
+    - { lob: LB-10, work_type: product,     profile: TECH_INDIA_LED }
+    - { lob: LB-04, work_type: engineering, profile: TECH_INDIA_LED }
+    - { lob: LB-06, work_type: engineering, profile: TECH_INDIA_LED }
+    - { lob: LB-02, work_type: engineering, profile: TECH_INDIA_LED }
+    - { lob: LB-11, work_type: engineering, profile: TECH_INDIA_LED }
+    - { lob: LB-12, work_type: engineering, profile: TECH_INDIA_LED }
+    - { lob: LB-13, work_type: engineering, profile: TECH_INDIA_LED }
+    - { lob: LB-13, work_type: facilities,  profile: FACILITIES_LOCAL }

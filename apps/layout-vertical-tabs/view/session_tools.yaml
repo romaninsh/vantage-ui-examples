@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# View: session_tools — the right panel. layout/vertical-tabs.yaml passes
+# `page` and `id` (the conversation id) from the tab on screen; switching
+# tabs updates the panel in place, without remounting it.
+args:
+  page: { type: string, required: true }
+  id: { type: string, required: true }
+body:
+  - kind: label
+    params: { text: "Tools", style: heading, icon: Wrench }
+  - kind: label
+    params: { text: "On screen: ${args.page}", style: muted }
+  - kind: label
+    when: 'args.id == ""'
+    params: { text: "Open a conversation to see its customer here.", style: muted }
+  - kind: label
+    when: 'args.id != ""'
+    params: { text: "Customer", style: heading, icon: User }
+  - kind: stat
+    when: 'args.id != ""'
+    observe: { script: 'scenery("conversation").where("id", args.id).ref("customer")' }
+    params: { label: Name, column: name }
+  - kind: stat
+    when: 'args.id != ""'
+    observe: { script: 'scenery("conversation").where("id", args.id).ref("customer")' }
+    params: { label: Plan, column: plan }
+  - kind: stat
+    when: 'args.id != ""'
+    observe: { script: 'scenery("conversation").where("id", args.id).ref("customer")' }
+    params: { label: Lifetime value, column: lifetime_value, icon: Banknote }
+  - kind: stat
+    when: 'args.id != ""'
+    observe: { script: 'scenery("conversation").where("id", args.id).ref("customer")' }
+    params: { label: Country, column: country }
+  - kind: label
+    when: 'args.id != ""'
+    params: { text: "Quick replies", style: heading, icon: MessageSquare }
+  - kind: label
+    when: 'args.id != ""'
+    params: { text: "Thanks for reaching out — let me take a look.", style: muted }
+  - kind: label
+    when: 'args.id != ""'
+    params: { text: "I've flagged this for the right team; you'll hear back shortly.", style: muted }
+  - kind: label
+    when: 'args.id != ""'
+    params: { text: "Is there anything else I can help with today?", style: muted }
+  - kind: stat
+    observe: queue
+    params: { label: "Waiting queue", icon: Clock, color: green }

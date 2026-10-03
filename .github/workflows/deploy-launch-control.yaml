@@ -72,7 +72,7 @@ jobs:
           LATEST_TAG="${IMAGE}:latest"
           # Packages the runner-built static binary; build context is the repo
           # root so the Dockerfile can COPY it from target/.
-          docker build -f apps/launch-control/server/Dockerfile -t "$SHA_TAG" -t "$LATEST_TAG" .
+          docker build -f apps/launch-control/server/Dockerfile.lambda -t "$SHA_TAG" -t "$LATEST_TAG" .
           docker push "$SHA_TAG"
           docker push "$LATEST_TAG"
           echo "image_uri=${SHA_TAG}" >> "$GITHUB_OUTPUT"

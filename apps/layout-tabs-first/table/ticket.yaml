@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: ticket — the queue. `customer` fans out unevenly (1-8 tickets per
+# customer, so the customer page has something to list); `assignee` stripes
+# evenly across agents. `number`, `subject`, `priority`, `status`, `channel`,
+# `created`, `due` and `tags` come from column generators, not the column
+# name.
+datasource: tickets
+title: Tickets
+faker:
+  fan_out: { column: customer, min: 1, max: 8 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: number, label: Number, type: string, flags: [searchable], faker: { pattern: "TCK-#####" } }
+  - { name: subject, type: string, flags: [title, searchable], faker: { sentence: { min_words: 4, max_words: 8 } } }
+  - { name: customer, type: string, references: customer }
+  - { name: assignee, label: Assignee, type: string, references: agent }
+  - { name: priority, type: string, faker: { pick: { values: [Low, Normal, High, Urgent], weights: [4, 5, 3, 1] } } }
+  - { name: status, type: string, faker: { pick: { values: [New, Open, Pending, Solved] } } }
+  - { name: channel, type: string, faker: { pick: { values: [Email, Chat, Phone] } } }
+  - { name: created, type: timestamp, faker: { date: { from: "-30d" } } }
+  - { name: due, label: SLA due, type: timestamp, faker: { date: { from: "-5d", to: "+10d" } } }
+  - { name: tags, type: string, faker: { pick: { values: [billing, bug, feature-request, login, refund, shipping, account, general] } } }

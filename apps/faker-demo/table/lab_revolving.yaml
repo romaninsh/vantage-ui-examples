@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: lab_revolving — about ten rows, one deleted and one inserted twice a
+# second. Select a row and watch what the grid does when it disappears.
+datasource: lab
+title: Revolving rows
+faker:
+  count: 10
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: email, type: string }
+  - { name: city, type: string }
+  - { name: balance, type: float, unit: { currency: "£" } }

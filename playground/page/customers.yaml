@@ -1,0 +1,13 @@
+# Page: customers — who we deliver for. Open a customer to walk into
+# their orders (the `has_many` reference declared on the table).
+title: Customers
+body:
+  - kind: crud
+    name: customers
+    table: { script: 'scenery("customer")' }
+    params:
+      id_column: id
+      columns:
+        name: {}
+        email: {}
+        city: {}

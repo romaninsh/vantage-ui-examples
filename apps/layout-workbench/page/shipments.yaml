@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: shipments — every parcel, newest booking first, moving live. Click a
+# row: the inspector on the right follows it (the layout reads this grid's
+# selection as `main.selection.shipments`). Delivered rows are dimmed,
+# exceptions red; dates read relative ("in 2 min", "5 min ago").
+title: Shipments
+body:
+  - kind: grid
+    name: shipments
+    observe: shipment
+    params:
+      default_sort: { column: created_at, direction: desc }
+      row_color: { column: status, color: { muted: [Delivered], danger: [Exception] } }
+      columns:
+        tracking_no: { label: Shipment, pin: true }
+        customer: { label: Customer, width: 180 }
+        origin_city: { label: From }
+        destination_city: { label: To }
+        carrier: {}
+        service_level: { label: Service }
+        status:
+          color:
+            blue: [Booked]
+            cyan: ["Picked up", "In transit"]
+            warning: ["Out for delivery"]
+            success: [Delivered]
+            danger: [Exception]
+        late: { label: Late, color: { danger: ["true"] } }
+        eta: { label: ETA, render: relative }
+        created_at: { label: Booked, render: relative }

@@ -1,0 +1,222 @@
+# Internal application catalogue — the products that consume tokens.
+#
+# STATIC. Fifteen apps, hand-authored. Small enough that generating them would
+# be worse than writing them.
+#
+# OWNERSHIP IS BY DEPARTMENT, RESOLVED AT LOAD. The YAML names the owning
+# department in business terms — line of business, division, department — and
+# the generator looks up the org_id from the expanded tree. Department names are
+# authored and stable; org_ids are generated and would rot the moment the tree
+# is re-expanded. If a named department stops existing, the load fails rather
+# than silently orphaning an app.
+#
+# OWNER IS NOT CONSUMER. Ask Northcrest is built by Enterprise Technology and
+# used by all 500,000 people; Claude Code is owned by the developer platform and
+# run by whoever is writing code. Who consumes an app is a fact, and it lives in
+# fct_usage — not here.
+#
+# STATUS HERE IS THE PRODUCT'S OWN. The same app is live in one team and still
+# piloting in another; that rollout state belongs on the fact, not on this row.
+#
+# primary_unit is only the default tab. The full set of units an app reports is
+# whatever rows exist in fct_app_output — derived, not declared.
+#
+#   node scripts/silver/apps.mjs
+
+meta:
+  period: [2026-01, 2026-07]
+
+units:
+  - { code: prompts,   label: Prompts,    noun: prompt }
+  - { code: documents, label: Documents,  noun: document }
+  - { code: rows,      label: Data rows,  noun: row }
+  - { code: cases,     label: Cases,      noun: case }
+  - { code: sessions,  label: Sessions,   noun: session }
+  - { code: reviews,   label: Reviews,    noun: review }
+  - { code: reports,   label: Reports,    noun: report }
+  - { code: scans,     label: Scans,      noun: scan }
+
+# What the app is FOR. Behaviour profiles reach for kinds, not for names — a
+# power coder wants "a coding tool", and which one depends on what their org
+# has. Adding an app to the catalogue then needs no change to any profile.
+kinds: [coding, assistant, domain, agent, analysis, research]
+
+# The dictated "usage driver" filter on the Overview page — three buckets over
+# the same catalogue, so it is a rollup of `kind` rather than a second thing to
+# maintain. Developer is the largest because engineering is where the tokens go.
+usage_drivers:
+  developer:    [coding, agent]
+  application:  [domain]
+  productivity: [assistant, analysis, research]
+
+# Who may use it at all. An app with no scope is open to the bank; otherwise it
+# is limited by discipline or by line of business. This is what stops the
+# simulator handing Quant Notebook to a facilities clerk.
+statuses: [development, pilot, production, sunset]
+audiences: [internal, customer_facing]
+
+apps:
+  - id: APP-01
+    name: Claude Code
+    owner: { lob: Enterprise Technology, division: Platform Engineering, department: Developer Experience }
+    status: production
+    audience: internal
+    primary_unit: sessions
+    launched: 2026-01
+    kind: coding
+    scope: { work_types: [engineering, data, product] }
+    description: Agentic coding across the engineering estate
+
+  - id: APP-02
+    name: Ask Northcrest
+    owner: { lob: Enterprise Technology, division: End User Technology, department: Workplace Engineering }
+    status: production
+    audience: internal
+    primary_unit: prompts
+    launched: 2026-01
+    kind: assistant
+    scope: { all: true }
+    description: Org-wide general-purpose assistant
+
+  - id: APP-03
+    name: DevGPT
+    owner: { lob: Enterprise Technology, division: Platform Engineering, department: Developer Tooling }
+    status: production
+    audience: internal
+    primary_unit: prompts
+    launched: 2026-01
+    kind: coding
+    scope: { work_types: [engineering, data, product, analytics] }
+    description: Internal developer assistant portal
+
+  - id: APP-04
+    name: Virtual Agent
+    owner: { lob: Consumer Digital, division: Conversational & Assisted, department: Virtual Assistant }
+    status: production
+    audience: customer_facing
+    primary_unit: sessions
+    launched: 2026-01
+    kind: domain
+    scope: { lobs: [LB-10, LB-05] }
+    description: Customer-facing conversational banking
+
+  - id: APP-05
+    name: Agent Builder
+    owner: { lob: Data & AI Platform, division: AI Platform, department: Agent Runtime }
+    status: pilot
+    audience: internal
+    primary_unit: prompts
+    launched: 2026-03
+    kind: agent
+    scope: { work_types: [engineering, data, product, analytics, control] }
+    description: Low-code platform for team-built agents
+
+  - id: APP-06
+    name: KYC Copilot
+    owner: { lob: Risk & Compliance, division: Financial Crime, department: KYC Operations }
+    status: production
+    audience: internal
+    primary_unit: documents
+    launched: 2026-01
+    kind: domain
+    scope: { lobs: [LB-11, LB-04, LB-05] }
+    description: Client due-diligence document review
+
+  - id: APP-07
+    name: Advisor Assist
+    owner: { lob: Wealth Management, division: Retail Investments, department: Advisory Services }
+    status: production
+    audience: customer_facing
+    primary_unit: sessions
+    launched: 2026-02
+    kind: domain
+    scope: { lobs: [LB-06] }
+    description: Meeting preparation and client summaries
+
+  - id: APP-08
+    name: Credit Memo Writer
+    owner: { lob: Commercial Banking, division: Credit & Portfolio, department: Credit Administration }
+    status: production
+    audience: internal
+    primary_unit: reports
+    launched: 2026-02
+    kind: domain
+    scope: { lobs: [LB-04, LB-03] }
+    description: Drafts credit memos from filings
+
+  - id: APP-09
+    name: Quant Notebook
+    owner: { lob: Global Markets Technology, division: Quantitative Libraries, department: Risk Analytics }
+    status: pilot
+    audience: internal
+    primary_unit: rows
+    launched: 2026-03
+    kind: analysis
+    scope: { work_types: [analytics, markets, data] }
+    description: Model prototyping for trading desks
+
+  - id: APP-10
+    name: Pitch Studio
+    owner: { lob: Corporate & Investment Banking, division: Deal Support, department: Pitch Production }
+    status: production
+    audience: internal
+    primary_unit: reports
+    launched: 2026-02
+    kind: domain
+    scope: { lobs: [LB-03] }
+    description: Pitchbook and deal materials generation
+
+  - id: APP-11
+    name: Sanctions Triage
+    owner: { lob: Risk & Compliance, division: Financial Crime, department: Sanctions Screening }
+    status: production
+    audience: internal
+    primary_unit: cases
+    launched: 2026-01
+    kind: domain
+    scope: { lobs: [LB-11] }
+    description: Alert adjudication for financial crime
+
+  - id: APP-12
+    name: Complaint Resolver
+    owner: { lob: Consumer Banking, division: Contact Centres, department: Complaints & Escalations }
+    status: production
+    audience: customer_facing
+    primary_unit: cases
+    launched: 2026-02
+    kind: domain
+    scope: { lobs: [LB-05, LB-10] }
+    description: Complaints triage and response drafting
+
+  - id: APP-13
+    name: Contract Lens
+    owner: { lob: Corporate Services, division: Legal & Governance, department: Commercial Legal }
+    status: pilot
+    audience: internal
+    primary_unit: documents
+    launched: 2026-04
+    kind: domain
+    scope: { lobs: [LB-13, LB-03, LB-04] }
+    description: Contract review and clause extraction
+
+  - id: APP-14
+    name: Research Digest
+    owner: { lob: Global Markets, division: Research, department: Macro Research }
+    status: sunset
+    audience: internal
+    primary_unit: documents
+    launched: 2026-01
+    kind: research
+    scope: { work_types: [analytics, markets, advisory] }
+    description: Research and filings summarisation, being folded into Ask Northcrest
+
+  - id: APP-15
+    name: Ops Navigator
+    owner: { lob: Payments & Transaction Banking, division: Payment Operations, department: Payment Investigations }
+    status: development
+    audience: internal
+    primary_unit: prompts
+    launched: 2026-06
+    kind: assistant
+    scope: { lobs: [LB-02] }
+    description: Runbook and procedure question answering

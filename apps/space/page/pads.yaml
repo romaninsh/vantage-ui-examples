@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: pads — launch pads; the Launches tab narrows server-side (?pad=).
+title: Pads
+body:
+  - kind: binder
+    name: pads
+    observe: pads
+    params:
+      columns:
+        name: { label: Pad, pin: true, width: 280 }
+        location.name: { label: Location }
+        country.name: { label: Country }
+        active: { label: Status, color: { success: ["true"], muted: ["false"] }, labels: { "true": Active, "false": Inactive } }
+        total_launch_count: { label: Launches }
+        orbital_launch_attempt_count: { label: Orbital attempts }
+        fastest_turnaround: { label: Fastest turnaround }

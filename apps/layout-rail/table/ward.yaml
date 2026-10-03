@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: ward — hospital wards; `bed` fans out from this table, `min: 3` to
+# `max: 10` beds per ward.
+datasource: hospital
+title: Wards
+faker:
+  count: 8
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: name, label: Ward, type: string, flags: [title, searchable], faker: { pick: { values: [Cardiology, Emergency, Maternity, Pediatrics, Orthopedics, Oncology, "Intensive Care", "General Surgery"] } } }
+  - { name: floor, type: int, faker: { range: { min: 1, max: 5 } } }
+  - { name: capacity, label: Beds, type: int, faker: { range: { min: 14, max: 30 } } }
+  - { name: occupied, type: int, faker: { range: { min: 4, max: 26 } } }
+references:
+  beds: { table: bed, kind: has_many, foreign_key: ward }

@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: infra — the hardware view: nodes up top, select one and the pods
+# scheduled on it stack below (the node → pods relation, joined on the
+# projected `nodeName`).
+title: Infrastructure
+body:
+  - kind: grid
+    name: nodes
+    table: nodes
+  - kind: grid
+    name: pods
+    when: '${nodes.selected_id} != ""'
+    table:
+      script: scenery("nodes").where("id", "${nodes.selected_id}").ref("pods")

@@ -23,7 +23,7 @@ body:
           # language=rhai
           action: |
             let r = actions.add_product();
-            let p = tables.product.create();
+            let p = table("product").record();
             p.set(r);
             p.save();
         - label: "Import products"

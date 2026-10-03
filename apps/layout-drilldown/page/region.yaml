@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: region — level two: the region's clubs, one card each.
+title: "${args.name}"
+body:
+  - kind: list
+    observe: { script: 'scenery("region").where("id", args.id).ref("clubs")' }
+    action: 'open("club", #{ id: row.id, name: row.name })'
+    item:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "${row.name}", style: heading, icon: Building2 }
+          - kind: label
+            params: { text: "${row.code} · ${row.city} · room for ${row.capacity} · rated ${row.rating}", style: muted }

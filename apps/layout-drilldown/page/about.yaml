@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: about — the app's README. Opens as the intro modal when the project
+# opens, and again from the command palette (cmd-k → About).
+title: About
+body:
+  - kind: markdown
+    width: 720
+    text: !include ../README.md
+  - kind: row
+    justify: end
+    children:
+      - kind: column
+        grow: false
+        children:
+          - kind: button
+            name: start
+            params: { label: Start exploring, style: primary, action: 'close()' }

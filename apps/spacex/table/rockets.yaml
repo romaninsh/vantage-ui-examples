@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: rockets — Falcon 1 / 9 / Heavy / Starship. The `rockets` root field
+# takes no `find:` argument, so `filter: false` keeps every condition on the
+# client; the `launches` relation still narrows server-side, because the key
+# (`rocket_id`) is sent to the *child*, whose root field does accept it.
+datasource: spacex
+title: Rockets
+graphql:
+  filter: false
+references:
+  launches: { table: launches, kind: has_many, foreign_key: rocket_id }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: type, type: string }
+  - { name: company, type: string }
+  - { name: country, type: string }
+  - { name: active, type: bool }
+  - { name: stages, type: int }
+  - { name: boosters, type: int }
+  - { name: cost_per_launch, label: Cost per launch, type: int, unit: { currency: "$" } }
+  - { name: success_rate_pct, label: Success rate %, type: int }
+  - { name: first_flight, label: First flight, type: date }
+  - { name: description, type: string, flags: [searchable] }
+  - { name: wikipedia, type: string, flags: [hidden] }

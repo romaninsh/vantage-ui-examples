@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./layout-schema-1.json
+# Layout: minimal — one title row (name, version, project icon, page
+# selector, tray, tools), the page filling the rest. The fake-data banner
+# folds into the tray as a ghost icon; About is a tray link opening a modal.
+tray:
+  - data_banner
+  - { page: about, label: About, icon: Info, open: modal }
+regions:
+  title_bar:
+    left:  [ { kind: app_title }, { kind: page_selector } ]
+    right: [ { kind: tray }, { kind: view, view: title_tools } ]
+  left: { nav: none }
+  main: { host: slot, header: data_banner, empty: dashboard }

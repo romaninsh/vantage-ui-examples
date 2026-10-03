@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Favorites
+body:
+  - kind: binder
+    name: favorites
+    observe: favorite
+    params:
+      details: false
+      filter: [user, article]
+      default_sort: { column: created_at, direction: desc }
+      columns:
+        user.username: { label: User, pin: true }
+        article.title: { label: Article, width: 360 }
+        favorited_ago: { label: Favorited }

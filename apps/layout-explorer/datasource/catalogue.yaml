@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: catalogue — the product catalogue (synthetic). `seed` makes
+# every run generate the same categories and products.
+#
+# The `category_names` sim runs once at start and then ends, leaving its rows
+# in place: roots take a name from `tops`, their children one from the matching
+# list in `subs`, and deeper levels a shelf name from `shelves`.
+type: faker
+description: Product catalogue (synthetic, fixed)
+seed: 11
+sims:
+  category_names:
+    table: category
+    script: |
+      let tops = ["Electronics", "Home & Kitchen", "Outdoor & Garden", "Sports & Fitness", "Office & Stationery"];
+      let subs = [
+        ["Laptops", "Headphones", "Smartphones", "Cameras", "Smart Home", "Monitors", "Gaming", "Wearables"],
+        ["Cookware", "Small Appliances", "Coffee & Tea", "Tableware", "Bedding", "Storage", "Lighting", "Cleaning"],
+        ["Garden Tools", "Barbecues", "Tents", "Garden Furniture", "Plants & Seeds", "Watering", "Camping Gear", "Outdoor Lighting"],
+        ["Running", "Cycling", "Yoga", "Weights", "Swimming", "Team Sports", "Racket Sports", "Fitness Trackers"],
+        ["Notebooks", "Pens", "Desks", "Office Chairs", "Printers", "Filing", "Desk Accessories", "Backpacks"]
+      ];
+      let shelves = ["Accessories", "Budget", "Premium", "Refurbished", "Bundles", "Spare Parts", "Kids", "Professional"];
+      let all = table().ids();
+      all.sort();
+      let level = #{};
+      let root_of = #{};
+      let used = #{};
+      let r = 0;
+      for id in all {
+        let p = table().get(id).parent_id;
+        let name = "";
+        if p == () || p == "" {
+          let k = r % tops.len();
+          level[id] = 1;
+          root_of[id] = k;
+          name = tops[k];
+          r += 1;
+        } else if p in level {
+          level[id] = level[p] + 1;
+          root_of[id] = root_of[p];
+          let n = if p in used { used[p] } else { 0 };
+          used[p] = n + 1;
+          let list = if level[id] == 2 { subs[root_of[p]] } else { shelves };
+          name = list[n % list.len()];
+          if n >= list.len() { name += " II"; }
+        }
+        used[id] = 0;
+        if name != "" { table().patch(id, #{ name: name }); }
+      }

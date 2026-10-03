@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: incoming — new tickets landing in real time; the layout's status
+# bar reads `tables.incoming.count` off it.
+datasource: incoming
+title: New tickets
+faker: { count: 0 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: number, label: Number, type: string, faker: { pattern: "TCK-#####" } }
+  - { name: subject, type: string, flags: [title, searchable], faker: { sentence: { min_words: 4, max_words: 8 } } }
+  - { name: channel, type: string, faker: { pick: { values: [Email, Chat, Phone] } } }
+  - { name: priority, type: string, faker: { pick: { values: [Low, Normal, High, Urgent], weights: [4, 5, 3, 1] } } }

@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: agents — the support team roster.
+title: Agents
+body:
+  - kind: label
+    params: { text: "Support agents", style: heading, icon: Headphones }
+  - kind: grid
+    name: agents
+    observe: agent
+    params:
+      search: true
+      columns:
+        name: { label: Agent, pin: true }
+        email: { label: Email, width: 220 }
+        team: { label: Team }

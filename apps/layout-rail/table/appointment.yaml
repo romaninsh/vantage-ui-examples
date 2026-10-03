@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: appointment — references patient and staff, spread evenly over the
+# next two weeks.
+datasource: hospital
+title: Appointments
+faker:
+  count: 90
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: confirmation, label: Booking, type: string, flags: [title, searchable], faker: { pattern: "APT-#####" } }
+  - { name: patient, type: string, references: patient }
+  - { name: staff, type: string, references: staff }
+  - { name: clinic, type: string, faker: { pick: { values: [Cardiology, "General Medicine", Pediatrics, Orthopedics, Radiology, Dermatology] } } }
+  - { name: scheduled, type: timestamp, faker: { date: { from: "now", to: "+14d", spread: even } } }
+  - { name: status, type: string, faker: { pick: { values: [Scheduled, Confirmed, Completed, Cancelled, "No-show"], weights: [4, 3, 2, 1, 1] } } }

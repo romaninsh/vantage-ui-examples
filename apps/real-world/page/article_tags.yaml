@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Article tags
+body:
+  - kind: binder
+    name: article_tags
+    observe: article_tag
+    params:
+      details: false
+      filter: [article, tag]
+      default_sort: { column: article.title, direction: asc }
+      columns:
+        article.title: { label: Article, pin: true, width: 360 }
+        tag.name:
+          label: Tag
+          color:
+            blue: [javascript, css, php, laravel, rust, mobile]
+            magenta: [design, accessibility, ai]
+            cyan: [databases, surrealdb, devops, security, performance, architecture]
+            green: [career, productivity, open-source, tutorial, testing]

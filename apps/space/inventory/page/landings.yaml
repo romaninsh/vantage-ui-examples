@@ -1,9 +1,0 @@
-# yaml-language-server: $schema=./page-schema-1.json
-
-# Page: landings — list view.
-
-title: Landings
-
-body:
-  - kind: crud
-    table: { script: 'scenery("landings").sort("id", "desc")' }

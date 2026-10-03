@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Comments
+body:
+  - kind: binder
+    name: comments
+    observe: comment
+    params:
+      form: comment
+      views: [comment_summary]
+      default_sort: { column: created_at, direction: desc }
+      filter: [article, author, "~body"]
+      columns:
+        body: { label: Comment, pin: true, width: 420 }
+        reply_kind:
+          color: { cyan: [author reply] }
+          labels: { author reply: Author reply }
+        article.title: { label: Article, width: 300 }
+        author.username: { label: Author }
+        posted_ago: { label: Posted }

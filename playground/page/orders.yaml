@@ -1,0 +1,16 @@
+# Page: orders — every delivery, newest first. The `customer` and
+# `courier` columns hold references — the values are ids of real rows in
+# those tables.
+title: Orders
+body:
+  - kind: crud
+    name: orders
+    table: { script: 'scenery("order").sort("placed_on", "desc")' }
+    params:
+      id_column: id
+      columns:
+        item: {}
+        total: {}
+        placed_on: {}
+        customer: {}
+        courier: {}

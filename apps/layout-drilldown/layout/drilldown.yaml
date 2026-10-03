@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./layout-schema-1.json
+# Layout: drilldown — a hub of cards, and pages that open on top of it.
+#
+# main:      `host: stack`. Opening a page from a page pushes it; Back (or a
+#            crumb) pops it and unloads it. The hub stays at the root.
+# title_bar: the app title, then the project switcher icon (added by itself
+#            with no left region); `command_palette` is a "Go to…" button,
+#            and cmd-k opens the same palette anywhere.
+# status:    layout-state functions: they re-evaluate as you drill in.
+regions:
+  title_bar:
+    left: [ { kind: app_title } ]
+    center: [ { kind: command_palette } ]
+    right: [ { kind: theme_toggle } ]
+  left: { nav: none }
+  main: { host: stack }
+  status:
+    - { id: here, text: '"On " + active_page("main") + " " + active_args("main").id' }
+    - { id: brand, text: 'layout_name() + " · " + app.brand', align: right }

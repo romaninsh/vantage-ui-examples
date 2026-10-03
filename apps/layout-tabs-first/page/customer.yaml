@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: customer — one tab per customer, opened from Customers with
+# `args.id`. Lists that customer's tickets via `scenery(...).ref(...)`; each
+# opens in its own tab.
+title: "Customer ${args.id}"
+record:
+  table: customer
+  id: "${args.id}"
+body:
+  - kind: label
+    params: { text: "${record.name}", style: heading, icon: Users }
+  - kind: label
+    params: { text: "${record.company}, ${record.email}, ${record.city}", style: muted }
+  - kind: label
+    params: { text: "Tickets", style: heading, icon: ClipboardList }
+  - kind: grid
+    name: tickets
+    observe:
+      script: 'scenery("customer").where("id", args.id).ref("tickets")'
+    params:
+      columns:
+        number: { label: Number, pin: true, width: 110 }
+        subject: { label: Subject, width: 320 }
+        status: { label: Status }
+        priority: { label: Priority }
+      row_actions:
+        - label: Open ticket
+          icon: ExternalLink
+          navigate: member
+          args:
+            id: "row.id"
+            name: "row.subject"

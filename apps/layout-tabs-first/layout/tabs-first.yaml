@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=./layout-schema-1.json
+# Layout: tabs-first — no sidebar; pages open as tabs in the title bar.
+#
+# `left: { nav: none }` shows no navigation, so the project switcher icon
+# joins the title bar by itself, right after the app title. `placement: title_bar` puts the
+# tabs in the middle of the bar; "+" opens the launcher.
+#
+# key:   the same ticket opens in the same tab, whoever opens it.
+# title: a tab reads the ticket's subject when the link passes one.
+# max:   past 6 tabs, the one you used longest ago closes.
+# reopen_closed: cmd-shift-t brings closed tabs back, newest first.
+regions:
+  title_bar:
+    left:
+      - { kind: app_title }
+      - { kind: environment, id: env, value: '${profile.env_label}' }
+    right:
+      - { kind: view, view: title_tools }
+      - { kind: theme_toggle }
+  left: { nav: none }
+  main:
+    host: tabs
+    empty: dashboard
+    tabs:
+      placement: title_bar
+      key: 'page + ":" + args.id'
+      title: 'args.name ?? page_title'
+      max: 6
+      reopen_closed: true
+      new_tab: launcher
+  status:
+    - { id: page, text: '"Page: " + main.page' }
+    - { id: desk, text: '"New tickets waiting: " + tables.incoming.count', align: right }

@@ -1,0 +1,11 @@
+# Datasource: records — the playground's business records (synthetic).
+#
+# `type: faker` generates believable data from column names alone: no
+# backend, no network, nothing to install. Tables on this datasource are
+# static grids; columns that `references:` another table point at real
+# rows there, so you can drill from a customer into their orders.
+#
+# This is the draft mode of building a Vantage app: shape tables, pages
+# and relations on fake data first, then point the same inventory at a
+# real database (SurrealDB, Postgres, …) when you're ready.
+type: faker

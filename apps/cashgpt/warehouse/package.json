@@ -1,0 +1,9 @@
+{
+  "name": "cashgpt-warehouse",
+  "private": true,
+  "description": "Generators and usage simulator that fill the cashgpt warehouse on first start.",
+  "dependencies": {
+    "pg": "^8.23.0",
+    "yaml": "^2.9.0"
+  }
+}

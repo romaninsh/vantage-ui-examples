@@ -72,9 +72,15 @@ impl Agency {
     }
 }
 
-trait AgencyTableExt {
+pub(crate) trait AgencyTableExt {
     fn query_launches(&self) -> Table<Db, Launch>;
     fn query_configs(&self) -> Table<Db, LauncherConfiguration>;
+    /// Keep only agencies that manufacture at least one launcher
+    /// configuration (`has == true`), or only those that manufacture none.
+    /// The `has_rockets` column is an expression, and Vista conditions
+    /// resolve stored columns only, so `?has_rockets=` is applied here,
+    /// on the table, before it becomes a Vista.
+    fn with_rocket_makers(self, has: bool) -> Self;
 }
 
 impl AgencyTableExt for Table<Db, Agency> {
@@ -83,5 +89,15 @@ impl AgencyTableExt for Table<Db, Agency> {
     }
     fn query_configs(&self) -> Table<Db, LauncherConfiguration> {
         self.get_subquery_as("configs").unwrap()
+    }
+    fn with_rocket_makers(mut self, has: bool) -> Self {
+        let configs = self.query_configs().get_count_query();
+        let condition = if has {
+            expr_any!("({}) > 0", (configs))
+        } else {
+            expr_any!("({}) = 0", (configs))
+        };
+        self.add_condition(condition.expr());
+        self
     }
 }

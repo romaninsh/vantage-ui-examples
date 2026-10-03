@@ -1,0 +1,11 @@
+# Application root for the icon rail demo.
+#
+#   layout: → layout/rail.yaml: menu/left.yaml as an icon rail, pages one at
+#             a time (no tab bar).
+#   home:   → the page the app opens on.
+layout: rail
+home: dashboard
+variables:
+  brand:
+    type: string
+    default: Riverside General Hospital

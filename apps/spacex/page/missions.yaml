@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: missions — customer programmes; the Launches tab narrows on mission_id.
+title: Missions
+body:
+  - kind: binder
+    name: missions
+    observe: missions
+    params:
+      default_sort: { column: name, direction: asc }
+      columns:
+        name: { label: Programme, pin: true, width: 200 }
+        manufacturers: { label: Manufacturers }
+        description: { label: Description, width: 480 }
+      row_actions:
+        - label: Copy website link
+          icon: Copy
+          copy: website
+        - label: Copy Wikipedia link
+          icon: Copy
+          copy: wikipedia

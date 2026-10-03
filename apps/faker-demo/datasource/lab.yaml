@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: lab — a plain seeded store. Each Lab table overrides
+# `faker.shape` (or gets a sim) to become a different hostile backend: flaky,
+# sluggish, slow to search, or churning under the selection. The data is the
+# same everywhere so every difference on screen comes from the backend's
+# behaviour, never from the schema.
+type: faker
+description: Backend behaviour lab (synthetic)
+count: 2000
+seed: 7
+sims:
+  revolve:
+    table: lab_revolving
+    script: |
+      loop {
+        sleep(seconds(0.5));
+        if table().count() > 10 { table().delete(pick(table().ids())); }
+        table().insert(#{ name: fake("name"), email: fake("email"), city: fake("city"),
+                          balance: rand_float(0.0, 9000.0) });
+      }

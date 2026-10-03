@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: capsules — Dragon capsules; the Launches tab narrows on cap_serial.
+title: Capsules
+body:
+  - kind: binder
+    name: capsules
+    observe: capsules
+    params:
+      default_sort: { column: original_launch, direction: desc }
+      filter: [status, type]
+      columns:
+        id: { label: Serial, pin: true }
+        type: { label: Type }
+        status:
+          label: Status
+          color: { success: [active], muted: [retired, unknown], danger: [destroyed] }
+          labels: { active: Active, retired: Retired, unknown: Unknown, destroyed: Destroyed }
+        reuse_count: { label: Reuses }
+        landings: { label: Landings }
+        original_launch: { label: First launch }

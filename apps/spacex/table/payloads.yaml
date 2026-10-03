@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: payloads — customer payloads carried by launches.
+datasource: spacex
+title: Payloads
+references:
+  launches: { table: launches, kind: has_many, foreign_key: payload_id }
+aggregates:
+  by_type: { op: count, group_by: payload_type }
+  by_orbit: { op: count, group_by: orbit }
+columns:
+  - { name: id, label: Payload, type: string, flags: [id, title, searchable] }
+  - { name: payload_type, label: Type, type: string }
+  - { name: nationality, type: string }
+  - { name: manufacturer, type: string }
+  - { name: customers, type: string }
+  - { name: orbit, type: string }
+  - { name: payload_mass_kg, label: Mass (kg), type: float }
+  - { name: reused, type: bool }

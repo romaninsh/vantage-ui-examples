@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+title: Strava
+items:
+  - page: strava
+    label: Strava
+    icon: Activity
+  - page: activities
+    label: Activities
+    icon: Bike

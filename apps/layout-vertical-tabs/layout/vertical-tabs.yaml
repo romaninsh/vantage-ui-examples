@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=./layout-schema-1.json
+# Layout: vertical-tabs — the open tabs as a list on the left, the page in
+# the middle, tools about it on the right.
+#
+# left:  `nav: vtabs` lists main's tabs, with the project switcher above
+#        and Project Settings below. While it is there, main draws no tabs
+#        of its own; delete the `left:` block and `placement: vertical`
+#        draws the list inside main instead.
+# right: view/session_tools.yaml follows the tab on screen. cmd-e hides it.
+regions:
+  title_bar: { view: title_bar }
+  left:
+    nav: vtabs
+    caption: Open tabs
+    width: 230
+    header: project_switcher
+    footer: project_settings
+  main:
+    host: tabs
+    header: data_banner
+    empty: dashboard
+    tabs:
+      placement: vertical
+      key: 'page + ":" + args.id'
+      max: 8
+      reopen_closed: true
+      new_tab: launcher
+  right:
+    view: session_tools
+    args: { page: '${main.page}', id: '${main.args.id}' }
+    width: 300
+    toggle: { key: cmd-e }

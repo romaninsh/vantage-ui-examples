@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+# Menu: left — the title bar's page selector lists these two pages. About is
+# a link in the title-bar tray (layout/workbench.yaml).
+title: Northwind Logistics
+items:
+  - page: shipments
+    label: Shipments
+    icon: Package
+  - page: tracking
+    label: Tracking
+    icon: Truck

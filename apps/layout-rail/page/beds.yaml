@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: beds — every bed, or those with one `status` (the menu link passes
+# `args.status`; empty means all, sorted so available beds come first). The
+# Ward column links to the ward's record.
+title: "${args.label}"
+body:
+  - kind: grid
+    name: beds
+    observe: { script: 'if args.status == "" { scenery("bed").sort("status", "asc") } else { scenery("bed").where("status", args.status) }' }
+    params:
+      search: true
+      columns:
+        bed_number: { label: Bed, pin: true }
+        ward: { label: Ward, link: ward }
+        status: { label: Status, color: { success: [Available], warning: [Cleaning, Maintenance], muted: [Occupied] } }

@@ -1,0 +1,9 @@
+# Application root for the vertical tabs demo.
+#
+#   layout: → layout/vertical-tabs.yaml: open tabs listed down the left,
+#             a tool panel on the right (cmd-e).
+#   home:   → the launcher, which "New launcher" opens too.
+layout: vertical-tabs
+home: launcher
+variables:
+  brand: { type: string, default: Northwind Support }

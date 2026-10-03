@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: products — the whole catalogue, searchable; opened by the search
+# icon over the tree. Selecting a product shows it in the drawer underneath.
+title: All products
+body:
+  - kind: grid
+    name: products
+    observe: product
+    params:
+      search: true
+      columns:
+        sku: { label: SKU, width: 140, pin: true }
+        brand: { label: Brand }
+        name: { label: Product }
+        price: { label: Price }
+        stock: { label: In stock, width: 90, color: { danger: ["0"] } }
+        rating: { label: Rating, width: 80 }
+        launched: { label: Launched, date_precision: day }
+      drawer: { view: product_detail, height: 200 }

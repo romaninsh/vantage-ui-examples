@@ -1,0 +1,36 @@
+# The launch-control API as a service Vantage runs for you. Standard compose
+# schema: `docker compose -f composer.yaml up -d` from a terminal drives the
+# same stack the Services indicator in the title bar does.
+#
+# `build: server` compiles the demo server inside Docker (two stages, see
+# server/Dockerfile), so no Rust toolchain is needed on this machine. The
+# first Start takes several minutes while it builds; later starts reuse the
+# image and the build cache.
+services:
+  api:
+    build: server
+    environment:
+      # SQLite on the named volume below, so simulated launches survive a
+      # rebuild of the image. The server seeds itself when the file is empty.
+      LAUNCH_DB_PATH: /data/launch.sqlite
+      # The demo's whole point: a share of reads answer 503 and every read
+      # takes a random 150-1200 ms. Set to "0" for a quiet server.
+      ERROR_RATE: "0.10"
+    # `127.0.0.1::8080`: loopback only, and an ephemeral host port picked by
+    # docker, so several stacks run side by side. The datasource addresses
+    # the service (`http://api:8080`) and Vantage rewrites it to the port
+    # docker assigned; `docker compose -p <project> port api 8080` shows it.
+    ports:
+      - "127.0.0.1::8080"
+    volumes:
+      - launch-db:/data
+    # distroless has no shell or curl; the binary checks itself.
+    healthcheck:
+      test: ["CMD", "/launch-control-server", "healthcheck"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 10s
+
+volumes:
+  launch-db:

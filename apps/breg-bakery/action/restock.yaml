@@ -21,7 +21,7 @@ form:
       widget: dropdown
       # language=rhai
       options: |
-        table("bakery-surreal/bakery").add_order("name", "asc")
+        table("bakery-surreal/bakery").sort("name", "asc")
       option_value: id
       option_label: name
     - name: batches

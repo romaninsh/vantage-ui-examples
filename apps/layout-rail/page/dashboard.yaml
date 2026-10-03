@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: dashboard — the home page, behind the rail's first icon.
+title: Dashboard
+body:
+  - kind: label
+    params: { text: "${app.brand} — icon rail", style: heading, icon: LayoutDashboard }
+  - kind: label
+    params: { text: "Pick an icon in the rail. Each section lists its own pages beside it; Staff, Appointments and About open straight away. The badge on Patients counts who is walking into the ER right now.", style: muted }
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: patient
+            params: { label: "Patients", icon: HeartPulse, color: blue }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: admission
+            params: { label: "Admissions", icon: ClipboardList, color: yellow }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: appointment
+            params: { label: "Appointments", icon: CalendarDays, color: green }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: er_arrival
+            params: { label: "At the ER desk", icon: Activity, color: red }
+  - kind: divider
+    label: ER arrivals
+  - kind: list
+    observe: { script: 'scenery("er_arrival").sort("id", "asc").limit(8)' }
+    height: 200
+    params:
+      text: '${ first_name + " " + last_name }'
+      sub: '${ complaint }'
+      label: '${ triage }'

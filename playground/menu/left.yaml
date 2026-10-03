@@ -1,0 +1,25 @@
+# Menu: left — the playground's navigation. "Live" holds the views that
+# move on their own; "Records" holds the relational grids. All of it is
+# fake data — reshape it by talking to your AI agent, or connect a real
+# database when you're ready.
+title: Playground
+items:
+  - section: Live
+    children:
+      - page: dashboard
+        label: Delivery Board
+        icon: LayoutDashboard
+      - page: cities
+        label: Cities
+        icon: Map
+  - section: Records
+    children:
+      - page: orders
+        label: Orders
+        icon: Star
+      - page: customers
+        label: Customers
+        icon: Heart
+      - page: couriers
+        label: Couriers
+        icon: Globe

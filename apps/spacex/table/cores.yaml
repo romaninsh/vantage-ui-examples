@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: cores — Falcon first-stage boosters (B1058, …). RTLS = return to
+# launch site, ASDS = autonomous spaceport drone ship.
+datasource: spacex
+title: Cores
+references:
+  launches: { table: launches, kind: has_many, foreign_key: core_serial }
+columns:
+  - { name: id, label: Serial, type: string, flags: [id, title, searchable] }
+  - { name: status, type: string, enum: [active, inactive, retired, expended, lost, unknown] }
+  - { name: block, type: int }
+  - { name: reuse_count, label: Reuses, type: int }
+  - { name: rtls_attempts, label: RTLS attempts, type: int }
+  - { name: rtls_landings, label: RTLS landings, type: int }
+  - { name: asds_attempts, label: ASDS attempts, type: int }
+  - { name: asds_landings, label: ASDS landings, type: int }
+  - { name: water_landing, label: Water landing, type: bool }
+  - { name: original_launch, label: First launch, type: timestamp, date_precision: day }

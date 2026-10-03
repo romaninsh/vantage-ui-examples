@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# View: ward_beds — the drawer under the wards grid: the selected ward's
+# beds, available ones in green.
+args:
+  id: { type: string, required: true }
+body:
+  - kind: grid
+    observe: { script: 'scenery("ward").where("id", args.id).ref("beds")' }
+    height: 180
+    params:
+      selectable: false
+      row_menu: false
+      columns:
+        bed_number: { label: Bed }
+        status: { label: Status, color: { success: [Available], warning: [Cleaning, Maintenance], muted: [Occupied] } }

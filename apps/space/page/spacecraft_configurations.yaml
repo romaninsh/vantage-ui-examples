@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: spacecraft_configurations — spacecraft designs.
+title: Spacecraft configurations
+body:
+  - kind: binder
+    name: spacecraft_configurations
+    observe: spacecraft_configurations
+    params:
+      columns:
+        name: { label: Spacecraft, pin: true, width: 240 }
+        type.name: { label: Type }
+        agency.name: { label: Agency }
+        in_use: { label: In use }

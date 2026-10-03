@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: tracking — parcels still on their way (`active` is true until
+# delivery), soonest ETA first; late ones in red. Selecting a row opens
+# view/shipment_detail.yaml in a drawer under the grid, and the inspector
+# follows it too (the grid has the same name as on the shipments page).
+title: Tracking
+body:
+  - kind: grid
+    name: shipments
+    observe: { script: 'scenery("shipment").where("active", true)' }
+    params:
+      row_color: { column: late, color: { danger: ["true"] } }
+      drawer: { view: shipment_detail, height: 220 }
+      columns:
+        tracking_no: { label: Shipment, pin: true }
+        origin_city: { label: From }
+        destination_city: { label: To }
+        status:
+          color:
+            blue: [Booked]
+            cyan: ["Picked up", "In transit"]
+            warning: ["Out for delivery"]
+            danger: [Exception]
+        location: { label: Last seen }
+        last_scan: { label: Scanned, render: relative }
+        eta: { label: ETA, render: relative }

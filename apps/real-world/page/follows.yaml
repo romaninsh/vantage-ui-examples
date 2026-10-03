@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Follows
+body:
+  - kind: binder
+    name: follows
+    observe: follow
+    params:
+      details: false
+      filter: [follower, author]
+      default_sort: { column: created_at, direction: desc }
+      columns:
+        follower.username: { label: Follower, pin: true }
+        author.username: { label: Follows }
+        since_ago: { label: Since }

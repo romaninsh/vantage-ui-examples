@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: lab-sluggish — a grid over a slow, page-based, read-only backend (table/lab_sluggish.yaml).
+title: Sluggish backend
+body:
+  - kind: markdown
+    text: |
+      ## Sluggish backend
+
+      Every read takes **0.8–2.5 seconds** and arrives in numbered pages of 50. The backend is
+      read-only, and one text cell in ten is deliberately odd — a 200-character name, an empty
+      one, a duplicate "John Smith", or unicode with an emoji.
+
+      Try: scroll while a page is still loading and confirm the grid stays responsive; type in
+      the search box and notice it never fires a request per keystroke; look for how long
+      names and empty titles are handled.
+
+  - kind: column
+    frame: true
+    children:
+      - kind: grid
+        name: slow
+        observe: lab_sluggish
+        height: 420
+        params:
+          search: true
+          columns:
+            company: { label: Company, pin: true, width: 260 }
+            city: { label: City }
+            phone: { label: Phone }
+            active: { label: Active, width: 80 }
+      - kind: label
+        params: { text: 'Selected: ${ if slow.selected_id == "" { "nothing" } else { slow.selected_id } }', style: muted }

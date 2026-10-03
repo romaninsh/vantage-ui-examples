@@ -1,6 +1,0 @@
-# Page: targets — placeholder (not implemented yet; framework grammar).
-title: Regional Targets
-body:
-  - kind: label
-    params:
-      text: "Regional Targets — coming soon"

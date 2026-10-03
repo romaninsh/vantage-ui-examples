@@ -8,9 +8,11 @@
 /AGENTS.md
 
 # Machine-local, not content: the install record an app keeps so it
-# can update itself, the row caches, and the credentials file.
+# can update itself, the row caches, the credentials file, and the
+# local data files the connect wizard placed (CSV, SQLite).
 manifest.yaml
 .cache/
 .env
+data/
 .DS_Store
 # --- end managed by Vantage

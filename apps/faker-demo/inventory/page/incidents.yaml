@@ -1,6 +1,0 @@
-# Page: incidents — placeholder (not implemented yet; framework grammar).
-title: Incidents
-body:
-  - kind: label
-    params:
-      text: "Incidents — coming soon"

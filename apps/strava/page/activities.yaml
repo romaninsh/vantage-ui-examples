@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Every activity, straight from the Strava API, a page at a time as you
+# scroll. Opening the page the first time signs in to Strava. Details (or
+# a double-click) opens the selected activity in its own tab.
+title: Activities
+body:
+  - kind: row
+    children:
+      - kind: button
+        name: details
+        enabled: 'activities.selected_id != ""'
+        params:
+          label: Details
+          icon: ExternalLink
+          style: primary
+          action: 'navigate("activity", #{ id: activities.selected_id })'
+  - kind: grid
+    name: activities
+    observe: activity
+    sugar: !include ../sugar/activity.yaml
+    params:
+      double_click: details
+      default_sort: { column: start_date_local, direction: desc }
+      columns:
+        name: { width: 260, pin: true }
+        sport_type: {}
+        start_date_local: { width: 170 }
+        distance_km: { width: 100 }
+        moving: { width: 80 }
+        elapsed: { width: 80 }
+        stopped: { width: 75 }
+        pace: { width: 115 }
+        top_speed: { width: 95 }
+        total_elevation_gain: { width: 85 }
+        climb_per_km: { width: 95 }
+        average_heartrate: { width: 70 }
+        max_heartrate: { width: 70 }
+        suffer_score: { width: 70 }
+        average_cadence: { width: 75 }
+        average_watts: { width: 70 }
+        weighted_average_watts: { width: 95 }
+        max_watts: { width: 70 }
+        kilojoules: { width: 70 }
+        average_temp: { width: 85 }
+        kudos_count: { width: 65 }
+        comment_count: { width: 85 }
+        achievement_count: { width: 105 }
+        pr_count: { width: 55 }
+        total_photo_count: { width: 70 }
+        athlete_count: { width: 80 }
+        tags: { width: 170 }
+        source: { width: 130 }
+        gear_id: { width: 95 }
+        visibility: { width: 95, labels: { everyone: Everyone, followers_only: Followers, only_me: "Only me" } }

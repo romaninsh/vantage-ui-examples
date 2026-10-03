@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: region — the top of the chain. Each region runs several clubs.
+datasource: gym
+title: Regions
+faker:
+  count: 4
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: country, label: Region, type: string, flags: [title, searchable] }
+  - { name: manager_name, label: Manager, type: string }
+  - { name: opened, label: Opened, type: timestamp, faker: { date: { from: "2014-01-01", to: "2022-12-31" } } }
+references:
+  clubs: { table: club, kind: has_many, foreign_key: region }

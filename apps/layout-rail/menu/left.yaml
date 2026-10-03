@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+# Menu: left — the rail. Home and About are plain links: choosing one hides
+# the sub-menu. Each section lists views of its pages for a task: the same
+# page with a filter (`args:`, Rhai expressions — hence the quoted strings),
+# so the list shows only what that task needs.
+title: Riverside General Hospital
+items:
+  - page: dashboard
+    label: Home
+    id: home
+    icon: LayoutDashboard
+  - section: Patients
+    id: patients
+    icon: HeartPulse
+    badge: 'tables.er_arrival.count'
+    badge_description: "People waiting in the emergency department for triage"
+    children:
+      - { page: er, label: Waiting in ER, icon: Ambulance, id: er }
+      - { page: patients, label: All patients, icon: Users, id: patients_all, args: { status: '""', label: '"All patients"' } }
+      - { page: patients, label: Inpatients, icon: Activity, id: patients_in, args: { status: '"Inpatient"', label: '"Inpatients"' } }
+      - { page: patients, label: Outpatients, icon: User, id: patients_out, args: { status: '"Outpatient"', label: '"Outpatients"' } }
+      - { page: admissions, label: Admissions, icon: ClipboardList, id: admissions }
+  - section: Wards
+    id: wards
+    icon: Building2
+    children:
+      - { page: wards, label: Wards, icon: Building2, id: wards_all }
+      - { page: beds, label: All beds, icon: LayoutGrid, id: beds_all, args: { status: '""', label: '"All beds"' } }
+      - { page: beds, label: Available beds, icon: CircleCheck, id: beds_free, args: { status: '"Available"', label: '"Available beds"' } }
+      - { page: beds, label: Being cleaned, icon: Sparkles, id: beds_cleaning, args: { status: '"Cleaning"', label: '"Beds being cleaned"' } }
+  - section: Staff
+    id: staff
+    icon: Stethoscope
+    children:
+      - { page: staff, label: All staff, icon: Users, id: staff_all, args: { role: '""', shift: '""', label: '"All staff"' } }
+      - { page: staff, label: Doctors, icon: Stethoscope, id: staff_doctors, args: { role: '"Doctor"', shift: '""', label: '"Doctors"' } }
+      - { page: staff, label: Nurses, icon: Heart, id: staff_nurses, args: { role: '"Nurse"', shift: '""', label: '"Nurses"' } }
+      - { page: staff, label: Night shift, icon: Moon, id: staff_night, args: { role: '""', shift: '"Night"', label: '"Night shift"' } }
+  - section: Appointments
+    id: appointments
+    icon: CalendarDays
+    children:
+      - { page: appointments, label: All bookings, icon: CalendarDays, id: appt_all, args: { status: '""', label: '"All bookings"' } }
+      - { page: appointments, label: Confirmed, icon: CalendarCheck, id: appt_confirmed, args: { status: '"Confirmed"', label: '"Confirmed bookings"' } }
+      - { page: appointments, label: Cancelled, icon: CircleX, id: appt_cancelled, args: { status: '"Cancelled"', label: '"Cancelled bookings"' } }
+      - { page: appointments, label: No-shows, icon: UserX, id: appt_noshow, args: { status: '"No-show"', label: '"No-shows"' } }
+  - page: about
+    label: About
+    id: about
+    icon: BookOpen

@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: chat — customers, conversations and their messages (synthetic,
+# fixed). `seed` makes every table on it generate the same rows on every
+# run, including the relational links between customers, conversations and
+# messages.
+type: faker
+description: Live-chat customers, conversations and messages (synthetic, fixed)
+seed: 42

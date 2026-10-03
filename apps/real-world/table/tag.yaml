@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: surrealdb
+title: Tag
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [mandatory, title, searchable] }
+  article_count: { type: int, label: Articles, expr: 'expr("(SELECT VALUE count() FROM article_tag WHERE tag = $parent.id GROUP ALL)[0] ?? 0")' }
+  usage: { type: string, label: Usage, flags: [label], expr: 'expr("IF ((SELECT VALUE count() FROM article_tag WHERE tag = $parent.id GROUP ALL)[0] ?? 0) = 0 THEN ''unused'' ELSE IF (SELECT VALUE count() FROM article_tag WHERE tag = $parent.id GROUP ALL)[0] >= 6 THEN ''popular'' ELSE '''' END")' }
+  created_at: { type: timestamp, label: Created, date_precision: day }
+  updated_at: { type: timestamp, label: Updated, time_precision: minutes }
+references:
+  article_tags: { table: article_tag, kind: has_many, foreign_key: tag }

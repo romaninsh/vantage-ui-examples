@@ -27,14 +27,19 @@ use tokio::sync::OnceCell;
 /// server for BDD (see [`point_inventory_at_localhost`]).
 pub const PORT: u16 = 8080;
 
-/// The committed inventory ships pointing at the public server so a `vantage://`
-/// install works with no local setup; BDD must hit the local one instead.
-const HOSTED_URL: &str = "https://launch-control.vantage-ui.com";
+/// Addresses the committed inventory may carry that BDD must redirect to the
+/// local server: the public server (a `vantage://` install works with no local
+/// setup) and the compose service name (`composer.yaml` runs the API in a
+/// container and Vantage rewrites the service host to the published port).
+const REWRITTEN_URLS: &[&str] = &[
+    "https://launch-control.vantage-ui.com",
+    "http://api:8080",
+];
 
 /// Inventory files carrying the hosted URL that BDD rewrites to localhost.
 const HOSTED_URL_FILES: &[&str] = &[
-    "apps/launch-control/inventory/datasource/local.yaml",
-    "apps/launch-control/inventory/action/submit-launch.yaml",
+    "apps/launch-control/datasource/local.yaml",
+    "apps/launch-control/action/submit-launch.yaml",
 ];
 
 /// Cargo package that builds the bundled server.
@@ -62,21 +67,24 @@ pub async fn ensure_started() {
         .await;
 }
 
-/// Rewrite the shipped hosted URL to `http://127.0.0.1:{PORT}` in the
+/// Rewrite the shipped server address to `http://127.0.0.1:{PORT}` in the
 /// launch-control inventory before the app launches.
 ///
-/// The committed inventory points at the public server (`HOSTED_URL`, an API
-/// Gateway → Lambda that runs with injected 503s) so a `vantage://` install
-/// works out of the box. BDD instead needs the local server this harness brings
-/// up: deterministic (`--error-rate 0`) and freshly seeded, so the counts in
-/// `data_tools.feature` are exact and reads never flake. Idempotent — only
-/// writes when it finds the hosted URL; CI checkouts are disposable, so the
-/// in-place edit is fine.
+/// The committed inventory points at the compose service (or, in older
+/// checkouts, the public server) so the app works with no local build. BDD
+/// instead needs the server this harness brings up: deterministic
+/// (`--error-rate 0`) and freshly seeded, so the counts in `data_tools.feature`
+/// are exact and reads never flake. Idempotent — only writes when it finds one
+/// of the shipped addresses; CI checkouts are disposable, so the in-place edit
+/// is fine.
 fn point_inventory_at_localhost() -> Result<()> {
     let local = format!("http://127.0.0.1:{PORT}");
     for rel in HOSTED_URL_FILES {
         let original = std::fs::read_to_string(rel).with_context(|| format!("read {rel}"))?;
-        let patched = original.replace(HOSTED_URL, &local);
+        let mut patched = original.clone();
+        for shipped in REWRITTEN_URLS {
+            patched = patched.replace(shipped, &local);
+        }
         if patched != original {
             std::fs::write(rel, &patched).with_context(|| format!("write {rel}"))?;
             eprintln!("pointed {rel} at {local} for BDD");

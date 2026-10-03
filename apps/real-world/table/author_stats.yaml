@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Most-favorited authors: one row per user with at least one article.
+# bar_pct = favorites as a share of the leader's (0–100), for the list bar.
+datasource: surrealdb
+title: Top authors
+columns:
+  id: { type: string, flags: [id] }
+  username: { type: string, flags: [title] }
+  articles: { type: int }
+  favorites: { type: int }
+  followers: { type: int }
+  bar_pct: { type: float }
+surreal:
+  # language=rhai
+  rhai: |
+    select()
+        .from(
+            select()
+                .from("user")
+                .field("id")
+                .field("username")
+                .expression(expr("(SELECT VALUE count() FROM article WHERE author = $parent.id GROUP ALL)[0] ?? 0").alias("articles"))
+                .expression(expr("(SELECT VALUE count() FROM favorite WHERE article.author = $parent.id GROUP ALL)[0] ?? 0").alias("favorites"))
+                .expression(expr("(SELECT VALUE count() FROM follow WHERE author = $parent.id GROUP ALL)[0] ?? 0").alias("followers"))
+                .subquery())
+        .field("id")
+        .field("username")
+        .field("articles")
+        .field("favorites")
+        .field("followers")
+        .expression(expr("math::round(favorites * 100.0 / math::max((SELECT VALUE (SELECT VALUE count() FROM favorite WHERE article.author = $parent.id GROUP ALL)[0] ?? 0 FROM user)))").alias("bar_pct"))
+        .where(expr("articles > 0"))
+        .order_by(ident("favorites"), "desc")
+        .order_by(ident("articles"), "desc")
+        .limit(8, 0)

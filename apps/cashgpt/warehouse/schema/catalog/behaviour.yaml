@@ -1,0 +1,310 @@
+# Behavioural profiles — how one person actually uses AI over seven months.
+#
+# The simulator draws a profile per employee, then plays their year out month by
+# month: do they adopt, when, how hard, which tools, do they stick with it, do
+# they blow up. Two runs of the same employee give different numbers, because
+# two people with the same job do.
+#
+# WHY PROFILES RATHER THAN A DISTRIBUTION. Apportioning a total across 280,000
+# people gives a correct histogram and no people in it — everyone lands near
+# their group's mean and nobody has a story. A profile carries the shape of a
+# behaviour: a dabbler quits in March, a runaway leaves an agent looping in
+# June, a switcher abandons Opus 4.7 the week 4.8 lands. Those are the rows the
+# Watchtower exists to find, and you cannot apportion your way to them.
+#
+# EVERY EMPLOYEE GETS A PROFILE, INCLUDING ABSTAINER. Non-adoption is a
+# behaviour, not an absence, and making it explicit means adoption rate is
+# something the simulation produces rather than a number imposed on it.
+#
+# PARAMETERS
+#   adopt            probability this profile ever starts, before discipline
+#                    and grade modifiers
+#   start            month window in which they begin, 1 = January
+#   churn            monthly probability of stopping FOR GOOD
+#   lapse            monthly probability of simply not using it, still a user.
+#                    Distinct from churn on purpose: an occasional user who
+#                    skips March has not left, and treating every gap as
+#                    permanent means the active base can only ever erode.
+#   intensity        lognormal tokens per active month: median, sigma.
+#                    Calibrated against real consumption: a long conversation is
+#                    20-50k tokens, an agentic coding session 0.5-2M. A daily
+#                    chat user lands near 1.5M/month, a power coder near 21M.
+#   volatility       month-to-month sigma around their own personal level —
+#                    a person is consistent with themselves, not with the mean
+#   tier_pref        pull towards model tiers, relative
+#   kind_pref        pull towards app kinds, relative
+#   breadth          distinct models and apps touched in a month
+#   novelty          0-1, chance of migrating to a model launched this month
+#   spike            probability and multiplier of a runaway month
+#
+#   node scripts/silver/behaviour.mjs
+
+meta:
+  months: 7
+  first_month: 2026-01
+
+profiles:
+  - code: ABSTAINER
+    name: Abstainer
+    note: Never starts. Not an absence — a decision, and the largest group in the bank.
+    adopt: 0.00
+    start: [1, 1]
+    churn: 0.000
+    lapse: 0.00
+    intensity: { median: 0, sigma: 0 }
+    volatility: 0
+    tier_pref: {}
+    kind_pref: {}
+    breadth: { models: [0, 0], apps: [0, 0] }
+    novelty: 0
+    spike: { prob: 0, mult: [1, 1] }
+
+  - code: DABBLER
+    name: Dabbler
+    note: Tries it, uses it twice, never comes back. High churn is the whole profile.
+    adopt: 0.55
+    start: [1, 6]
+    churn: 0.320
+    lapse: 0.45
+    intensity: { median: 110000, sigma: 0.9 }
+    volatility: 0.7
+    tier_pref: { top: 1, high: 3, base: 6, untiered: 1 }
+    kind_pref: { assistant: 1.4, domain: 11, coding: 0.6 }
+    breadth: { models: [1, 2], apps: [1, 1] }
+    novelty: 0.05
+    spike: { prob: 0.00, mult: [1, 1] }
+
+  - code: OCCASIONAL
+    name: Occasional user
+    note: Opens it when stuck. Weeks go by. Low volume, long tenure.
+    adopt: 0.80
+    start: [1, 6]
+    churn: 0.020
+    lapse: 0.28
+    intensity: { median: 340000, sigma: 0.75 }
+    volatility: 0.55
+    tier_pref: { top: 1, high: 3, base: 7, untiered: 1 }
+    kind_pref: { assistant: 1.5, domain: 20, research: 0.3 }
+    breadth: { models: [1, 2], apps: [1, 2] }
+    novelty: 0.10
+    spike: { prob: 0.005, mult: [3, 6] }
+
+  - code: STEADY_CHAT
+    name: Steady chat
+    note: Daily driver for drafting and questions. The modal adopter in a bank.
+    adopt: 0.90
+    start: [1, 5]
+    churn: 0.006
+    lapse: 0.04
+    intensity: { median: 1500000, sigma: 0.6 }
+    volatility: 0.35
+    tier_pref: { top: 1, high: 3, base: 8, untiered: 1 }
+    kind_pref: { assistant: 1.4, domain: 26, research: 0.3 }
+    breadth: { models: [2, 3], apps: [1, 3] }
+    novelty: 0.25
+    spike: { prob: 0.01, mult: [3, 8] }
+
+  - code: DOMAIN_WORKER
+    name: Domain worker
+    note: Lives in one purpose-built app all day — KYC, complaints, credit memos.
+    adopt: 0.88
+    start: [1, 6]
+    churn: 0.008
+    lapse: 0.05
+    intensity: { median: 19000000, sigma: 0.6 }
+    volatility: 0.30
+    tier_pref: { top: 1.2, high: 3, base: 12, untiered: 2 }
+    kind_pref: { domain: 22, assistant: 0.5 }
+    breadth: { models: [1, 3], apps: [1, 2] }
+    novelty: 0.15
+    spike: { prob: 0.012, mult: [4, 9] }
+
+  - code: POWER_CODER
+    name: Power coder
+    note: Agentic coding most of the working day. Frontier models, high volume.
+    adopt: 0.96
+    start: [1, 4]
+    churn: 0.006
+    lapse: 0.03
+    intensity: { median: 21000000, sigma: 0.7 }
+    volatility: 0.40
+    tier_pref: { top: 2.8, high: 5, base: 12, untiered: 1 }
+    kind_pref: { coding: 5.2, agent: 1.5, assistant: 0.8, domain: 2.8 }
+    breadth: { models: [3, 6], apps: [2, 3] }
+    novelty: 0.65
+    spike: { prob: 0.035, mult: [3, 10] }
+
+  - code: AGENT_RUNNER
+    name: Agent runner
+    note: Fires off long autonomous runs. Spiky by nature — a quiet month then a huge one.
+    adopt: 0.92
+    start: [2, 6]
+    churn: 0.015
+    lapse: 0.10
+    intensity: { median: 16000000, sigma: 1.05 }
+    volatility: 0.95
+    tier_pref: { top: 3.2, high: 4, base: 11, untiered: 1 }
+    kind_pref: { agent: 5.2, coding: 2.6, analysis: 0.8, domain: 4.2 }
+    breadth: { models: [2, 5], apps: [1, 3] }
+    novelty: 0.75
+    spike: { prob: 0.09, mult: [4, 14] }
+
+  - code: ANALYST_HEAVY
+    name: Heavy analyst
+    note: Long-context work over data and filings. Steadier than an agent runner, nearly as large.
+    adopt: 0.90
+    start: [1, 5]
+    churn: 0.006
+    lapse: 0.06
+    intensity: { median: 9000000, sigma: 0.7 }
+    volatility: 0.45
+    tier_pref: { top: 1.4, high: 4, base: 12, untiered: 3 }
+    kind_pref: { analysis: 1.8, research: 1.0, assistant: 0.6, domain: 21 }
+    breadth: { models: [2, 5], apps: [2, 3] }
+    novelty: 0.45
+    spike: { prob: 0.03, mult: [3, 9] }
+
+  - code: BATCH_OPERATOR
+    name: Batch operator
+    note: Scheduled jobs, not a person at a keyboard. Flat, machine-like, cheap per token.
+    adopt: 0.70
+    start: [1, 5]
+    churn: 0.005
+    lapse: 0.04
+    intensity: { median: 12000000, sigma: 0.5 }
+    volatility: 0.12
+    tier_pref: { top: 0.2, high: 1, base: 14, untiered: 8 }
+    kind_pref: { domain: 27, analysis: 1.1, agent: 0.7 }
+    breadth: { models: [1, 2], apps: [1, 2] }
+    novelty: 0.05
+    spike: { prob: 0.02, mult: [5, 12] }
+
+  - code: LATE_BLOOMER
+    name: Late bloomer
+    note: Ignores it until a colleague shows them, then ramps hard. Drives the June step-up.
+    adopt: 0.82
+    start: [4, 7]
+    churn: 0.005
+    lapse: 0.06
+    intensity: { median: 3200000, sigma: 0.8 }
+    volatility: 0.5
+    tier_pref: { top: 1, high: 4, base: 8, untiered: 1 }
+    kind_pref: { assistant: 1.4, coding: 1.0, domain: 21 }
+    breadth: { models: [2, 4], apps: [1, 3] }
+    novelty: 0.55
+    spike: { prob: 0.02, mult: [3, 8] }
+
+  - code: RUNAWAY
+    name: Runaway
+    note: >
+      Leaves something running. A scanner with no ceiling, a retry loop, an eval
+      harness re-running nightly. Rare, and the reason the Watchtower exists —
+      these are the rows that come out at 200x their team.
+    adopt: 0.97
+    start: [1, 5]
+    churn: 0.008
+    lapse: 0.05
+    intensity: { median: 17000000, sigma: 0.9 }
+    volatility: 0.8
+    tier_pref: { top: 2.6, high: 3, base: 9, untiered: 2 }
+    kind_pref: { agent: 2.8, coding: 1.8, domain: 10, analysis: 1.0 }
+    breadth: { models: [2, 4], apps: [1, 2] }
+    novelty: 0.4
+    # this is the profile that produces the 40x-plus outliers
+    spike: { prob: 0.38, mult: [6, 18] }
+
+# ---------------------------------------------------------------------------
+# Which profiles a discipline produces. Relative weights, normalised per
+# work_type. ABSTAINER carries most of the weight almost everywhere — that is
+# what makes bank-wide adoption land near half rather than near everyone.
+# ---------------------------------------------------------------------------
+assignment:
+  engineering:
+    { ABSTAINER: 4.6, DABBLER: 4, OCCASIONAL: 8, STEADY_CHAT: 16, DOMAIN_WORKER: 3,
+      POWER_CODER: 34, AGENT_RUNNER: 14, ANALYST_HEAVY: 6, BATCH_OPERATOR: 4,
+      LATE_BLOOMER: 8.4, RUNAWAY: 1.2 }
+  data:
+    { ABSTAINER: 6.2, DABBLER: 4, OCCASIONAL: 8, STEADY_CHAT: 14, DOMAIN_WORKER: 4,
+      POWER_CODER: 20, AGENT_RUNNER: 12, ANALYST_HEAVY: 18, BATCH_OPERATOR: 9,
+      LATE_BLOOMER: 8.4, RUNAWAY: 1.0 }
+  product:
+    { ABSTAINER: 9.3, DABBLER: 6, OCCASIONAL: 12, STEADY_CHAT: 24, DOMAIN_WORKER: 8,
+      POWER_CODER: 18, AGENT_RUNNER: 6, ANALYST_HEAVY: 6, BATCH_OPERATOR: 2,
+      LATE_BLOOMER: 14.7, RUNAWAY: 0.5 }
+  analytics:
+    { ABSTAINER: 10.8, DABBLER: 6, OCCASIONAL: 11, STEADY_CHAT: 18, DOMAIN_WORKER: 10,
+      POWER_CODER: 8, AGENT_RUNNER: 5, ANALYST_HEAVY: 26, BATCH_OPERATOR: 8,
+      LATE_BLOOMER: 12.6, RUNAWAY: 0.7 }
+  markets:
+    { ABSTAINER: 23.0, DABBLER: 8, OCCASIONAL: 14, STEADY_CHAT: 18, DOMAIN_WORKER: 12,
+      POWER_CODER: 4, AGENT_RUNNER: 3, ANALYST_HEAVY: 14, BATCH_OPERATOR: 3,
+      LATE_BLOOMER: 12.6, RUNAWAY: 0.5 }
+  advisory:
+    { ABSTAINER: 34.7, DABBLER: 12, OCCASIONAL: 16, STEADY_CHAT: 16, DOMAIN_WORKER: 22,
+      POWER_CODER: 0.5, AGENT_RUNNER: 0.4, ANALYST_HEAVY: 3, BATCH_OPERATOR: 2,
+      LATE_BLOOMER: 14.7, RUNAWAY: 0.2 }
+  control:
+    { ABSTAINER: 37.0, DABBLER: 11, OCCASIONAL: 15, STEADY_CHAT: 14, DOMAIN_WORKER: 26,
+      POWER_CODER: 0.6, AGENT_RUNNER: 0.5, ANALYST_HEAVY: 4, BATCH_OPERATOR: 6,
+      LATE_BLOOMER: 12.6, RUNAWAY: 0.25 }
+  people:
+    { ABSTAINER: 41.6, DABBLER: 13, OCCASIONAL: 16, STEADY_CHAT: 13, DOMAIN_WORKER: 10,
+      POWER_CODER: 0.3, AGENT_RUNNER: 0.2, ANALYST_HEAVY: 2, BATCH_OPERATOR: 1,
+      LATE_BLOOMER: 12.6, RUNAWAY: 0.15 }
+  ops:
+    { ABSTAINER: 44.7, DABBLER: 14, OCCASIONAL: 15, STEADY_CHAT: 10, DOMAIN_WORKER: 32,
+      POWER_CODER: 0.3, AGENT_RUNNER: 0.2, ANALYST_HEAVY: 1.5, BATCH_OPERATOR: 9,
+      LATE_BLOOMER: 10.5, RUNAWAY: 0.2 }
+  service:
+    { ABSTAINER: 50.7, DABBLER: 15, OCCASIONAL: 13, STEADY_CHAT: 8, DOMAIN_WORKER: 30,
+      POWER_CODER: 0.2, AGENT_RUNNER: 0.1, ANALYST_HEAVY: 1, BATCH_OPERATOR: 5,
+      LATE_BLOOMER: 8.4, RUNAWAY: 0.15 }
+  facilities:
+    { ABSTAINER: 64.7, DABBLER: 12, OCCASIONAL: 8, STEADY_CHAT: 4, DOMAIN_WORKER: 3,
+      POWER_CODER: 0.1, AGENT_RUNNER: 0.05, ANALYST_HEAVY: 0.4, BATCH_OPERATOR: 1,
+      LATE_BLOOMER: 4.2, RUNAWAY: 0.05 }
+
+# Grade tilts the draw. Seniors are likelier to abstain and, when they do use
+# it, to reach for the expensive model — they have less time and more licence.
+# Applied as a multiplier on the profile weight, interpolated by rank 1..8.
+seniority_modifier:
+  ABSTAINER:     { rank1: 0.85, rank8: 2.20 }
+  DABBLER:       { rank1: 1.00, rank8: 1.40 }
+  OCCASIONAL:    { rank1: 1.00, rank8: 1.20 }
+  STEADY_CHAT:   { rank1: 1.05, rank8: 0.80 }
+  DOMAIN_WORKER: { rank1: 1.20, rank8: 0.55 }
+  POWER_CODER:   { rank1: 1.15, rank8: 0.35 }
+  AGENT_RUNNER:  { rank1: 0.80, rank8: 0.70 }
+  ANALYST_HEAVY: { rank1: 0.90, rank8: 0.90 }
+  BATCH_OPERATOR: { rank1: 1.00, rank8: 0.60 }
+  LATE_BLOOMER:  { rank1: 1.00, rank8: 1.10 }
+  RUNAWAY:       { rank1: 0.70, rank8: 1.30 }
+
+# Intensity also scales with grade — a VP's agent run costs more than an
+# analyst's because they point it at bigger problems.
+intensity_by_rank: [0.72, 0.88, 1.15, 1.30, 1.45, 1.55, 1.80, 2.60]
+
+# When adopters start, as a share of all of them. Bank-wide.
+#
+# A profile's own `start` window MASKS this and the remainder is renormalised,
+# so a late bloomer still cannot start in January while the overall shape stays
+# under one control.
+#
+# THIS IS NOT THE JUNE STEP. January is already a $3.27m month, so the bank
+# opens the year with a real user base — Copilot and the Azure agreement were
+# both in place long before. What June adds is intensity, not headcount: see
+# usage_ramp.
+start_curve: [0.19, 0.09, 0.12, 0.15, 0.17, 0.22, 0.06]
+
+# Bank-wide intensity ramp — a multiplier on every active person's token level
+# for that month. Adoption explains who is using it; this explains how hard.
+#
+# THIS IS THE JUNE STEP. May to June is 2.57x on a base that grew 19%, so it
+# cannot be adoption: it is the Bedrock gateway going live across engineering
+# and frontier models becoming reachable at volume from inside the estate. The
+# jump lives here rather than in any profile because it happened TO everyone at
+# once, which is exactly what an infrastructure change looks like.
+#
+# See schema/catalog/models.yaml (platforms.live_from) and
+# data/reference/company-story.md.
+usage_ramp: [0.94, 0.72, 0.66, 0.81, 0.87, 1.48, 1.93]

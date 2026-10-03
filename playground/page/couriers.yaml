@@ -1,0 +1,12 @@
+# Page: couriers — the fleet. Six riders share the day's orders.
+title: Couriers
+body:
+  - kind: crud
+    name: couriers
+    table: { script: 'scenery("courier")' }
+    params:
+      id_column: id
+      columns:
+        name: {}
+        vehicle: {}
+        city: {}

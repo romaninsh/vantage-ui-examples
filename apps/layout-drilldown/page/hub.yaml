@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: hub — the root of the stack: one card per region. Clicking a card
+# pushes the region's page on top (the list's `action:`).
+title: Regions
+body:
+  - kind: list
+    observe: region
+    action: 'open("region", #{ id: row.id, name: row.country })'
+    item:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "${row.country}", style: heading, icon: MapPin }
+          - kind: label
+            params: { text: "Managed by ${row.manager_name} · opened ${row.opened}", style: muted }

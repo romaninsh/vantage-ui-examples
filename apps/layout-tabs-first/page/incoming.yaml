@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: incoming — the `builtin:fifo` stream: tickets as they're submitted.
+title: New tickets (live)
+body:
+  - kind: label
+    params: { text: "New tickets, arriving live", style: heading, icon: Inbox }
+  - kind: grid
+    name: incoming
+    observe: { script: 'scenery("incoming").sort("id", "asc")' }
+    params:
+      search: true
+      columns:
+        number: { label: Number, pin: true, width: 110 }
+        subject: { label: Subject, width: 320 }
+        channel: { label: Channel }
+        priority: { label: Priority }

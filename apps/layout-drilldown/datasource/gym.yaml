@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: gym — the Northwind Gym chain (synthetic): regions, clubs,
+# members, visits and payments. `seed` keeps it the same on every run.
+type: faker
+description: Northwind Gym chain (synthetic, fixed)
+seed: 7

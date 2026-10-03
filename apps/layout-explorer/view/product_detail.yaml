@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# View: product_detail — the drawer under a product grid, for the selected
+# product: its name, four facts and a Buy button in one row, and the
+# description below (drag the drawer taller, or scroll, to read it all).
+args:
+  id: { type: string, required: true }
+body:
+  - kind: list
+    observe: { script: 'scenery("product").where("id", args.id).limit(1)' }
+    item:
+      - kind: column
+        children:
+          - kind: label
+            params: { text: "${row.brand} ${row.name} · ${row.sku}", style: heading, icon: Package }
+          - kind: row
+            align: stretch
+            children:
+              - kind: column
+                frame: true
+                children:
+                  - kind: label
+                    params: { text: "Price", style: muted, icon: PoundSterling }
+                  - kind: label
+                    params: { text: "${money(row.price / 100.0, \"£\")}", style: heading }
+              - kind: column
+                frame: true
+                children:
+                  - kind: label
+                    params: { text: "In stock", style: muted, icon: Warehouse }
+                  - kind: label
+                    params: { text: "${row.stock} units", style: heading }
+              - kind: column
+                frame: true
+                children:
+                  - kind: label
+                    params: { text: "Rating", style: muted, icon: Star }
+                  - kind: label
+                    params: { text: "${row.rating} / 5", style: heading }
+              - kind: column
+                frame: true
+                children:
+                  - kind: label
+                    params: { text: "Launched", style: muted, icon: CalendarDays }
+                  - kind: label
+                    params: { text: "${date_human(row.launched)}", style: heading }
+              - kind: column
+                align: stretch
+                justify: center
+                children:
+                  - kind: button
+                    name: buy
+                    params:
+                      label: Buy
+                      icon: ShoppingCart
+                      style: primary
+                      action: 'toast("Added to basket", "success");'
+          - kind: label
+            params: { text: "${row.description}" }

@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: lab_search — 50,000 rows with fast windows but a server-side search
+# that answers 0.2–1.5 s late, so replies to quick typing land out of order.
+datasource: lab
+title: Slow search
+faker:
+  count: 50000
+  shape:
+    capabilities: [count, fetch_window, order, search]
+    latency:
+      window: 20ms..60ms
+      get: 10ms..30ms
+      search_extra: 200ms..1500ms
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: first_name, label: First name, type: string, flags: [title, searchable] }
+  - { name: last_name, label: Last name, type: string, flags: [searchable] }
+  - { name: country, type: string }
+  - { name: email, type: string }

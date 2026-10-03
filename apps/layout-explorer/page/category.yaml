@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: category — opened from a tree node with `args.id` (and `args.name`,
+# which the tree uses to highlight the node). Lists the category's own
+# products; selecting one shows it in the drawer underneath.
+title: "${record.name}"
+record:
+  table: category
+  id: "${args.id}"
+body:
+  - kind: grid
+    name: products
+    observe: { script: 'scenery("product").where("category", args.id).sort("name", "asc")' }
+    params:
+      columns:
+        sku: { label: SKU, width: 140, pin: true }
+        brand: { label: Brand }
+        name: { label: Product }
+        price: { label: Price }
+        stock: { label: In stock, width: 90, color: { danger: ["0"] } }
+        rating: { label: Rating, width: 80 }
+      drawer: { view: product_detail, height: 200 }

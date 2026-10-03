@@ -1,0 +1,12 @@
+# Application root for the workbench layout demo.
+#
+#   layout: → layout/workbench.yaml: a booking desk on the left, one page in
+#             the middle, an inspector on the right that follows the selected
+#             shipment, and a status bar.
+#   home:   → the page the app opens on.
+layout: workbench
+home: shipments
+variables:
+  brand:
+    type: string
+    default: Northwind Logistics

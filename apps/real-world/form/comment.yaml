@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./form-schema-1.json
+title: Comment
+table: comment
+max_columns: 2
+body:
+  - article
+  - author
+  - { name: body, multiline: 5, span: full }
+  - kind: row
+    label: Posted / updated
+    body:
+      - { name: created_at, readonly: true }
+      - { name: updated_at, readonly: true }

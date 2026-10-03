@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: patient — one patient's record, opened from Patients in a sheet on
+# the right (`open_in("sheet", …)`), so the list stays in view. Their
+# admissions and appointments are lists, two lines per entry.
+title: "${record.first_name} ${record.last_name}"
+record:
+  table: patient
+  id: "${args.id}"
+body:
+  - kind: label
+    params: { text: "${record.status} · blood type ${record.blood_type}", icon: HeartPulse }
+  - kind: label
+    params: { text: "Born ${date_human(record.date_of_birth)} · ${record.phone}", style: muted }
+  - kind: divider
+    label: Admissions
+  - kind: list
+    name: patient_admissions
+    observe: { script: 'scenery("patient").where("id", args.id).ref("admissions")' }
+    item:
+      - kind: column
+        frame: true
+        children:
+          - kind: row
+            justify: between
+            children:
+              - kind: label
+                params: { text: "${row.case_number} · ${row.status}", icon: ClipboardList }
+              - kind: label
+                params: { text: "${date_relative(row.admitted)}", style: muted }
+          - kind: label
+            params: { text: "${row.diagnosis}", style: muted }
+  - kind: divider
+    label: Appointments
+  - kind: list
+    name: patient_appointments
+    observe: { script: 'scenery("patient").where("id", args.id).ref("appointments")' }
+    item:
+      - kind: column
+        frame: true
+        children:
+          - kind: row
+            justify: between
+            children:
+              - kind: label
+                params: { text: "${row.clinic}", icon: CalendarDays }
+              - kind: label
+                params: { text: "${date_relative(row.scheduled)}", style: muted }
+          - kind: label
+            params: { text: "${row.confirmation} · ${row.status}", style: muted }

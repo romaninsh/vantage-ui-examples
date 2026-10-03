@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: payment — 1 or 2 charges per visit (class fees, extras).
+datasource: gym
+title: Payments
+faker:
+  fan_out: { column: visit, min: 1, max: 2 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: visit, label: Visit, type: string, references: visit }
+  - { name: reference, label: Reference, type: string, flags: [title, searchable], faker: { pattern: "PAY-??##-####" } }
+  - { name: item, label: Item, type: string, faker: { pick: { values: [Class fee, Day pass, Personal training, Towel hire, Smoothie bar, Locker], weights: [4, 2, 2, 3, 3, 1] } } }
+  - { name: amount, label: Amount, type: float, unit: { currency: "£" }, faker: { range: { min: 2.5, max: 45, decimals: 2 } } }
+  - { name: method, label: Method, type: string, faker: { pick: { values: [Card, Apple Pay, Direct debit, Cash, Voucher], weights: [6, 4, 3, 1, 1] } } }
+  - { name: status, label: Status, type: string, faker: { pick: { values: [Paid, Pending, Refunded, Failed], weights: [80, 10, 6, 4] } } }

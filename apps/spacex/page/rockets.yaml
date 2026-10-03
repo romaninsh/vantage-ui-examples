@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: rockets — a binder: the Launches tab narrows through the relation.
+title: Rockets
+body:
+  - kind: binder
+    name: rockets
+    observe: rockets
+    params:
+      default_sort: { column: first_flight, direction: asc }
+      columns:
+        name: { label: Rocket, pin: true, width: 160 }
+        type: { label: Type }
+        active:
+          label: Status
+          color: { success: ["true"], muted: ["false"] }
+          labels: { "true": Active, "false": Retired }
+        stages: { label: Stages }
+        boosters: { label: Boosters }
+        cost_per_launch: { label: Cost per launch }
+        success_rate_pct: { label: "Success %" }
+        first_flight: { label: First flight }
+      row_actions:
+        - label: Copy Wikipedia link
+          icon: Copy
+          copy: wikipedia

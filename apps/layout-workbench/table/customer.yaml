@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: customer — accounts that book shipments (a fixed list). The live
+# shipment table can't reference it (sims only write tables without
+# `references:`), so a shipment's `customer` is a company name.
+datasource: customers
+title: Customers
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: company, label: Customer, type: string, flags: [title, searchable] }
+  - { name: city, type: string }
+  - { name: country, type: string }
+  - { name: contact_email, label: Contact email, type: string }
+  - { name: contact_phone, label: Contact phone, type: string }
+  - { name: account_tier, label: Tier, type: string, faker: { pick: { values: [Standard, Premium, Enterprise], weights: [5, 3, 2] } } }

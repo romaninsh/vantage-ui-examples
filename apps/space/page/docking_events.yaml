@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: docking_events — vehicle arrivals and departures at a station.
+title: Docking events
+body:
+  - kind: binder
+    name: docking_events
+    observe: docking_events
+    params:
+      columns:
+        space_station_target.name: { label: Station, pin: true, width: 240 }
+        flight_vehicle_chaser.name: { label: Vehicle }
+        docking_location.name: { label: Port }
+        docking: { label: Docked, time_precision: minutes }
+        departure: { label: Departed, time_precision: minutes }

@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: launchers — individual boosters; the Landings tab is a client-filtered
+# join on the booster id.
+title: Launchers
+body:
+  - kind: binder
+    name: launchers
+    observe: launchers
+    params:
+      columns:
+        serial_number: { label: Booster, pin: true, width: 160 }
+        status.name: { label: Status, color: { green: ["active"], muted: ["retired", "expended", "converted", "N/A"], red: ["lost", "destroyed", "scrapped"] } }
+        flight_proven: { label: Flight proven }
+        flights: { label: Flights }
+        successful_landings: { label: Landings }
+        attempted_landings: { label: Attempts }
+        first_launch_date: { label: First flight, date_precision: day }
+        last_launch_date: { label: Last flight, date_precision: day }

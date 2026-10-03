@@ -1,0 +1,74 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: lab-scope — the framework's scope graph on one page: application
+# variables, the active profile, a named select publishing a value, a view
+# mounted with args and exporting an output, a grid publishing its selection
+# and a `when:` gate reading it. Every label below re-renders in place as the
+# value it reads changes.
+title: Scope & wiring
+body:
+  - kind: markdown
+    text: |
+      ## Scope & wiring
+
+      Every template hole on this page reads a **scope path**: `app.*` comes from `application.yaml`,
+      `profile.*` from the active profile's env file (`VANTAGE_PROFILE=prod` swaps it), and
+      named components publish outputs — the chips publish `focus.value`, the stat publishes
+      `region_count.value`, the grid publishes `regions.selected_id`. The view mount below is a
+      private scope: only its declared `total` output crosses the boundary as `brief.total`.
+      Click a chip or a grid row and watch the labels that read them repaint.
+
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params: { text: "${app.brand} — ${profile.motd}", style: heading, icon: Frame }
+      - kind: row
+        children:
+          - kind: column
+            width: 260
+            children:
+              - kind: select
+                name: focus
+                appearance: chips
+                params: { options: ["All regions", "Busiest only"], default: "All regions" }
+          - kind: column
+            children:
+              - kind: stat
+                name: region_count
+                observe: top
+                params: { label: "Regions reporting", icon: Map, color: blue }
+      - kind: label
+        params: { text: "Focus: ${focus.value} — ${region_count.value} regions live" }
+
+  - kind: column
+    frame: true
+    children:
+      - kind: view
+        name: brief
+        src: region-brief
+        args:
+          heading: "Region brief — mounted from view/region-brief.yaml"
+      - kind: label
+        params: { text: "The view exported brief.total = ${brief.total}", style: muted }
+
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params: { text: "Click a row to select it", style: heading, icon: GalleryVerticalEnd }
+      - kind: grid
+        name: regions
+        observe: { script: 'if focus.value == "Busiest only" { scenery("top").sort("visitors", "desc").limit(3) } else { scenery("top").sort("visitors", "desc") }' }
+        height: 300
+        params:
+          id_column: region
+          columns:
+            region: { label: Region, pin: true }
+            visitors: { label: Visitors }
+            vs_baseline: { label: "vs normal %" }
+            live: { label: Live, color: { success: [Live], danger: [Offline] } }
+      - kind: label
+        params: { text: 'Selected region: ${ if regions.selected_id == "" { "none yet" } else { regions.selected_id } }' }
+      - kind: label
+        when: 'regions.selected_id != ""'
+        params: { text: "…the selection is non-empty, so this when:-gated line appeared", style: muted, icon: Check }

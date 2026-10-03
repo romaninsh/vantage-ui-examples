@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+# Menu: left — SpaceX sidebar, grouped by domain.
+title: SpaceX
+items:
+  - page: welcome
+    label: Welcome
+    icon: BookOpen
+  - page: overview
+    label: Overview
+    icon: LayoutDashboard
+  - section: Missions
+    children:
+      - page: launches
+        label: Launches
+        icon: Rocket
+      - page: missions
+        label: Programmes
+        icon: Target
+      - page: payloads
+        label: Payloads
+        icon: Package
+  - section: Vehicles
+    children:
+      - page: rockets
+        label: Rockets
+        icon: Plane
+      - page: dragons
+        label: Dragons
+        icon: Box
+      - page: capsules
+        label: Capsules
+        icon: Package
+      - page: cores
+        label: Cores
+        icon: Layers
+  - section: Infrastructure
+    children:
+      - page: launchpads
+        label: Launchpads
+        icon: Map
+      - page: landpads
+        label: Landpads
+        icon: MapPin
+      - page: ships
+        label: Ships
+        icon: Ship

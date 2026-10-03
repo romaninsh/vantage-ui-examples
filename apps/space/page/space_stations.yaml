@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: space_stations — stations past and present; Dockings, Expeditions and
+# Spacewalks are client-filtered joins.
+title: Space stations
+body:
+  - kind: binder
+    name: space_stations
+    observe: space_stations
+    params:
+      columns:
+        name: { label: Station, pin: true, width: 260 }
+        status.name: { label: Status, color: { green: ["Active"], muted: ["De-Orbited", "Decommissioned"], yellow: ["Under Construction", "Planned"] } }
+        type.name: { label: Type }
+        orbit: { label: Orbit }
+        founded: { label: Founded }
+        deorbited: { label: Deorbited }
+        onboard_crew: { label: Crew }
+        docked_vehicles: { label: Docked }

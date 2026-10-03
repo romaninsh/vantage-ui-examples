@@ -1,9 +1,0 @@
-# yaml-language-server: $schema=./page-schema-1.json
-
-# Page: spacecraft_configurations — list view.
-
-title: Spacecraft configurations
-
-body:
-  - kind: crud
-    table: { script: 'scenery("spacecraft_configurations").sort("name", "asc")' }

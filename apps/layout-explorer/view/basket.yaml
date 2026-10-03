@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# View: basket — the right panel: the basket's lines as a grid, then the
+# item count and the total from the table's aggregates. Checkout only shows
+# a toast: the basket is fixed.
+body:
+  - kind: label
+    params: { text: "Basket", style: heading, icon: ShoppingCart }
+  - kind: grid
+    name: basket
+    observe: basket_item
+    height: 240
+    params:
+      selectable: false
+      row_menu: false
+      columns:
+        product_name: { label: Product }
+        qty: { label: Qty, width: 50 }
+        line_total: { label: Total, width: 90 }
+  - kind: spacer
+  - kind: row
+    children:
+      - kind: stat
+        observe: basket_item#items
+        params: { label: Items, icon: Package }
+      - kind: stat
+        observe: basket_item#total
+        params: { label: Total, icon: PoundSterling, color: green }
+  - kind: button
+    name: checkout
+    params:
+      label: Checkout
+      icon: CreditCard
+      style: primary
+      action: 'toast("Order placed — thank you!", "success");'

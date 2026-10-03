@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: starship_vehicles — the vehicles array of the dashboard/starship
+# singleton.
+title: Starship fleet
+body:
+  - kind: binder
+    name: starship_vehicles
+    observe: starship_vehicles
+    params:
+      columns:
+        serial_number: { label: Vehicle, pin: true, width: 160 }
+        status.name: { label: Status, color: { green: ["active"], muted: ["retired", "expended", "converted", "N/A"], red: ["lost", "destroyed", "scrapped"] } }
+        launcher_config.name: { label: Config }
+        flight_proven: { label: Flight proven }
+        flights: { label: Flights }
+        successful_landings: { label: Landings }
+        attempted_landings: { label: Attempts }
+        first_launch_date: { label: First flight, date_precision: day }
+        last_launch_date: { label: Last flight, date_precision: day }

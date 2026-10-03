@@ -14,21 +14,30 @@ Two halves:
   `total_payload_mass`, landing counts…) are **computed, not stored**. Latency +
   random 503s are injected on purpose. The server is dormant by default; a
   mission simulation is triggered on demand (see below), stamping `last_updated`.
-- `inventory/` — the YAML app: a launches Binder board with relation drilldowns
+- the app root (`datasource/`, `table/`, `page/`, `view/`, `action/`, `menu/`) — the YAML app: a launches Binder board with relation drilldowns
   (provider / rocket / pad → location / payloads / crew / landings → landpad),
   live-refreshing off `last_updated` and never blanking on a flaky 503.
 
 ## Run
 
+Open the app in Vantage and press Start on the Services indicator in the title
+bar. `composer.yaml` builds the server image inside Docker (no Rust toolchain
+needed; the first build takes a few minutes) and runs it on a loopback port that
+docker picks. The datasource addresses the service as `http://api:8080` and
+Vantage rewrites that to the published port. The database lives on a named
+volume and seeds itself from the bundled fixtures on first start.
+
 ```bash
-# 1. seed SQLite from the committed LL2 fixtures (once)
-cargo run -p launch-control-server -- seed
+# in the vantage-ui repo
+cargo run -p vantage-ui -- ../vantage-ui-examples/apps/launch-control
+```
 
-# 2. start the flaky API (dormant — no background simulator)
-cargo run -p launch-control-server -- serve
+Without Docker, run the server yourself and point the datasource at it:
 
-# 3. point vantage-ui at the inventory (in the vantage-ui repo)
-cargo run -p vantage-ui -- --config ../vantage-ui-examples/apps/launch-control/inventory
+```bash
+cargo run -p launch-control-server -- serve      # seeds SQLite on first start
+# then set datasource/local.yaml `url` to http://127.0.0.1:8080 (and the
+# action/submit-launch.yaml url to match)
 ```
 
 ## Server commands

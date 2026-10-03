@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: launches — every launch, or the upcoming/previous endpoint variants.
+# The plain binder is where every 'Open launches' drill-down lands; the range
+# chips remount the second binder over launches_upcoming / launches_previous.
+title: Launches
+body:
+  - kind: select
+    name: range
+    appearance: chips
+    width: 300
+    params: { options: [all, upcoming, previous], default: all }
+  - kind: binder
+    name: launches
+    when: 'range.value == "all"'
+    observe: launches
+    params:
+      columns:
+        name: { label: Launch, pin: true, width: 340 }
+        status.name: { label: Status, color: { green: ["Launch Successful", "Go for Launch", "Payload Deployed"], yellow: ["To Be Confirmed", "To Be Determined", "On Hold", "Launch in Flight"], red: ["Launch Failure", "Launch was a Partial Failure"] } }
+        net: { label: NET, time_precision: minutes }
+        launch_service_provider.name: { label: Provider }
+        rocket.configuration.full_name: { label: Rocket }
+        mission.name: { label: Mission }
+        mission.orbit.name: { label: Orbit }
+        pad.name: { label: Pad }
+        pad.location.name: { label: Site }
+        probability: { label: "Go %" }
+        webcast_live: { label: Live }
+  - kind: binder
+    name: launches_range
+    when: 'range.value != "all"'
+    observe: { script: 'scenery("launches_" + range.value)' }
+    params:
+      columns:
+        name: { label: Launch, pin: true, width: 340 }
+        status.name: { label: Status, color: { green: ["Launch Successful", "Go for Launch", "Payload Deployed"], yellow: ["To Be Confirmed", "To Be Determined", "On Hold", "Launch in Flight"], red: ["Launch Failure", "Launch was a Partial Failure"] } }
+        net: { label: NET, time_precision: minutes }
+        launch_service_provider.name: { label: Provider }
+        rocket.configuration.full_name: { label: Rocket }
+        mission.name: { label: Mission }
+        mission.orbit.name: { label: Orbit }
+        pad.name: { label: Pad }
+        pad.location.name: { label: Site }
+        probability: { label: "Go %" }
+        webcast_live: { label: Live }

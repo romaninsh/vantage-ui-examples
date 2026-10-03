@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: surrealdb
+title: Comment
+columns:
+  id: { type: string, flags: [id] }
+  body: { type: string, flags: [mandatory, title, searchable] }
+  article: { type: string, flags: [mandatory], references: article }
+  article.title: { type: string, label: Article }
+  # Pages filter on this string, never on the `article` link (string ≠ record).
+  article.slug: { type: string, flags: [hidden] }
+  author:
+    type: string
+    flags: [mandatory]
+    references: { table: user, kind: has_one, name: author }
+  author.username: { type: string, label: Author }
+  author_name: { type: string, flags: [hidden], expr: 'expr("author.username")' }
+  article_title: { type: string, flags: [hidden], expr: 'expr("article.title")' }
+  # Pill when the article's own author replies.
+  reply_kind: { type: string, label: Reply, flags: [label], expr: 'expr("IF author = article.author THEN ''author reply'' ELSE '''' END")' }
+  posted_ago: { type: string, label: Posted, expr: 'expr("fn::ago(created_at)")' }
+  created_at: { type: timestamp, label: Posted on, time_precision: minutes }
+  updated_at: { type: timestamp, label: Updated on, time_precision: minutes }

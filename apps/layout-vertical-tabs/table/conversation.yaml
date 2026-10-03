@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: conversation — one chat thread per row; `customer` links to a real
+# row on `customer` (relational static build spreads the 60 conversations
+# evenly over the 30 customers); `messages` fans out below.
+datasource: chat
+title: Conversations
+faker:
+  count: 60
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: customer, type: string, references: customer }
+  - name: topic
+    type: string
+    flags: [title, searchable]
+    faker:
+      pick:
+        values: [Billing question, Login issue, Shipping delay, Refund request, Feature request, Account upgrade, Password reset, Damaged item, Cancel subscription, Technical error]
+  - { name: channel, type: string, faker: { pick: { values: [Web chat, WhatsApp, Messenger] } } }
+  - name: status
+    type: string
+    faker:
+      pick:
+        values: [Waiting, Active, Snoozed, Closed]
+        weights: [3, 4, 2, 5]
+  - { name: started, type: timestamp, faker: { date: { from: "-14d" } } }
+  - { name: last_message, label: Last message, type: string, faker: { sentence: { min_words: 4, max_words: 12 } } }
+  - { name: unread, label: Unread, type: int, faker: { range: { min: 0, max: 9 } } }
+  - { name: csat, label: "CSAT (1-5)", type: int, faker: { range: { min: 1, max: 5 } } }
+references:
+  messages: { table: message, kind: has_many, foreign_key: conversation }

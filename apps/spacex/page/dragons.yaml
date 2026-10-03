@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: dragons — two spacecraft, no relations (the API has no launch key for them).
+title: Dragons
+body:
+  - kind: grid
+    name: dragons
+    observe: dragons
+    height: 200
+    params:
+      columns:
+        name: { label: Spacecraft, pin: true, width: 160 }
+        type: { label: Type }
+        active:
+          label: Status
+          color: { success: ["true"], muted: ["false"] }
+          labels: { "true": Active, "false": Retired }
+        first_flight: { label: First flight }
+        crew_capacity: { label: Crew }
+        description: { label: Description, width: 400 }
+      row_actions:
+        - label: Copy Wikipedia link
+          icon: Copy
+          copy: wikipedia

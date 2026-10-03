@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: dashboard — the home page. Three live counts and a short tour.
+title: Dashboard
+body:
+  - kind: label
+    params: { text: "${app.brand} — live chat console", style: heading, icon: LayoutDashboard }
+  - kind: label
+    params: { text: "Open a conversation from Conversations: each one keeps a tab in the list on the left, and the tools panel on the right follows the tab on screen. cmd-e hides the tools, cmd-shift-t reopens a closed tab.", style: muted }
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: conversation
+            params: { label: "Conversations", icon: MessageSquare, color: blue }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: queue
+            params: { label: "Waiting queue", icon: Clock, color: green }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: customer
+            params: { label: "Customers", icon: Users, color: magenta }

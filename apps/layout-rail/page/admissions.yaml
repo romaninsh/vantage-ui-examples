@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: admissions — every admission, referencing a patient and a ward.
+title: Admissions
+body:
+  - kind: grid
+    name: admissions
+    observe: admission
+    params:
+      search: true
+      default_sort: { column: admitted, direction: desc }
+      columns:
+        case_number: { label: Case, pin: true }
+        patient: { label: Patient, link: patient }
+        ward: { label: Ward, link: ward }
+        admitted: { label: Admitted }
+        status: { label: Status }
+        diagnosis: { label: Diagnosis, width: 280 }

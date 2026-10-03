@@ -24,7 +24,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::OnceCell;
 
 /// Fixed loopback port the mock datasources point at (see
-/// `apps/space-mock/inventory/datasource/*.yaml`).
+/// `apps/space-mock/datasource/*.yaml`).
 pub const PORT: u16 = 14599;
 
 static SERVER: OnceCell<()> = OnceCell::const_new();

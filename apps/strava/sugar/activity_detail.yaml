@@ -1,0 +1,27 @@
+# Display columns for the activity page (`record: { sugar: !include … }`).
+outputs:
+  when: { type: string }
+  distance_km: { label: "Distance (km)", type: string }
+  moving: { label: "Moving time", type: string }
+  elapsed: { label: "Elapsed time", type: string }
+  elevation: { label: "Elevation (m)", type: string }
+  speed_avg: { label: "Avg speed", type: string }
+  speed_max: { label: "Max speed", type: string }
+  work_kj: { label: "Total work (kJ)", type: string }
+  effort: { label: "Relative effort", type: string }
+  calories_kcal: { label: Calories, type: string }
+  hr_avg: { label: "Avg HR", type: string }
+  hr_max: { label: "Max HR", type: string }
+  cadence_avg: { label: Cadence, type: string }
+  watts_avg: { label: "Avg power", type: string }
+  watts_max: { label: "Max power", type: string }
+  watts_weighted: { label: "Weighted avg power", type: string }
+  temp: { label: Temperature, type: string }
+  photo_url: { type: string }
+  track_geojson: { type: string, flags: [hidden] }
+  gear_text: { label: Gear, type: string }
+  top_results: { type: string }
+  segments_md: { type: string }
+  laps_md: { type: string }
+  splits_md: { type: string }
+script: !include activity_detail.rhai

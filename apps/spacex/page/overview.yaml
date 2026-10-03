@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: overview — figures and charts from `aggregates:` declared on the
+# tables. A GraphQL datasource has no query tables, but every root field
+# here returns its whole result in one request, so reductions over the loaded
+# rows are exact.
+title: Overview
+body:
+  - kind: label
+    params: { text: "SpaceX — the public GraphQL mirror as a console", style: heading, icon: Rocket }
+  - kind: label
+    params: { text: "Read-only, best-effort community endpoint; every tile below is reduced from rows the app already holds", style: muted }
+
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: launches#total
+            params: { label: "Launches", icon: Rocket, color: blue }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: launches#successes
+            params: { label: "Successful", icon: CircleCheck, color: green }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: launches#upcoming
+            params: { label: "Upcoming", icon: Calendar, color: yellow }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: payloads
+            params: { label: "Payloads flown", icon: Package, color: cyan }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: cores
+            params: { label: "Boosters", icon: Layers, color: magenta }
+
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Launches per year", style: heading, icon: ChartBar }
+          - kind: chart
+            observe: launches#by_year
+            height: 280
+            params: { x: launch_year, y: by_year, chart_type: bar, value_labels: true, label: "" }
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Payloads by orbit", style: heading, icon: ChartPie }
+          - kind: row
+            children:
+              - kind: column
+                children:
+                  - kind: chart
+                    observe: payloads#by_orbit
+                    height: 280
+                    params: { x: orbit, y: by_orbit, chart_type: pie, label: "", palette: { order: grouped } }
+              - kind: list
+                observe: payloads#by_orbit
+                height: 280
+                params:
+                  text: '${ orbit }'
+                  label: '${ by_orbit }'
+                  palette: { order: grouped }
+
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params: { text: "Latest launches", style: heading, icon: Calendar }
+      - kind: list
+        observe: { script: 'scenery("launches").sort("launch_date_utc", "desc").limit(8)' }
+        height: 300
+        params:
+          text: '${ mission_name }'
+          sub: '${ launch_year + "  ·  " + rocket.rocket_name + "  ·  " + launch_site.site_name }'
+          label: '${ if upcoming == true { #{ text: "upcoming", color: "warning" } } else if launch_success == true { #{ text: "success", color: "success" } } else if launch_success == false { #{ text: "failed", color: "danger" } } else { #{ text: "unknown", color: "muted" } } }'

@@ -28,7 +28,7 @@ Feature: launch-control loads pre-seeded data through the bundled server
     And the data script holds: table("launches").list().len() > 0
     # Server-side drill-down: the bundled server honors ?lsp__id= (provider ->
     # launches), and the filter genuinely discriminates.
-    And the data script holds: table("launches").add_condition_eq("lsp__id", 121).count() == 18
-    And the data script holds: table("launches").add_condition_eq("lsp__id", "no-such-id").count() == 0
+    And the data script holds: table("launches").where("lsp__id", 121).count() == 18
+    And the data script holds: table("launches").where("lsp__id", "no-such-id").count() == 0
     # The whole exploration left no errors behind.
     Then there are no error log entries

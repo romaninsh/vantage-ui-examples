@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: expeditions — crew rotations aboard a station; the Spacewalks tab is a
+# client-filtered join.
+title: Expeditions
+body:
+  - kind: binder
+    name: expeditions
+    observe: expeditions
+    params:
+      columns:
+        name: { label: Expedition, pin: true, width: 240 }
+        spacestation.name: { label: Station }
+        start: { label: Start, date_precision: day }
+        end: { label: End, date_precision: day }

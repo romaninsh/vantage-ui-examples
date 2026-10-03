@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: shipment — one row per parcel. Nothing is generated up front
+# (`count: 0`): sims/shipment.rhai inserts each row, or adopts one saved from
+# the desk form, and moves it along. `customer` is plain text, not a
+# reference: a column with `references:` builds the table as relational
+# static, which sims can't write.
+#
+# `active` is true until delivery; the tracking page and the "Behind ETA"
+# stat narrow on it (observe scripts only have equality `where`). `trail` is
+# a GeoJSON LineString of the positions so far; `sim` is the owning sim.
+datasource: logistics
+title: Shipments
+faker: { count: 0 }
+aggregates:
+  total_value: { op: sum, column: declared_value }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: tracking_no, label: Shipment, type: string, flags: [title, searchable] }
+  - { name: customer, type: string }
+  - { name: origin_city, label: From, type: string, enum: [Rotterdam, Hamburg, Antwerp, Paris, Lyon, Madrid, Milan, Munich, Warsaw, Prague, Vienna, Copenhagen] }
+  - { name: destination_city, label: To, type: string, enum: [Rotterdam, Hamburg, Antwerp, Paris, Lyon, Madrid, Milan, Munich, Warsaw, Prague, Vienna, Copenhagen] }
+  - { name: carrier, type: string }
+  - { name: service_level, label: Service, type: string, enum: [Economy, Standard, Express, Overnight] }
+  - { name: status, type: string }
+  - { name: pieces, type: int }
+  - { name: weight_kg, label: Weight, type: float, unit: kg }
+  - { name: declared_value, label: Declared value, type: float, unit: { currency: "£" } }
+  - { name: created_at, label: Booked, type: timestamp }
+  - { name: eta, label: ETA, type: timestamp }
+  - { name: location, label: Last seen, type: string }
+  - { name: last_scan, label: Last scan, type: timestamp }
+  - { name: lat, type: float }
+  - { name: lon, type: float }
+  - { name: late, type: bool }
+  - { name: active, type: bool, flags: [hidden] }
+  - { name: trail, type: string, flags: [hidden] }
+  - { name: sim, type: string, flags: [hidden] }

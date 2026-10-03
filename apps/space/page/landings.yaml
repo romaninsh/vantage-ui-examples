@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: landings — every booster landing attempt.
+title: Landings
+body:
+  - kind: binder
+    name: landings
+    observe: landings
+    params:
+      columns:
+        landing_location.name: { label: Location, pin: true, width: 260 }
+        type.name: { label: Type }
+        success: { label: Outcome, color: { success: ["true"], danger: ["false"] }, labels: { "true": Success, "false": Failure } }
+        attempt: { label: Attempted }
+        firststage.launcher.serial_number: { label: Booster }

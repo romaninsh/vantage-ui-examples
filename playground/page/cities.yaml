@@ -1,0 +1,17 @@
+# Page: cities — the full per-city table, live. Ranked by parcel count;
+# the `live` column colours Live green and Offline red.
+title: Cities
+body:
+  - kind: crud
+    name: cities
+    table: { script: 'scenery("cities").sort("parcels", "desc")' }
+    params:
+      id_column: city
+      columns:
+        city: {}
+        parcels: {}
+        vs_baseline: {}
+        live:
+          color:
+            green: ["Live"]
+            red: ["Offline"]

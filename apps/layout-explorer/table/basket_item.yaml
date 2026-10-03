@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: basket_item — the basket's lines. `product` holds a catalogue
+# product id; the line keeps the product name and the unit price it was
+# added at. Money is whole pence (`minor_units`), so the total is exact.
+datasource: basket
+title: Basket
+aggregates:
+  total: { op: sum, column: line_total }
+  items: { op: sum, column: qty }
+columns:
+  - { name: line, type: string, flags: [id, hidden] }
+  - { name: product, type: string, references: product }
+  - { name: product_name, label: Product, type: string, flags: [title] }
+  - { name: qty, label: Qty, type: int }
+  - { name: unit_price, label: Price, type: int, unit: { currency: "£", minor_units: true } }
+  - { name: line_total, label: Total, type: int, unit: { currency: "£", minor_units: true } }

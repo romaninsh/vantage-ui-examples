@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: category — the catalogue tree: 5 top-level categories, branches
+# 2 to 5 levels deep (`tree: { depth: 5, min_depth: 2 }`), so some aisles
+# stop at a subcategory and others go down to a narrow shelf. `parent_id`
+# is a same-table `tree` column (roots are empty), which the layout's tree
+# nests through `parent:`.
+#
+# The datasource's `category_names` sim renames the generated rows once at
+# start: roots from a list of top categories, children and deeper levels from
+# matching sub-category and shelf lists.
+datasource: catalogue
+title: Categories
+faker:
+  count: 70
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: name, label: Category, type: string, flags: [title, searchable], faker: { pattern: "Category ##" } }
+  - { name: code, label: Code, type: string, faker: { pattern: "CAT-###" } }
+  - { name: parent_id, label: Parent, type: string, faker: { tree: { roots: 5, depth: 5, min_depth: 2 } } }
+  - { name: description, label: About, type: string, faker: { sentence: { min_words: 8, max_words: 14 } } }
+references:
+  subcategories: { table: category, kind: has_many, foreign_key: parent_id }
+  products: { table: product, kind: has_many, foreign_key: category }

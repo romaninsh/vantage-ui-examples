@@ -18,7 +18,7 @@
 
 # Per-app local secrets — inventory/.env can hold real credentials (AWS keys,
 # tokens). Never commit; .env.example documents the shape.
-**/inventory/.env
+**/.env
 # Everything vantage-ui rewrites on open, from the running build: the JSON
 # schemas, the per-kind folder README, and the AGENTS.md pointer file. Commit
 # them and they go stale the moment the build moves, so every version bump

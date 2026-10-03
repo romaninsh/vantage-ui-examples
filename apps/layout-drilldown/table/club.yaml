@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: club — 3 to 6 clubs per region.
+datasource: gym
+title: Clubs
+faker:
+  fan_out: { column: region, min: 3, max: 6 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: region, label: Region, type: string, references: region }
+  - name: name
+    label: Club
+    type: string
+    flags: [title, searchable]
+    faker:
+      pick:
+        values: [Iron Works, Peak Performance, The Foundry, Riverside, Summit, Old Mill, Harbour, Northgate, Canal Street, The Arena, Kingsway, Vault, Parkside, Station Yard, Granary, Beacon, Southbank, Highfield, Quayside, Ropewalk, Tannery, Lighthouse, Orchard, Signal Box]
+  - { name: code, label: Code, type: string, faker: { pattern: "NW-###" } }
+  - { name: city, label: City, type: string }
+  - { name: capacity, label: Capacity, type: int, faker: { range: { min: 150, max: 900 } } }
+  - { name: rating, label: Rating, type: float, faker: { range: { min: 3.2, max: 4.9, decimals: 1 } } }
+references:
+  members: { table: member, kind: has_many, foreign_key: club }

@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=./form-schema-1.json
+title: Tag
+table: tag
+body:
+  - name
+  - { name: created_at, readonly: true }
+  - { name: updated_at, readonly: true }

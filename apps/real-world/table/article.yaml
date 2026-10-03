@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: surrealdb
+title: Article
+columns:
+  id: { type: string, flags: [id] }
+  title: { type: string, flags: [mandatory, title, searchable] }
+  # Pill beside the title: new this week, or edited after publishing.
+  freshness: { type: string, label: Status, flags: [label], expr: 'expr("IF created_at > time::now() - 7d THEN ''new'' ELSE IF updated_at > created_at + 1h THEN ''edited'' ELSE '''' END")' }
+  slug: { type: string, flags: [searchable] }
+  author:
+    type: string
+    flags: [mandatory]
+    references: { table: user, kind: has_one, name: author }
+  author.username: { type: string, label: Author }
+  author_name: { type: string, flags: [hidden], expr: 'expr("author.username")' }
+  description: { type: string, flags: [mandatory] }
+  body: { type: string, flags: [mandatory, hidden] }
+  tags: { type: string, expr: 'expr("array::join(array::sort((SELECT VALUE tag.name FROM article_tag WHERE article = $parent.id)), '', '')")' }
+  favorites_count: { type: int, label: Favorites, expr: 'expr("(SELECT VALUE count() FROM favorite WHERE article = $parent.id GROUP ALL)[0] ?? 0")' }
+  comments_count: { type: int, label: Comments, expr: 'expr("(SELECT VALUE count() FROM comment WHERE article = $parent.id GROUP ALL)[0] ?? 0")' }
+  published_ago: { type: string, label: Published, expr: 'expr("fn::ago(created_at)")' }
+  updated_ago: { type: string, label: Updated, expr: 'expr("fn::ago(updated_at)")' }
+  created_at: { type: timestamp, label: Published on, time_precision: minutes }
+  updated_at: { type: timestamp, label: Updated on, time_precision: minutes }
+references:
+  comments: { table: comment, kind: has_many, foreign_key: article }
+  article_tags: { table: article_tag, kind: has_many, foreign_key: article }
+  favorited_by: { table: favorite, kind: has_many, foreign_key: article }

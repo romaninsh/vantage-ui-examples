@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# The first page. Until the Strava credentials are in .env it offers the
+# setup wizard; afterwards it says so and lets you replace them.
+title: Strava
+body:
+  - kind: markdown
+    width: 720
+    text: |
+      # Your Strava workouts
+
+      This app reads your recent activities from the Strava API. It talks
+      to Strava through an API application you own, so nothing passes
+      through anyone else's servers.
+
+  - kind: column
+    width: 720
+    frame: true
+    when: "!secrets.strava_client_id"
+    children:
+      - kind: label
+        params: { text: "Strava isn't set up yet", style: heading, icon: Key }
+      - kind: markdown
+        text: |
+          You need a free Strava API application first. The wizard shows
+          where to create one and saves its Client ID and Client Secret in
+          this app's `.env` file.
+      - kind: button
+        params:
+          label: "Set up Strava"
+          icon: Settings
+          style: primary
+          action: |
+            actions.setup_strava();
+
+  - kind: column
+    width: 720
+    frame: true
+    when: "secrets.strava_client_id"
+    children:
+      - kind: label
+        params: { text: "Strava credentials saved", style: heading, icon: CircleCheck }
+      - kind: markdown
+        text: |
+          The Client ID and Client Secret are in this app's `.env` file.
+          Signing in to Strava comes next.
+      - kind: button
+        params:
+          label: "Change credentials"
+          icon: Key
+          action: |
+            actions.setup_strava();

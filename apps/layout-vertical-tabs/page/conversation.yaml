@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: conversation — one tab per chat, opened with `args.id` (the
+# conversation) and `args.customer` (its customer). The page's record is the
+# customer, so the tab reads their name. Lists the chat's messages; the tools
+# on the right read the same id through `main.args.id`.
+title: "${record.name}"
+record:
+  table: customer
+  id: "${args.customer}"
+body:
+  - kind: label
+    params: { text: "${record.plan} plan · ${record.country}", style: muted, icon: MessageSquare }
+  - kind: grid
+    name: messages
+    observe: { script: 'scenery("conversation").where("id", args.id).ref("messages")' }
+    params:
+      selectable: false
+      row_menu: false
+      columns:
+        sent: { label: Sent, width: 150, render: relative }
+        author: { label: From, width: 100, color: { blue: [Agent], foreground: [Customer] } }
+        body: { label: Message }

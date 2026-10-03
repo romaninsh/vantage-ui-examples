@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=./action-schema-1.json
+#
+# First-run setup: create a Strava API application, then paste its
+# credentials. The values go to .env through `secrets.set`, which asks
+# the user once before it writes.
+kind: wizard
+dialog:
+  title: "Set up Strava"
+  size: lg
+steps:
+  - name: create_app
+    title: "Create a Strava API app"
+    body:
+      - kind: markdown
+        text: |
+          # Create your Strava API application
+
+          1. Sign in to Strava and open
+             [strava.com/settings/api](https://www.strava.com/settings/api).
+          2. Fill in the form:
+             - **Application Name**: anything, e.g. *Vantage workouts*
+             - **Category**: *Visualizer*
+             - **Website**: `http://127.0.0.1`
+             - **Authorization Callback Domain**: `127.0.0.1`
+          3. Upload any icon when Strava asks for one.
+
+          Strava then shows **My API Application** with a **Client ID** and
+          a **Client Secret**. Keep that page open and press **Next**.
+
+  - name: credentials
+    title: "Enter the credentials"
+    state:
+      saved: false
+    body:
+      - kind: markdown
+        text: |
+          # Paste the Client ID and Client Secret
+
+          Press the button, paste both values from **My API Application**
+          and save. Vantage asks once before a script writes secrets to
+          this app's `.env` file.
+      - kind: button
+        when: "!state.saved"
+        params:
+          label: "Enter credentials…"
+          icon: Key
+          style: primary
+          action: |
+            let c = actions.strava_credentials();
+            secrets.set(#{
+              strava_client_id: c.client_id,
+              strava_client_secret: c.client_secret,
+            });
+            state.saved = true;
+      - kind: label
+        when: "state.saved"
+        params:
+          text: "Saved. Press Finish."
+          style: heading
+          icon: CircleCheck

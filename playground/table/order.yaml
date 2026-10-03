@@ -1,0 +1,14 @@
+# Table: order — one row per delivery. The `customer` and `courier`
+# columns are references: their values are real ids from those tables,
+# so every order belongs to somebody and drill-downs always find rows.
+datasource: records
+title: Orders
+faker:
+  count: 40
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: customer, type: string, references: customer }
+  - { name: courier, type: string, references: courier }
+  - { name: item, type: string, flags: [title, searchable] }
+  - { name: total, type: decimal }
+  - { name: placed_on, type: datetime }

@@ -1,0 +1,12 @@
+# Application root for the explorer demo.
+#
+#   layout: → layout/explorer.yaml: the category tree on the left, read
+#             live from the table, pages in tabs, a tools menu on the right
+#             and a status bar.
+#   home:   → the page the app opens on.
+layout: explorer
+home: dashboard
+variables:
+  brand:
+    type: string
+    default: Northwind Supply

@@ -1,0 +1,14 @@
+# Application root for the tabs-first demo.
+#
+#   layout:   → layout/tabs-first.yaml: no sidebar; every page is a tab in
+#               the title bar, next to the project switcher.
+#   home:     → the launcher, the page "+" opens too.
+#   profiles: → `profile.env_label` feeds the environment marker in the
+#               title bar. Run with VANTAGE_PROFILE=prod to see it change.
+layout: tabs-first
+home: launcher
+variables:
+  brand: { type: string, default: Northwind Support }
+profiles:
+  dev: { env_file: profiles/dev.env }
+  prod: { env_file: profiles/prod.env }
