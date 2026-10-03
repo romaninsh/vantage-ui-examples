@@ -1,0 +1,6 @@
+Needs a live SurrealDB: the `surrealdb` datasource connects to the `surrealdb`
+composer service (cbor://root:root@surrealdb:8000), which the macOS CI runner
+can't start, so the first page fails to mount (`table article couldn't be
+opened`) and the shared "clean startup" scenario fails. Run it explicitly with
+the service up and seeded (tests/schema.surql, tests/seed.surql):
+`cargo run -p test-framework -- apps/real-world`.
