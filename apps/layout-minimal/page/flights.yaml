@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: flights — the live board, full height. Departures first, then
+# flights in the air by progress, landed ones last.
+title: Flights
+body:
+  - kind: grid
+    name: flights
+    observe: flight
+    params:
+      default_sort: { column: board_order, direction: desc }
+      row_color: { column: phase, color: { muted: [Landed], blue: [Boarding] } }
+      columns:
+        flight_no: { label: Flight, pin: true }
+        carrier: {}
+        origin: { label: From }
+        destination: { label: To }
+        phase: { color: { warning: [Boarding, Taxiing], success: [Cruising], cyan: [Climbing, Descending], magenta: [Takeoff, Landing], muted: [Landed, Scheduled] } }
+        progress: { render: progress, color: { success: [">=100"] } }
+        altitude_ft: { label: Altitude }
+        ground_speed_kts: { label: Speed }
+        flight_time: { label: Block }
+        scheduled_departure: { label: Departs, render: relative }
+        eta: { label: ETA, render: relative }
+        delay_minutes: { label: Delay, color: { danger: [">=30"], warning: [">=10"] } }
+        gate: {}
+      drawer:
+        height: 150
+        fields:
+          carrier: {}
+          aircraft_type: { label: Aircraft }
+          registration: {}
+          origin_city: { label: From }
+          destination_city: { label: To }
+          phase: { color: { warning: [Boarding, Taxiing], success: [Cruising], cyan: [Climbing, Descending], magenta: [Takeoff, Landing], muted: [Landed, Scheduled] } }
+          progress: { render: progress }
+          altitude_ft: { label: Altitude }
+          ground_speed_kts: { label: Speed }
+          heading: {}
+          distance_remaining_nm: { label: Remaining }
+          actual_departure: { label: Departed, render: relative }
+          eta: { label: ETA, render: relative }
+          flight_time: { label: Block }
+          delay_minutes: { label: Delay, color: { danger: [">=30"], warning: [">=10"] } }
+          gate: {}
+          pax: { label: Passengers }
+          seats: {}

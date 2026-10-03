@@ -68,11 +68,22 @@ enum Cmd {
         #[arg(long, default_value_t = 1200)]
         latency_max: u64,
     },
+    /// Exit 0 when a server answers on `port`, 1 otherwise. The container
+    /// healthcheck runs this: the distroless image has no shell or curl.
+    Healthcheck {
+        #[arg(long, default_value_t = 8080)]
+        port: u16,
+    },
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+    if let Some(Cmd::Healthcheck { port }) = cli.cmd {
+        let url = format!("http://127.0.0.1:{port}/health");
+        let ok = reqwest::get(&url).await.is_ok_and(|r| r.status().is_success());
+        std::process::exit(if ok { 0 } else { 1 });
+    }
     let database = db::connect(&db_path()).await?;
     db::create_schema(&database).await?;
 
@@ -129,11 +140,28 @@ async fn main() -> Result<()> {
                     "launch-control serving on http://127.0.0.1:{port}  \
                      (error_rate={error_rate}, latency={latency_min}-{latency_max}ms)"
                 );
-                axum::serve(listener, app).await?;
+                axum::serve(listener, app)
+                    .with_graceful_shutdown(shutdown_signal())
+                    .await?;
             }
         }
+        Cmd::Healthcheck { .. } => unreachable!("handled before the database opens"),
     }
     Ok(())
+}
+
+/// Resolves on SIGTERM or SIGINT. `docker compose stop` sends SIGTERM and gives
+/// the process ten seconds before SIGKILL; answering it lets the container
+/// exit at once, with exit code 0, and lets in-flight requests finish first.
+#[cfg(not(feature = "lambda"))]
+async fn shutdown_signal() {
+    use tokio::signal::unix::{signal, SignalKind};
+    let mut term = signal(SignalKind::terminate()).expect("install SIGTERM handler");
+    let mut int = signal(SignalKind::interrupt()).expect("install SIGINT handler");
+    tokio::select! {
+        _ = term.recv() => {}
+        _ = int.recv() => {}
+    }
 }
 
 /// `Serve` configured entirely from the environment — the entrypoint when the

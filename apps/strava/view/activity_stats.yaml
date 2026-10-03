@@ -1,0 +1,76 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# The activity page's right card: headline figures, power, averages and
+# maximums, gear. Colours follow Strava: orange headline, red effort.
+title: Stats
+table: activity_detail
+body:
+  - kind: row
+    gap: 28
+    children:
+      - kind: stat
+        label: Distance
+        value: "${record.distance_km}"
+        unit: km
+        color: "#fc4c02"
+      - kind: stat
+        label: "Moving time"
+        value: "${record.moving}"
+        color: "#fc4c02"
+      - kind: stat
+        label: Elevation
+        value: "${record.elevation}"
+        unit: m
+        color: "#fc4c02"
+      - kind: stat
+        label: "Relative effort"
+        value: "${record.effort}"
+        color: red
+  - kind: row
+    gap: 28
+    when: 'record.watts_weighted != ""'
+    children:
+      - kind: stat
+        label: "Weighted avg power"
+        value: "${record.watts_weighted}"
+        unit: W
+        color: magenta
+      - kind: stat
+        label: "Total work"
+        value: "${record.work_kj}"
+        unit: kJ
+        color: magenta
+      - kind: stat
+        label: Calories
+        value: "${record.calories_kcal}"
+        color: warning
+  - kind: separator
+    label: "Avg · Max"
+  - kind: label
+    text: "Speed    ${record.speed_avg} · ${record.speed_max}"
+    color: blue
+  - kind: label
+    when: 'record.hr_avg != ""'
+    text: "Heart rate    ${record.hr_avg} · ${record.hr_max}"
+    color: red
+  - kind: label
+    when: 'record.watts_avg != ""'
+    text: "Power    ${record.watts_avg} · ${record.watts_max}"
+    color: magenta
+  - kind: label
+    when: 'record.cadence_avg != ""'
+    text: "Cadence    ${record.cadence_avg}"
+    color: cyan
+  - kind: label
+    when: 'record.temp != ""'
+    text: "Temperature    ${record.temp}"
+    color: yellow
+  - kind: label
+    text: "Elapsed time    ${record.elapsed}"
+  - kind: separator
+  - kind: label
+    when: 'record.gear_text != ""'
+    text: "Gear: ${record.gear_text}"
+  - kind: label
+    text: "Strava activity ${record.id}"
+    copy: "${record.id}"
+    style: mono

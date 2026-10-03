@@ -4,14 +4,7 @@
 datasource: lab
 title: Revolving rows
 faker:
-  effect: rhai
   count: 10
-  interval: 500ms
-  seed: 205
-  rhai: |
-    if count() > 10 { delete(pick(ids())) }
-    insert(#{ name: fake("name"), email: fake("email"), city: fake("city"),
-              balance: rand_float(0.0, 9000.0) });
 columns:
   - { name: id, type: string, flags: [id, hidden] }
   - { name: name, type: string, flags: [title, searchable] }

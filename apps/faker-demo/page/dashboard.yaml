@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./page-schema-1.json
-# Page: dashboard — the Command Centre over the `gym-traffic` pulse sim.
+# Page: dashboard — the Command Centre over the `gym-traffic` `builtin:pulse` sim.
 #
 # Nothing here polls: the sim pushes every change, so the tiles, the donut,
 # the arrivals bars and the feed all move on their own. Stats read the
@@ -73,7 +73,7 @@ body:
           - kind: chart
             # tail() follows the end of the table: the last 10 minute buckets,
             # sliding as new minutes append (limit() would freeze on the oldest).
-            observe: { script: 'scenery("minutes").tail(10)' }
+            observe: { script: 'scenery("minutes").sort("id", "asc").tail(10)' }
             height: 280
             params: { x: minute, y: attendees, chart_type: bar, value_labels: true, label: "" }
 
@@ -87,7 +87,7 @@ body:
           - kind: label
             params: { text: "Every headcount movement, newest first; rows expire after a few seconds", style: muted }
           - kind: list
-            observe: { script: 'scenery("updates").tail(15)' }
+            observe: { script: 'scenery("updates").sort("id", "asc").limit(15)' }
             height: 300
             params:
               text: '${ updated + "   " + region }'

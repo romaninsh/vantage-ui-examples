@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: notes — shown in a sheet on the right edge. Click beside it, press
+# Escape or Done to close it; the page underneath keeps its place.
+title: "Notes · ${args.name}"
+body:
+  - kind: markdown
+    width: 360
+    text: |
+      **Notes for ${args.name}.** This sheet sits above the layout. Edit
+      `layout/drilldown.yaml` while it is open: the sheet stays.
+  - kind: button
+    name: done
+    params: { label: Done, action: 'close()' }

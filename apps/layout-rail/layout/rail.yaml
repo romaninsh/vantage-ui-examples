@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./layout-schema-1.json
+# Layout: rail — each section of menu/left.yaml is one icon in a narrow
+# rail, and the chosen section's views are listed in the column beside it.
+# "Home" and "About" are plain links: choosing one hides that column. The
+# project switcher sits in the title row, and Project Settings and the
+# fake-data notice fold into the tray, so the rail holds navigation only.
+tray:
+  - project_settings
+  - data_banner
+regions:
+  title_bar:
+    left: [ { kind: app_title }, { kind: project_switcher } ]
+    right: [ { kind: tray }, { kind: view, view: title_tools } ]
+  left:
+    nav: rail
+    source: { menu: left }
+    width: 220
+    footer: project_settings
+  main: { host: slot, header: data_banner, empty: dashboard }

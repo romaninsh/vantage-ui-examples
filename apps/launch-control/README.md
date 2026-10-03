@@ -20,15 +20,24 @@ Two halves:
 
 ## Run
 
+Open the app in Vantage and press Start on the Services indicator in the title
+bar. `composer.yaml` builds the server image inside Docker (no Rust toolchain
+needed; the first build takes a few minutes) and runs it on a loopback port that
+docker picks. The datasource addresses the service as `http://api:8080` and
+Vantage rewrites that to the published port. The database lives on a named
+volume and seeds itself from the bundled fixtures on first start.
+
 ```bash
-# 1. seed SQLite from the committed LL2 fixtures (once)
-cargo run -p launch-control-server -- seed
-
-# 2. start the flaky API (dormant — no background simulator)
-cargo run -p launch-control-server -- serve
-
-# 3. point vantage-ui at the inventory (in the vantage-ui repo)
+# in the vantage-ui repo
 cargo run -p vantage-ui -- ../vantage-ui-examples/apps/launch-control
+```
+
+Without Docker, run the server yourself and point the datasource at it:
+
+```bash
+cargo run -p launch-control-server -- serve      # seeds SQLite on first start
+# then set datasource/local.yaml `url` to http://127.0.0.1:8080 (and the
+# action/submit-launch.yaml url to match)
 ```
 
 ## Server commands

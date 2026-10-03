@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: er_board — patients arriving at the ER front desk (synthetic).
+#
+# The `builtin:fifo` sim starts empty, adds one row every three seconds and
+# removes each row again after 15-30 seconds, so the Patients badge keeps
+# moving without growing.
+type: faker
+description: ER front-desk arrivals, one every few seconds
+sims:
+  arrivals:
+    table: er_arrival
+    script: "builtin:fifo"
+    spawn: { burst: 0, rate: 20, max: 100, args: { retention_lo: 15, retention_hi: 30 } }

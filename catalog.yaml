@@ -85,8 +85,9 @@ apps:
     persona: "Live data"
     persona_url: "/solutions/live-data/"
     status: "available"
-    # 0.41: list templates use `${…}` holes; earlier builds print them literally.
-    min_version: "0.41.1"
+    # 1.1: live data comes from `sims:` (builtin:pulse / fifo / folder_tree and a
+    # Rhai sim); earlier builds reject the datasource.
+    min_version: "1.1.0"
     icon: "monitoring"
     blurb: "A gym control panel with no backend at all — every table is generated in memory and keeps moving on its own: a live regional dashboard, a check-in stream, self-escalating incidents you can act on, and a lab of flaky, sluggish and churning backends to watch the UI cope with."
     repo_path: "apps/faker-demo"
@@ -94,7 +95,7 @@ apps:
     screenshot: "images/vantage-ui-app.png"
     demonstrates:
       - "Zero setup: the faker datasource needs no server, network or credentials"
-      - "Live pages without polling — pulse, fifo, rhai and live_folder effects push every change"
+      - "Live pages without polling — pulse, fifo, folder_tree and Rhai sims push every change"
       - "User writes and scripted mutations sharing one in-memory table"
       - "Backend personalities: faults, latency, slow search and churn, made visible"
 

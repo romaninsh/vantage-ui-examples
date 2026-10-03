@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: member — level four. The member's details on the left, a compact
+# column of actions on the right. `state.colour` is a page variable: the
+# modal's answer lands there and the label shows it.
+title: "${args.name}"
+state:
+  colour: not picked yet
+body:
+  - kind: row
+    align: start
+    children:
+      - kind: column
+        children:
+          - kind: list
+            observe: { script: 'scenery("member").where("id", args.id)' }
+            item:
+              - kind: label
+                params: { text: "${row.tier} member since ${row.joined} · £${row.monthly_fee}/month · ${row.email}", style: muted }
+          - kind: label
+            params: { text: "Favourite colour: ${state.colour}", icon: Sparkles }
+      - kind: column
+        align: stretch
+        grow: false
+        children:
+          - kind: button
+            name: visits
+            params: { label: Visits, icon: Activity, size: xs, style: primary, action: 'open("visits", #{ id: args.id, name: args.name })' }
+          - kind: button
+            name: notes
+            params: { label: Notes, icon: BookOpen, size: xs, action: 'open_in("sheet", "notes", #{ name: args.name })' }
+          - kind: button
+            name: pick
+            params:
+              label: Pick a colour
+              icon: Sparkles
+              size: xs
+              action: |
+                let colour = modal("pick_colour", #{ name: args.name });
+                state.colour = if colour == () { "no choice" } else { colour };

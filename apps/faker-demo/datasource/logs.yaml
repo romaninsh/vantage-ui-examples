@@ -1,10 +1,14 @@
 # Datasource: logs — a synthetic, constantly-growing log folder tree.
 #
-# The `live_folder` effect simulates `{date}/access_logs_{HH}/chunk_NN.log`
+# The `builtin:folder_tree` sim simulates `{date}/access_logs_{HH}/chunk_NN.log`
 # (the active chunk grows every second and rolls over), rare timestamped
 # error logs, and per-event-type logs firing probabilistically. Everything is
-# in memory; modifying a file touches its ancestor folders. `backfill`
-# replays history at startup so the tree isn't empty on first open.
+# in memory; modifying a file touches its ancestor folders. `warm` replays
+# history at startup so the tree isn't empty on first open.
 type: faker
-effect: live_folder
-backfill: 1h
+sims:
+  logs:
+    table: folders
+    script: "builtin:folder_tree"
+    warm: 1h
+    spawn: { burst: 1, max: 1 }

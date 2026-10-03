@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# View: desk — the left panel. A form that books a shipment (the dispatcher
+# sim picks the new row up and starts moving it), the latest bookings filling
+# the space left, and three live stats at the foot of the panel. The stats
+# are one click target: it opens the tracking page.
+body:
+  - kind: form
+    observe: shipment
+    create: true
+    params: { fields: [customer, origin_city, destination_city, service_level, declared_value] }
+    on_save: |
+      let no = record.tracking_no;
+      let what = if no == () || no == "" { `to ${record.destination_city}` } else { no };
+      toast(`Shipment ${what} booked`, "success");
+      reset();
+  - kind: grid
+    observe: { script: 'scenery("shipment").sort("created_at", "desc").limit(30)' }
+    params:
+      selectable: false
+      columns:
+        tracking_no: { label: Shipment }
+        status:
+          color:
+            blue: [Booked]
+            cyan: ["Picked up", "In transit"]
+            warning: ["Out for delivery"]
+            success: [Delivered]
+            danger: [Exception]
+        created_at: { label: Booked, render: relative }
+  - kind: row
+    name: live_stats
+    action: 'open("tracking")'
+    children:
+      - kind: stat
+        name: in_transit
+        observe: { script: 'scenery("shipment").where("status", "In transit")' }
+        params: { label: In transit, icon: Truck, color: blue }
+      - kind: stat
+        name: total_value
+        observe: shipment#total_value
+        params: { label: Total value, icon: Wallet, color: green }
+      - kind: stat
+        name: behind_eta
+        observe: { script: 'scenery("shipment").where("late", true).where("active", true)' }
+        params: { label: Behind ETA, icon: Clock, color: danger }

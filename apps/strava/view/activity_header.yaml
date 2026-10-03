@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# The activity page's left card: when, what, the social counts, and a
+# link to the activity on Strava.
+title: Overview
+table: activity_detail
+body:
+  - kind: label
+    text: "${record.when}"
+    style: muted
+  - kind: row
+    gap: 8
+    children:
+      - kind: label
+        text: "${record.name}"
+        style: heading
+      - kind: badge
+        text: "${record.sport_type}"
+        color:
+          warning: [Ride, VirtualRide, EBikeRide, GravelRide, MountainBikeRide]
+          blue: [Swim]
+          success: [Run, TrailRun, VirtualRun, Walk, Hike]
+  - kind: label
+    when: 'record.description != ""'
+    text: "${record.description}"
+  - kind: row
+    gap: 16
+    children:
+      - kind: label
+        text: "${record.kudos_count} kudos"
+        color: "#fc4c02"
+      - kind: label
+        text: "${record.comment_count} comments"
+        style: muted
+      - kind: label
+        text: "${record.achievement_count} achievements"
+        color: warning
+      - kind: label
+        text: "${record.pr_count} PRs"
+        color: yellow
+  - kind: button
+    text: "View on Strava"
+    icon: ExternalLink
+    url: "https://www.strava.com/activities/${record.id}"

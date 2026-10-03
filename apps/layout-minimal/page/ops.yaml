@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: ops — the `fifo` stream as a grid. Leave this page and come back:
+# the slot unloads it on the way out, so it mounts fresh.
+title: Ops Feed
+body:
+  - kind: grid
+    name: ops_events
+    observe: { script: 'scenery("ops_event").sort("id", "asc")' }
+    params:
+      search: true
+      columns:
+        flight_no: { label: Flight, pin: true }
+        event: { label: Event }
+        gate: { label: Gate, width: 80 }
+        severity: { label: Severity, color: { red: [Critical], yellow: [Warning] } }
+        message: { label: Message, width: 320 }

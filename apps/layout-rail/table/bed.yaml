@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: bed — fans out from ward: each ward gets 3-10 beds, next to each
+# other in id order.
+datasource: hospital
+title: Beds
+faker:
+  fan_out: { column: ward, min: 3, max: 10 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: bed_number, label: Bed, type: string, flags: [title, searchable], faker: { pattern: "Bed ?##" } }
+  - { name: ward, type: string, references: ward }
+  - { name: status, type: string, faker: { pick: { values: [Occupied, Available, Cleaning, Maintenance], weights: [5, 3, 1, 1] } } }

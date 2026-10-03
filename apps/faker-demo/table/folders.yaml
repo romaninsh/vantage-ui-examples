@@ -1,18 +1,16 @@
-# Table: folders — the path-parameterized listing family over the logs sim.
-# One row per child of a path: the finder opens one scenery per expanded
-# folder, all routed through this single family (one Dio).
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: folders — the log tree written by the `logs` datasource's
+# `builtin:folder_tree` sim. One row per folder or file; `parent` is the path of
+# the containing folder ("" for the day folder), and every folder's size is the
+# sum of its children, kept current by the sim.
 datasource: logs
 title: Folders
-# Folder rows lift {size, file_count} from the sim's get-only size vista via
-# the dio-level augment — still one Dio; sizes trickle in with the vista's
-# natural latency (the debounce showcase).
-augment:
-  from: folder_size
-  key: path
-  columns: [size, file_count]
+faker: { count: 0 }
 columns:
-  - { name: name, type: string, flags: [id, title] }
+  - { name: path, type: string, flags: [id] }
+  - { name: parent, type: string, flags: [searchable] }
+  - { name: name, type: string, flags: [title] }
   - { name: kind, type: string }
   - { name: size, type: int }
-  - { name: created, type: string }
-  - { name: modified, type: string }
+  - { name: created, type: timestamp }
+  - { name: modified, type: timestamp }

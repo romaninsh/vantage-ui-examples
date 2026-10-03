@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: ops — gate, delay and boarding events reaching the ops board
+# (synthetic).
+#
+# The `builtin:fifo` sim starts empty, adds one row every two seconds and
+# removes each row again after 20–35 seconds, so the page keeps moving
+# without growing.
+type: faker
+description: Live gate and delay events, one every couple of seconds
+sims:
+  events:
+    table: ops_event
+    script: "builtin:fifo"
+    spawn: { burst: 0, rate: 30, max: 100, args: { retention_lo: 20, retention_hi: 35 } }

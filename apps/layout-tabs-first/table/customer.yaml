@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: customer — the account behind a ticket. `tickets` lets the
+# customer page list a customer's own tickets via `scenery(...).ref(...)`.
+datasource: tickets
+title: Customers
+faker:
+  count: 24
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: name, label: Customer, type: string, flags: [title, searchable] }
+  - { name: email, type: string }
+  - { name: company, type: string }
+  - { name: city, type: string }
+references:
+  tickets: { table: ticket, kind: has_many, foreign_key: customer }

@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: launcher — the start page, and what "+" opens. Click a conversation
+# below: it opens in its own vertical tab, named after the customer; open
+# the same one twice and its tab comes forward instead of duplicating.
+title: Launcher
+body:
+  - kind: label
+    params: { text: "${app.brand} — live chat console", style: heading, icon: LayoutDashboard }
+  - kind: label
+    params: { text: "Every conversation opens as a row in the list on the left. Close one and press cmd-shift-t to bring it back. cmd-e hides the tools on the right.", style: muted }
+  - kind: row
+    children:
+      - { kind: button, params: { label: Dashboard, icon: LayoutDashboard, action: 'navigate("dashboard")' } }
+      - { kind: button, params: { label: Conversations, icon: MessageSquare, action: 'navigate("conversations")' } }
+      - { kind: button, params: { label: Waiting queue, icon: Clock, action: 'navigate("queue")' } }
+      - { kind: button, params: { label: About, icon: BookOpen, action: 'navigate("about")' } }
+  - kind: label
+    params: { text: "Waiting queue", style: heading, icon: Clock }
+  - kind: grid
+    name: queue
+    observe: { script: 'scenery("queue").sort("id", "asc")' }
+    height: 200
+    params:
+      columns:
+        customer_name: { label: Customer, pin: true }
+        topic: { label: Topic }
+        channel: { label: Channel, width: 110 }
+        opening_message: { label: Opening message, width: 320 }
+  - kind: label
+    params: { text: "All conversations", style: heading, icon: MessageSquare }
+  - kind: grid
+    name: conversations
+    observe: conversation
+    params:
+      search: true
+      default_sort: { column: started, direction: desc }
+      on_select: 'navigate("conversation", #{ id: row.id, customer: row.customer })'
+      row_actions:
+        - label: Open conversation
+          icon: ExternalLink
+          navigate: conversation
+          args: { id: "row.id", customer: "row.customer" }
+      columns:
+        customer: { label: Customer, link: customer, pin: true }
+        topic: { label: Topic }
+        channel: { label: Channel, width: 110 }
+        status: { label: Status, width: 100 }
+        started: { label: Started }
+        last_message: { label: Last message, width: 320 }
+        unread: { label: Unread, width: 90 }
+        csat: { label: CSAT, width: 70 }

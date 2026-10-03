@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+# Menu: left — the pages the title bar's page selector lists. About is not
+# here: it is a tray link in layout/minimal.yaml, opening in a modal.
+title: Meridian Ops Board
+items:
+  - page: flights
+    label: Flights
+    icon: Plane
+  - page: dashboard
+    label: Dashboard
+    icon: LayoutDashboard
+  - page: ops
+    label: Ops Feed
+    icon: Activity
+  - page: airports
+    label: Airports
+    icon: MapPin

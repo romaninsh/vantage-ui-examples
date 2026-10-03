@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: incoming — newly submitted tickets, arriving live.
+#
+# The `builtin:fifo` sim starts empty, adds one row every four seconds and
+# removes each row again after `retention_lo`..`retention_hi` seconds, so the
+# count in the status bar keeps moving without growing.
+type: faker
+description: Newly submitted tickets, arriving live
+sims:
+  arrivals:
+    table: incoming
+    script: "builtin:fifo"
+    spawn: { burst: 0, rate: 15, max: 100, args: { retention_lo: 25, retention_hi: 45 } }

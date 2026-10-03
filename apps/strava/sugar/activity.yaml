@@ -1,0 +1,13 @@
+# Display columns for an activity, shared by the Activities grid and the
+# activity page (`sugar: !include ../sugar/activity.yaml`).
+outputs:
+  distance_km: { label: "Distance (km)", type: float }
+  moving: { label: Moving, type: string }
+  elapsed: { label: Elapsed, type: string }
+  stopped: { label: Stopped, type: string }
+  pace: { label: "Speed / pace", type: string }
+  top_speed: { label: "Top speed", type: string }
+  climb_per_km: { label: "Climb (m/km)", type: float }
+  tags: { label: Tags, type: string }
+  source: { label: "Recorded with", type: string }
+script: !include activity.rhai

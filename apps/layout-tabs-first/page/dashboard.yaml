@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: dashboard — the home page. Two live counts and a short tour.
+title: Dashboard
+body:
+  - kind: label
+    params: { text: "${app.brand} — support desk", style: heading, icon: LayoutDashboard }
+  - kind: label
+    params: { text: "Open a ticket from the queue: each one gets a tab in the title bar, reused when you open the same ticket again. The + button opens the launcher, cmd-shift-t reopens a closed tab.", style: muted }
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: ticket
+            params: { label: "Tickets in the queue", icon: ClipboardList, color: blue }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: incoming
+            params: { label: "New tickets waiting", icon: Inbox, color: green }

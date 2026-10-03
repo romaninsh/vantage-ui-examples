@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=./layout-schema-1.json
+# Layout: explorer — a data tree beside tabs.
+#
+# left:   one node per row of the category table, nested through its
+#         `parent_id` column; branches run 2 to 5 levels deep. `open.args`
+#         are Rhai over `row`.
+#         The search icon in its caption opens the searchable All products.
+# main:   one page at a time (`host: slot`); its id is `work`, which
+#         menu/tools.yaml names in `open: work`.
+# right:  the basket (view/basket.yaml), always on screen.
+# status: the page on screen and the live low-stock alert count.
+regions:
+  title_bar: { view: title_bar }
+  left:
+    nav: tree
+    caption: Catalogue
+    width: 260
+    header: project_switcher
+    footer: project_settings
+    source:
+      table: category
+      label: name
+      parent: parent_id
+      open: { page: category, args: { id: 'row.id', name: 'row.name' } }
+    caption_action: { icon: Search, tooltip: Search all products, page: products, open: work }
+  main: { id: work, host: slot, header: data_banner, empty: dashboard }
+  right:
+    view: basket
+    width: 300
+  status:
+    - { id: page, text: '"Page: " + main.page' }
+    - { id: desk, text: '"Low-stock alerts: " + tables.stock_alert.count', align: right }

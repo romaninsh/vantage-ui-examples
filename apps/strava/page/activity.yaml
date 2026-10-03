@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# One activity in full, opened from Activities (Details or double-click)
+# in its own tab. One request: GET /activities/{id}. The map needs the map
+# plugin in plugins/map-1 (see .gitignore); without it the map tile says
+# "plugin not found".
+title: "${record.name}"
+record:
+  table: activity_detail
+  id: "${args.id}"
+  sugar: !include ../sugar/activity_detail.yaml
+body:
+  - kind: row
+    children:
+      - kind: column
+        width: 440
+        frame: true
+        children:
+          - kind: record_view
+            src: activity_header
+          - kind: image
+            src: "${record.photo_url}"
+            width: 300
+      - kind: column
+        frame: true
+        children:
+          - kind: record_view
+            src: activity_stats
+  # The route: sugar decodes Strava's polyline into GeoJSON.
+  - kind: widget
+    widget: map
+    name: route_map
+    height: 460
+    on_ready: |
+      if record.track_geojson != "" {
+        let route = map_add_geojson(route_map, record.track_geojson);
+        map_fit_bounds(route_map, route);
+      }
+  - kind: divider
+    label: Top results
+  - kind: markdown
+    text: "${record.top_results}"
+  - kind: divider
+    label: Segments
+  - kind: markdown
+    text: "${record.segments_md}"
+  - kind: divider
+    label: Laps
+    when: 'record.laps_md != ""'
+  - kind: markdown
+    when: 'record.laps_md != ""'
+    text: "${record.laps_md}"
+  - kind: divider
+    label: Splits
+    when: 'record.splits_md != ""'
+  - kind: markdown
+    when: 'record.splits_md != ""'
+    text: "${record.splits_md}"

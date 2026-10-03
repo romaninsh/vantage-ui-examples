@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: ops_event — one row per gate, delay or boarding update reaching
+# the ops board. Values come from pattern and pick generators.
+datasource: ops
+title: Ops events
+faker: { count: 0 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: flight_no, label: Flight, type: string, flags: [title, searchable], faker: { pattern: "??####" } }
+  - { name: event, type: string, flags: [searchable], faker: { pick: { values: [Gate change, Boarding call, Delay update, Departed, Landed, Cancelled], weights: [5, 4, 3, 3, 3, 1] } } }
+  - { name: gate, type: string, faker: { pattern: "?##" } }
+  - { name: severity, type: string, faker: { pick: { values: [Info, Warning, Critical], weights: [6, 3, 1] } } }
+  - { name: message, type: string, faker: { sentence: { min_words: 4, max_words: 9 } } }

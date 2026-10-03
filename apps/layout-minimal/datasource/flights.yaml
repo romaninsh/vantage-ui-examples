@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: flights — a live fleet. `builtin:flight` simulates about 200
+# aircraft in the air on a 10x clock: flights board, take off, cruise, land,
+# and landed rows disappear a minute later.
+type: faker
+description: Live flights (simulated)
+seed: 501
+sims:
+  air:
+    table: flight
+    script: "builtin:flight"
+    clock: 10
+    warm: 12h
+    spawn: { burst: 0, rate: 0.3, max: 260, args: { landed_retention: 600 } }

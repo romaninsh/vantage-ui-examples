@@ -1,0 +1,34 @@
+# Datasource: dispatch — the live parcel flow (synthetic).
+#
+# The `builtin:pulse` sim simulates an upstream live feed: each city carries
+# a current parcel count drifting within ±`band`% of its baseline. One
+# shared sim drives a coupled set of tables — a raw `activity` feed, a
+# derived `cities` aggregate, and an `arrivals`-per-minute series — so
+# the dashboard moves on its own the moment the app opens.
+type: faker
+sims:
+  pulse:
+    table: cities
+    script: "builtin:pulse"
+    spawn:
+      burst: 1
+      max: 1
+      args:
+        aggregate: cities
+        feed: activity
+        minutes: arrivals
+        key_column: city
+        value_column: parcels
+        band: 6
+        min_interval: 1
+        max_interval: 3
+        # Norwich periodically drops offline (frozen value, live = "Offline").
+        offline: [Norwich]
+        # Baselines ≈ parcels moving through each hub right now.
+        keys:
+          - { name: London, baseline: 420 }
+          - { name: Manchester, baseline: 260 }
+          - { name: Birmingham, baseline: 230 }
+          - { name: Glasgow, baseline: 150 }
+          - { name: Bristol, baseline: 120 }
+          - { name: Norwich, baseline: 60 }

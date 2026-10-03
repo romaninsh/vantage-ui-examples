@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: tracking_event — one scan per step of a parcel's journey, written by
+# sims/shipment.rhai and deleted with its shipment. `shipment_id` holds the
+# shipment's row id (for narrowing); `shipment_ref` its tracking number.
+datasource: logistics
+title: Tracking events
+faker: { count: 0 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: shipment_id, type: string, flags: [hidden] }
+  - { name: shipment_ref, label: Shipment, type: string, flags: [title, searchable] }
+  - { name: city, label: Location, type: string }
+  - { name: event, type: string }
+  - { name: lat, type: float }
+  - { name: lon, type: float }
+  - { name: scanned_at, label: At, type: timestamp }

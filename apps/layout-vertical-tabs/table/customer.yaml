@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: customer — the people behind each conversation.
+datasource: chat
+title: Customers
+faker:
+  count: 30
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: name, label: Customer, type: string, flags: [title, searchable] }
+  - { name: email, type: string }
+  - { name: plan, type: string, faker: { pick: { values: [Free, Starter, Pro, Enterprise], weights: [4, 3, 2, 1] } } }
+  - { name: lifetime_value, label: Lifetime value, type: float, unit: { currency: "$" }, faker: { range: { min: 0, max: 25000, decimals: 2 } } }
+  - { name: country, type: string }
+references:
+  conversations: { table: conversation, kind: has_many, foreign_key: customer }

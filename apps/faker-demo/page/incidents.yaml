@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./page-schema-1.json
-# Page: incidents — the `rhai` effect meets user writes. The datasource script
+# Page: incidents — a Rhai sim meets user writes. The datasource sim script
 # raises and escalates incidents on its own; Add, Details and the row actions
 # below write to the same in-memory store, and the script keeps ageing the
 # rows you changed. Nothing survives a restart — that is the point of faker.

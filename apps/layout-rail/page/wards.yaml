@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: wards — bed occupancy by ward. Select a ward: its beds show in the
+# drawer underneath (view/ward_beds.yaml, through `ward.beds`). Right-click a
+# ward → Beds opens the beds list narrowed to it, with a filter chip.
+title: Wards
+body:
+  - kind: grid
+    name: wards
+    observe: ward
+    params:
+      columns:
+        name: { label: Ward, pin: true }
+        floor: { label: Floor }
+        capacity: { label: Beds }
+        occupied: { label: Occupied }
+      drawer: { view: ward_beds, height: 220 }

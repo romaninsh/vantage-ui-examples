@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: hospital — patients, wards, beds, staff, admissions and
+# appointments (synthetic, fixed). `seed` keeps every table on it, including
+# the relational ones, stable between runs.
+type: faker
+description: Hospital core records (synthetic, fixed)
+seed: 42

@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: member — one tab per ticket, opened from the queue or a customer's
+# ticket list with `args.id` (kept as the page key `member`: the tab logic
+# in `layout/tabs-first.yaml` keys and titles tabs off `page` and `args.*`,
+# not off what a page is called).
+title: "Ticket ${args.id}"
+record:
+  table: ticket
+  id: "${args.id}"
+body:
+  - kind: label
+    params: { text: "${record.number} — ${record.subject}", style: heading, icon: Tag }
+  - kind: label
+    params: { text: "Status: ${record.status}, priority: ${record.priority}, channel: ${record.channel}", style: muted }
+  - kind: row
+    children:
+      - kind: label
+        params: { text: "Customer id: ${record.customer}" }
+      - kind: label
+        params: { text: "Assigned agent id: ${record.assignee}" }
+  - kind: label
+    params: { text: "Created: ${record.created}, SLA due: ${record.due}, tags: ${record.tags}", style: muted }
+  - kind: label
+    params: { text: "Switch between ticket tabs and watch the title and status bar follow.", style: muted }

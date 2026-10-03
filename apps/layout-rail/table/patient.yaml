@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: patient — the hospital's patient roster. `admissions` and
+# `appointments` back the patient record page's related grids.
+datasource: hospital
+title: Patients
+faker:
+  count: 70
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: first_name, label: First name, type: string, flags: [title, searchable] }
+  - { name: last_name, label: Last name, type: string, flags: [searchable] }
+  - { name: date_of_birth, label: Date of birth, type: date, faker: { date: { from: "1935-01-01", to: "2008-01-01" } } }
+  - { name: phone, type: string }
+  - { name: blood_type, label: Blood type, type: string, faker: { pick: { values: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] } } }
+  - { name: status, type: string, faker: { pick: { values: [Outpatient, Inpatient, Discharged], weights: [5, 2, 3] } } }
+references:
+  admissions: { table: admission, kind: has_many, foreign_key: patient }
+  appointments: { table: appointment, kind: has_many, foreign_key: patient }

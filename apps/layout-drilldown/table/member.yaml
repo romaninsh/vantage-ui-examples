@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: member — 6 to 12 members per club.
+datasource: gym
+title: Members
+faker:
+  fan_out: { column: club, min: 6, max: 12 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: club, label: Club, type: string, references: club }
+  - { name: first_name, label: First name, type: string, flags: [title, searchable] }
+  - { name: last_name, label: Last name, type: string, flags: [searchable] }
+  - { name: email, label: Email, type: string }
+  - { name: tier, label: Tier, type: string, faker: { pick: { values: [Basic, Standard, Premium, Student], weights: [4, 5, 2, 2] } } }
+  - { name: joined, label: Joined, type: timestamp, faker: { date: { from: "-156w" } } }
+  - { name: monthly_fee, label: Monthly fee, type: float, unit: { currency: "£" }, faker: { range: { min: 19, max: 89, decimals: 2 } } }
+references:
+  visits: { table: visit, kind: has_many, foreign_key: member }

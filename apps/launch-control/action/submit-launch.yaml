@@ -14,10 +14,10 @@ params:
   name:                    { type: string, label: "Mission name" }
 http:
   method: POST
-  # The hosted server's address (matches datasource/local.yaml). Hardcoded
-  # rather than ${ENV} because http_request errors on an unset var. For local
-  # runs, point this at http://127.0.0.1:8080/sim/launches.
-  url: "http://127.0.0.1:8080/sim/launches"
+  # The compose service, same as datasource/local.yaml: Vantage rewrites
+  # `api:8080` to the loopback port docker published. Running the server by
+  # hand instead? Use http://127.0.0.1:8080/sim/launches.
+  url: "http://api:8080/sim/launches"
   headers:
     Content-Type: "application/json"
   body:

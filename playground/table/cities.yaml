@@ -1,0 +1,12 @@
+# Table: cities — the derived per-city aggregate (one row per city,
+# updated in place). `parcels` is the current count; `vs_baseline` its %
+# deviation from normal; `live` flips to "Offline" when telemetry drops.
+# Fed by the shared `dispatch` pulse sim's aggregate half.
+datasource: dispatch
+title: Cities
+faker: { count: 0 }
+columns:
+  - { name: city, type: string, flags: [id, title, searchable] }
+  - { name: parcels, type: int }
+  - { name: vs_baseline, type: int }
+  - { name: live, type: string }

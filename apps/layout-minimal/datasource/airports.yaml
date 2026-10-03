@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: airports — the fixed list of airports behind the flights
+# table's `origin`/`destination` codes (synthetic, fixed).
+type: faker
+description: Airports served by the board (synthetic, fixed)
+count: 18
+seed: 502

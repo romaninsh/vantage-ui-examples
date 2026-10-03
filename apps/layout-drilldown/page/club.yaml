@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: club — level three: the club's members, one row each.
+title: "${args.name}"
+body:
+  - kind: list
+    observe: { script: 'scenery("club").where("id", args.id).ref("members")' }
+    action: 'open("member", #{ id: row.id, name: row.first_name + " " + row.last_name })'
+    item:
+      - kind: column
+        children:
+          - kind: label
+            params: { text: "${row.first_name} ${row.last_name}", icon: User }
+          - kind: label
+            params: { text: "${row.tier} · £${row.monthly_fee}/month · ${row.email}", style: muted }

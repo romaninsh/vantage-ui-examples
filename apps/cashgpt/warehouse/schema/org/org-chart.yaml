@@ -1,0 +1,634 @@
+# Northcrest Financial Group — organisational outline
+#
+# STATIC. Hand-authored and reviewed; the expander turns it into ~35,000 org
+# units. Divisions and departments are named here because names carry meaning
+# and a generator cannot invent "Documentary Credits". Teams are expanded from
+# the `teams` vocabulary because 35,000 of them cannot be hand-written and
+# nobody would read them if they were.
+#
+# Headcount cascades: LOB headcount is authoritative, divisions declare theirs,
+# departments take a share of their division, teams are sized by span of control.
+#
+#   node scripts/silver/org-units.mjs
+
+meta:
+  company: Northcrest Financial Group
+  # London-headquartered universal bank. Retail is UK and Ireland; markets,
+  # transaction banking and CIB run out of the European, Asian and Americas hubs.
+  hq: London
+  incorporated: United Kingdom
+  headcount: 500000
+  # 270,123 of these use AI — 54% adoption
+  as_of: 2026-07-31
+
+# Level 1 is the group; individual contributors sit under a level-6 team.
+levels:
+  1: { code: L1, name: Group }
+  2: { code: L2, name: Line of business }
+  3: { code: L3, name: Division }
+  4: { code: L4, name: Department }
+  5: { code: L5, name: Section }
+  6: { code: L6, name: Team }
+
+span:
+  # Team size is lognormal, not a uniform range. Spans of control have a hard
+  # floor (below ~3 it is not a team) and a long right tail (a contact-centre
+  # supervisor really can have 45 reports). A flat range gives neither, and the
+  # resulting org looks machine-made the moment you sort by headcount.
+  #
+  #   median 11 · sigma 0.48  ->  p50 11 · p90 20 · p99 34 · p99.9 ~48
+  team:
+    distribution: lognormal
+    median: 11
+    sigma: 0.48
+    min: 3
+    max: 60
+  # teams per section, uniform — this one genuinely is a flat band
+  section:
+    teams_min: 4
+    teams_max: 9
+
+# Section names for departments too large to be one team of each stem. UK and
+# Ireland first, because retail is the bulk of the headcount and it is domestic;
+# the international hubs follow, which is where markets and CIB actually sit.
+regions:
+  [London, South East, Midlands, North West, Yorkshire, South West, Scotland,
+   North East, Wales, Northern Ireland, Dublin, Frankfurt, Paris, Amsterdam,
+   Luxembourg, Madrid, Milan, Zurich, Singapore, Hong Kong, Tokyo, Mumbai,
+   Dubai, Sydney, New York, Toronto, Sao Paulo, Johannesburg]
+
+# ---------------------------------------------------------------------------
+# Reusable team vocabularies. A department picks one; the expander cycles the
+# stems, suffixing with a region or an ordinal once it runs out.
+# ---------------------------------------------------------------------------
+vocab:
+  ops: &ops
+    [Processing, Exceptions, Quality Control, Client Support, Reconciliation,
+     Workflow, Fulfilment, Case Handling]
+  service: &service
+    [Front Line, Escalations, Scheduling, Coaching, Retention, Triage]
+  engineering: &engineering
+    [Platform, Delivery, Reliability, Integration, Tooling, Architecture,
+     Automation, Release]
+  advisory: &advisory
+    [Coverage, Origination, Client Solutions, Structuring, Execution, Portfolio]
+  control: &control
+    [Controls, Assurance, Reporting, Governance, Policy, Testing]
+  analytics: &analytics
+    [Insights, Modelling, Reporting, Data Products, Experimentation]
+  markets: &markets
+    [Desk, Flow, Structured, Electronic, Risk Book]
+  people: &people
+    [Partnering, Operations, Programmes, Advisory, Shared Services]
+  facilities: &facilities
+    [Site Services, Maintenance, Space Planning, Security, Contracts]
+  # Product engineering names its teams after the thing it ships, not after a
+  # function. This is what makes "spend by team" legible to a product owner.
+  product: &product
+    [Mobile App, Online Banking, Cards Portal, Savings Platform, Mortgage Hub,
+     Payments Hub, Open Banking APIs, Onboarding Journey, Identity & Auth,
+     Notifications, Statements, Disputes Portal, Loan Origination, Rewards,
+     Business Portal, Wealth Portal, Branch Terminal, Agent Desktop]
+  data: &data
+    [Ingestion, Pipelines, Data Products, Streaming, Quality, Lineage,
+     Contracts, Governance, Catalogue]
+
+# ---------------------------------------------------------------------------
+# What people in a department actually DO. Keyed by the same vocabulary the
+# department uses for its team names, so a Legal department never staffs a
+# Site Reliability engineer. Weights are relative within the mix.
+# ---------------------------------------------------------------------------
+function_mix:
+  ops:
+    { Operations: 5, Business Analysis: 2, Client Service: 2, Compliance: 1, Analytics: 1 }
+  service:
+    { Client Service: 6, Operations: 3, Training: 1, Business Analysis: 1 }
+  engineering:
+    { Software Engineering: 6, Site Reliability: 2, Architecture: 2, Security: 2, Data Management: 1 }
+  advisory:
+    { Client Service: 4, Business Analysis: 3, Product Management: 2, Risk Management: 1, Operations: 1 }
+  control:
+    { Compliance: 4, Risk Management: 3, Auditing: 2, Legal: 2, Operations: 1 }
+  analytics:
+    { Analytics: 4, Data Science: 3, Data Management: 2, Quantitative Research: 2, Software Engineering: 1 }
+  markets:
+    { Trading: 5, Quantitative Research: 3, Analytics: 2, Risk Management: 1 }
+  people:
+    { Training: 4, Operations: 3, Business Analysis: 2, Legal: 1 }
+  facilities:
+    { Operations: 6, Security: 3, Compliance: 1 }
+  product:
+    { Software Engineering: 6, Product Management: 3, Architecture: 1, Analytics: 1, Site Reliability: 1 }
+  data:
+    { Data Management: 5, Software Engineering: 3, Analytics: 2, Data Science: 1 }
+
+# How senior a department skews. 1.0 is neutral; above pulls the grade mix up,
+# below pushes it down. A contact centre is juniors with a few supervisors; a
+# quant desk is the other way round.
+seniority_tilt:
+  ops: 0.85
+  service: 0.70
+  engineering: 1.25
+  advisory: 1.20
+  control: 1.10
+  analytics: 1.30
+  markets: 1.45
+  people: 0.95
+  facilities: 0.65
+  product: 1.25
+  data: 1.30
+
+# ---------------------------------------------------------------------------
+# How likely each discipline is to use AI at all, and how hard when they do.
+# This is the single biggest driver of where the money goes: an engineering
+# team is nearly all users at high intensity, a facilities team is a handful of
+# people asking occasional questions. Keyed by work_type, read by the usage
+# generators — NOT loaded into silver, for the same reason as the seniority
+# figures: once fct_usage exists, adoption is measured, not assumed.
+#
+# adoption   share of the discipline's headcount that uses AI at all
+# intensity  relative spend per active user, 1.0 being the bank average
+# ---------------------------------------------------------------------------
+ai_profile:
+  engineering: { adoption: 0.94, intensity: 2.60 }
+  data:        { adoption: 0.92, intensity: 2.40 }
+  product:     { adoption: 0.88, intensity: 2.00 }
+  analytics:   { adoption: 0.86, intensity: 2.20 }
+  markets:     { adoption: 0.70, intensity: 1.40 }
+  advisory:    { adoption: 0.55, intensity: 1.00 }
+  control:     { adoption: 0.52, intensity: 0.90 }
+  people:      { adoption: 0.46, intensity: 0.70 }
+  ops:         { adoption: 0.42, intensity: 0.60 }
+  service:     { adoption: 0.34, intensity: 0.45 }
+  facilities:  { adoption: 0.16, intensity: 0.30 }
+
+# ---------------------------------------------------------------------------
+lines_of_business:
+
+  - id: LB-05
+    name: Consumer Banking
+    resource_org: Consumer
+    headcount: 112000
+    divisions:
+      - name: Branch Network
+        headcount: 48000
+        departments:
+          - { name: Regional Branches,      share: 0.62, teams: *service }
+          - { name: Branch Operations,      share: 0.20, teams: *ops }
+          - { name: In-Branch Advisory,     share: 0.12, teams: *advisory }
+          - { name: Cash & Vault Services,  share: 0.06, teams: *ops }
+      - name: Contact Centres
+        headcount: 30000
+        departments:
+          - { name: Inbound Servicing,        share: 0.48, teams: *service }
+          - { name: Outbound & Retention,     share: 0.22, teams: *service }
+          - { name: Complaints & Escalations, share: 0.18, teams: *ops }
+          - { name: Workforce Management,     share: 0.12, teams: *analytics }
+      - name: Everyday Banking
+        headcount: 13000
+        departments:
+          - { name: Current Accounts,    share: 0.32, teams: *ops }
+          - { name: Savings & Deposits,  share: 0.26, teams: *ops }
+          - { name: Overdrafts & Fees,   share: 0.18, teams: *control }
+          - { name: Account Servicing,   share: 0.24, teams: *ops }
+      - name: Cards & Unsecured Lending
+        headcount: 11000
+        departments:
+          - { name: Credit Cards,             share: 0.34, teams: *ops }
+          - { name: Personal Loans,           share: 0.24, teams: *ops }
+          - { name: Collections & Recoveries, share: 0.26, teams: *service }
+          - { name: Credit Decisioning,       share: 0.16, teams: *analytics }
+      - name: Mortgages
+        headcount: 10000
+        departments:
+          - { name: Mortgage Origination, share: 0.30, teams: *advisory }
+          - { name: Underwriting,         share: 0.26, teams: *control }
+          - { name: Mortgage Servicing,   share: 0.28, teams: *ops }
+          - { name: Arrears Management,   share: 0.16, teams: *service }
+
+  - id: LB-13
+    name: Corporate Services
+    resource_org: Others
+    headcount: 58000
+    divisions:
+      - name: Corporate Real Estate & Facilities
+        headcount: 20000
+        departments:
+          - { name: Facilities Management, share: 0.38, teams: *facilities }
+          - { name: Workplace Services,    share: 0.26, teams: *facilities }
+          - { name: Property Portfolio,    share: 0.16, teams: *control }
+          - { name: Physical Security,     share: 0.20, teams: *facilities }
+      - name: People
+        headcount: 15000
+        departments:
+          - { name: Talent Acquisition,       share: 0.24, teams: *people }
+          - { name: Learning & Development,   share: 0.22, teams: *people }
+          - { name: HR Operations,            share: 0.30, teams: *ops }
+          - { name: Reward & Benefits,        share: 0.12, teams: *people }
+          - { name: Employee Relations,       share: 0.12, teams: *people }
+      - name: Procurement & Vendor Management
+        headcount: 7000
+        departments:
+          - { name: Sourcing,            share: 0.30, teams: *advisory }
+          - { name: Contract Management, share: 0.26, teams: *control }
+          - { name: Vendor Risk,         share: 0.20, teams: *control }
+          - { name: Accounts Payable,    share: 0.24, teams: *ops }
+      - name: Legal & Governance
+        headcount: 6000
+        departments:
+          - { name: Commercial Legal,       share: 0.34, teams: *advisory }
+          - { name: Litigation & Disputes,  share: 0.24, teams: *advisory }
+          - { name: Regulatory Legal,       share: 0.24, teams: *control }
+          - { name: Board & Secretariat,    share: 0.18, teams: *control }
+      - name: Internal Audit
+        headcount: 5000
+        departments:
+          - { name: Technology Audit, share: 0.28, teams: *control }
+          - { name: Financial Audit,  share: 0.28, teams: *control }
+          - { name: Conduct Audit,    share: 0.24, teams: *control }
+          - { name: Audit Analytics,  share: 0.20, teams: *analytics }
+      - name: Corporate Affairs
+        headcount: 5000
+        departments:
+          - { name: Communications,     share: 0.28, teams: *people }
+          - { name: Brand & Marketing,  share: 0.34, teams: *analytics }
+          - { name: Investor Relations, share: 0.18, teams: *control }
+          - { name: Sustainability,     share: 0.20, teams: *control }
+
+  - id: LB-04
+    name: Commercial Banking
+    resource_org: Commercial & Industry
+    headcount: 48000
+    divisions:
+      - name: Middle Market
+        headcount: 16000
+        departments:
+          - { name: Regional Coverage,   share: 0.38, teams: *advisory }
+          - { name: Sector Coverage,     share: 0.26, teams: *advisory }
+          - { name: Franchise Lending,   share: 0.18, teams: *advisory }
+          - { name: Client Onboarding,   share: 0.18, teams: *ops }
+      - name: Business Banking
+        headcount: 14000
+        departments:
+          - { name: Small Business Coverage, share: 0.42, teams: *advisory }
+          - { name: Merchant Lending,        share: 0.26, teams: *ops }
+          - { name: Business Servicing,      share: 0.32, teams: *service }
+      - name: Credit & Portfolio
+        headcount: 10000
+        departments:
+          - { name: Credit Administration, share: 0.32, teams: *control }
+          - { name: Portfolio Monitoring,  share: 0.26, teams: *analytics }
+          - { name: Collateral Management, share: 0.22, teams: *ops }
+          - { name: Restructuring,         share: 0.20, teams: *advisory }
+      - name: Commercial Operations
+        headcount: 8000
+        departments:
+          - { name: Loan Servicing,        share: 0.34, teams: *ops }
+          - { name: Documentation,         share: 0.24, teams: *ops }
+          - { name: Syndications Support,  share: 0.20, teams: *ops }
+          - { name: Trade Processing,      share: 0.22, teams: *ops }
+
+  - id: LB-02
+    name: Payments & Transaction Banking
+    resource_org: Corporate
+    headcount: 44000
+    divisions:
+      - name: Payment Operations
+        headcount: 18000
+        departments:
+          - { name: Wire & RTGS,             share: 0.28, teams: *ops }
+          - { name: ACH & Direct Debit,      share: 0.26, teams: *ops }
+          - { name: Instant Payments,        share: 0.22, teams: *ops }
+          - { name: Payment Investigations,  share: 0.24, teams: *ops }
+      - name: Cards & Merchant Services
+        headcount: 12000
+        departments:
+          - { name: Card Processing,          share: 0.32, teams: *ops }
+          - { name: Merchant Acquiring,       share: 0.26, teams: *advisory }
+          - { name: Disputes & Chargebacks,   share: 0.24, teams: *ops }
+          - { name: Terminal Estate,          share: 0.18, teams: *facilities }
+      - name: Cash Management
+        headcount: 8000
+        departments:
+          - { name: Liquidity Services,     share: 0.36, teams: *advisory }
+          - { name: Account Services,       share: 0.34, teams: *ops }
+          - { name: Client Implementation,  share: 0.30, teams: *ops }
+      - name: Trade & Supply Chain Finance
+        headcount: 6000
+        departments:
+          - { name: Trade Finance Operations, share: 0.40, teams: *ops }
+          - { name: Documentary Credits,      share: 0.32, teams: *ops }
+          - { name: Supply Chain Programmes,  share: 0.28, teams: *advisory }
+
+  - id: LB-06
+    name: Wealth Management
+    resource_org: Wealth
+    headcount: 41000
+    divisions:
+      - name: Private Banking
+        headcount: 14000
+        departments:
+          - { name: Ultra High Net Worth, share: 0.22, teams: *advisory }
+          - { name: High Net Worth,       share: 0.40, teams: *advisory }
+          - { name: Lending & Credit,     share: 0.20, teams: *control }
+          - { name: Client Onboarding,    share: 0.18, teams: *ops }
+      - name: Retail Investments
+        headcount: 12000
+        departments:
+          - { name: Advisory Services,       share: 0.42, teams: *advisory }
+          - { name: Self-Directed Investing, share: 0.30, teams: *service }
+          - { name: Retirement Solutions,    share: 0.28, teams: *advisory }
+      - name: Investment Solutions
+        headcount: 8000
+        departments:
+          - { name: Portfolio Construction,   share: 0.30, teams: *analytics }
+          - { name: Alternatives,             share: 0.22, teams: *advisory }
+          - { name: Discretionary Mandates,   share: 0.28, teams: *advisory }
+          - { name: Product Governance,       share: 0.20, teams: *control }
+      - name: Wealth Operations
+        headcount: 7000
+        departments:
+          - { name: Custody & Settlement, share: 0.38, teams: *ops }
+          - { name: Client Reporting,     share: 0.34, teams: *ops }
+          - { name: Fee Billing,          share: 0.28, teams: *ops }
+
+  - id: LB-07
+    name: Enterprise Technology
+    resource_org: Others
+    headcount: 44000
+    divisions:
+      - name: Core Platforms
+        headcount: 11000
+        departments:
+          - { name: Core Banking,             share: 0.30, teams: *engineering }
+          - { name: Integration & APIs,       share: 0.24, teams: *engineering }
+          - { name: Mainframe Modernisation,  share: 0.22, teams: *engineering }
+          - { name: Payments Engineering,     share: 0.24, teams: *engineering }
+      - name: Infrastructure & Cloud
+        headcount: 10000
+        departments:
+          - { name: Cloud Engineering,        share: 0.30, teams: *engineering }
+          - { name: Site Reliability,         share: 0.26, teams: *engineering }
+          - { name: Network & Edge,           share: 0.22, teams: *engineering }
+          - { name: Data Centre Operations,   share: 0.22, teams: *ops }
+      - name: Security Engineering
+        headcount: 8000
+        departments:
+          - { name: Identity & Access,          share: 0.28, teams: *engineering }
+          - { name: Threat Detection,           share: 0.26, teams: *engineering }
+          - { name: Application Security,       share: 0.24, teams: *engineering }
+          - { name: Vulnerability Management,   share: 0.22, teams: *control }
+      - name: End User Technology
+        headcount: 7000
+        departments:
+          - { name: Workplace Engineering, share: 0.34, teams: *engineering }
+          - { name: Service Desk,          share: 0.40, teams: *service }
+          - { name: Device Management,     share: 0.26, teams: *ops }
+      - name: Platform Engineering
+        headcount: 8000
+        departments:
+          - { name: Developer Experience,        share: 0.20, teams: *engineering }
+          - { name: Internal Developer Platform, share: 0.22, teams: *engineering }
+          - { name: Build & Release,             share: 0.18, teams: *engineering }
+          - { name: Runtime Platform,            share: 0.22, teams: *engineering }
+          - { name: Developer Tooling,           share: 0.18, teams: *engineering }
+
+  - id: LB-11
+    name: Risk & Compliance
+    resource_org: Others
+    headcount: 36000
+    divisions:
+      - name: Financial Crime
+        headcount: 12000
+        departments:
+          - { name: Transaction Monitoring, share: 0.32, teams: *ops }
+          - { name: Sanctions Screening,    share: 0.24, teams: *ops }
+          - { name: KYC Operations,         share: 0.28, teams: *ops }
+          - { name: Investigations,         share: 0.16, teams: *control }
+      - name: Credit Risk
+        headcount: 8000
+        departments:
+          - { name: Credit Risk Models, share: 0.34, teams: *analytics }
+          - { name: Portfolio Risk,     share: 0.36, teams: *analytics }
+          - { name: Risk Reporting,     share: 0.30, teams: *control }
+      - name: Compliance
+        headcount: 7000
+        departments:
+          - { name: Regulatory Compliance, share: 0.30, teams: *control }
+          - { name: Surveillance,          share: 0.24, teams: *ops }
+          - { name: Compliance Advisory,   share: 0.24, teams: *advisory }
+          - { name: Regulatory Reporting,  share: 0.22, teams: *control }
+      - name: Operational Risk
+        headcount: 5000
+        departments:
+          - { name: Risk Assessment,      share: 0.36, teams: *control }
+          - { name: Incident Management,  share: 0.32, teams: *ops }
+          - { name: Business Continuity,  share: 0.32, teams: *control }
+      - name: Market & Liquidity Risk
+        headcount: 4000
+        departments:
+          - { name: Market Risk,      share: 0.38, teams: *analytics }
+          - { name: Liquidity Risk,   share: 0.32, teams: *analytics }
+          - { name: Model Validation, share: 0.30, teams: *control }
+
+  - id: LB-10
+    name: Consumer Digital
+    resource_org: Consumer
+    headcount: 34000
+    divisions:
+      - name: Product Engineering
+        headcount: 12000
+        departments:
+          - { name: Retail Products,    share: 0.34, teams: *product }
+          - { name: Payments Products,  share: 0.26, teams: *product }
+          - { name: Servicing Products, share: 0.22, teams: *product }
+          - { name: Business Products,  share: 0.18, teams: *product }
+      - name: Mobile & Web
+        headcount: 8000
+        departments:
+          - { name: Mobile Banking, share: 0.36, teams: *engineering }
+          - { name: Online Banking, share: 0.30, teams: *engineering }
+          - { name: Design System,  share: 0.18, teams: *engineering }
+          - { name: Accessibility,  share: 0.16, teams: *control }
+      - name: Digital Journeys
+        headcount: 6000
+        departments:
+          - { name: Digital Onboarding,   share: 0.36, teams: *engineering }
+          - { name: Servicing Journeys,   share: 0.34, teams: *engineering }
+          - { name: Personalisation,      share: 0.30, teams: *analytics }
+      - name: Conversational & Assisted
+        headcount: 5000
+        departments:
+          - { name: Virtual Assistant, share: 0.38, teams: *engineering }
+          - { name: Agent Assist,      share: 0.32, teams: *engineering }
+          - { name: Voice Channel,     share: 0.30, teams: *engineering }
+      - name: Digital Operations
+        headcount: 3000
+        departments:
+          - { name: Release Management,   share: 0.30, teams: *ops }
+          - { name: Digital Analytics,    share: 0.38, teams: *analytics }
+          - { name: Content Operations,   share: 0.32, teams: *ops }
+
+  - id: LB-03
+    name: Corporate & Investment Banking
+    resource_org: Corporate
+    headcount: 24000
+    divisions:
+      - name: Capital Markets
+        headcount: 7000
+        departments:
+          - { name: Equity Capital Markets, share: 0.34, teams: *markets }
+          - { name: Debt Capital Markets,   share: 0.36, teams: *markets }
+          - { name: Leveraged Finance,      share: 0.30, teams: *advisory }
+      - name: Advisory
+        headcount: 6000
+        departments:
+          - { name: M&A Advisory,      share: 0.42, teams: *advisory }
+          - { name: Restructuring,     share: 0.26, teams: *advisory }
+          - { name: Industry Coverage, share: 0.32, teams: *advisory }
+      - name: Corporate Coverage
+        headcount: 6000
+        departments:
+          - { name: Global Corporates,      share: 0.40, teams: *advisory }
+          - { name: Financial Institutions,  share: 0.34, teams: *advisory }
+          - { name: Public Sector,          share: 0.26, teams: *advisory }
+      - name: Deal Support
+        headcount: 5000
+        departments:
+          - { name: Pitch Production,        share: 0.28, teams: *ops }
+          - { name: Valuation & Modelling,   share: 0.26, teams: *analytics }
+          - { name: Deal Analytics,          share: 0.22, teams: *analytics }
+          - { name: Transaction Management,  share: 0.24, teams: *ops }
+
+  - id: LB-01
+    name: Global Markets
+    resource_org: Corporate
+    headcount: 15000
+    divisions:
+      - name: Trading
+        headcount: 5000
+        departments:
+          - { name: Rates,                 share: 0.22, teams: *markets }
+          - { name: Credit,                share: 0.20, teams: *markets }
+          - { name: FX & Commodities,      share: 0.22, teams: *markets }
+          - { name: Equities,              share: 0.20, teams: *markets }
+          - { name: Securitized Products,  share: 0.16, teams: *markets }
+      - name: Sales & Coverage
+        headcount: 4000
+        departments:
+          - { name: Institutional Sales, share: 0.42, teams: *advisory }
+          - { name: Corporate Sales,     share: 0.32, teams: *advisory }
+          - { name: Electronic Sales,    share: 0.26, teams: *markets }
+      - name: Markets Operations
+        headcount: 4000
+        departments:
+          - { name: Trade Support,        share: 0.30, teams: *ops }
+          - { name: Collateral & Margin,  share: 0.26, teams: *ops }
+          - { name: Confirmations,        share: 0.22, teams: *ops }
+          - { name: Reconciliations,      share: 0.22, teams: *ops }
+      - name: Research
+        headcount: 2000
+        departments:
+          - { name: Macro Research,  share: 0.34, teams: *analytics }
+          - { name: Credit Research, share: 0.34, teams: *analytics }
+          - { name: Equity Research, share: 0.32, teams: *analytics }
+
+  - id: LB-08
+    name: Data & AI Platform
+    resource_org: Others
+    headcount: 20000
+    divisions:
+      - name: Data Engineering
+        headcount: 6000
+        departments:
+          - { name: Ingestion Engineering,      share: 0.28, teams: *data }
+          - { name: Transformation Engineering, share: 0.30, teams: *data }
+          - { name: Data Products,              share: 0.24, teams: *data }
+          - { name: Data Reliability,           share: 0.18, teams: *data }
+      - name: Data Platform
+        headcount: 5000
+        departments:
+          - { name: Lakehouse Engineering, share: 0.30, teams: *engineering }
+          - { name: Streaming & Ingest,    share: 0.24, teams: *engineering }
+          - { name: Data Governance,       share: 0.22, teams: *control }
+          - { name: Data Quality,          share: 0.24, teams: *control }
+      - name: AI Platform
+        headcount: 5000
+        departments:
+          - { name: Model Gateway,        share: 0.28, teams: *engineering }
+          - { name: Agent Runtime,        share: 0.26, teams: *engineering }
+          - { name: Evaluation & Safety,  share: 0.24, teams: *control }
+          - { name: AI Enablement,        share: 0.22, teams: *people }
+      - name: Analytics Engineering
+        headcount: 2000
+        departments:
+          - { name: Semantic Layer,      share: 0.34, teams: *engineering }
+          - { name: Reporting Platform,  share: 0.36, teams: *engineering }
+          - { name: Feature Store,       share: 0.30, teams: *engineering }
+      - name: Data Science
+        headcount: 2000
+        departments:
+          - { name: Applied Science,   share: 0.38, teams: *analytics }
+          - { name: Decision Science,  share: 0.34, teams: *analytics }
+          - { name: Research,          share: 0.28, teams: *analytics }
+
+  - id: LB-12
+    name: Finance & Treasury
+    resource_org: Others
+    headcount: 12000
+    divisions:
+      - name: Financial Control
+        headcount: 4000
+        departments:
+          - { name: Controllership,        share: 0.38, teams: *control }
+          - { name: Product Control,       share: 0.34, teams: *control }
+          - { name: Statutory Reporting,   share: 0.28, teams: *control }
+      - name: Treasury
+        headcount: 3000
+        departments:
+          - { name: ALM & Liquidity,     share: 0.38, teams: *analytics }
+          - { name: Capital Management,  share: 0.34, teams: *analytics }
+          - { name: Funding,             share: 0.28, teams: *markets }
+      - name: Planning & Analysis
+        headcount: 3000
+        departments:
+          - { name: Financial Planning, share: 0.36, teams: *analytics }
+          - { name: Cost Management,    share: 0.32, teams: *control }
+          - { name: Business Finance,   share: 0.32, teams: *advisory }
+      - name: Tax
+        headcount: 2000
+        departments:
+          - { name: Direct Tax,       share: 0.38, teams: *control }
+          - { name: Indirect Tax,     share: 0.34, teams: *control }
+          - { name: Transfer Pricing, share: 0.28, teams: *control }
+
+  - id: LB-09
+    name: Global Markets Technology
+    resource_org: Corporate
+    headcount: 12000
+    divisions:
+      - name: Trading Systems
+        headcount: 5000
+        departments:
+          - { name: Equities Systems,      share: 0.28, teams: *engineering }
+          - { name: Fixed Income Systems,  share: 0.28, teams: *engineering }
+          - { name: Algo Execution,        share: 0.22, teams: *engineering }
+          - { name: Order Management,      share: 0.22, teams: *engineering }
+      - name: Post-Trade Technology
+        headcount: 3000
+        departments:
+          - { name: Clearing & Settlement, share: 0.38, teams: *engineering }
+          - { name: Risk Engines,          share: 0.34, teams: *engineering }
+          - { name: Regulatory Feeds,      share: 0.28, teams: *engineering }
+      - name: Market Data
+        headcount: 2000
+        departments:
+          - { name: Reference Data,   share: 0.36, teams: *engineering }
+          - { name: Real-time Feeds,  share: 0.38, teams: *engineering }
+          - { name: Data Licensing,   share: 0.26, teams: *control }
+      - name: Quantitative Libraries
+        headcount: 2000
+        departments:
+          - { name: Pricing Libraries,     share: 0.38, teams: *analytics }
+          - { name: Risk Analytics,        share: 0.34, teams: *analytics }
+          - { name: Model Infrastructure,  share: 0.28, teams: *engineering }

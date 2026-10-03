@@ -1,0 +1,10 @@
+# Menu: left — this layout lists open tabs on the left instead of a menu, but
+# a project keeps one: it is the list the native menu bar and future command
+# palette use.
+title: Northwind Support
+items:
+  - { page: launcher, label: Launcher, icon: LayoutGrid }
+  - { page: dashboard, label: Dashboard, icon: LayoutDashboard }
+  - { page: conversations, label: Conversations, icon: MessageSquare }
+  - { page: queue, label: Waiting queue, icon: Clock }
+  - { page: about, label: About, icon: BookOpen }

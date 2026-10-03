@@ -1,0 +1,13 @@
+# Application root for the drill-down demo.
+#
+#   layout: → layout/drilldown.yaml: no sidebar; pages stack up as you drill
+#             in, with a Back button and a breadcrumb above them.
+#   home:   → the hub the stack starts from.
+#   intro:  → the About page in a modal each time the project opens.
+layout: drilldown
+home: hub
+intro: about
+variables:
+  brand:
+    type: string
+    default: Northwind Gym

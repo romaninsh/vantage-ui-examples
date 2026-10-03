@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: customers — accounts that book shipments (synthetic, fixed).
+# `count` rows generated once, the same on every run because of `seed`.
+type: faker
+description: Logistics customers (synthetic, fixed)
+count: 30
+seed: 11

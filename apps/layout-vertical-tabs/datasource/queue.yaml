@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: queue — new conversations landing in the waiting queue
+# (synthetic). The `builtin:fifo` sim starts empty, adds one row every three
+# seconds and removes each row again after a random time in
+# `[retention_lo, retention_hi]` seconds, so the queue keeps moving without
+# growing.
+type: faker
+description: Incoming chats waiting for an agent
+sims:
+  arrivals:
+    table: queue
+    script: "builtin:fifo"
+    spawn: { burst: 0, rate: 20, max: 100, args: { retention_lo: 25, retention_hi: 50 } }

@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+# Menu: left — not shown by this layout, but the command palette lists its
+# links under "Navigation".
+title: Northwind Gym
+items:
+  - page: hub
+    label: Regions
+    icon: MapPin
+  - page: about
+    label: About
+    icon: BookOpen
+    open: modal

@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+# Menu: tools — the right panel. Each link shows one `open:` policy; the
+# Stock alerts badge counts the live low-stock feed.
+title: Tools
+items:
+  - page: products
+    label: All products
+    icon: Package
+    open: work          # the host with id `work` (the tabs in main)
+  - page: alerts
+    label: Stock alerts
+    icon: TriangleAlert
+    badge: 'tables.stock_alert.count'
+    open: tab           # a tab of this link's own
+  - page: dashboard
+    label: Dashboard
+    icon: LayoutDashboard
+    open: replace       # the tab menu clicks reuse
+  - page: about
+    label: About
+    icon: BookOpen
+    open: tab

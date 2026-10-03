@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=./layout-schema-1.json
+# Layout: workbench — a desk on the left (book a shipment, recent bookings,
+# live stats), one page in main (shipments or tracking), and an inspector on
+# the right that follows the row you click.
+#
+# title_bar: the app title, the project switcher (a `left: { view: … }`
+#            counts as a left region, so it is listed here), and a page
+#            selector over menu/left.yaml. The tray folds the data banner
+#            and holds an About link that opens in a modal.
+# left:      view/desk.yaml.
+# main:      a slot: one page at a time, no tabs.
+# right:     view/inspector.yaml. `main.selection.shipments` is the row
+#            selected in the grid named `shipments` on the page on screen;
+#            both pages name their grid that. cmd-i hides the panel.
+# status:    Rhai expressions; `tables.tracking_event.count` is live.
+tray:
+  - data_banner
+  - { page: about, label: About, icon: Info, open: modal }
+regions:
+  title_bar:
+    left:  [ { kind: app_title }, { kind: project_switcher }, { kind: page_selector } ]
+    right: [ { kind: tray }, { kind: view, view: title_tools } ]
+  left: { view: desk, width: 300 }
+  main: { host: slot, header: data_banner, empty: dashboard }
+  right:
+    view: inspector
+    args: { id: '${main.selection.shipments}' }
+    width: 340
+    toggle: { key: cmd-i }
+  status:
+    - { id: live, text: '"Live scans: " + tables.tracking_event.count' }
+    - { id: brand, text: 'app.brand', align: right }

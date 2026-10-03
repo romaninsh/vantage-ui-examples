@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: pick_colour — shown in a modal by the member page. `close(value)`
+# closes the modal and hands the value back to `modal(…)`; `close()` (or
+# Escape) answers with nothing.
+title: Pick a colour
+body:
+  - kind: label
+    params: { text: "Which colour does ${args.name} like?", style: heading }
+  - kind: row
+    children:
+      - kind: button
+        name: red
+        params: { label: Red, color: red, action: 'close("Red")' }
+      - kind: button
+        name: green
+        params: { label: Green, color: green, action: 'close("Green")' }
+      - kind: button
+        name: blue
+        params: { label: Blue, color: blue, action: 'close("Blue")' }
+  - kind: button
+    name: cancel
+    params: { label: Cancel, action: 'close()' }

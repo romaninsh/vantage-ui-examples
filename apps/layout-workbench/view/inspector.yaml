@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=./view-schema-1.json
+# View: inspector — the right panel. layout/workbench.yaml passes
+# `id: '${main.selection.shipments}'`, the row selected in the `shipments`
+# grid on screen; a click updates it in place without reloading the panel.
+# The facts are live: status, position and ETA change as the sim moves the
+# parcel. Each fact is a label with an icon, few captions.
+args:
+  id: { type: string, required: true }
+body:
+  - kind: label
+    when: 'args.id == ""'
+    params: { text: "Click a shipment", style: muted }
+  - kind: list
+    when: 'args.id != ""'
+    observe: { script: 'scenery("shipment").where("id", args.id).limit(1)' }
+    item:
+      - kind: label
+        params: { text: "${row.tracking_no}", style: heading, icon: Package }
+      - kind: label
+        params: { text: "${row.customer}", style: muted }
+      - kind: label
+        params: { text: "${row.status}", icon: Activity }
+      - kind: label
+        params: { text: '${if row.late == true { "Behind ETA" } else { "On schedule" }}', icon: TriangleAlert }
+      - kind: label
+        params: { text: '${"ETA " + date_relative(row.eta)}', icon: Clock }
+      - kind: label
+        params: { text: "${row.origin_city} → ${row.destination_city}", icon: Navigation }
+      - kind: label
+        params: { text: '${row.location} · ${"scanned " + date_relative(row.last_scan)}', icon: MapPin }
+      - kind: label
+        params: { text: "${row.carrier} · ${row.service_level}", icon: Truck }
+      - kind: label
+        params: { text: '${row.pieces} pcs · ${unit(row.weight_kg, "kg")}', icon: Scale }
+      - kind: label
+        params: { text: '${money(row.declared_value, "£")}', icon: Wallet }

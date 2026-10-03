@@ -36,10 +36,13 @@ body:
               - kind: select
                 name: person
                 observe: person_picker
+                # No `column:` — the picker shows the table's [title]
+                # column (full_name) and publishes the row id, which is
+                # what the person_* queries bind. A `column:` would make
+                # it publish the name instead.
                 params:
                   label: Person
                   placeholder: "Search people by name…"
-                  column: full_name
           - kind: column
             children:
               - kind: label

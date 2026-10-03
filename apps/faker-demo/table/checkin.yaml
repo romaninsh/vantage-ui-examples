@@ -3,6 +3,7 @@
 # names (first_name, last_name, email, city); `guest` is a bool by type.
 datasource: checkins
 title: Check-ins
+faker: { count: 0 }
 columns:
   - { name: id, type: string, flags: [id, hidden] }
   - { name: first_name, label: First name, type: string, flags: [title, searchable] }

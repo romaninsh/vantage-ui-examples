@@ -1,0 +1,111 @@
+# Northcrest seniority ladder.
+#
+# STATIC. Eight grades, junior to senior. Small enough to hand-author, and it
+# has to be authored rather than derived because the grade pyramid and who is
+# allowed to run what are policy, not observation.
+#
+# TWO KINDS OF FIELD LIVE HERE, and the split matters:
+#
+#   loaded    rank, title, band, management scope, population_share — these
+#             are HR facts and land in silver.dim_seniority
+#
+#   generation  ai_adoption, ai_intensity — inputs the usage generators read to
+#             shape who uses AI and how hard. They are NOT loaded: once real
+#             usage exists, adoption is something you measure off the facts, and
+#             storing an assumption next to the measurement is how the two
+#             quietly diverge.
+#
+#   node scripts/silver/seniority.mjs
+
+meta:
+  # population_share must total exactly 1.
+  #
+  # Calibrated against a real universal bank, not a smooth curve: a 300,000
+  # person bank runs roughly 2,500 Managing Directors and an operating
+  # committee you could seat at one table. An evenly-tapering pyramid gives
+  # 8,500 MDs and 1,500 Executives, and then most of them have nothing to run.
+  headcount: 500000
+
+# heads_org_level: the levels of dim_org_unit this grade typically runs.
+#   2 line of business · 3 division · 4 department · 5 section · 6 team
+# null means individual contributor.
+levels:
+  - rank: 1
+    code: ANALYST
+    title: Analyst
+    band: B1
+    population_share: 0.29000
+    manager_eligible: false
+    heads_org_level: null
+    ai_adoption: 0.61
+    ai_intensity: 0.72
+
+  - rank: 2
+    code: ASSOCIATE
+    title: Associate
+    band: B2
+    population_share: 0.25500
+    manager_eligible: false
+    heads_org_level: null
+    ai_adoption: 0.63
+    ai_intensity: 0.88
+
+  - rank: 3
+    code: SR_ASSOCIATE
+    title: Senior Associate
+    band: B3
+    population_share: 0.19000
+    manager_eligible: true
+    heads_org_level: [6, 6]
+    ai_adoption: 0.60
+    ai_intensity: 1.15
+
+  - rank: 4
+    code: AVP
+    title: Assistant Vice President
+    band: B4
+    population_share: 0.14500
+    manager_eligible: true
+    heads_org_level: [6, 6]
+    ai_adoption: 0.58
+    ai_intensity: 1.30
+
+  - rank: 5
+    code: VP
+    title: Vice President
+    band: B5
+    population_share: 0.09500
+    manager_eligible: true
+    heads_org_level: [5, 6]
+    ai_adoption: 0.55
+    ai_intensity: 1.45
+
+  - rank: 6
+    code: SVP
+    title: Senior Vice President
+    band: B6
+    population_share: 0.01900
+    manager_eligible: true
+    heads_org_level: [4, 5]
+    ai_adoption: 0.42
+    ai_intensity: 1.55
+
+  - rank: 7
+    code: MD
+    title: Managing Director
+    band: B7
+    population_share: 0.00580
+    manager_eligible: true
+    heads_org_level: [3, 4]
+    ai_adoption: 0.34
+    ai_intensity: 1.80
+
+  - rank: 8
+    code: EXEC
+    title: Executive
+    band: B8
+    population_share: 0.00020
+    manager_eligible: true
+    heads_org_level: [1, 2]
+    ai_adoption: 0.28
+    ai_intensity: 2.60

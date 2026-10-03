@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: staff — doctors and nurses, narrowed by the menu link's `args.role`
+# and `args.shift` (empty means any).
+title: "${args.label}"
+body:
+  - kind: grid
+    name: staff
+    observe:
+      script: |
+        let s = scenery("staff");
+        if args.role != "" { s = s.where("role", args.role); }
+        if args.shift != "" { s = s.where("shift", args.shift); }
+        s
+    params:
+      search: true
+      columns:
+        first_name: { label: First name, pin: true }
+        last_name: { label: Last name }
+        role: { label: Role, color: { blue: [Doctor], cyan: [Nurse] } }
+        department: { label: Department }
+        shift: { label: Shift, color: { magenta: [Night] } }

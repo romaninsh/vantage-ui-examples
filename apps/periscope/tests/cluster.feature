@@ -22,13 +22,13 @@ Feature: Periscope reads the live demo cluster over MCP
 
     # Cluster-scoped lists: at least the single minikube/k3s node, and the demo namespace.
     And the data script holds: table("nodes").count() >= 1
-    And the data script holds: table("namespaces").add_condition_eq("name", "demo").count() == 1
+    And the data script holds: table("namespaces").where("name", "demo").count() == 1
 
     # The nginx Deployment `web` and at least its three replica pods in `demo`.
-    And the data script holds: table("deployments").add_condition_eq("name", "web").count() == 1
-    And the data script holds: table("pods").add_condition_eq("namespace", "demo").count() >= 3
+    And the data script holds: table("deployments").where("name", "web").count() == 1
+    And the data script holds: table("pods").where("namespace", "demo").count() >= 3
 
     # The remaining demo fixtures: the Service, the ConfigMap and the Job.
-    And the data script holds: table("services").add_condition_eq("name", "web").count() == 1
-    And the data script holds: table("configmaps").add_condition_eq("name", "demo-config").count() == 1
-    And the data script holds: table("jobs").add_condition_eq("name", "pi").count() == 1
+    And the data script holds: table("services").where("name", "web").count() == 1
+    And the data script holds: table("configmaps").where("name", "demo-config").count() == 1
+    And the data script holds: table("jobs").where("name", "pi").count() == 1

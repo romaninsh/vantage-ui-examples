@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: basket — a fixed shopping basket: basket/basket_item.csv, one
+# row per line. Read-only; it shows what the basket panel looks like.
+type: csv
+description: Shopping basket (fixed)
+path: basket

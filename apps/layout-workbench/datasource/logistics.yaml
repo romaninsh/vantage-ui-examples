@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: logistics — shipments and their tracking scans, played live by
+# two sims (synthetic). Both tables start empty (`faker: { count: 0 }`); the
+# sims fill them.
+#
+# shipment:   one sim per parcel (sims/shipment.rhai). `clock: 240` runs four
+#             sim hours per real minute, so a delivery takes 3–6 real minutes.
+#             `warm: 20h` replays 20 sim hours before going live, so the grid
+#             opens with parcels at every stage. 40 start at once, then one
+#             new booking every 10 real seconds (0.025 per sim minute) while
+#             fewer than 120 are alive.
+# dispatcher: one sim (sims/dispatcher.rhai) that starts a shipment sim for
+#             each booking saved from the desk form, so it starts moving.
+type: faker
+description: Shipments and tracking scans (synthetic, live)
+seed: 11
+sims:
+  shipment:
+    table: shipment
+    script: !include ../sims/shipment.rhai
+    clock: 240
+    warm: 20h
+    spawn: { burst: 40, rate: 0.025, max: 120 }
+  dispatcher:
+    table: shipment
+    script: !include ../sims/dispatcher.rhai
+    clock: 240
+    warm: 20h

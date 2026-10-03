@@ -1,0 +1,45 @@
+# Page: dashboard — the delivery board. Two live charts (pie of parcels
+# in flight per city, bars of arrivals per minute) over two live lists
+# (ranked cities, the raw activity tail). Everything here animates on
+# its own — it's all fed by the `dispatch` sim.
+title: Delivery Board
+body:
+  - kind: column
+    children:
+      - kind: row
+        children:
+          - kind: chart
+            # Shaping lives on the binding: busiest city first, resolved
+            # once into its own sorted scenery.
+            table: { script: 'scenery("cities").sort("parcels", "desc")' }
+            params:
+              x: city
+              y: parcels
+              label: Parcels in flight
+              chart_type: pie
+          - kind: chart
+            # tail() follows the end of the table — the last 10 minute
+            # buckets, sliding as new minutes append.
+            table: { script: 'scenery("arrivals").sort("id", "asc").tail(10)' }
+            params:
+              x: minute
+              y: attendees
+              label: Arrivals per minute
+              chart_type: bar
+              value_labels: true
+      - kind: row
+        children:
+          # Ranked cities; label shows the trend vs baseline / OFFLINE.
+          - kind: list
+            table: { script: 'scenery("cities").sort("parcels", "desc")' }
+            params:
+              palette: {}
+              text: 'city + "  ·  " + parcels.to_string()'
+              label: 'switch live == "Live" { true => #{ text: vs_baseline.to_string() + "%", color: switch vs_baseline >= 0 { true => "green", false => "red" } }, false => #{ text: "OFFLINE", color: "danger" } }'
+          # The raw incoming feed — signed deltas coloured green/red,
+          # newest changes flowing in.
+          - kind: list
+            table: { script: 'scenery("activity").sort("id", "asc").limit(15)' }
+            params:
+              text: 'updated + "   " + city'
+              label: 'switch delta >= 0 { true => #{ text: "+" + delta.to_string(), color: "green" }, false => #{ text: delta.to_string(), color: "red" } }'

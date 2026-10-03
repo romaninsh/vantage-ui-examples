@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: queue — new chats arriving every few seconds, each removed again
+# once it times out unanswered.
+datasource: queue
+title: Waiting queue
+faker: { count: 0 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: customer_name, label: Customer, type: string, flags: [title, searchable] }
+  - { name: topic, type: string, faker: { pick: { values: [Billing question, Login issue, Shipping delay, Refund request, Feature request, Account upgrade, Password reset, Damaged item, Cancel subscription, Technical error] } } }
+  - { name: channel, type: string, faker: { pick: { values: [Web chat, WhatsApp, Messenger] } } }
+  - { name: opening_message, label: Opening message, type: string, faker: { sentence: { min_words: 3, max_words: 10 } } }

@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: er — the people the Patients badge counts: arrivals waiting in the
+# emergency department; critical and urgent cases stand out in colour. The
+# feed is live; each arrival leaves once triaged.
+title: Waiting in ER
+body:
+  - kind: grid
+    name: er
+    observe: { script: 'scenery("er_arrival").sort("id", "asc")' }
+    params:
+      selectable: false
+      row_menu: false
+      row_color: { column: triage, color: { danger: [Critical], warning: [Urgent] } }
+      columns:
+        triage: { label: Triage }
+        first_name: { label: First name }
+        last_name: { label: Last name }
+        complaint: { label: Complaint, width: 320 }

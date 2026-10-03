@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: airports — the small reference table behind the flights grid's
+# `origin`/`destination` codes.
+title: Airports
+body:
+  - kind: grid
+    name: airports
+    observe: airport
+    params:
+      search: true
+      columns:
+        iata: { label: IATA, pin: true, width: 90 }
+        city: { label: City }
+        country: { label: Country }
+        kind: { label: Type }
+        runways: { label: Runways, width: 90 }
+        timezone: { label: Timezone, width: 100 }

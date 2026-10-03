@@ -1,0 +1,11 @@
+# Application root for the minimal layout demo.
+#
+#   layout: → layout/minimal.yaml: no sidebar, one page at a time, as much
+#             room as possible for the live flight board.
+#   home:   → the page the app opens on.
+layout: minimal
+home: flights
+variables:
+  brand:
+    type: string
+    default: Meridian Ops Board

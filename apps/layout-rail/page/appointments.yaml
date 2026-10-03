@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: appointments — bookings over the next two weeks, or those with one
+# `status` (the menu link passes `args.status`; empty means all, soonest
+# first).
+title: "${args.label}"
+body:
+  - kind: grid
+    name: appointments
+    observe: { script: 'if args.status == "" { scenery("appointment").sort("scheduled", "asc") } else { scenery("appointment").where("status", args.status) }' }
+    params:
+      search: true
+      columns:
+        confirmation: { label: Booking, pin: true }
+        scheduled: { label: When, render: relative }
+        patient: { label: Patient, link: patient }
+        staff: { label: Clinician, link: staff }
+        clinic: { label: Clinic }
+        status: { label: Status, color: { success: [Confirmed, Completed], danger: [Cancelled, No-show] } }

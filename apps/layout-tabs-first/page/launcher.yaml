@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: launcher — the start page, and what "+" opens. Each button opens a
+# page in its own tab; this tab stays until you close it.
+title: Launcher
+body:
+  - kind: label
+    params: { text: "${app.brand} — open something", style: heading, icon: LayoutDashboard }
+  - kind: label
+    params: { text: "Every page opens in its own tab in the title bar. Right-click a row in the ticket queue and choose Open ticket: its tab reads the subject, and opening the same ticket again brings that tab forward instead of duplicating it. Close a tab and press cmd-shift-t to bring it back.", style: muted }
+  - kind: row
+    children:
+      - { kind: button, params: { label: Dashboard, icon: LayoutDashboard, action: 'navigate("dashboard")' } }
+      - { kind: button, params: { label: Ticket queue, icon: ClipboardList, action: 'navigate("tickets")' } }
+      - { kind: button, params: { label: Customers, icon: Users, action: 'navigate("customers")' } }
+      - { kind: button, params: { label: Agents, icon: Headphones, action: 'navigate("agents")' } }
+  - kind: row
+    children:
+      - { kind: button, params: { label: "New tickets (live)", icon: Inbox, action: 'navigate("incoming")' } }
+      - { kind: button, params: { label: "Open ticket #1", icon: Tag, action: 'navigate("member", #{ id: "00000000000000000000", name: "Ticket #1" })' } }
+      - { kind: button, params: { label: About, icon: BookOpen, action: 'navigate("about")' } }

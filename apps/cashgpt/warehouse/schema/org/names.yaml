@@ -1,0 +1,304 @@
+# Name pools by culture.
+#
+# STATIC. Referenced by the `name_mix` on every site in locations.yaml — a
+# person's name is drawn from the culture mix of the office they sit in, not
+# from one global list.
+#
+# WHY SEPARATE FROM locations.yaml. That file is about geography and is read
+# constantly while reasoning about the org. This is four thousand lines of
+# vocabulary that nobody needs to read. Keeping them apart means the geography
+# stays legible.
+#
+# WHAT A "CULTURE" IS HERE. A naming tradition, not a nationality and not an
+# ethnicity. It exists only to make the staff list of a global bank look like a
+# staff list rather than a generator's output. British and american pools are
+# deliberately broad; every site's mix does the real work.
+#
+# SIZE. The two largest pools carry the most people, so they are the widest.
+# Combinations per culture must clear the headcount assigned to it or the
+# generator falls back to middle initials, which above a few per cent starts to
+# read as fake.
+#
+#   node scripts/silver/employees.mjs
+
+cultures:
+
+  british:
+    first:
+      [James, Oliver, William, Harry, Thomas, Jack, George, Charlie, Henry, Alfie,
+       Daniel, Samuel, Joseph, Benjamin, Edward, Matthew, Alexander, Lucas, Ethan, Adam,
+       Emily, Charlotte, Sophie, Olivia, Amelia, Isabella, Grace, Lucy, Chloe, Ella,
+       Hannah, Jessica, Megan, Katie, Laura, Rachel, Rebecca, Sarah, Emma, Alice,
+       Nathan, Callum, Liam, Ryan, Connor, Dylan, Owen, Elliot, Toby, Miles,
+       Freya, Poppy, Isla, Evie, Ruby, Holly, Erin, Maisie, Niamh, Bethany,
+       Andrew, David, Michael, Peter, Richard, Simon, Stephen, Paul, Mark, John,
+       Helen, Claire, Louise, Nicola, Fiona, Joanne, Karen, Julie, Amanda, Caroline,
+       Cameron, Fraser, Rory, Angus, Duncan, Malcolm, Gordon, Stuart, Craig, Iain,
+       Gareth, Rhys, Dylan, Ieuan, Huw, Morgan, Bryn, Geraint, Tomos, Aled,
+       Eleanor, Imogen, Rosie, Martha, Beatrice, Harriet, Verity, Tabitha, Clara, Nina,
+       Julian, Rupert, Giles, Hugo, Sebastian, Quentin, Marcus, Dominic, Barnaby, Crispin,
+       Zara, Tilly, Bonnie, Sadie, Nell, Wren, Ottilie, Cecily, Delphine, Marnie,
+       Jasper, Reuben, Felix, Arthur, Albert, Stanley, Wilfred, Bertie, Monty, Rafe]
+    last:
+      [Smith, Jones, Taylor, Brown, Williams, Wilson, Johnson, Davies, Robinson, Wright,
+       Thompson, Evans, Walker, White, Roberts, Green, Hall, Wood, Jackson, Clarke,
+       Harris, Edwards, Turner, Martin, Cooper, Hill, Ward, Morris, Moore, Clark,
+       Lee, King, Baker, Harrison, Morgan, Allen, James, Scott, Phillips, Watson,
+       Davis, Parker, Price, Bennett, Young, Griffiths, Mitchell, Kelly, Cook, Carter,
+       Richardson, Bailey, Collins, Bell, Shaw, Murray, Palmer, Holmes, Marshall, Barnes,
+       Fletcher, Chapman, Gibson, Webb, Knight, Lawrence, Sutton, Pearce, Hopkins, Reed,
+       Bradley, Osborne, Fitzgerald, Hammond, Whitfield, Ashworth, Kirkby, Stanton, Lambert, Redfern,
+       Crawford, Sinclair, Blackwood, Fairbairn, Cunningham, Ferguson, Buchanan, MacLeod, Ainsworth, Ramsay,
+       Llewellyn, Pritchard, Vaughan, Meredith, Bowen, Rhys, Trevelyan, Cadwallader, Probert, Maddocks,
+       Ellery, Penhaligon, Trelawney, Carew, Godolphin, Roscarrock, Nancarrow, Trewin, Polglase, Vyvyan,
+       Ashcombe, Netherwood, Thorncroft, Wexley, Haverstock, Bramwell, Ellingham, Calthorpe, Dunmore, Ravenscroft,
+       Winterbourne, Marchmont, Pemberton, Fairweather, Hollingsworth, Standish, Kingsley, Brightwell, Rookwood, Sandiford,
+       Alderton, Beresford, Cholmondeley, Devereux, Fanshawe, Grosvenor, Hartington, Lascelles, Mainwaring, Ponsonby]
+
+  irish:
+    first:
+      [Conor, Sean, Cian, Oisin, Fionn, Darragh, Eoin, Ronan, Padraig, Cormac,
+       Niamh, Aoife, Saoirse, Ciara, Roisin, Sinead, Orla, Maeve, Clodagh, Grainne,
+       Declan, Liam, Brendan, Kieran, Colm, Diarmuid, Ruairi, Tadhg, Eamon, Fergus,
+       Aisling, Caoimhe, Deirdre, Fionnuala, Aine, Bridget, Nuala, Siobhan, Eimear, Blathnaid,
+       Micheal, Seamus, Donal, Gearoid, Lorcan, Barra, Turlough, Odhran, Rory, Malachy,
+       Aoibhinn, Muireann, Sorcha, Treasa, Meabh, Riona, Dearbhla, Laoise, Aibhlinn, Ailbhe]
+    last:
+      [Murphy, Kelly, OSullivan, Walsh, Smith, OBrien, Byrne, Ryan, OConnor, ONeill,
+       Reilly, Doyle, McCarthy, Gallagher, Doherty, Kennedy, Lynch, Murray, Quinn, Moore,
+       McLoughlin, OCarroll, Connolly, Daly, OConnell, Wilson, Dunne, Brennan, Burke, Collins,
+       Campbell, Clarke, Johnston, Hughes, OFarrell, Fitzgerald, Brown, Martin, Maguire, Nolan,
+       Flynn, Thompson, OCallaghan, ODonnell, Duffy, OMahony, Boyle, Healy, Shea, White,
+       Sweeney, Hayes, Kavanagh, Power, McGrath, Moran, Brady, Stewart, Casey, Foley]
+
+  indian:
+    first:
+      [Aarav, Vivaan, Aditya, Vihaan, Arjun, Reyansh, Krishna, Ishaan, Shaurya, Atharv,
+       Rohan, Karan, Rahul, Amit, Sanjay, Vikram, Rajesh, Anil, Suresh, Ramesh,
+       Priya, Ananya, Diya, Aadhya, Kiara, Saanvi, Anika, Navya, Myra, Sara,
+       Kavita, Sunita, Anjali, Deepa, Meera, Pooja, Neha, Shreya, Divya, Nisha,
+       Siddharth, Aditya, Nikhil, Varun, Ankit, Manish, Gaurav, Abhishek, Rakesh, Pankaj,
+       Lakshmi, Radha, Sita, Gayatri, Padma, Usha, Rekha, Vandana, Sarita, Asha,
+       Venkatesh, Srinivas, Ravi, Prasad, Murali, Balaji, Ganesh, Mahesh, Karthik, Sathish,
+       Aishwarya, Deepika, Sowmya, Lavanya, Bhavana, Harini, Keerthi, Nandini, Swathi, Vaishnavi,
+       Harpreet, Gurpreet, Jaspreet, Manpreet, Simran, Navjot, Amrit, Baljit, Rupinder, Sukhwinder,
+       Imran, Farhan, Zainab, Ayesha, Fatima, Sameer, Nadia, Tariq, Rizwan, Shabana,
+       Arnav, Kabir, Aryan, Dhruv, Rudra, Yash, Advik, Kiaan, Ayaan, Veer,
+       Tanvi, Riya, Ishita, Aarohi, Prisha, Anvi, Trisha, Mahika, Siya, Aanya,
+       Subramanian, Chandrasekhar, Narayanan, Krishnamurthy, Raghavan, Sundaram, Iyer, Rangan, Kalyan, Vasudevan,
+       Debjani, Moushumi, Sudeshna, Rituparna, Paromita, Tanushree, Arundhati, Sohini, Madhumita, Piyali]
+    last:
+      [Sharma, Verma, Gupta, Kumar, Singh, Patel, Shah, Mehta, Joshi, Desai,
+       Reddy, Rao, Naidu, Nair, Menon, Pillai, Iyer, Iyengar, Krishnan, Subramanian,
+       Chatterjee, Banerjee, Mukherjee, Bhattacharya, Ghosh, Das, Bose, Sen, Dutta, Roy,
+       Kulkarni, Deshpande, Joshi, Gokhale, Ranade, Karve, Bhave, Sathe, Phadke, Apte,
+       Agarwal, Bansal, Goyal, Mittal, Jindal, Singhal, Khandelwal, Maheshwari, Poddar, Kothari,
+       Chopra, Kapoor, Malhotra, Khanna, Bhatia, Ahuja, Sethi, Anand, Tandon, Grover,
+       Nayak, Panda, Mohanty, Sahoo, Behera, Pradhan, Mishra, Tripathi, Dwivedi, Chaturvedi,
+       Pillai, Varma, Thampi, Kurup, Warrier, Panicker, Namboothiri, Unnikrishnan, Achuthan, Balakrishnan,
+       Chandran, Raman, Ramanathan, Venkataraman, Srinivasan, Natarajan, Gopalan, Swaminathan, Ganesan, Kannan,
+       Gill, Sandhu, Dhillon, Grewal, Bajwa, Chahal, Sidhu, Mann, Randhawa, Brar,
+       Khan, Ansari, Qureshi, Siddiqui, Rehman, Hussain, Sheikh, Farooqui, Baig, Mirza,
+       Fernandes, DSouza, Pereira, Rodrigues, Almeida, Coelho, Braganza, Pinto, Menezes, Noronha,
+       Shetty, Hegde, Kamath, Pai, Bhat, Prabhu, Acharya, Rai, Shenoy, Kini,
+       Trivedi, Vyas, Pandya, Dave, Thakkar, Modi, Amin, Solanki, Chauhan, Rathod]
+
+  chinese:
+    first:
+      [Wei, Ming, Jian, Hao, Lei, Feng, Tao, Jun, Bo, Kai,
+       Li, Na, Xin, Yan, Fang, Jing, Mei, Hua, Ling, Yun,
+       Zhen, Qiang, Peng, Chao, Yang, Bin, Gang, Hui, Long, Sheng,
+       Xiaoming, Xiaoli, Xiaohong, Xiaojun, Xiaoyan, Xiaofeng, Xiaowei, Xiaolan, Xiaoyu, Xiaoqing,
+       Chen, Cheng, Dong, Fei, Guo, Hong, Jia, Kun, Liang, Mei,
+       Zhihao, Yuxuan, Zichen, Ruoxi, Yiran, Junjie, Sinan, Tianyu, Wenjun, Yuhan,
+       Haoran, Zihan, Yichen, Xinyi, Jiaqi, Ziyu, Mengyao, Shuyi, Qianwen, Boyang]
+    last:
+      [Wang, Li, Zhang, Liu, Chen, Yang, Huang, Zhao, Wu, Zhou,
+       Xu, Sun, Ma, Zhu, Hu, Guo, He, Gao, Lin, Luo,
+       Zheng, Liang, Xie, Song, Tang, Han, Cao, Deng, Xiao, Feng,
+       Zeng, Cheng, Cai, Peng, Pan, Yuan, Yu, Dong, Su, Ye,
+       Lu, Wei, Jiang, Tian, Du, Ding, Shen, Jiang, Fan, Fu,
+       Shi, Yao, Tan, Qian, Xiong, Ren, Bai, Cui, Kang, Mao]
+
+  # Hong Kong, Singapore and Malaysia. Cantonese and Hokkien romanisations plus
+  # the western given name that is genuinely ubiquitous in those offices —
+  # applying mainland pinyin to a Hong Kong staff list is simply wrong.
+  chinese_diaspora:
+    first:
+      [Ka Yan, Ka Ho, Chun Kit, Wing Sze, Man Chun, Yuk Lin, Siu Ming, Wai Man, Hoi Yan, Chi Wai,
+       Ka Ming, Wing Kei, Tsz Ying, Ho Yin, Mei Ling, Kwok Wai, Pui Shan, Chun Yu, Lai Kwan, Yuen Ting,
+       Jerome, Vivian, Elaine, Cindy, Kelvin, Winnie, Ivan, Fiona, Alvin, Doris,
+       Gladys, Herman, Priscilla, Terence, Yvonne, Bernard, Clarice, Desmond, Eunice, Wilson,
+       Jia Hui, Wei Ming, Xin Yi, Zhi Hao, Hui Ling, Jun Jie, Mei Fang, Yong Sheng, Li Ping, Kai Xin,
+       Aloysius, Cheryl, Melvin, Shermaine, Darryl, Jocelyn, Randolph, Verlyn, Clement, Adeline]
+    last:
+      [Chan, Cheung, Wong, Lam, Ng, Ho, Leung, Tsang, Kwok, Yip,
+       Lau, Chow, Chu, Mak, Tam, Yeung, Fung, Choi, Pang, Sze,
+       Tan, Lim, Goh, Ong, Teo, Koh, Sim, Chia, Yeo, Neo,
+       Toh, Loh, Quek, Seah, Chew, Foo, Heng, Kang, Low, Wee,
+       Poon, Shum, Tsui, Yuen, Kwan, Hui, Siu, Lui, Man, Tong]
+
+  japanese:
+    first:
+      [Hiroshi, Takashi, Kenji, Yuki, Daiki, Sota, Ren, Haruto, Kaito, Riku,
+       Yui, Sakura, Aoi, Hina, Mei, Rin, Yuna, Akari, Miu, Ichika,
+       Satoshi, Naoki, Masaru, Osamu, Tetsuya, Shinji, Katsuo, Nobuo, Isamu, Makoto,
+       Yoko, Keiko, Naoko, Junko, Michiko, Sachiko, Kazuko, Hiroko, Tomoko, Emiko,
+       Shota, Yuta, Ryota, Kenta, Kohei, Takumi, Yusuke, Daisuke, Shohei, Tatsuya,
+       Ayaka, Nanami, Misaki, Kaori, Chihiro, Saori, Manami, Rika, Yuka, Asuka]
+    last:
+      [Sato, Suzuki, Takahashi, Tanaka, Watanabe, Ito, Yamamoto, Nakamura, Kobayashi, Kato,
+       Yoshida, Yamada, Sasaki, Yamaguchi, Matsumoto, Inoue, Kimura, Hayashi, Shimizu, Saito,
+       Yamazaki, Mori, Abe, Ikeda, Hashimoto, Ishikawa, Yamashita, Ogawa, Ishii, Hasegawa,
+       Goto, Okada, Kondo, Maeda, Fujita, Endo, Aoki, Sakamoto, Murakami, Ota,
+       Kaneko, Fujii, Fukuda, Nishimura, Miura, Takeuchi, Nakajima, Okamoto, Matsuda, Harada]
+
+  french:
+    first:
+      [Jean, Pierre, Michel, Philippe, Alain, Nicolas, Laurent, Thierry, Olivier, Vincent,
+       Marie, Sophie, Isabelle, Catherine, Nathalie, Sylvie, Anne, Celine, Valerie, Sandrine,
+       Antoine, Julien, Sebastien, Guillaume, Mathieu, Romain, Alexandre, Maxime, Baptiste, Clement,
+       Camille, Julie, Aurelie, Emilie, Chloe, Manon, Lea, Charlotte, Pauline, Marion,
+       Etienne, Bastien, Florian, Gaspard, Hugo, Lucas, Theo, Corentin, Quentin, Damien,
+       Amelie, Elodie, Margaux, Ines, Oceane, Sarah, Clara, Louise, Juliette, Anais]
+    last:
+      [Martin, Bernard, Dubois, Thomas, Robert, Richard, Petit, Durand, Leroy, Moreau,
+       Simon, Laurent, Lefebvre, Michel, Garcia, David, Bertrand, Roux, Vincent, Fournier,
+       Morel, Girard, Andre, Lefevre, Mercier, Dupont, Lambert, Bonnet, Francois, Martinez,
+       Legrand, Garnier, Faure, Rousseau, Blanc, Guerin, Muller, Henry, Roussel, Nicolas,
+       Perrin, Morin, Mathieu, Clement, Gauthier, Dumont, Lopez, Fontaine, Chevalier, Robin,
+       Masson, Sanchez, Gerard, Nguyen, Boyer, Denis, Lemaire, Duval, Joly, Gautier]
+
+  german:
+    first:
+      [Michael, Thomas, Andreas, Stefan, Christian, Peter, Wolfgang, Klaus, Jurgen, Matthias,
+       Sabine, Susanne, Petra, Andrea, Claudia, Monika, Nicole, Birgit, Ursula, Gabriele,
+       Lukas, Felix, Jonas, Maximilian, Sebastian, Tobias, Florian, Daniel, Philipp, Simon,
+       Anna, Lena, Julia, Laura, Sarah, Marie, Katharina, Johanna, Lisa, Hannah,
+       Markus, Frank, Ralf, Bernd, Dirk, Uwe, Holger, Torsten, Rainer, Norbert,
+       Elisabeth, Christine, Martina, Beate, Silke, Kerstin, Heike, Anja, Doris, Renate]
+    last:
+      [Muller, Schmidt, Schneider, Fischer, Weber, Meyer, Wagner, Becker, Schulz, Hoffmann,
+       Schafer, Koch, Bauer, Richter, Klein, Wolf, Schroder, Neumann, Schwarz, Zimmermann,
+       Braun, Kruger, Hofmann, Hartmann, Lange, Schmitt, Werner, Schmitz, Krause, Meier,
+       Lehmann, Schmid, Schulze, Maier, Kohler, Herrmann, Konig, Walter, Mayer, Huber,
+       Kaiser, Fuchs, Peters, Lang, Scholz, Moller, Weiss, Jung, Hahn, Schubert,
+       Vogel, Friedrich, Keller, Gunther, Frank, Berger, Winkler, Roth, Beck, Lorenz]
+
+  polish:
+    first:
+      [Piotr, Krzysztof, Andrzej, Tomasz, Jan, Pawel, Michal, Marcin, Marek, Grzegorz,
+       Anna, Maria, Katarzyna, Malgorzata, Agnieszka, Barbara, Ewa, Magdalena, Joanna, Monika,
+       Lukasz, Jakub, Adam, Rafal, Dariusz, Mateusz, Wojciech, Jacek, Robert, Bartosz,
+       Aleksandra, Karolina, Natalia, Zofia, Julia, Weronika, Paulina, Justyna, Dorota, Iwona,
+       Szymon, Kamil, Damian, Filip, Przemyslaw, Sebastian, Artur, Maciej, Radoslaw, Dawid,
+       Emilia, Wiktoria, Gabriela, Klaudia, Sylwia, Beata, Renata, Elzbieta, Halina, Alicja]
+    last:
+      [Nowak, Kowalski, Wisniewski, Wojcik, Kowalczyk, Kaminski, Lewandowski, Zielinski, Szymanski, Wozniak,
+       Dabrowski, Kozlowski, Jankowski, Mazur, Kwiatkowski, Krawczyk, Piotrowski, Grabowski, Nowakowski, Pawlowski,
+       Michalski, Adamczyk, Dudek, Zajac, Wieczorek, Jablonski, Krol, Majewski, Olszewski, Jaworski,
+       Malinowski, Pawlak, Witkowski, Walczak, Stepien, Gorski, Rutkowski, Michalak, Sikora, Ostrowski,
+       Baran, Duda, Szewczyk, Tomaszewski, Pietrzak, Marciniak, Wrobel, Zalewski, Jakubowski, Jasinski]
+
+  spanish:
+    first:
+      [Antonio, Jose, Manuel, Francisco, Juan, David, Javier, Carlos, Daniel, Miguel,
+       Maria, Carmen, Ana, Isabel, Laura, Cristina, Marta, Elena, Lucia, Paula,
+       Alejandro, Pablo, Sergio, Jorge, Alberto, Raul, Ivan, Fernando, Rafael, Diego,
+       Sara, Andrea, Beatriz, Silvia, Patricia, Rocio, Nuria, Alba, Irene, Sonia,
+       Adrian, Ruben, Hector, Oscar, Victor, Gonzalo, Ignacio, Enrique, Guillermo, Mario,
+       Natalia, Claudia, Julia, Eva, Raquel, Nerea, Celia, Lorena, Miriam, Angela]
+    last:
+      [Garcia, Rodriguez, Gonzalez, Fernandez, Lopez, Martinez, Sanchez, Perez, Gomez, Martin,
+       Jimenez, Ruiz, Hernandez, Diaz, Moreno, Munoz, Alvarez, Romero, Alonso, Gutierrez,
+       Navarro, Torres, Dominguez, Vazquez, Ramos, Gil, Ramirez, Serrano, Blanco, Molina,
+       Morales, Suarez, Ortega, Delgado, Castro, Ortiz, Rubio, Marin, Sanz, Nunez,
+       Iglesias, Medina, Garrido, Cortes, Castillo, Santos, Lozano, Guerrero, Cano, Prieto]
+
+  portuguese:
+    first:
+      [Joao, Pedro, Miguel, Tiago, Rui, Bruno, Ricardo, Andre, Nuno, Paulo,
+       Maria, Ana, Sofia, Ines, Beatriz, Catarina, Mariana, Rita, Joana, Carolina,
+       Diogo, Goncalo, Rodrigo, Francisco, Tomas, Guilherme, Duarte, Afonso, Vasco, Henrique,
+       Matilde, Leonor, Margarida, Teresa, Helena, Cristina, Patricia, Filipa, Marta, Luisa,
+       Luis, Carlos, Fernando, Jorge, Sergio, Marcos, Rafael, Gabriel, Felipe, Thiago,
+       Camila, Juliana, Fernanda, Larissa, Amanda, Bruna, Renata, Vanessa, Priscila, Aline]
+    last:
+      [Silva, Santos, Ferreira, Pereira, Oliveira, Costa, Rodrigues, Martins, Jesus, Sousa,
+       Fernandes, Goncalves, Gomes, Lopes, Marques, Alves, Almeida, Ribeiro, Pinto, Carvalho,
+       Teixeira, Moreira, Correia, Mendes, Nunes, Soares, Vieira, Monteiro, Cardoso, Rocha,
+       Raposo, Neves, Coelho, Cruz, Cunha, Pires, Ramos, Reis, Simoes, Antunes,
+       Barbosa, Azevedo, Machado, Freitas, Melo, Castro, Campos, Miranda, Barros, Fonseca]
+
+  italian:
+    first:
+      [Giuseppe, Giovanni, Antonio, Marco, Francesco, Luigi, Andrea, Roberto, Stefano, Alessandro,
+       Maria, Anna, Giulia, Francesca, Laura, Paola, Chiara, Elena, Sara, Valentina,
+       Matteo, Luca, Davide, Simone, Federico, Lorenzo, Riccardo, Nicola, Fabio, Emanuele,
+       Silvia, Martina, Alessia, Federica, Ilaria, Elisa, Serena, Beatrice, Giorgia, Alice,
+       Paolo, Massimo, Claudio, Sergio, Vincenzo, Salvatore, Domenico, Pietro, Carlo, Enrico,
+       Cristina, Monica, Barbara, Daniela, Simona, Roberta, Michela, Alessandra, Antonella, Rossella]
+    last:
+      [Rossi, Russo, Ferrari, Esposito, Bianchi, Romano, Colombo, Ricci, Marino, Greco,
+       Bruno, Gallo, Conti, De Luca, Mancini, Costa, Giordano, Rizzo, Lombardi, Moretti,
+       Barbieri, Fontana, Santoro, Mariani, Rinaldi, Caruso, Ferrara, Galli, Martini, Leone,
+       Longo, Gentile, Martinelli, Vitale, Lombardo, Serra, Coppola, De Santis, DAngelo, Marchetti,
+       Parisi, Villa, Conte, Ferretti, Bianco, Rossetti, Testa, Grasso, Pellegrini, Palumbo]
+
+  arabic:
+    first:
+      [Mohammed, Ahmed, Ali, Omar, Khalid, Youssef, Ibrahim, Hassan, Hussein, Abdullah,
+       Fatima, Aisha, Mariam, Nour, Layla, Sara, Huda, Amira, Rania, Yasmin,
+       Tariq, Faisal, Sultan, Rashid, Salem, Majid, Nasser, Bilal, Zaid, Karim,
+       Noura, Hala, Dana, Reem, Lina, Salma, Farah, Nadia, Iman, Dalia,
+       Amir, Sami, Adnan, Waleed, Fahad, Jamal, Hamza, Yasir, Ziad, Marwan,
+       Zahra, Leila, Rasha, Manal, Hanan, Ghada, Suha, Wafa, Asma, Buthaina,
+       Mohd Faiz, Nurul, Siti, Ahmad Zaki, Muhammad Hafiz, Aisyah, Farhana, Syafiq, Amirah, Izzat]
+    last:
+      [Al Mansouri, Al Maktoum, Al Nuaimi, Al Suwaidi, Al Marri, Al Qassimi, Al Falasi, Al Shamsi, Al Rashid, Al Hashimi,
+       Hassan, Ibrahim, Mahmoud, Abdullah, Khalil, Nasser, Saleh, Farouk, Mansour, Aziz,
+       Haddad, Khoury, Nassar, Sayegh, Rahal, Salameh, Halabi, Sfeir, Zogby, Antoun,
+       Bin Ismail, Bin Abdullah, Binti Hassan, Abdul Rahman, Mohd Noor, Zainal, Rosli, Yusof, Ramli, Shukri,
+       Chaudhry, Malik, Bhatti, Awan, Gilani, Jafri, Naqvi, Rizvi, Zaidi, Kazmi]
+
+  african:
+    first:
+      [Chinedu, Emeka, Obinna, Chukwuma, Ifeanyi, Nnamdi, Kelechi, Uche, Chidi, Ikenna,
+       Ngozi, Chioma, Adaeze, Amara, Ifeoma, Nneka, Chinwe, Uchenna, Obiageli, Adanna,
+       Kwame, Kofi, Kwabena, Yaw, Kojo, Kwaku, Nana, Akwasi, Fiifi, Ato,
+       Ama, Akosua, Abena, Adwoa, Afua, Yaa, Esi, Efua, Adjoa, Akua,
+       Thabo, Sipho, Bongani, Mandla, Themba, Lungile, Sizwe, Andile, Musa, Zanele,
+       Nomsa, Thandiwe, Nkosazana, Lerato, Palesa, Refilwe, Boitumelo, Naledi, Dineo, Karabo,
+       Oluwaseun, Adebayo, Babatunde, Olumide, Femi, Tayo, Segun, Bisi, Yemi, Tunde,
+       Amina, Zainab, Halima, Aisha, Fatoumata, Mariama, Aminata, Kadiatou, Oumou, Djeneba]
+    last:
+      [Okafor, Okonkwo, Eze, Nwosu, Obi, Adeyemi, Adebayo, Okoro, Nwachukwu, Chukwu,
+       Mensah, Boateng, Osei, Asante, Owusu, Appiah, Amoah, Darko, Agyeman, Frimpong,
+       Dlamini, Nkosi, Zulu, Mabaso, Mthembu, Ndlovu, Khumalo, Sithole, Mokoena, Molefe,
+       Botha, Van der Merwe, Naidoo, Pillay, Govender, Moodley, Reddy, Naicker, Padayachee, Chetty,
+       Diallo, Traore, Keita, Toure, Camara, Bah, Sow, Barry, Cisse, Sylla,
+       Adeleke, Ogunleye, Balogun, Afolabi, Oyelaran, Ogundipe, Fashola, Akinyemi, Bankole, Sanusi]
+
+  american:
+    first:
+      [Michael, Christopher, Matthew, Joshua, David, James, Daniel, Robert, John, Joseph,
+       Jennifer, Jessica, Amanda, Ashley, Sarah, Stephanie, Melissa, Nicole, Elizabeth, Heather,
+       Tyler, Brandon, Justin, Ryan, Kyle, Aaron, Nathan, Zachary, Austin, Cody,
+       Madison, Taylor, Brittany, Samantha, Lauren, Rachel, Megan, Kayla, Hannah, Alexis,
+       Jamal, DeAndre, Malik, Terrell, Andre, Marcus, Darius, Xavier, Isaiah, Jerome,
+       Latoya, Tamika, Aaliyah, Imani, Jasmine, Danielle, Kiara, Shanice, Ebony, Nia,
+       Carlos, Luis, Jose, Miguel, Angel, Eduardo, Ricardo, Alejandro, Hector, Manuel,
+       Maria, Guadalupe, Alejandra, Yesenia, Marisol, Adriana, Gabriela, Esperanza, Rosalinda, Xiomara,
+       Braden, Colton, Hunter, Landon, Mason, Parker, Preston, Trevor, Weston, Chase,
+       Peyton, Sydney, Morgan, Kendall, Reagan, Delaney, Harper, Quinn, Riley, Avery]
+    last:
+      [Smith, Johnson, Williams, Brown, Jones, Miller, Davis, Garcia, Rodriguez, Wilson,
+       Martinez, Anderson, Taylor, Thomas, Hernandez, Moore, Martin, Jackson, Thompson, White,
+       Lopez, Lee, Gonzalez, Harris, Clark, Lewis, Robinson, Walker, Perez, Hall,
+       Young, Allen, Sanchez, Wright, King, Scott, Green, Baker, Adams, Nelson,
+       Hill, Ramirez, Campbell, Mitchell, Roberts, Carter, Phillips, Evans, Turner, Torres,
+       Parker, Collins, Edwards, Stewart, Flores, Morris, Nguyen, Murphy, Rivera, Cook,
+       Rogers, Morgan, Peterson, Cooper, Reed, Bailey, Bell, Gomez, Kelly, Howard,
+       Washington, Jefferson, Freeman, Coleman, Banks, Dixon, Simmons, Hayes, Ford, Woods,
+       Sullivan, OConnor, Kowalski, Novak, Schultz, Weiss, Rossi, Kaminski, Andersen, Larsen,
+       Whitaker, Brennan, Delgado, Hoffman, Vaughn, Sutton, Barnett, Callahan, Fitzgerald, Lindstrom]

@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: alerts — the `fifo` stream of low-stock alerts as a grid.
+title: Stock alerts
+body:
+  - kind: label
+    params: { text: "Low-stock alerts from the warehouses", style: heading, icon: TriangleAlert }
+  - kind: grid
+    name: alerts
+    observe: { script: 'scenery("stock_alert").sort("id", "asc")' }
+    params:
+      search: true
+      columns:
+        sku: { label: SKU, width: 140, pin: true }
+        brand: { label: Brand }
+        warehouse: { label: Warehouse }
+        units_left: { label: Units left, width: 90 }
+        level: { label: Level, color: { warning: [Low], danger: [Critical, Out of stock] } }
+        raised: { label: Raised, time_precision: seconds }

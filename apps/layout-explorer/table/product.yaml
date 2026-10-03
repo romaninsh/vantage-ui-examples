@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: product — every category (top-level and sub) holds 2–6 products,
+# next to each other in id order (`fan_out` over `category`). `name` is a
+# product line; pages show it after the brand ("Northwind Compact").
+datasource: catalogue
+title: Products
+faker:
+  fan_out: { column: category, min: 2, max: 6 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: sku, label: SKU, type: string, flags: [searchable], faker: { pattern: "SKU-??-#####" } }
+  - name: brand
+    label: Brand
+    type: string
+    flags: [searchable]
+    faker: { pick: { values: [Northwind, Acme, Lumen, Fjord, Kestrel, Oakridge, Polaris, Tidewater] } }
+  - name: name
+    label: Product
+    type: string
+    flags: [title, searchable]
+    faker: { pick: { values: [Compact, Pro, Lite, Max, Classic, Essentials, Signature, Travel, Studio, Everyday, Premium, Mini, XL, Starter Kit, Deluxe, Series 3] } }
+  - { name: category, label: Category, type: string, references: category }
+  # Money as whole pence (`minor_units`): exact sums, shown as £12.34.
+  - { name: price, label: Price, type: int, unit: { currency: "£", minor_units: true }, faker: { range: { min: 499, max: 149900 } } }
+  - { name: stock, label: In stock, type: int, faker: { range: { min: 0, max: 250 } } }
+  - { name: rating, label: Rating, type: float, faker: { range: { min: 2.5, max: 5, decimals: 1 } } }
+  - { name: launched, label: Launched, type: timestamp, faker: { date: { from: "-156w", to: "-1w" } } }
+  - { name: description, label: Description, type: string, faker: { sentence: { min_words: 10, max_words: 18 } } }

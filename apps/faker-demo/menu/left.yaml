@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=./menu-schema-1.json
 # Menu: left — the PristineGym control panel.
 #
-# Live Ops is the pulse sim (dashboard, its two tables, the check-in stream)
+# Live Ops is the `builtin:pulse` sim (dashboard, its two tables, the check-in stream)
 # and the growing log tree. Incidents is where the sim and the user both write.
 # Lab holds one page per backend personality, each explaining what it shows.
 title: PristineGym

@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: visits — level five: the member's visits, newest first. Double-click
+# a row (or select it and press Payments) to push its payments.
+title: "Visits · ${args.name}"
+body:
+  - kind: grid
+    name: visit_grid
+    observe: { script: 'scenery("member").where("id", args.id).ref("visits")' }
+    height: 260
+    params:
+      double_click: payments
+      default_sort: { column: at, direction: desc }
+      columns:
+        at: { label: Checked in, time_precision: minutes }
+        activity: { label: Activity }
+        duration_min: { label: Minutes }
+        trainer_name: { label: Trainer }
+  - kind: row
+    children:
+      - kind: button
+        name: payments
+        enabled: 'visit_grid.selected_id != ""'
+        params:
+          label: Payments
+          icon: CreditCard
+          action: 'open("payments", #{ id: visit_grid.selected_id, name: args.name })'

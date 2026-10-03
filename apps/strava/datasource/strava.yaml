@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+description: Strava API v3, through your own Strava API application
+type: api-client
+url: https://www.strava.com/api/v3
+# Strava ignores unknown query params, so lookups by id (the activity
+# page) are matched against the fetched rows instead of sent.
+filter_strategy: client
+# Strava allows 100 reads per 15 minutes on a new app.
+max_connections: 2
+# Lists page with ?page=N&per_page=M (1-based, at most 200) and carry no
+# total: grids fetch pages as you scroll and stop at the first short one.
+pagination: { page_param: page, limit_param: per_page }
+auth:
+  type: bearer
+  # Signs in on the first request: silently with the saved refresh token,
+  # otherwise in the browser. The request waits; the rotated refresh token
+  # is saved back to .env.
+  token: |
+    oauth2_login(#{
+      authorize_url: "https://www.strava.com/oauth/authorize",
+      token_url: "https://www.strava.com/oauth/token",
+      client_id: "${secret.strava_client_id}",
+      client_secret: "${secret.strava_client_secret}",
+      scope: "read,activity:read_all",
+      refresh_token: "${secret.strava_refresh_token}",
+    })

@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: tickets — the ticket queue. Right-click a row and choose "Open
+# ticket": it opens in its own tab, titled by its subject.
+title: Tickets
+body:
+  - kind: label
+    params: { text: "Ticket queue", style: heading, icon: ClipboardList }
+  - kind: grid
+    name: tickets
+    observe: ticket
+    params:
+      search: true
+      default_sort: { column: created, direction: desc }
+      columns:
+        number: { label: Number, pin: true, width: 110 }
+        subject: { label: Subject, width: 320 }
+        status: { label: Status, width: 100 }
+        priority: { label: Priority, width: 100 }
+        channel: { label: Channel, width: 100 }
+        customer: { label: Customer id, link: customer }
+        assignee: { label: Agent id, link: agent }
+        due: { label: SLA due }
+      row_actions:
+        - label: Open ticket
+          icon: ExternalLink
+          navigate: member
+          args:
+            id: "row.id"
+            name: "row.subject"

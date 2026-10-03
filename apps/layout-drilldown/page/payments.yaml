@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: payments — level six: what one visit was charged.
+title: "Payments · ${args.name}"
+body:
+  - kind: grid
+    observe: { script: 'scenery("visit").where("id", args.id).ref("payments")' }
+    height: 160
+    params:
+      columns:
+        reference: { label: Reference }
+        item: { label: Item }
+        amount: { label: Amount }
+        method: { label: Method }
+        status: { label: Status, color: { success: [Paid], warning: [Pending], muted: [Refunded], danger: [Failed] } }

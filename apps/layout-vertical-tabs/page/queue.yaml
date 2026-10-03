@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: queue — the `builtin:fifo` stream as a grid.
+title: Waiting queue
+body:
+  - kind: label
+    params: { text: "New chats arriving — pick one up before it times out", style: heading, icon: Clock }
+  - kind: grid
+    name: queue
+    observe: { script: 'scenery("queue").sort("id", "asc")' }
+    params:
+      search: true
+      columns:
+        customer_name: { label: Customer, pin: true }
+        topic: { label: Topic }
+        channel: { label: Channel, width: 110 }
+        opening_message: { label: Opening message, width: 320 }

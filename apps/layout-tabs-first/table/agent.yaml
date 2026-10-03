@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: agent — the support team; `team` is a fixed pick of values.
+datasource: tickets
+title: Agents
+faker:
+  count: 8
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: name, label: Agent, type: string, flags: [title, searchable] }
+  - { name: email, type: string }
+  - { name: team, type: string, faker: { pick: { values: ["Tier 1", "Tier 2", Escalations] } } }

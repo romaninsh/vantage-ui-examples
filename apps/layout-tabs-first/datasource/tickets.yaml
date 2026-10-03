@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: tickets — customers, agents and their ticket queue (synthetic).
+# Faker resolves `references:` and `fan_out` only within one datasource, so
+# all three tables live here. Ticket rows come from the ticket table's
+# `fan_out` over customers, not from a `count`.
+type: faker
+description: Support customers, agents and tickets (synthetic)
+seed: 21

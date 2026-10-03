@@ -13,7 +13,7 @@ faker:
       window: 800ms..2500ms
       get: 800ms..2500ms
       count: 800ms..2500ms
-    weirdness: 0.1
+  weirdness: 0.1
 columns:
   - { name: id, type: string, flags: [id, hidden] }
   - { name: company, type: string, flags: [title, searchable] }

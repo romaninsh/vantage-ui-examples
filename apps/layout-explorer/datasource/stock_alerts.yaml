@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Datasource: stock_alerts — low-stock alerts raised by the warehouses
+# (synthetic).
+#
+# The `builtin:fifo` sim starts empty, adds one alert every three seconds and
+# clears each again after 25–45 seconds, so the badge and the status bar keep
+# moving without growing.
+type: faker
+description: Low-stock alerts, one every few seconds
+sims:
+  alerts:
+    table: stock_alert
+    script: "builtin:fifo"
+    spawn: { burst: 0, rate: 20, max: 100, args: { retention_lo: 25, retention_hi: 45 } }

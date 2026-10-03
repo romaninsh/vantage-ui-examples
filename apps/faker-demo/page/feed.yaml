@@ -9,9 +9,8 @@ body:
     params: { text: "The stream the dashboard is built from. Each row is one movement; rows expire after ten seconds.", style: muted }
   - kind: grid
     name: feed
-    observe: updates
+    observe: { script: 'scenery("updates").sort("id", "asc")' }
     params:
-      id_column: region
       columns:
         updated: { label: At, width: 110 }
         region: { label: Region }

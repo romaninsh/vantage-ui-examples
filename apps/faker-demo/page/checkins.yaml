@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=./page-schema-1.json
-# Page: checkins — the `fifo` effect as a plain grid. Rows arrive at the top
+# Page: checkins — the `builtin:fifo` sim as a plain grid. Rows arrive at the top
 # once a second and leave again 20–35 s later; the grid animates both without
 # any refresh configured, because the datasource pushes every change.
 title: Check-ins
@@ -10,7 +10,7 @@ body:
     params: { text: "A new arrival every second; each row leaves again after 20–35 seconds. Nothing polls: the table pushes.", style: muted }
   - kind: grid
     name: checkins
-    observe: checkin
+    observe: { script: 'scenery("checkin").sort("id", "asc")' }
     params:
       search: true
       columns:

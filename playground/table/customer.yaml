@@ -1,0 +1,15 @@
+# Table: customer — who we deliver for. Fake rows, generated from the
+# column names. `has_many: order` lets you open a customer and walk into
+# their orders.
+datasource: records
+title: Customers
+faker:
+  count: 12
+columns:
+  - { name: id, type: string, flags: [id] }
+  - { name: name, type: string, flags: [title, searchable] }
+  - { name: email, type: string }
+  - { name: city, type: string }
+has_many:
+  - table: order
+    foreign_key: customer

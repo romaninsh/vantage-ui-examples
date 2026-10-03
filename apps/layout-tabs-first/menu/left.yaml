@@ -1,0 +1,11 @@
+# Menu: left — this layout draws no menu (it is tabs-first), but a project
+# keeps one: it is the list the native menu bar and future command palette use.
+title: Northwind Support
+items:
+  - { page: launcher, label: Launcher, icon: LayoutGrid }
+  - { page: dashboard, label: Dashboard, icon: LayoutDashboard }
+  - { page: tickets, label: Tickets, icon: ClipboardList }
+  - { page: customers, label: Customers, icon: Users }
+  - { page: agents, label: Agents, icon: Headphones }
+  - { page: incoming, label: "New tickets", icon: Inbox }
+  - { page: about, label: About, icon: BookOpen }

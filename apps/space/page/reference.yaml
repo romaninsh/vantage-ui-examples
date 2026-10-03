@@ -14,5 +14,5 @@ body:
           options: [agency types, astronaut roles, astronaut statuses, astronaut types, celestial body types, countries, docking locations, event types, first stage types, image licenses, image variant types, infourl types, landing locations, landing types, languages, launch statuses, launcher statuses, mission types, net precisions, notice types, orbits, payload types, program types, road closure statuses, space station statuses, spacecraft configuration types, spacecraft statuses, timeline event types, vidurl types]
           default: launch statuses
   - kind: grid
-    observe: { script: 'scenery("config_" + kind.value.replace(" ", "_"))' }
+    observe: { script: 'let t = kind.value; t.replace(" ", "_"); scenery("config_" + t)' }
     height: 640

@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# One activity in full (GET /activities/{id}) — what the activity page
+# shows. The segment, lap and split arrays come with the row; the page's
+# sugar (sugar/activity_detail.yaml) turns them into tables.
+datasource: strava
+title: Activity
+table: "activities/{id}"
+columns:
+  - { name: id, type: int, flags: [id] }
+  - { name: name, type: string, flags: [title] }
+  - { name: sport_type, label: Sport, type: string }
+  - { name: description, type: string }
+  - { name: start_date_local, label: Started, type: timestamp }
+  - { name: distance, label: "Distance (m)", type: float }
+  - { name: moving_time, label: "Moving (s)", type: int }
+  - { name: elapsed_time, label: "Elapsed (s)", type: int }
+  - { name: total_elevation_gain, label: "Climb (m)", type: float }
+  - { name: average_speed, label: "Avg speed (m/s)", type: float }
+  - { name: max_speed, label: "Max speed (m/s)", type: float }
+  - { name: average_heartrate, label: "Avg HR", type: float }
+  - { name: max_heartrate, label: "Max HR", type: float }
+  - { name: average_cadence, label: Cadence, type: float }
+  - { name: average_watts, label: "Avg W", type: float }
+  - { name: weighted_average_watts, label: "Weighted W", type: int }
+  - { name: max_watts, label: "Max W", type: int }
+  - { name: kilojoules, label: kJ, type: float }
+  - { name: calories, type: float }
+  - { name: suffer_score, label: "Relative effort", type: float }
+  - { name: average_temp, label: "Temp (°C)", type: float }
+  - { name: kudos_count, label: Kudos, type: int }
+  - { name: comment_count, label: Comments, type: int }
+  - { name: achievement_count, label: Achievements, type: int }
+  - { name: pr_count, label: PRs, type: int }
+  - { name: total_photo_count, label: Photos, type: int }
+  - { name: timezone, type: string }
+  - { name: gear.name, label: Gear, type: string }
+  - { name: external_id, label: "Upload file", type: string }

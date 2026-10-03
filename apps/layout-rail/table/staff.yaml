@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: staff — doctors and nurses.
+datasource: hospital
+title: Staff
+faker:
+  count: 40
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: first_name, label: First name, type: string, flags: [title, searchable] }
+  - { name: last_name, label: Last name, type: string, flags: [searchable] }
+  - { name: role, type: string, faker: { pick: { values: [Doctor, Nurse], weights: [1, 2] } } }
+  - { name: department, type: string, faker: { pick: { values: [Cardiology, Emergency, Pediatrics, Surgery, Radiology, "Intensive Care", Oncology, "General Medicine"] } } }
+  - { name: shift, type: string, faker: { pick: { values: [Day, Evening, Night] } } }
+  - { name: phone, type: string }

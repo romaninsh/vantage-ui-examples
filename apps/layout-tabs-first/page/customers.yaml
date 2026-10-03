@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Page: customers — right-click a row and choose "Open customer" to see
+# that customer's tickets in a tab of their own.
+title: Customers
+body:
+  - kind: label
+    params: { text: "Customers", style: heading, icon: Users }
+  - kind: grid
+    name: customers
+    observe: customer
+    params:
+      search: true
+      columns:
+        name: { label: Customer, pin: true }
+        company: { label: Company }
+        email: { label: Email, width: 220 }
+        city: { label: City }
+      row_actions:
+        - label: Open customer
+          icon: ExternalLink
+          navigate: customer
+          args:
+            id: "row.id"
+            name: "row.name"

@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Table: stock_alert — one row per low-stock alert; the `builtin:fifo` feed
+# behind the Tools badge and the status bar count.
+datasource: stock_alerts
+title: Stock alerts
+faker: { count: 0 }
+columns:
+  - { name: id, type: string, flags: [id, hidden] }
+  - { name: sku, label: SKU, type: string, flags: [title, searchable], faker: { pattern: "SKU-??-#####" } }
+  - { name: brand, label: Brand, type: string, faker: { pick: { values: [Northwind, Acme, Lumen, Fjord, Kestrel, Oakridge, Polaris, Tidewater] } } }
+  - { name: warehouse, label: Warehouse, type: string, faker: { pick: { values: [Leeds, Bristol, Glasgow, Reading, Cardiff] } } }
+  - { name: units_left, label: Units left, type: int, faker: { range: { min: 0, max: 9 } } }
+  - { name: level, label: Level, type: string, faker: { pick: { values: [Low, Critical, Out of stock], weights: [6, 3, 1] } } }
+  - { name: raised, label: Raised, type: timestamp, faker: { date: { from: "-2m" } } }

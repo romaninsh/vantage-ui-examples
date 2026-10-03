@@ -10,21 +10,21 @@ The pages are deliberately independent; each shows one thing.
 
 ## Live Ops
 
-- **Command Centre** — a `pulse` sim: eleven regions whose headcounts drift around a
+- **Command Centre** — a `builtin:pulse` sim: eleven regions whose headcounts drift around a
   baseline, one of them dropping offline now and then. Stat tiles read aggregates declared
   on the table, the donut and its legend share one sorted observation, the arrivals bars
   grow through the current minute, and the feed shows every movement as it lands. Nothing
   on this page polls.
 - **Regions** and **Live Feed** — the same sim as plain grids: the aggregate (rows updated
   in place) and the raw stream (rows arriving and expiring).
-- **Check-ins** — the `fifo` effect: a new row every second, each gone again 20–35 seconds
+- **Check-ins** — the `builtin:fifo` sim: a new row every second, each gone again 20–35 seconds
   later. The grid animates arrivals and departures with no refresh configured.
-- **Log Finder** — the `live_folder` effect: a log tree that grows every second, browsed
-  with the finder component. Folder sizes are lifted in lazily through an `augment:`.
+- **Log Finder** — the `builtin:folder_tree` sim: a log tree that grows every second, browsed
+  with the finder component. Folder sizes are kept current by the sim.
 
 ## Incidents
 
-The `rhai` effect: a script runs every two seconds, raising incidents, ageing the open ones
+A Rhai sim: a script loops every two seconds, raising incidents, ageing the open ones
 and escalating their severity when nobody acknowledges them. The page is a full binder —
 Add, Details, Delete, filters — plus *Acknowledge*, *Resolve* and *Reopen* row actions.
 Your edits and the script's edits land in the same store, so an incident you acknowledge

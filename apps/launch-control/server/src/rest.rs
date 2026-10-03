@@ -53,7 +53,14 @@ pub fn router(state: AppState) -> Router {
     // Trigger: must be reliable, so it is NOT behind the flaky middleware.
     let sim = Router::new().route("/sim/launches", post(create_sim_launch));
 
-    Router::new().merge(sim).merge(api).with_state(state)
+    // Liveness for the container healthcheck; never flaky, never 503.
+    let health = Router::new().route("/health", get(|| async { "ok" }));
+
+    Router::new()
+        .merge(health)
+        .merge(sim)
+        .merge(api)
+        .with_state(state)
 }
 
 /// Create a launch from the user's basics, return it, and start a real-time
