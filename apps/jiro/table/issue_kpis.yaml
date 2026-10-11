@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Read-only view: one row of headline numbers for the dashboard.
+datasource: jiro
+title: Issue KPIs
+table: issue_kpis
+columns:
+  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: total, type: int }
+  - { name: open, type: int }
+  - { name: backlog, type: int }
+  - { name: todo, type: int }
+  - { name: in_progress, type: int }
+  - { name: in_review, type: int }
+  - { name: done, type: int }
+  - { name: wont_do, type: int }
+  - { name: bugs_open, type: int }
+  - { name: points_open, type: int }
+  - { name: points_done, type: int }

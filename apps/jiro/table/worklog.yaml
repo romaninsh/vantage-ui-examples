@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Worklogs (time spent) on issues — collection `worklog`. Minutes stored as int
+# (Vantage has no duration type).
+datasource: jiro
+title: Worklog
+table: worklog
+columns:
+  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: issue, label: Issue, type: string, references: { table: issue, kind: has_one, name: issue } }
+  - { name: issue_key, label: Issue, type: string, flags: [calculated] }
+  - { name: author, label: Logged by, type: string, references: { table: member, kind: has_one, name: author } }
+  - { name: author_name, label: Logged by, type: string, flags: [calculated] }
+  - { name: minutes, label: Minutes, type: int }
+  - { name: note, label: Note, type: string, flags: [searchable] }
+  - { name: spent_on, label: Date, type: date }

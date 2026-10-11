@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Project board
+body:
+  - kind: row
+    children:
+      - kind: select
+        name: projsel
+        observe: project
+        params: { column: key, label: Project, all_label: "All projects" }
+  - kind: kanban
+    name: board
+    observe:
+      script: |
+        let k = projsel.value;
+        let q = scenery("issue");
+        if k != "All projects" && k != "" { q = q.where("project_key", k); }
+        q
+    params:
+      id_column: _id
+      lane: status
+      title: title
+      rank: rank
+      description: description
+      assignee: assignee_name
+      labels: labels
+      due: due_date
+      search: true
+      on_open: 'open("issue_view", #{ id: row._id })'
+      quick_filters:
+        chips:
+          - { label: Only mine, dot: primary, script: 'table.where("assignee", user.id)' }
+          - { label: Bugs, dot: red, script: 'table.where("type", "bug")' }
+          - { label: High priority, dot: yellow, script: 'table.where("priority", "in", ["highest", "high"])' }
+      lanes:
+        - { value: backlog, label: Backlog, color: muted }
+        - { value: todo, label: "To Do", color: blue }
+        - { value: in_progress, label: "In Progress", color: yellow }
+        - { value: in_review, label: "In Review", color: cyan }
+        - { value: done, label: Done, color: success }
+        - { value: wont_do, label: "Won't Do", color: danger }

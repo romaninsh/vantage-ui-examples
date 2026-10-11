@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Read-only view: issue count per type.
+datasource: jiro
+title: Issues by type
+table: type_counts
+columns:
+  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: type, type: string, flags: [title] }
+  - { name: issues, type: int }

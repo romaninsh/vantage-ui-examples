@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Read-only view: issue count per status, in workflow order.
+datasource: jiro
+title: Issues by status
+table: status_counts
+columns:
+  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: status, type: string }
+  - { name: label, type: string, flags: [title] }
+  - { name: issues, type: int }
+  - { name: ord, type: int, flags: [hidden] }

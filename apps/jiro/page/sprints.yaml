@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Sprints
+body:
+  - kind: binder
+    name: sprints
+    observe: sprint
+    params:
+      id_column: _id
+      default_sort: { column: start_date, direction: desc }
+      filter: [state, project_key]
+      row_actions:
+        - label: Open sprint
+          icon: Rocket
+          navigate: sprint_view
+          args: { sprint: "row._id", name: "row.name" }
+      columns:
+        name: { label: Sprint, pin: true }
+        project_key: { label: Project }
+        state:
+          label: State
+          color: { blue: [planned], yellow: [active], muted: [closed] }
+          labels: { planned: Planned, active: Active, closed: Closed }
+        goal: { label: Goal }
+        start_date: { label: Start }
+        end_date: { label: End }

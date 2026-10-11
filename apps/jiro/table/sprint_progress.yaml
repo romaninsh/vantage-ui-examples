@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Read-only view: per-sprint progress (points done vs total).
+datasource: jiro
+title: Sprint progress
+table: sprint_progress
+columns:
+  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: sprint_name, label: Sprint, type: string, flags: [title] }
+  - { name: project_key, label: Project, type: string }
+  - { name: state, label: State, type: string }
+  - { name: total_issues, label: Issues, type: int }
+  - { name: done_issues, label: Done, type: int }
+  - { name: total_points, label: Points, type: int }
+  - { name: done_points, label: Points done, type: int }
+  - { name: pct, label: "% done", type: int }
+  - { name: start_date, label: Start, type: date }
+  - { name: end_date, label: End, type: date }

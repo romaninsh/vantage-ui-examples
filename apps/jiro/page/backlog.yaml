@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Backlog
+body:
+  - kind: binder
+    name: backlog
+    observe: issue
+    params:
+      id_column: _id
+      default_sort: { column: priority, direction: asc }
+      filters:
+        - { label: "Backlog only", column: status, value: backlog }
+      filter: [type, priority, project_key, assignee_name, "~labels"]
+      row_actions:
+        - label: Open issue
+          icon: ExternalLink
+          navigate: issue_view
+          args: { id: "row._id" }
+      columns:
+        key: { label: Key, pin: true, width: 110 }
+        title: { label: Summary }
+        type:
+          label: Type
+          color: { accent: [epic], blue: [story], cyan: [task], danger: [bug], muted: [sub-task] }
+          labels: { epic: Epic, story: Story, task: Task, bug: Bug, sub-task: Sub-task }
+        priority:
+          label: Priority
+          color: { danger: [highest], warning: [high], blue: [medium], muted: [low, lowest] }
+          labels: { highest: Highest, high: High, medium: Medium, low: Low, lowest: Lowest }
+        project_key: { label: Project }
+        assignee_name: { label: Assignee }
+        estimate: { label: Points }

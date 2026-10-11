@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Issue links
+body:
+  - kind: binder
+    name: links
+    observe: issue_link
+    params:
+      id_column: _id
+      default_sort: { column: source_key, direction: asc }
+      filter: [type, "~source_key", "~target_key"]
+      columns:
+        source_key: { label: From, pin: true, width: 120 }
+        type:
+          label: Link
+          color: { danger: [blocks], warning: [is_blocked_by], blue: [relates_to], muted: [duplicates] }
+          labels: { blocks: blocks, is_blocked_by: "is blocked by", relates_to: "relates to", duplicates: duplicates }
+        target_key: { label: To, width: 120 }

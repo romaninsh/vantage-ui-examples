@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=./form-schema-1.json
+# Edit/Add layout for an issue. Keeps every editable field present and ordered (the
+# auto-generated form mounted only a subset here). Reference fields use the dropdown widget;
+# note that on this MongoDB build the reference pickers can stay empty and fall back to a raw
+# id field (see FEEDBACK.md), so status/type/priority/text/date editing is the reliable path —
+# status is best changed by dragging on the board.
+title: Issue
+table: issue
+max_columns: 2
+body:
+  - { name: key, label: Key }
+  - { name: title, label: Summary, span: full }
+  - { name: description, label: Description, multiline: 4, span: full }
+  - kind: row
+    body:
+      - { name: type }
+      - { name: status }
+      - { name: priority }
+  - kind: group
+    label: People
+    max_columns: 2
+    body:
+      - { name: assignee, widget: dropdown }
+      - { name: reporter, widget: dropdown }
+  - kind: group
+    label: Planning
+    max_columns: 2
+    body:
+      - { name: parent, widget: dropdown }
+      - { name: sprint, widget: dropdown }
+      - { name: fix_version, widget: dropdown }
+      - { name: estimate }
+      - { name: due_date, date_precision: day }
+      - { name: component }
+      - { name: labels, span: full }

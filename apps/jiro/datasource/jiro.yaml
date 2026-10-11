@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Kestrel Labs issue tracker — MongoDB run by the project's compose stack.
+# Single-node replica set (rs0) so boards get live change-stream updates.
+type: mongo
+description: Jiro tracker data (local MongoDB, single-node replica set rs0)
+# Host 27017 is taken on this machine; the compose service publishes rs0 on 27027.
+# directConnection bypasses topology discovery (the member advertises localhost:27017).
+url: mongodb://localhost:27027/jiro?directConnection=true&serverSelectionTimeoutMS=2000
+database: jiro

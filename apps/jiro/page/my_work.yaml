@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# "My work" board: the current user's issues (title-bar user picker).
+title: My work
+body:
+  - kind: label
+    when: '!user.id'
+    params: { text: "Choose who you are with the person icon in the title bar to see your work.", icon: UserCheck }
+  - kind: kanban
+    name: mboard
+    when: user.id
+    observe: { script: 'scenery("issue").where("assignee", user.id)' }
+    params:
+      id_column: _id
+      lane: status
+      title: title
+      rank: rank
+      description: description
+      assignee: assignee_name
+      labels: labels
+      due: due_date
+      search: true
+      on_open: 'open("issue_view", #{ id: row._id })'
+      quick_filters:
+        chips:
+          - { label: Bugs, dot: red, script: 'table.where("type", "bug")' }
+          - { label: High priority, dot: yellow, script: 'table.where("priority", "in", ["highest", "high"])' }
+          - { label: Recently updated, script: 'table.where("updated_at", ">", days_ago(7))' }
+      lanes:
+        - { value: backlog, label: Backlog, color: muted }
+        - { value: todo, label: "To Do", color: blue }
+        - { value: in_progress, label: "In Progress", color: yellow }
+        - { value: in_review, label: "In Review", color: cyan }
+        - { value: done, label: Done, color: success }
+        - { value: wont_do, label: "Won't Do", color: danger }

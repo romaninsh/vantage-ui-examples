@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Watchers
+body:
+  - kind: binder
+    name: watchers
+    observe: watcher
+    params:
+      id_column: _id
+      default_sort: { column: issue_key, direction: asc }
+      filter: ["~issue_key", "~member_name"]
+      columns:
+        issue_key: { label: Issue, pin: true, width: 120 }
+        member_name: { label: Watcher }

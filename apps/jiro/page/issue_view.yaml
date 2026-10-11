@@ -1,0 +1,105 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: "${record.key} ${record.title}"
+record:
+  table: issue
+  id: "${args.id}"
+body:
+  - kind: row
+    children:
+      - kind: label
+        params: { text: "${record.key}  ·  ${record.title}", style: heading, icon: Flag }
+  - kind: label
+    params: { text: "${record.type} · ${record.status} · ${record.priority} priority · ${record.project_key}", style: muted }
+  - kind: row
+    children:
+      # ---- left column: details + description ----
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Details", style: heading }
+          - kind: label
+            params: { text: "Assignee: ${record.assignee_name}" }
+          - kind: label
+            params: { text: "Reporter: ${record.reporter_name}" }
+          - kind: label
+            params: { text: "Sprint: ${record.sprint_name}  ·  Fix version: ${record.version_name}" }
+          - kind: label
+            params: { text: "Parent: ${record.parent_key}  ·  Component: ${record.component}" }
+          - kind: label
+            params: { text: "Points: ${record.estimate}  ·  Labels: ${record.labels}" }
+          - kind: divider
+            label: Description
+          - kind: markdown
+            text: "${record.description}"
+      # ---- right column: links + watchers ----
+      - kind: column
+        width: 320
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Linked issues", style: heading, icon: Link }
+          - kind: list
+            observe: { script: 'scenery("issue_link").where("source", args.id)' }
+            height: 150
+            params:
+              text: '${ type + "  →  " + target_key }'
+          - kind: divider
+            label: Watchers
+          - kind: list
+            observe: { script: 'scenery("watcher").where("issue", args.id)' }
+            height: 150
+            params:
+              text: '${ member_name }'
+  - kind: divider
+    label: Sub-issues
+  - kind: grid
+    name: children
+    observe: { script: 'scenery("issue").where("parent", args.id)' }
+    height: 220
+    params:
+      id_column: _id
+      refresh_interval: 10
+      row_actions:
+        - label: Open issue
+          icon: ExternalLink
+          navigate: issue_view
+          args: { id: "row._id" }
+      columns:
+        key: { label: Key, pin: true, width: 110 }
+        type: { label: Type, color: { accent: [epic], blue: [story], cyan: [task], danger: [bug], muted: [sub-task] } }
+        title: { label: Summary }
+        status:
+          label: Status
+          color: { muted: [backlog], blue: [todo], yellow: [in_progress], cyan: [in_review], success: [done], danger: [wont_do] }
+          labels: { backlog: Backlog, todo: To Do, in_progress: In Progress, in_review: In Review, done: Done, wont_do: "Won't Do" }
+        assignee_name: { label: Assignee }
+        estimate: { label: Points }
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Comments", style: heading, icon: MessageSquare }
+          - kind: list
+            observe: { script: 'scenery("comment").where("issue", args.id)' }
+            height: 240
+            item:
+              - kind: label
+                params: { text: "${row.author_name}", style: heading }
+              - kind: label
+                params: { text: "${row.body}" }
+              - kind: label
+                params: { text: "${date_relative(row.created_at)}", style: muted }
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Work logged", style: heading, icon: Clock }
+          - kind: list
+            observe: { script: 'scenery("worklog").where("issue", args.id)' }
+            height: 240
+            params:
+              text: '${ author_name + " · " + minutes + " min" }'
+              sub: '${ note }'

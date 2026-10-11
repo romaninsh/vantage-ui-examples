@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Issues
+body:
+  - kind: binder
+    name: issues
+    observe: issue
+    params:
+      id_column: _id
+      form: issue-form
+      default_sort: { column: updated_at, direction: desc }
+      filter: [type, status, priority, project_key, assignee_name, sprint_name, "~labels"]
+      columns:
+        key: { label: Key, pin: true, width: 110 }
+        type:
+          label: Type
+          color: { accent: [epic], blue: [story], cyan: [task], danger: [bug], muted: [sub-task] }
+          labels: { epic: Epic, story: Story, task: Task, bug: Bug, sub-task: Sub-task }
+        title: { label: Summary }
+        status:
+          label: Status
+          color: { muted: [backlog], blue: [todo], yellow: [in_progress], cyan: [in_review], success: [done], danger: [wont_do] }
+          labels: { backlog: Backlog, todo: To Do, in_progress: In Progress, in_review: In Review, done: Done, wont_do: "Won't Do" }
+        priority:
+          label: Priority
+          color: { danger: [highest], warning: [high], blue: [medium], muted: [low, lowest] }
+          labels: { highest: Highest, high: High, medium: Medium, low: Low, lowest: Lowest }
+        assignee_name: { label: Assignee }
+        project_key: { label: Project }
+        estimate: { label: Points }
+        updated_at: { label: Updated, render: relative }

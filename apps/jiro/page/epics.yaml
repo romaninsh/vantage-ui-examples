@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Epics with their stories, tasks, bugs and sub-tasks nested under them. Points and
+# "% done" roll up over each subtree, so an epic shows its whole scope.
+title: Epics
+body:
+  - kind: label
+    params: { text: "Epics and everything under them", style: heading, icon: Layers }
+  - kind: tree
+    name: epics
+    observe: issue
+    params:
+      id_column: _id
+      parent: parent
+      title: title
+      rank: rank
+      orphans:
+        label: No epic
+        roots: 'row.type == "epic"'
+      columns:
+        key: { label: Key }
+        type: { label: Type }
+        status: { label: Status }
+        assignee_name: { label: Assignee }
+        estimate: { label: Points, rollup: sum }
+        progress:
+          label: "% done"
+          rollup: { done_pct: status, done: [done, wont_do] }
+      on_open: 'open("issue_view", #{ id: row._id })'

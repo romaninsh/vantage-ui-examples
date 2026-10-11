@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Read-only view: per-epic child progress.
+datasource: jiro
+title: Epic progress
+table: epic_progress
+columns:
+  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: parent_key, label: Epic, type: string }
+  - { name: epic_title, label: Title, type: string, flags: [title, searchable] }
+  - { name: project_key, label: Project, type: string }
+  - { name: total, label: Children, type: int }
+  - { name: done, label: Done, type: int }
+  - { name: pct, label: "% done", type: int }

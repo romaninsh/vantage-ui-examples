@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Read-only view: all Done issues (release notes narrow this by fix_version — a single
+# .where on a view table, which avoids the live multi-filter empty-grid bug).
+datasource: jiro
+title: Done issues
+table: issue_done
+columns:
+  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: key, label: Key, type: string, flags: [searchable] }
+  - { name: title, label: Summary, type: string, flags: [title, searchable] }
+  - { name: type, label: Type, type: string }
+  - { name: project_key, label: Project, type: string }
+  - { name: fix_version, label: Fix version, type: string }
+  - { name: assignee_name, label: Assignee, type: string }
+  - { name: estimate, label: Points, type: int }
