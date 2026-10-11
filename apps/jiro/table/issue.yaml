@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Issues — collection `issue`. The heart of Jiro.
+# MongoDB can't carry dotted/related columns, so related names are denormalised onto the
+# document (project_key, assignee_name, …) as read-only [calculated] columns; the FK id
+# columns (project, assignee, reporter, parent, sprint, fix_version) stay editable and drive
+# the reference dropdowns, relation tabs and `.ref()` traversals.
+datasource: jiro
+title: Issue
+table: issue
+# (relations: project, assignee, reporter, parent/children, sprint, fix_version, comments, worklogs, watchers, links)
+columns:
+  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: key, label: Key, type: string, flags: [searchable] }
+  - { name: title, label: Summary, type: string, flags: [title, mandatory, searchable] }
+  - { name: description, label: Description, type: string, flags: [searchable] }
+  - { name: type, label: Type, type: string, enum: [epic, story, task, bug, sub-task], default: story }
+  - { name: status, label: Status, type: string, enum: [backlog, todo, in_progress, in_review, done, wont_do], default: backlog }
+  - { name: priority, label: Priority, type: string, enum: [highest, high, medium, low, lowest], default: medium }
+
+  - { name: project, label: Project, type: string, references: { table: project, kind: has_one, name: project } }
+  - { name: project_key, label: Project, type: string, flags: [calculated] }
+
+  - { name: assignee, label: Assignee, type: string, references: { table: member, kind: has_one, name: assignee } }
+  - { name: assignee_name, label: Assignee, type: string, flags: [calculated] }
+
+  - { name: reporter, label: Reporter, type: string, references: { table: member, kind: has_one, name: reporter } }
+  - { name: reporter_name, label: Reporter, type: string, flags: [calculated] }
+
+  - { name: parent, label: Parent, type: string, references: { table: issue, kind: has_one, name: parent } }
+  - { name: parent_key, label: Parent, type: string, flags: [calculated] }
+
+  - { name: sprint, label: Sprint, type: string, references: { table: sprint, kind: has_one, name: sprint } }
+  - { name: sprint_name, label: Sprint, type: string, flags: [calculated] }
+
+  - { name: fix_version, label: Fix version, type: string, references: { table: version, kind: has_one, name: fix_version } }
+  - { name: version_name, label: Fix version, type: string, flags: [calculated] }
+
+  - { name: estimate, label: Points, type: int }
+  - { name: due_date, label: Due, type: date }
+  - { name: labels, label: Labels, type: string, flags: [searchable] }
+  - { name: component, label: Component, type: string, flags: [searchable] }
+  - { name: rank, label: Rank, type: int, flags: [hidden] }
+  - { name: created_at, label: Created, type: timestamp, time_precision: minutes }
+  - { name: updated_at, label: Updated, type: timestamp, time_precision: minutes }
+references:
+  children: { table: issue, kind: has_many, foreign_key: parent }
+  comments: { table: comment, kind: has_many, foreign_key: issue }
+  worklogs: { table: worklog, kind: has_many, foreign_key: issue }
+  watchers: { table: watcher, kind: has_many, foreign_key: issue }
+  links_out: { table: issue_link, kind: has_many, foreign_key: source }
+aggregates:
+  issues: { op: count }
+  by_status: { op: count, group_by: status }
+  by_type: { op: count, group_by: type }
+  by_priority: { op: count, group_by: priority }

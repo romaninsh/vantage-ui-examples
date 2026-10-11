@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: "${args.key} — Issues"
+body:
+  - kind: label
+    params: { text: "${args.key} — all issues", style: heading, icon: ListChecks }
+  - kind: grid
+    name: proj_issues
+    observe: { script: 'scenery("issue").where("project", args.project)' }
+    params:
+      id_column: _id
+      search: true
+      refresh_interval: 10
+      row_actions:
+        - label: Open issue
+          icon: ExternalLink
+          navigate: issue_view
+          args: { id: "row._id" }
+      columns:
+        key: { label: Key, pin: true, width: 110 }
+        type:
+          label: Type
+          color: { accent: [epic], blue: [story], cyan: [task], danger: [bug], muted: [sub-task] }
+          labels: { epic: Epic, story: Story, task: Task, bug: Bug, sub-task: Sub-task }
+        title: { label: Summary }
+        status:
+          label: Status
+          color: { muted: [backlog], blue: [todo], yellow: [in_progress], cyan: [in_review], success: [done], danger: [wont_do] }
+          labels: { backlog: Backlog, todo: To Do, in_progress: In Progress, in_review: In Review, done: Done, wont_do: "Won't Do" }
+        priority:
+          label: Priority
+          color: { danger: [highest], warning: [high], blue: [medium], muted: [low, lowest] }
+        assignee_name: { label: Assignee }
+        sprint_name: { label: Sprint }
+        estimate: { label: Points }

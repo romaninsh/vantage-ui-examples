@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+items:
+  - page: dashboard
+    label: Overview
+    icon: LayoutDashboard
+  - divider: true
+  - section: Boards
+    icon: Kanban
+    children:
+      - { page: board, label: Project board, icon: LayoutGrid }
+      - { page: sprint_board, label: Sprint board, icon: Rocket }
+      - { page: my_work, label: My work, icon: UserCheck }
+  - section: Work
+    icon: ListChecks
+    children:
+      - { page: issues, label: All issues, icon: ListChecks }
+      - { page: backlog, label: Backlog, icon: Inbox }
+      - { page: my_issues, label: My issues, icon: User }
+      - { page: epics, label: Epics, icon: Layers }
+  - section: Planning
+    icon: CalendarDays
+    children:
+      - { page: projects, label: Projects, icon: FolderOpen }
+      - { page: sprints, label: Sprints, icon: Calendar }
+      - { page: versions, label: Versions, icon: Tag }
+      - { page: members, label: People, icon: Users }
+  - section: Activity
+    icon: MessageSquare
+    children:
+      - { page: comments, label: Comments, icon: MessageSquare }
+      - { page: worklogs, label: Worklogs, icon: Clock }
+      - { page: watchers, label: Watchers, icon: Eye }
+      - { page: links, label: Issue links, icon: Link }

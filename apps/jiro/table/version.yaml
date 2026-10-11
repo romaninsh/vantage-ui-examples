@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Versions / releases, per project — collection `version`.
+datasource: jiro
+title: Version
+table: version
+columns:
+  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: name, label: Version, type: string, flags: [title, mandatory, searchable] }
+  - { name: project, label: Project, type: string, references: { table: project, kind: has_one, name: project } }
+  - { name: project_key, label: Project, type: string, flags: [calculated] }
+  - { name: released, label: Released, type: bool, default: false }
+  - { name: release_date, label: Release date, type: date }
+  - { name: description, label: Description, type: string }
+references:
+  issues: { table: issue, kind: has_many, foreign_key: fix_version }

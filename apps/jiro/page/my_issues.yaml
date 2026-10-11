@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# "My issues": the tabular counterpart to the My work board, for the current user.
+title: My issues
+body:
+  - kind: label
+    when: '!user.id'
+    params: { text: "Choose who you are with the person icon in the title bar to see your issues.", icon: User }
+  - kind: grid
+    name: mine
+    when: user.id
+    observe: { script: 'scenery("issue").where("assignee", user.id)' }
+    params:
+      id_column: _id
+      search: true
+      refresh_interval: 15
+      default_sort: { column: updated_at, direction: desc }
+      quick_filters:
+        chips:
+          - { label: Open, dot: blue, default: true, script: 'table.where("status", "not_in", ["done", "wont_do"])' }
+          - { label: Bugs, dot: red, script: 'table.where("type", "bug")' }
+          - { label: High priority, dot: yellow, script: 'table.where("priority", "in", ["highest", "high"])' }
+          - { label: Recently updated, script: 'table.where("updated_at", ">", days_ago(7))' }
+      row_actions:
+        - label: Open issue
+          icon: ExternalLink
+          navigate: issue_view
+          args: { id: "row._id" }
+      columns:
+        key: { label: Key, pin: true, width: 110 }
+        title: { label: Summary }
+        project_key: { label: Project }
+        type:
+          label: Type
+          color: { accent: [epic], blue: [story], cyan: [task], danger: [bug], muted: [sub-task] }
+          labels: { epic: Epic, story: Story, task: Task, bug: Bug, sub-task: Sub-task }
+        status:
+          label: Status
+          color: { muted: [backlog], blue: [todo], yellow: [in_progress], cyan: [in_review], success: [done], danger: [wont_do] }
+          labels: { backlog: Backlog, todo: To Do, in_progress: In Progress, in_review: In Review, done: Done, wont_do: "Won't Do" }
+        priority: { label: Priority, color: { danger: [highest], warning: [high], blue: [medium], muted: [low, lowest] } }
+        estimate: { label: Points }
+        updated_at: { label: Updated, render: relative }

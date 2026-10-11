@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Links between issues — collection `issue_link`.
+datasource: jiro
+title: Issue link
+table: issue_link
+columns:
+  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: source, label: From, type: string, references: { table: issue, kind: has_one, name: source } }
+  - { name: source_key, label: From, type: string, flags: [calculated, title, searchable] }
+  - { name: type, label: Link, type: string, enum: [blocks, is_blocked_by, relates_to, duplicates] }
+  - { name: target, label: To, type: string, references: { table: issue, kind: has_one, name: target } }
+  - { name: target_key, label: To, type: string, flags: [calculated, searchable] }

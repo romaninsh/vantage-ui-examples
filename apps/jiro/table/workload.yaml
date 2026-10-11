@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Read-only view: open workload per assignee.
+datasource: jiro
+title: Workload
+table: workload
+columns:
+  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: member_name, label: Member, type: string, flags: [title] }
+  - { name: open_issues, label: Open issues, type: int }
+  - { name: open_points, label: Open points, type: int }

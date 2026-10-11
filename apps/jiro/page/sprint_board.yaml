@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Sprint board
+body:
+  - kind: row
+    children:
+      - kind: select
+        name: sprintsel
+        observe: sprint
+        params: { column: name, label: Sprint, all_label: "All sprints" }
+  - kind: kanban
+    name: sboard
+    observe:
+      script: |
+        let s = sprintsel.value;
+        let q = scenery("issue");
+        if s != "All sprints" && s != "" { q = q.where("sprint_name", s); }
+        q
+    params:
+      id_column: _id
+      lane: status
+      title: title
+      rank: rank
+      description: description
+      assignee: assignee_name
+      labels: labels
+      due: due_date
+      search: true
+      on_open: 'open("issue_view", #{ id: row._id })'
+      lanes:
+        - { value: backlog, label: Backlog, color: muted }
+        - { value: todo, label: "To Do", color: blue }
+        - { value: in_progress, label: "In Progress", color: yellow }
+        - { value: in_review, label: "In Review", color: cyan }
+        - { value: done, label: Done, color: success }
+        - { value: wont_do, label: "Won't Do", color: danger }

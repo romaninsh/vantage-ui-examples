@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Versions
+body:
+  - kind: binder
+    name: versions
+    observe: version
+    params:
+      id_column: _id
+      default_sort: { column: release_date, direction: desc }
+      filter: [project_key, released]
+      row_actions:
+        - label: Release notes
+          icon: FileText
+          navigate: release_notes
+          args: { version: "row._id", name: "row.name", key: "row.project_key" }
+      columns:
+        name: { label: Version, pin: true, width: 110 }
+        project_key: { label: Project }
+        released:
+          label: Released
+          color: { success: ["true"], warning: ["false"] }
+          labels: { "true": Released, "false": Unreleased }
+        release_date: { label: Release date }
+        description: { label: Description }

@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Projects — collection `project`.
+datasource: jiro
+title: Project
+table: project
+columns:
+  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: key, label: Key, type: string, flags: [mandatory, searchable] }
+  - { name: name, label: Name, type: string, flags: [title, mandatory, searchable] }
+  - { name: client, label: Client, type: string, flags: [searchable] }
+  - { name: status, label: Status, type: string, enum: [active, archived], default: active }
+  - { name: lead, label: Lead, type: string, references: { table: member, kind: has_one, name: lead } }
+  - { name: lead_name, label: Lead, type: string, flags: [calculated] }
+  - { name: description, label: Description, type: string }
+references:
+  issues: { table: issue, kind: has_many, foreign_key: project }
+  sprints: { table: sprint, kind: has_many, foreign_key: project }
+  versions: { table: version, kind: has_many, foreign_key: project }
+aggregates:
+  projects: { op: count }
+  active: { op: count, where: { status: active } }

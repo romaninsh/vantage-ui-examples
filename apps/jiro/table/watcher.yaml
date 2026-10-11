@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Issue watchers — collection `watcher` (one row per member watching an issue).
+datasource: jiro
+title: Watcher
+table: watcher
+columns:
+  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: issue, label: Issue, type: string, references: { table: issue, kind: has_one, name: issue } }
+  - { name: issue_key, label: Issue, type: string, flags: [calculated, searchable] }
+  - { name: member, label: Watcher, type: string, references: { table: member, kind: has_one, name: member } }
+  - { name: member_name, label: Watcher, type: string, flags: [calculated, title, searchable] }

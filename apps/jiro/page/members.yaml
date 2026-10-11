@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: People
+body:
+  - kind: binder
+    name: members
+    observe: member
+    params:
+      id_column: _id
+      default_sort: { column: name, direction: asc }
+      filter: [team, active, "~role"]
+      row_actions:
+        - label: See their issues
+          icon: UserCheck
+          navigate: member_issues
+          args: { member: "row._id", name: "row.name" }
+      columns:
+        name: { label: Name, pin: true }
+        initials: { label: "", width: 56 }
+        role: { label: Role }
+        team:
+          label: Team
+          color: { blue: [platform], cyan: [mobile], magenta: [design], accent: [product] }
+          labels: { platform: Platform, mobile: Mobile, design: Design, product: Product }
+        capacity: { label: Capacity }
+        email: { label: Email, width: 200 }
+        active: { label: Active, labels: { "true": "Yes", "false": "No" } }

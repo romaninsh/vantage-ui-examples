@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Worklogs
+body:
+  - kind: binder
+    name: worklogs
+    observe: worklog
+    params:
+      id_column: _id
+      default_sort: { column: spent_on, direction: desc }
+      filter: ["~issue_key", "~author_name", ">minutes"]
+      columns:
+        issue_key: { label: Issue, pin: true, width: 110 }
+        author_name: { label: Logged by, width: 160 }
+        minutes: { label: Minutes }
+        note: { label: Note }
+        spent_on: { label: Date }

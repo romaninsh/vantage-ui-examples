@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Projects
+body:
+  - kind: binder
+    name: projects
+    observe: project
+    params:
+      id_column: _id
+      default_sort: { column: key, direction: asc }
+      filter: [status, "~client"]
+      row_actions:
+        - label: Open project board
+          icon: Kanban
+          navigate: board
+          args: { project: "row._id" }
+        - label: Open issues
+          icon: ListChecks
+          navigate: project_issues
+          args: { project: "row._id", key: "row.key" }
+      columns:
+        key: { label: Key, pin: true, width: 90 }
+        name: { label: Name }
+        client: { label: Client }
+        lead_name: { label: Lead }
+        status:
+          label: Status
+          color: { success: [active], muted: [archived] }
+          labels: { active: Active, archived: Archived }
+        description: { label: Description }

@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Comments
+body:
+  - kind: binder
+    name: comments
+    observe: comment
+    params:
+      id_column: _id
+      default_sort: { column: created_at, direction: desc }
+      filter: ["~issue_key", "~author_name", "~body"]
+      columns:
+        issue_key: { label: Issue, pin: true, width: 110 }
+        author_name: { label: Author, width: 160 }
+        body: { label: Comment }
+        created_at: { label: Posted, render: relative }

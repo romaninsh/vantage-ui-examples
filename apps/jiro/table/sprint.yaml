@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Sprints, per project — collection `sprint`.
+datasource: jiro
+title: Sprint
+table: sprint
+columns:
+  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: name, label: Sprint, type: string, flags: [title, mandatory, searchable] }
+  - { name: project, label: Project, type: string, references: { table: project, kind: has_one, name: project } }
+  - { name: project_key, label: Project, type: string, flags: [calculated] }
+  - { name: goal, label: Goal, type: string, flags: [searchable] }
+  - { name: state, label: State, type: string, enum: [planned, active, closed], default: planned }
+  - { name: start_date, label: Start, type: date }
+  - { name: end_date, label: End, type: date }
+references:
+  issues: { table: issue, kind: has_many, foreign_key: sprint }

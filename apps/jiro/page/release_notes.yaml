@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: "Release notes — ${args.key} ${args.name}"
+body:
+  - kind: label
+    params:
+      text: "Release notes — ${args.key} ${args.name}"
+      style: heading
+      icon: FileText
+  - kind: label
+    params:
+      text: "Everything marked Done against fix version ${args.name}."
+      style: muted
+  - kind: grid
+    name: notes
+    observe: { script: 'scenery("issue_done").where("fix_version", args.version)' }
+    params:
+      id_column: _id
+      refresh_interval: 15
+      columns:
+        key: { label: Key, pin: true, width: 110 }
+        type:
+          label: Type
+          color: { accent: [epic], blue: [story], cyan: [task], danger: [bug], muted: [sub-task] }
+          labels: { epic: Epic, story: Story, task: Task, bug: Bug, sub-task: Sub-task }
+        title: { label: Summary }
+        assignee_name: { label: Assignee }
+        estimate: { label: Points }

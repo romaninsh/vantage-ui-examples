@@ -1,0 +1,122 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Overview
+body:
+  - kind: label
+    params: { text: "Kestrel Labs — delivery overview", style: heading, icon: LayoutDashboard }
+
+  # ---- headline KPIs (from the issue_kpis view) ----
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: issue_kpis
+            params: { label: Open issues, column: open, icon: ClipboardList, color: blue, refresh_interval: 15 }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: issue_kpis
+            params: { label: In progress, column: in_progress, icon: Loader, color: yellow, refresh_interval: 15 }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: issue_kpis
+            params: { label: In review, column: in_review, icon: Eye, color: cyan, refresh_interval: 15 }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: issue_kpis
+            params: { label: Done, column: done, icon: CircleCheck, color: success, refresh_interval: 15 }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: issue_kpis
+            params: { label: Open bugs, column: bugs_open, icon: Bug, color: danger, refresh_interval: 15 }
+      - kind: column
+        frame: true
+        children:
+          - kind: stat
+            observe: issue_kpis
+            params: { label: Open story points, column: points_open, icon: Layers, color: accent, refresh_interval: 15 }
+
+  # ---- status breakdown + type split ----
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Open issues by status", style: heading }
+          - kind: chart
+            observe: status_counts
+            height: 280
+            params: { x: label, y: issues, chart_type: bar, value_labels: true, label: "", refresh_interval: 20 }
+      - kind: column
+        width: 320
+        frame: true
+        children:
+          - kind: label
+            params: { text: "By type", style: heading }
+          - kind: chart
+            observe: type_counts
+            width: 280
+            height: 280
+            params: { x: type, y: issues, chart_type: pie, label: "", refresh_interval: 20 }
+
+  # ---- active sprint progress + workload ----
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Active sprint progress", style: heading, icon: Rocket }
+          - kind: list
+            observe: { script: 'scenery("sprint_progress").where("state", "active")' }
+            height: 220
+            params:
+              refresh_interval: 20
+              text: '${ sprint_name + "  ·  " + done_points + "/" + total_points + " pts" }'
+              sub: '${ project_key + " — " + done_issues + "/" + total_issues + " issues done" }'
+              bar: pct
+              label: '${ #{ text: pct + "%", color: (if pct >= 66 { "success" } else if pct >= 33 { "warning" } else { "danger" }) } }'
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Open workload by person", style: heading, icon: Users }
+          - kind: chart
+            observe: workload
+            height: 220
+            params: { x: member_name, y: open_points, chart_type: bar, value_labels: true, label: "", refresh_interval: 20 }
+
+  # ---- recently updated ----
+  - kind: row
+    children:
+      - kind: column
+        frame: true
+        children:
+          - kind: label
+            params: { text: "Recently updated", style: heading, icon: Clock }
+          - kind: list
+            name: recent
+            observe: { script: 'scenery("issue").sort("updated_at", "desc").limit(10)' }
+            action: 'open("issue_view", #{ id: row._id })'
+            height: 300
+            item:
+              - kind: row
+                children:
+                  - kind: column
+                    width: 120
+                    children:
+                      - kind: label
+                        params: { text: "${row.key}" }
+                  - kind: label
+                    params: { text: "${row.title}" }
+                  - kind: label
+                    params: { text: "${row.status} · ${row.assignee_name}", style: muted }

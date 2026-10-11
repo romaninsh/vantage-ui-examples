@@ -1,0 +1,11 @@
+# Jiro — Kestrel Labs issue tracker.
+theme:
+  light: Hybrid Light
+  dark: Hybrid Dark
+home: dashboard
+# Who is using Jiro: the title-bar picker over the people table. Pages read the
+# choice as ${user.id} (a member _id, e.g. mem-ana) and ${user.label}.
+user:
+  table: member
+  label: name
+  match: email

@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# People at Kestrel Labs — collection `member`.
+datasource: jiro
+title: Member
+table: member
+columns:
+  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: name, label: Name, type: string, flags: [title, mandatory, searchable] }
+  - { name: initials, label: Initials, type: string }
+  - { name: role, label: Role, type: string, flags: [searchable] }
+  - { name: team, label: Team, type: string, enum: [platform, mobile, design, product] }
+  - { name: email, label: Email, type: string, flags: [searchable] }
+  - { name: capacity, label: Capacity (pts/sprint), type: int }
+  - { name: active, label: Active, type: bool, default: true }
+  - { name: bio, label: Bio, type: string }
+references:
+  assigned: { table: issue, kind: has_many, foreign_key: assignee }
+  reported: { table: issue, kind: has_many, foreign_key: reporter }
+  led_projects: { table: project, kind: has_many, foreign_key: lead }
+aggregates:
+  members: { op: count }
+  by_team: { op: count, group_by: team }

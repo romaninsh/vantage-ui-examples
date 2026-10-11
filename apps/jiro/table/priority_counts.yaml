@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# Read-only view: open issue count per priority.
+datasource: jiro
+title: Open by priority
+table: priority_counts
+columns:
+  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: priority, type: string, flags: [title] }
+  - { name: issues, type: int }
+  - { name: ord, type: int, flags: [hidden] }
