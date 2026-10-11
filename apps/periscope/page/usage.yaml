@@ -9,21 +9,21 @@ body:
     children:
       - kind: select
         name: namespace
-        table: namespaces
+        observe: namespaces
         params:
           column: name
           all_label: All namespaces
       - kind: row
         children:
           - kind: chart
-            table: node_metrics
+            observe: node_metrics
             params:
               x: name
               y: cpuMillicores
               label: CPU in use by node (mCPU)
               chart_type: bar
           - kind: chart
-            table: node_metrics
+            observe: node_metrics
             params:
               x: name
               y: memBytes
@@ -32,7 +32,7 @@ body:
       - kind: row
         children:
           - kind: chart
-            table:
+            observe:
               script: |
                 if namespace.value == "All namespaces" { scenery("pod_metrics") }
                 else { scenery("pod_metrics").where("namespace", namespace.value) }
@@ -42,7 +42,7 @@ body:
               label: CPU in use by pod (mCPU)
               chart_type: bar
           - kind: chart
-            table:
+            observe:
               script: |
                 if namespace.value == "All namespaces" { scenery("pod_metrics") }
                 else { scenery("pod_metrics").where("namespace", namespace.value) }

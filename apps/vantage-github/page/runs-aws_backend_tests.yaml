@@ -6,4 +6,4 @@
 title: "AWS Backend Tests runs"
 body:
   - kind: crud
-    table: runs-aws_backend_tests
+    observe: runs-aws_backend_tests

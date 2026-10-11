@@ -5,6 +5,6 @@ title: Events
 body:
   - kind: grid
     name: events
-    table: events
+    observe: events
     params:
       refresh_interval: 10

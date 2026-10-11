@@ -6,4 +6,4 @@ title: Namespaces
 body:
   - kind: binder
     name: namespaces
-    table: namespaces
+    observe: namespaces

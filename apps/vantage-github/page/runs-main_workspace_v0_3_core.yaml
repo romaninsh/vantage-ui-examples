@@ -6,4 +6,4 @@
 title: "Main Workspace (v0.3 Core) runs"
 body:
   - kind: crud
-    table: runs-main_workspace_v0_3_core
+    observe: runs-main_workspace_v0_3_core

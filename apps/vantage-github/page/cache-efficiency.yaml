@@ -3,7 +3,7 @@ title: Cache Efficiency
 body:
   - kind: grid
     name: workflows
-    table: gh-workflows
+    observe: gh-workflows
     params:
       row_actions:
         # Runs the scaffold-runs command: discovers this workflow's steps and

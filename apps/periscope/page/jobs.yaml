@@ -4,4 +4,4 @@ title: Jobs
 body:
   - kind: grid
     name: jobs
-    table: jobs
+    observe: jobs

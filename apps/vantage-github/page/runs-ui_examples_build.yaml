@@ -6,4 +6,4 @@
 title: "UI Examples Build runs"
 body:
   - kind: crud
-    table: runs-ui_examples_build
+    observe: runs-ui_examples_build
