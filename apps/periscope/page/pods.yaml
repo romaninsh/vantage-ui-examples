@@ -6,7 +6,7 @@ title: Pods
 body:
   - kind: binder
     name: pods
-    table: pods
+    observe: pods
     params:
       refresh_interval: 5
       views:

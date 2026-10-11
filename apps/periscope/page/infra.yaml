@@ -6,9 +6,9 @@ title: Infrastructure
 body:
   - kind: grid
     name: nodes
-    table: nodes
+    observe: nodes
   - kind: grid
     name: pods
     when: '${nodes.selected_id} != ""'
-    table:
+    observe:
       script: scenery("nodes").where("id", "${nodes.selected_id}").ref("pods")

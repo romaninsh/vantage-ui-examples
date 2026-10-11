@@ -4,4 +4,4 @@ title: ConfigMaps
 body:
   - kind: grid
     name: configmaps
-    table: configmaps
+    observe: configmaps

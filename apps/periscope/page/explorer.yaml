@@ -6,14 +6,14 @@ title: Explorer
 body:
   - kind: grid
     name: namespaces
-    table: namespaces
+    observe: namespaces
   - kind: grid
     name: deployments
     when: '${namespaces.selected_id} != ""'
-    table:
+    observe:
       script: scenery("namespaces").where("id", "${namespaces.selected_id}").ref("deployments")
   - kind: grid
     name: pods
     when: '${deployments.selected_id} != ""'
-    table:
+    observe:
       script: scenery("deployments").where("id", "${deployments.selected_id}").ref("pods")

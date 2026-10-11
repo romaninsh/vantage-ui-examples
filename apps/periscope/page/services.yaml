@@ -4,4 +4,4 @@ title: Services
 body:
   - kind: grid
     name: services
-    table: services
+    observe: services

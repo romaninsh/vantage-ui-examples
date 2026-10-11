@@ -12,21 +12,21 @@ body:
     children:
       - kind: select
         name: namespace
-        table: namespaces
+        observe: namespaces
         params:
           column: name
           all_label: All namespaces
       - kind: row
         children:
           - kind: chart
-            table: nodes
+            observe: nodes
             params:
               x: name
               y: cpuCapacityMillicores
               label: CPU capacity by node (mCPU)
               chart_type: bar
           - kind: chart
-            table: nodes
+            observe: nodes
             params:
               x: name
               y: memCapacityBytes
@@ -35,7 +35,7 @@ body:
       - kind: row
         children:
           - kind: chart
-            table:
+            observe:
               script: |
                 if namespace.value == "All namespaces" { scenery("deployments") }
                 else { scenery("deployments").where("namespace", namespace.value) }
@@ -45,7 +45,7 @@ body:
               label: Desired replicas by deployment
               chart_type: bar
           - kind: chart
-            table:
+            observe:
               script: |
                 if namespace.value == "All namespaces" { scenery("pods") }
                 else { scenery("pods").where("namespace", namespace.value) }

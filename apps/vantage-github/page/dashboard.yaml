@@ -10,7 +10,7 @@ body:
       - kind: row
         children:
           - kind: chart
-            table: runs-aws_backend_tests
+            observe: runs-aws_backend_tests
             params:
               x: run_number
               chart_type: stacked_area
@@ -29,7 +29,7 @@ body:
                 - post_run_actions_checkout_v4
                 - complete_job
           - kind: chart
-            table: runs-main_workspace_v0_3_core
+            observe: runs-main_workspace_v0_3_core
             params:
               x: run_number
               chart_type: stacked_area
@@ -51,7 +51,7 @@ body:
       - kind: row
         children:
           - kind: chart
-            table: runs-mongodb_tests
+            observe: runs-mongodb_tests
             params:
               x: run_number
               chart_type: stacked_area
@@ -72,7 +72,7 @@ body:
                 - stop_containers
                 - complete_job
           - kind: chart
-            table: runs-pr_version_check
+            observe: runs-pr_version_check
             params:
               x: run_number
               chart_type: stacked_area
@@ -88,7 +88,7 @@ body:
       - kind: row
         children:
           - kind: chart
-            table: runs-ui_examples_build
+            observe: runs-ui_examples_build
             params:
               x: run_number
               chart_type: stacked_area
@@ -150,7 +150,7 @@ body:
                 - build_examples_cursive__post_run_actions_checkout_v4
                 - build_examples_cursive__complete_job
           - kind: chart
-            table: runs-vantage_sql
+            observe: runs-vantage_sql
             params:
               x: run_number
               chart_type: stacked_area

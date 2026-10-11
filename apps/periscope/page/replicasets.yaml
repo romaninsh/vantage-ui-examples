@@ -4,4 +4,4 @@ title: ReplicaSets
 body:
   - kind: binder
     name: replicasets
-    table: replicasets
+    observe: replicasets

@@ -6,4 +6,4 @@
 title: "PR version check runs"
 body:
   - kind: crud
-    table: runs-pr_version_check
+    observe: runs-pr_version_check

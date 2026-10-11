@@ -6,7 +6,7 @@ title: Deployments
 body:
   - kind: binder
     name: deployments
-    table: deployments
+    observe: deployments
     params:
       refresh_interval: 5
       views:

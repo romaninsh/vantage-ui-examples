@@ -6,7 +6,7 @@ title: Nodes
 body:
   - kind: binder
     name: nodes
-    table: nodes
+    observe: nodes
     params:
       views:
         - node_summary

@@ -6,4 +6,4 @@
 title: "vantage-sql runs"
 body:
   - kind: crud
-    table: runs-vantage_sql
+    observe: runs-vantage_sql

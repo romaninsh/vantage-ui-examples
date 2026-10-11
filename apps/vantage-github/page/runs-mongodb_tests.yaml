@@ -6,4 +6,4 @@
 title: "MongoDB Tests runs"
 body:
   - kind: crud
-    table: runs-mongodb_tests
+    observe: runs-mongodb_tests
