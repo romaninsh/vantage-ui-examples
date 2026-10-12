@@ -2,8 +2,7 @@
 title: Bakery staff
 description: Shops, their products, clients, orders and invoices, for the breg-web frontend.
 
-# Entity names are the table names, so breg-web and vantage-server's
-# protocol checks open `order`, `product` and so on.
+# Entity names are the table names: clients open `order`, `product` and so on.
 entities:
   - name: bakery
     observe: bakery
@@ -47,12 +46,11 @@ entities:
   # Not exposed: payment (scoped only through invoice, which needs a join),
   # and the query-sourced dashboard tables (no bakery id to scope on).
 
+# Seeding and wiping the database stay in the app; they are not served.
 actions:
   - magic-promotion
   - restock
   - chase-payments
-  - seed-database
-  - reset-database
   - send-password-reset
 
 auth:
