@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=./api-schema-1.json
+title: Jiro staff
+description: Issues, projects and people, for a team dashboard or a script.
+
+entities:
+  # The issue grid's columns, plus the foreign keys a client filters and
+  # traverses by. Descriptions, reporters, sprints and ranks stay inside.
+  - name: issues
+    observe: issue
+    params:
+      columns: [key, title, type, status, priority, project, project_key, assignee, assignee_name, estimate, due_date, updated_at]
+      # `project` and `assignee` also let a client open `projects.issues`
+      # and `users.assigned`.
+      filter: [status, assignee, project, type, priority]
+      default_sort: -updated_at
+    api: { collection_limit: 500 }
+
+  - name: projects
+    observe: project
+    params:
+      columns: [key, name, client, status, lead, lead_name]
+      filter: [status, lead]
+      default_sort: key
+    api: { load: instant }
+
+  # `member` on the inside; email, capacity and bio are not served.
+  - name: users
+    observe: member
+    params:
+      columns: [name, initials, role, team, active]
+      filter: [team, active]
+      default_sort: name
+
+auth:
+  local: none

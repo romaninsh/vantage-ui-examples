@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=./api-schema-1.json
+title: Bakery staff
+description: Shops, their products, clients, orders and invoices, for the breg-web frontend.
+
+# Entity names are the table names: clients open `order`, `product` and so on.
+entities:
+  - name: bakery
+    observe: bakery
+    params:
+      columns: [name, profit_margin]
+    api:
+      load: instant
+      persist: true
+      scope: { id: { in: $principal.bakery_ids } }
+
+  - name: product
+    observe: product
+    params:
+      columns: [name, calories, price, bakery, bakery.name, is_deleted, inventory, stock]
+      filter: [bakery, is_deleted]
+    api: { persist: true, scope: { via: bakery } }
+
+  # Password hashes and the roll-up touch stamp are not served.
+  - name: client
+    observe: client
+    params:
+      columns: [name, email, contact_details, is_paying_client, bakery, bakery.name, order_count, invoice_count, balance]
+      filter: [bakery, is_paying_client]
+    api: { scope: { via: bakery } }
+
+  # `lines` (the raw order lines) is not served.
+  - name: order
+    observe: order
+    params:
+      columns: [bakery, client, invoice, client.name, bakery.name, invoice.number, is_deleted, created_at, status, cancellation_reason, cancellation_note]
+      filter: [status, bakery, client, invoice]
+    api: { collection_limit: 300, scope: { via: bakery } }
+
+  - name: invoice
+    observe: invoice
+    params:
+      columns: [number, bakery, bakery.name, client, client.name, issued_at, due_at, status, total, paid, outstanding, settlement]
+      filter: [status, bakery, client]
+    api: { scope: { via: bakery } }
+
+  # Not exposed: payment (scoped only through invoice, which needs a join),
+  # and the query-sourced dashboard tables (no bakery id to scope on).
+
+# Seeding and wiping the database stay in the app; they are not served.
+actions:
+  - magic-promotion
+  - restock
+  - chase-payments
+  - send-password-reset
+
+auth:
+  local: none
+  # Head office sees every shop; each manager sees their own.
+  test:
+    tokens:
+      hq-token: { principal: hq, bakery_ids: ["bakery:leeds", "bakery:newcastle"] }
+      leeds-token: { principal: leeds, bakery_ids: ["bakery:leeds"] }
+      newcastle-token: { principal: newcastle, bakery_ids: ["bakery:newcastle"] }
