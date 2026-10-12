@@ -13,16 +13,27 @@ body:
       parent: parent
       title: title
       rank: rank
+      reparent: true
+      # Nothing nests under a sub-task.
+      allowed: 'parent == () || parent.type != "sub-task"'
       orphans:
         label: No epic
         roots: 'row.type == "epic"'
       columns:
-        key: { label: Key }
-        type: { label: Type }
-        status: { label: Status }
+        key: { label: Key, width: 100 }
+        type:
+          label: Type
+          color: { accent: [epic], blue: [story], cyan: [task], danger: [bug], muted: [sub-task] }
+          labels: { epic: Epic, story: Story, task: Task, bug: Bug, sub-task: Sub-task }
+        status:
+          label: Status
+          color: { muted: [backlog], blue: [todo], yellow: [in_progress], cyan: [in_review], success: [done], danger: [wont_do] }
+          labels: { backlog: Backlog, todo: To Do, in_progress: In Progress, in_review: In Review, done: Done, wont_do: "Won't Do" }
         assignee_name: { label: Assignee }
         estimate: { label: Points, rollup: sum }
         progress:
           label: "% done"
           rollup: { done_pct: status, done: [done, wont_do] }
+          render: progress
+          color: { success: [">=100"], warning: ["34..100"], danger: ["0..34"] }
       on_open: 'open("issue_view", #{ id: row._id })'
