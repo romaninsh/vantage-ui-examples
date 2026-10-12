@@ -75,31 +75,33 @@ body:
           labels: { backlog: Backlog, todo: To Do, in_progress: In Progress, in_review: In Review, done: Done, wont_do: "Won't Do" }
         assignee_name: { label: Assignee }
         estimate: { label: Points }
-  - kind: row
-    children:
-      - kind: column
-        frame: true
-        children:
-          - kind: label
-            params: { text: "Comments", style: heading, icon: MessageSquare }
-          - kind: list
-            observe: { script: 'scenery("comment").where("issue", args.id)' }
-            height: 240
-            item:
-              - kind: label
-                params: { text: "${row.author_name}", style: heading }
-              - kind: label
-                params: { text: "${row.body}" }
-              - kind: label
-                params: { text: "${date_relative(row.created_at)}", style: muted }
-      - kind: column
-        frame: true
-        children:
-          - kind: label
-            params: { text: "Work logged", style: heading, icon: Clock }
-          - kind: list
-            observe: { script: 'scenery("worklog").where("issue", args.id)' }
-            height: 240
-            params:
-              text: '${ author_name + " · " + minutes + " min" }'
-              sub: '${ note }'
+  - kind: divider
+    label: Activity
+  # Comments and work logs in one feed, newest at the bottom; the box posts a comment as the
+  # person picked in the title bar.
+  - kind: activity
+    name: activity
+    height: 420
+    params:
+      sources:
+        - label: Comments
+          observe: { script: 'scenery("comment").where("issue", args.id)' }
+          style: comment
+          at: created_at
+          who: author_name
+          body: body
+        - label: Work
+          observe: { script: 'scenery("worklog").where("issue", args.id)' }
+          style: event
+          at: spent_on
+          who: author_name
+          text: '${row.author_name} logged **${row.minutes} min** — ${row.note}'
+      collapse_after: 3
+      compose:
+        observe: comment
+        fields:
+          issue: "${args.id}"
+          author: "${user.id}"
+          author_name: "${user.label}"
+        body: body
+        mentions: { member: name, issue: key }
