@@ -48,5 +48,10 @@ entities:
       columns: [name, state, start_date, end_date, project]
       filter: [project, state]
 
+# Project actions a client may run (`db.run.recalculate_estimates`). The
+# issues page's row actions ("Close issue") are served with `issues`.
+actions:
+  - recalculate-estimates
+
 auth:
   local: none

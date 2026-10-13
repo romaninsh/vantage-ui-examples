@@ -6,6 +6,7 @@ import Spinner from "@atlaskit/spinner";
 import { token } from "@atlaskit/tokens";
 import { observer, useCollection } from "@vantage-ui/client/react";
 import { useDb } from "../db";
+import { RecalculateEstimates } from "../estimates/RecalculateEstimates";
 import { IssueList } from "../issues/IssueList";
 import { ProjectLead } from "../jira/ProjectLead";
 import { ProjectStatusLozenge } from "../jira/ProjectStatusLozenge";
@@ -36,6 +37,7 @@ const ProjectBody = observer(function ProjectBody({ project, view }: { project: 
         ]}
       >
         <ProjectStatusLozenge status={project.status} />
+        <RecalculateEstimates projectKey={key} />
         <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: token("space.100") }}>
           <span style={{ color: token("color.text.subtle") }}>Lead</span>
           <ProjectLead project={project} />

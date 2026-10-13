@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Tools
+body:
+  - kind: binder
+    name: tools
+    observe: tool
+    params:
+      default_sort: { column: name, direction: asc }
+      filter: [status, category, "~borrower"]
+      columns:
+        name: { label: Tool, pin: true }
+        category: { label: Category }
+        status:
+          label: Status
+          color:
+            success: [available]
+            blue: [on_loan]
+            warning: [repair]
+          labels:
+            available: Available
+            on_loan: On loan
+            repair: In repair
+        borrower: { label: Borrower }
+        due_on: { label: Due back }
+        overdue: { label: Overdue }

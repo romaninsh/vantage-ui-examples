@@ -41,7 +41,11 @@ tr.pending td { color: #9a6700; }
 tr.failed td { background: #ffebe9; }
 td input { width: 60px; font: inherit; border: 1px solid transparent; background: transparent; }
 td input:focus { border-color: #d0c8b8; background: #fff; }
-.jobs { margin: 0 14px 14px; max-height: 220px; }
+.restock { margin: 0 14px 14px; max-height: 300px; display: grid; gap: 10px; align-content: start; }
+.restock-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.restock-select { width: 240px; }
+.restock-bar { width: 240px; }
+.restock-products { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .splash { display: grid; place-items: center; align-content: center; gap: 8px; height: 100vh; color: #777; }
 .splash p { margin: 0; }
 .hint { color: #777; font-size: 12px; }
@@ -56,13 +60,6 @@ aside { overflow: auto; }
 .detail dd { margin: 0; }
 .detail h2 button { float: right; }
 .products h2 select { font-size: 12px; margin-left: 8px; }
-.launch { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-.joblist { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.job { border: 1px solid #eee; border-radius: 8px; padding: 6px 8px; }
-.job.running { border-color: #1f883d; }
-.jobhead { display: flex; gap: 8px; align-items: center; font-size: 12px; }
-.jobhead span { color: #777; }
-pre { margin: 4px 0 0; font-size: 11px; white-space: pre-wrap; color: #444; max-height: 110px; overflow: hidden; }
 .signin { display: grid; place-items: center; height: 100vh; }
 .signin form { display: grid; gap: 10px; width: 340px; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 2px #0001; }
 .signin h1 { font-size: 18px; margin: 0; }

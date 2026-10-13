@@ -1,4 +1,5 @@
-export const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*[A-Za-z]/g, "");
+/** "1 product", "3 products". */
+export const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 
 export function ago(iso: string | null): string {
   if (!iso) return "";

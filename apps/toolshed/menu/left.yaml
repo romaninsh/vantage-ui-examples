@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+title: Toolshed
+items:
+  - page: tools
+    label: Tools
+    icon: Wrench

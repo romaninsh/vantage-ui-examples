@@ -46,11 +46,11 @@ entities:
   # Not exposed: payment (scoped only through invoice, which needs a join),
   # and the query-sourced dashboard tables (no bakery id to scope on).
 
-# Seeding and wiping the database stay in the app; they are not served.
+# Seeding, wiping and the docker-run scripts (magic-promotion, restock,
+# chase-payments) run only in the Vantage app; they are not served. Row
+# and toolbar actions on the pages (bakeries' "Restock bakery", the order
+# lifecycle) are served with their entity.
 actions:
-  - magic-promotion
-  - restock
-  - chase-payments
   - send-password-reset
 
 auth:

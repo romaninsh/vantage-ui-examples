@@ -11,3 +11,47 @@ body:
       columns:
         name: { label: Shop, pin: true }
         profit_margin: { label: "Margin %" }
+      row_actions:
+        # A run. The staff web app's wizard picks the products and the
+        # batch size, starts it, then confirms through the `confirmed`
+        # input; `progress` of `total` moves as each oven run lands, and
+        # `low_stock` names every product still short afterwards. `total`
+        # is -1 until the body has counted the products.
+        - label: "Restock bakery"
+          icon: Sparkles
+          state:
+            total: { type: int, default: -1 }
+            progress: { type: int }
+            confirmed: { type: bool, input: true }
+          emits:
+            low_stock: { product: string, stock: int }
+          # `args.products`: the product ids to restock (default: every
+          # product of this shop below 10). Ids from another shop are
+          # ignored. `args.batch`: units per oven run (default 6).
+          # language=rhai
+          action: |
+            let wanted = if "products" in args { args.products } else { () };
+            let batch = if "batch" in args { args.batch } else { 6 };
+            if batch < 1 || batch > 48 { throw "batch must be between 1 and 48"; }
+            let picked = [];
+            // Compared here, not with `where`: a Rhai `where` passes the id
+            // as text, which never equals SurrealDB's record link.
+            for p in table("product").list() {
+              if p.bakery != row.id || p.is_deleted == true { continue; }
+              let pick = if wanted == () { (p.stock ?? 0) < 10 } else { p.id in wanted };
+              if pick { picked.push(p); }
+            }
+            state.total = picked.len();
+            wait("confirmed");
+            let still_low = [];
+            for p in picked {
+              sleep(1500);
+              let stock = (table("product").get(p.id).stock ?? 0) + batch;
+              table("product").patch(p.id, #{ inventory: #{ stock: stock } });
+              state.progress = state.progress + 1;
+              if stock < 10 {
+                emit("low_stock", #{ product: p.name, stock: stock });
+                still_low.push(p.name);
+              }
+            }
+            #{ restocked: picked.len(), units: picked.len() * batch, still_low: still_low }

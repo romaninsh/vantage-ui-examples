@@ -11,6 +11,7 @@ import { StatusLozenge } from "../jira/StatusLozenge";
 import { PRIORITY_LABELS, TYPE_LABELS } from "../jira/issueFields";
 import { formatDate } from "../jira/format";
 import type { Issues } from "../vantage.gen";
+import { CloseIssue } from "./CloseIssue";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -26,8 +27,9 @@ const None = () => <span style={{ color: token("color.text.subtlest") }}>None</s
 export const DetailsPanel = observer(function DetailsPanel({ issue }: { issue: Issues }) {
   return (
     <aside aria-label="Details" style={panel}>
-      <div style={{ marginBottom: token("space.200") }}>
+      <div style={{ marginBottom: token("space.200"), display: "flex", alignItems: "center", gap: token("space.150") }}>
         <StatusLozenge status={issue.status} />
+        <CloseIssue issue={issue} />
       </div>
       <h2 style={heading}>Details</h2>
       <dl style={grid}>
