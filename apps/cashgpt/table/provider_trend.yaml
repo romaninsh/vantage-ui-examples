@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Exec · provider trend
+id_column: provider
+columns:
+  - { name: provider, type: string, flags: [id, title] }
+  - { name: total, type: string }
+  - { name: trend, type: string, optional: true }
+postgres:
+  # One row per provider: spend across every month, and the monthly series
+  # as a JSON array for a sparkline cell. The series runs over all months in
+  # the cube (a month without spend is 0), so every row shares one x axis.
+  # language=rhai
+  rhai: |
+    select().from("mart_spend_agg")
+        .expression(expr("provider_group").alias("provider"))
+        .expression(expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M'").alias("total"))
+        .expression(expr("(SELECT json_agg(round(coalesce(p.monthly_sum, 0)) ORDER BY mo.month_key) FROM (SELECT DISTINCT month_key FROM mart_spend_agg) mo LEFT JOIN (SELECT s.month_key, sum(s.spend_usd) AS monthly_sum FROM mart_spend_agg s WHERE s.provider_group = mart_spend_agg.provider_group GROUP BY 1) p ON p.month_key = mo.month_key)").alias("trend"))
+        .group_by(expr("provider_group"))
+        .order_by(expr("sum(spend_usd)"), "desc")

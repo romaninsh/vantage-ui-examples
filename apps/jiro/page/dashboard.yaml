@@ -7,42 +7,24 @@ body:
   # ---- headline KPIs (from the issue_kpis view) ----
   - kind: row
     children:
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: issue_kpis
-            params: { label: Open issues, column: open, icon: ClipboardList, color: blue, refresh_interval: 15 }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: issue_kpis
-            params: { label: In progress, column: in_progress, icon: Loader, color: yellow, refresh_interval: 15 }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: issue_kpis
-            params: { label: In review, column: in_review, icon: Eye, color: cyan, refresh_interval: 15 }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: issue_kpis
-            params: { label: Done, column: done, icon: CircleCheck, color: success, refresh_interval: 15 }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: issue_kpis
-            params: { label: Open bugs, column: bugs_open, icon: Bug, color: danger, refresh_interval: 15 }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: issue_kpis
-            params: { label: Open story points, column: points_open, icon: Layers, color: accent, refresh_interval: 15 }
+      - kind: stat
+        observe: issue_kpis
+        params: { label: Open issues, column: open, icon: ClipboardList, color: blue, refresh_interval: 15 }
+      - kind: stat
+        observe: issue_kpis
+        params: { label: In progress, column: in_progress, icon: Loader, color: yellow, refresh_interval: 15 }
+      - kind: stat
+        observe: issue_kpis
+        params: { label: In review, column: in_review, icon: Eye, color: cyan, refresh_interval: 15 }
+      - kind: stat
+        observe: issue_kpis
+        params: { label: Done, column: done, icon: CircleCheck, color: success, refresh_interval: 15 }
+      - kind: stat
+        observe: issue_kpis
+        params: { label: Open bugs, column: bugs_open, icon: Bug, color: danger, refresh_interval: 15 }
+      - kind: stat
+        observe: issue_kpis
+        params: { label: Open story points, column: points_open, icon: Layers, color: accent, refresh_interval: 15 }
 
   # ---- status breakdown + type split ----
   - kind: row

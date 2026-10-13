@@ -112,66 +112,54 @@ body:
   # spend. Cost-like deltas paint growth red (change_good: down).
   - kind: row
     children:
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: island_month_cost
-            observe:
-              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("cost_this_month").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
-            params:
-              label: "Cost this month"
-              icon: TrendingUp
-              color: green
-              column: display
-              change: change
-              change_text: change_text
-              change_good: down
-              spark: spark
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: island_ytd
-            observe:
-              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("ytd_spend").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
-            params:
-              label: "Year to date"
-              icon: CreditCard
-              color: blue
-              column: display
-              change_text: change_text
-              spark: spark
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: island_cpu
-            observe:
-              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("cost_per_user").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
-            params:
-              label: "Cost per user"
-              icon: Gauge
-              color: yellow
-              column: display
-              change: change
-              change_text: change_text
-              change_good: down
-              spark: spark
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: island_unattributed
-            observe:
-              script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("unattributed_spend").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
-            params:
-              label: "Unattributed spend"
-              icon: Network
-              color: cyan
-              column: display
-              change_text: change_text
-              spark: spark
+      - kind: stat
+        name: island_month_cost
+        observe:
+          script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("cost_this_month").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+        params:
+          label: "Cost this month"
+          icon: TrendingUp
+          color: green
+          column: display
+          change: change
+          change_text: change_text
+          change_good: down
+          spark: spark
+      - kind: stat
+        name: island_ytd
+        observe:
+          script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("ytd_spend").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+        params:
+          label: "Year to date"
+          icon: CreditCard
+          color: blue
+          column: display
+          change_text: change_text
+          spark: spark
+      - kind: stat
+        name: island_cpu
+        observe:
+          script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("cost_per_user").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+        params:
+          label: "Cost per user"
+          icon: Gauge
+          color: yellow
+          column: display
+          change: change
+          change_text: change_text
+          change_good: down
+          spark: spark
+      - kind: stat
+        name: island_unattributed
+        observe:
+          script: 'let L = lob.value; if L == "All billable orgs" { L = "" } let R = rorg.value; if R == "All resource orgs" { R = "" } let D = driver.value; if D == "All usage drivers" { D = "" } let P = platform.value; if P == "All platforms" { P = "" } let MD = model.value; if MD == "All models" { MD = "" } let F = jobfn.value; if F == "All job functions" { F = "" } let s = scenery("unattributed_spend").where("month_key", month.value); s.args(#{ lob: L, rorg: R, driver: D, platform: P, model: MD, jobfn: F })'
+        params:
+          label: "Unattributed spend"
+          icon: Network
+          color: cyan
+          column: display
+          change_text: change_text
+          spark: spark
 
   # Spend trajectory — reference: TrajectoryPanel (stacked monthly bars,
   # platform | usage-driver segmented toggle, breakdown list beside).

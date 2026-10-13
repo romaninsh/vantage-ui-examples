@@ -78,55 +78,43 @@ body:
           column: who_line
       - kind: row
         children:
-          - kind: column
-            frame: true
-            children:
-              - kind: stat
-                name: mgr_spend
-                observe:
-                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
-                params:
-                  label: "Spend"
-                  icon: CreditCard
-                  color: blue
-                  column: spend_display
-          - kind: column
-            frame: true
-            children:
-              - kind: stat
-                name: mgr_active
-                observe:
-                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
-                params:
-                  label: "Active people"
-                  icon: Network
-                  color: green
-                  column: active_display
-                  change_text: active_sub
-          - kind: column
-            frame: true
-            children:
-              - kind: stat
-                name: mgr_per_user
-                observe:
-                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
-                params:
-                  label: "Per active user"
-                  icon: Gauge
-                  color: yellow
-                  column: per_user_display
-          - kind: column
-            frame: true
-            children:
-              - kind: stat
-                name: mgr_tier
-                observe:
-                  script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
-                params:
-                  label: "Top tier"
-                  icon: Layers
-                  color: cyan
-                  column: tier_display
+          - kind: stat
+            name: mgr_spend
+            observe:
+              script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
+            params:
+              label: "Spend"
+              icon: CreditCard
+              color: blue
+              column: spend_display
+          - kind: stat
+            name: mgr_active
+            observe:
+              script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
+            params:
+              label: "Active people"
+              icon: Network
+              color: green
+              column: active_display
+              change_text: active_sub
+          - kind: stat
+            name: mgr_per_user
+            observe:
+              script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
+            params:
+              label: "Per active user"
+              icon: Gauge
+              color: yellow
+              column: per_user_display
+          - kind: stat
+            name: mgr_tier
+            observe:
+              script: 'let M = mmonth.value; if M == "All months" { M = "" } let s = scenery("mgr_summary"); s.args(#{ org: mgrs.selected_id, month: M })'
+            params:
+              label: "Top tier"
+              icon: Layers
+              color: cyan
+              column: tier_display
 
   # Reference: "Spend trajectory by platform|usage driver" — same panel as
   # the Overview trajectory, scoped to the manager's tree. Stack order is

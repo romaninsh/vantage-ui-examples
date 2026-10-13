@@ -3,36 +3,21 @@ title: Dashboard
 body:
   - kind: row
     children:
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: article
-            params: { label: Articles, icon: Newspaper, color: blue, delta: { column: created_at, months: 1 } }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: comment
-            params: { label: Comments, icon: MessageSquare, color: cyan, delta: { column: created_at, months: 1 } }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: user
-            params: { label: Users, icon: Users, color: green, delta: { column: created_at, months: 1 } }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: favorite
-            params: { label: Favorites, icon: Heart, color: magenta, delta: { column: created_at, months: 1 } }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: unverified_user
-            params: { label: "Unverified emails", icon: TriangleAlert, color: yellow, refresh_interval: 30 }
+      - kind: stat
+        observe: article
+        params: { label: Articles, icon: Newspaper, color: blue, delta: { column: created_at, months: 1 } }
+      - kind: stat
+        observe: comment
+        params: { label: Comments, icon: MessageSquare, color: cyan, delta: { column: created_at, months: 1 } }
+      - kind: stat
+        observe: user
+        params: { label: Users, icon: Users, color: green, delta: { column: created_at, months: 1 } }
+      - kind: stat
+        observe: favorite
+        params: { label: Favorites, icon: Heart, color: magenta, delta: { column: created_at, months: 1 } }
+      - kind: stat
+        observe: unverified_user
+        params: { label: "Unverified emails", icon: TriangleAlert, color: yellow, refresh_interval: 30 }
 
   - kind: row
     height: 300

@@ -8,15 +8,9 @@ body:
     params: { text: "Open a ticket from the queue: each one gets a tab in the title bar, reused when you open the same ticket again. The + button opens the launcher, cmd-shift-t reopens a closed tab.", style: muted }
   - kind: row
     children:
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: ticket
-            params: { label: "Tickets in the queue", icon: ClipboardList, color: blue }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: incoming
-            params: { label: "New tickets waiting", icon: Inbox, color: green }
+      - kind: stat
+        observe: ticket
+        params: { label: "Tickets in the queue", icon: ClipboardList, color: blue }
+      - kind: stat
+        observe: incoming
+        params: { label: "New tickets waiting", icon: Inbox, color: green }

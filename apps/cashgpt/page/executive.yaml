@@ -41,79 +41,64 @@ body:
   # tokens consumed with the blended rate.
   - kind: row
     children:
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: ex_latest
-            observe:
-              script: 'scenery("exec_islands").where("month_key", period.value)'
-            params:
-              label: "Latest month spend"
-              icon: TrendingUp
-              color: green
-              column: latest_display
-              change: latest_change
-              change_text: latest_text
-              change_good: down
-              spark: spend_spark
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: ex_period
-            observe:
-              script: 'scenery("exec_islands").where("month_key", period.value)'
-            params:
-              label: "Spend in period"
-              icon: CreditCard
-              color: blue
-              column: period_display
-              change_text: period_note
-              spark: spend_spark
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: ex_tier
-            observe:
-              script: 'scenery("exec_islands").where("month_key", period.value)'
-            params:
-              label: "Top tier share"
-              icon: Layers
-              color: cyan
-              column: tier_display
-              change_text: tier_note
-              spark: tier_spark
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: ex_people
-            observe:
-              script: 'scenery("exec_islands").where("month_key", period.value)'
-            params:
-              label: "Active people"
-              icon: Network
-              color: blue
-              column: people_display
-              change: people_change
-              change_text: people_text
-              spark: people_spark
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: ex_tokens
-            observe:
-              script: 'scenery("exec_islands").where("month_key", period.value)'
-            params:
-              label: "Tokens consumed"
-              icon: Gauge
-              color: yellow
-              column: tokens_display
-              change_text: tokens_note
-              spark: tokens_spark
+      - kind: stat
+        name: ex_latest
+        observe:
+          script: 'scenery("exec_islands").where("month_key", period.value)'
+        params:
+          label: "Latest month spend"
+          icon: TrendingUp
+          color: green
+          column: latest_display
+          change: latest_change
+          change_text: latest_text
+          change_good: down
+          spark: spend_spark
+      - kind: stat
+        name: ex_period
+        observe:
+          script: 'scenery("exec_islands").where("month_key", period.value)'
+        params:
+          label: "Spend in period"
+          icon: CreditCard
+          color: blue
+          column: period_display
+          change_text: period_note
+          spark: spend_spark
+      - kind: stat
+        name: ex_tier
+        observe:
+          script: 'scenery("exec_islands").where("month_key", period.value)'
+        params:
+          label: "Top tier share"
+          icon: Layers
+          color: cyan
+          column: tier_display
+          change_text: tier_note
+          spark: tier_spark
+      - kind: stat
+        name: ex_people
+        observe:
+          script: 'scenery("exec_islands").where("month_key", period.value)'
+        params:
+          label: "Active people"
+          icon: Network
+          color: blue
+          column: people_display
+          change: people_change
+          change_text: people_text
+          spark: people_spark
+      - kind: stat
+        name: ex_tokens
+        observe:
+          script: 'scenery("exec_islands").where("month_key", period.value)'
+        params:
+          label: "Tokens consumed"
+          icon: Gauge
+          color: yellow
+          column: tokens_display
+          change_text: tokens_note
+          spark: tokens_spark
 
   # Reference: "AI token spend trajectory by provider" — stacked bars with
   # the breakdown list beside (Provider | MoM | Total | share). Stack order
@@ -172,6 +157,29 @@ body:
                   palette:
                     colors: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
                     order: grouped
+
+  # Per-provider spend across the whole cube with a monthly mini-trend.
+  - kind: column
+    frame: true
+    children:
+      - kind: label
+        params:
+          text: "Provider trends"
+          style: heading
+          icon: TrendingUp
+      - kind: label
+        params:
+          text: "total spend and month-by-month trajectory, all months"
+          style: muted
+      - kind: grid
+        name: exec_provider_trend_grid
+        observe: provider_trend
+        height: 260
+        params:
+          columns:
+            provider: { label: Provider }
+            total: { label: Total }
+            trend: { label: Last months, render: sparkline, width: 90 }
 
   # Reference: "Cost ownership" — costOwnershipSql's documented intent (the
   # reference registered no SQL and rendered an empty shell). Band derives
