@@ -5,30 +5,18 @@ title: Dashboard
 body:
   - kind: row
     children:
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: flight#total
-            params: { label: "Flights tracked", icon: Plane, color: blue }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: flight#boarding
-            params: { label: "Boarding", icon: Clock, color: yellow }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: flight#cruising
-            params: { label: "Cruising", icon: Plane, color: green }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: ops_event
-            params: { label: "Live ops events", icon: Activity, color: green }
+      - kind: stat
+        observe: flight#total
+        params: { label: "Flights tracked", icon: Plane, color: blue }
+      - kind: stat
+        observe: flight#boarding
+        params: { label: "Boarding", icon: Clock, color: yellow }
+      - kind: stat
+        observe: flight#cruising
+        params: { label: "Cruising", icon: Plane, color: green }
+      - kind: stat
+        observe: ops_event
+        params: { label: "Live ops events", icon: Activity, color: green }
   - kind: row
     children:
       - kind: button

@@ -14,31 +14,19 @@ body:
 
   - kind: row
     children:
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: top#training
-            params: { label: "Members training", icon: Activity, color: green }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: top
-            params: { label: "Regions reporting", icon: Map, color: blue }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: offline
-            observe: top#offline
-            params: { label: "Regions offline", icon: TriangleAlert, color: danger }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: checkin
-            params: { label: "At the front desk", icon: Users, color: cyan }
+      - kind: stat
+        observe: top#training
+        params: { label: "Members training", icon: Activity, color: green }
+      - kind: stat
+        observe: top
+        params: { label: "Regions reporting", icon: Map, color: blue }
+      - kind: stat
+        name: offline
+        observe: top#offline
+        params: { label: "Regions offline", icon: TriangleAlert, color: danger }
+      - kind: stat
+        observe: checkin
+        params: { label: "At the front desk", icon: Users, color: cyan }
 
   - kind: row
     children:

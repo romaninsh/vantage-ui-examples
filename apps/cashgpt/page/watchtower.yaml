@@ -50,58 +50,46 @@ body:
   # Islands 3/4 are month totals — they do not react to the peer tab.
   - kind: row
     children:
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: w_outlier
-            observe:
-              script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
-            params:
-              label: "Peer outlier"
-              icon: Gauge
-              color: red
-              column: outlier_display
-              change_text: outlier_note
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: w_platform
-            observe:
-              script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
-            params:
-              label: "Top platform share"
-              icon: Layers
-              color: cyan
-              column: platform_display
-              change_text: platform_note
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: w_mom
-            observe:
-              script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
-            params:
-              label: "MoM spend velocity"
-              icon: TrendingUp
-              color: blue
-              column: mom_display
-              change_text: mom_note_static
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            name: w_projected
-            observe:
-              script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
-            params:
-              label: "Projected next month"
-              icon: CreditCard
-              color: yellow
-              column: projected_display
-              change_text: projected_note_static
+      - kind: stat
+        name: w_outlier
+        observe:
+          script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+        params:
+          label: "Peer outlier"
+          icon: Gauge
+          color: red
+          column: outlier_display
+          change_text: outlier_note
+      - kind: stat
+        name: w_platform
+        observe:
+          script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+        params:
+          label: "Top platform share"
+          icon: Layers
+          color: cyan
+          column: platform_display
+          change_text: platform_note
+      - kind: stat
+        name: w_mom
+        observe:
+          script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+        params:
+          label: "MoM spend velocity"
+          icon: TrendingUp
+          color: blue
+          column: mom_display
+          change_text: mom_note_static
+      - kind: stat
+        name: w_projected
+        observe:
+          script: 'let m = switch wmonth.value { "Jan" => "2026-01", "Feb" => "2026-02", "Mar" => "2026-03", "Apr" => "2026-04", "May" => "2026-05", "Jun" => "2026-06", _ => "2026-07" }; let g = switch wpeer.value { "Job title" => "function", "Grade in LOB" => "grade", _ => "team" }; scenery("watch_islands").where("month_key", m).where("peer_group", g)'
+        params:
+          label: "Projected next month"
+          icon: CreditCard
+          color: yellow
+          column: projected_display
+          change_text: projected_note_static
 
   # Reference: "Spend outliers" — leave-one-out peer stats per person; the
   # peer-group tab swaps the column triples (here: the scenery). σ ≥ 3 is

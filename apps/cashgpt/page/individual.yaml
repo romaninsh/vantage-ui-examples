@@ -72,38 +72,26 @@ body:
           column: where_line
       - kind: row
         children:
-          - kind: column
-            frame: true
-            children:
-              - kind: stat
-                name: p_spend
-                observe:
-                  script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
-                params: { label: "Total spend", icon: CreditCard, color: blue, column: spend_display }
-          - kind: column
-            frame: true
-            children:
-              - kind: stat
-                name: p_months
-                observe:
-                  script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
-                params: { label: "Active months", icon: Gauge, color: green, column: months_display }
-          - kind: column
-            frame: true
-            children:
-              - kind: stat
-                name: p_profile
-                observe:
-                  script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
-                params: { label: "Behaviour", icon: Network, color: yellow, column: profile_display }
-          - kind: column
-            frame: true
-            children:
-              - kind: stat
-                name: p_peak
-                observe:
-                  script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
-                params: { label: "Peak vs peers", icon: TrendingUp, color: red, column: peak_display }
+          - kind: stat
+            name: p_spend
+            observe:
+              script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
+            params: { label: "Total spend", icon: CreditCard, color: blue, column: spend_display }
+          - kind: stat
+            name: p_months
+            observe:
+              script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
+            params: { label: "Active months", icon: Gauge, color: green, column: months_display }
+          - kind: stat
+            name: p_profile
+            observe:
+              script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
+            params: { label: "Behaviour", icon: Network, color: yellow, column: profile_display }
+          - kind: stat
+            name: p_peak
+            observe:
+              script: 'let s = scenery("person_summary"); s.args(#{ person: person.value })'
+            params: { label: "Peak vs peers", icon: TrendingUp, color: red, column: peak_display }
 
   # Reference: "Personal cost over time" — one line per model (top 8), so
   # a switch from one flagship to the next is visible. The data picks the

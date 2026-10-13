@@ -12,36 +12,21 @@ body:
 
   - kind: row
     children:
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: launches#total
-            params: { label: "Launches", icon: Rocket, color: blue }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: launches#successes
-            params: { label: "Successful", icon: CircleCheck, color: green }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: launches#upcoming
-            params: { label: "Upcoming", icon: Calendar, color: yellow }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: payloads
-            params: { label: "Payloads flown", icon: Package, color: cyan }
-      - kind: column
-        frame: true
-        children:
-          - kind: stat
-            observe: cores
-            params: { label: "Boosters", icon: Layers, color: magenta }
+      - kind: stat
+        observe: launches#total
+        params: { label: "Launches", icon: Rocket, color: blue }
+      - kind: stat
+        observe: launches#successes
+        params: { label: "Successful", icon: CircleCheck, color: green }
+      - kind: stat
+        observe: launches#upcoming
+        params: { label: "Upcoming", icon: Calendar, color: yellow }
+      - kind: stat
+        observe: payloads
+        params: { label: "Payloads flown", icon: Package, color: cyan }
+      - kind: stat
+        observe: cores
+        params: { label: "Boosters", icon: Layers, color: magenta }
 
   - kind: row
     children:
