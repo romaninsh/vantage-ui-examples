@@ -4,14 +4,15 @@ description: Issues, projects and people, for a team dashboard or a script.
 
 entities:
   # The issue grid's columns, plus the foreign keys a client filters and
-  # traverses by. Descriptions, reporters, sprints and ranks stay inside.
+  # traverses by, and the description for an issue page. Reporters, sprints
+  # and ranks stay inside.
   - name: issues
     observe: issue
     params:
-      columns: [key, title, type, status, priority, project, project_key, assignee, assignee_name, estimate, due_date, updated_at]
+      columns: [key, title, description, type, status, priority, project, project_key, assignee, assignee_name, estimate, due_date, updated_at]
       # `project` and `assignee` also let a client open `projects.issues`
-      # and `users.assigned`.
-      filter: [status, assignee, project, type, priority]
+      # and `users.assigned`; `key` finds the issue behind a `/issues/JIR-12` link.
+      filter: [key, status, assignee, project, type, priority]
       default_sort: -updated_at
     api: { collection_limit: 500 }
 
@@ -19,7 +20,8 @@ entities:
     observe: project
     params:
       columns: [key, name, client, status, lead, lead_name]
-      filter: [status, lead]
+      # `key` finds the project behind a `/projects/WEB` link.
+      filter: [key, status, lead]
       default_sort: key
     api: { load: instant }
 
@@ -30,6 +32,21 @@ entities:
       columns: [name, initials, role, team, active]
       filter: [team, active]
       default_sort: name
+
+  # One issue's thread: a client opens it filtered by `issue`. No actions
+  # are listed; the staff app adds comments as plain inserts.
+  - name: comments
+    observe: comment
+    params:
+      columns: [issue, author, author_name, body, created_at]
+      filter: [issue]
+      default_sort: created_at
+
+  - name: sprints
+    observe: sprint
+    params:
+      columns: [name, state, start_date, end_date, project]
+      filter: [project, state]
 
 auth:
   local: none

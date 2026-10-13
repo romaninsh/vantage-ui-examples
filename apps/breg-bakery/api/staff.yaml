@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=./api-schema-1.json
 title: Bakery staff
-description: Shops, their products, clients, orders and invoices, for the breg-web frontend.
+description: Shops, their products, clients, orders and invoices, for the staff web app in web/staff.
 
 # Entity names are the table names: clients open `order`, `product` and so on.
 entities:
