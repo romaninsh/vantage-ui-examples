@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=./action-schema-1.json
+kind: script
+dialog:
+  title: Check overdue loans
+state:
+  total:    { type: int }
+  progress: { type: int }
+  overdue:  { type: int }
+  status:   { type: string }
+emits:
+  overdue_tool: { name: string, borrower: string, due_on: string }
+body: |
+  // Walks every tool on loan, flags the ones past their due date and clears the
+  // flag on the rest. Today is the UTC date.
+  let today = `${now()}`.sub_string(0, 10);
+  let loans = table("tool").where("status", "on_loan").sort("due_on", "asc");
+  let ids = loans.ids();
+  state.total = ids.len();
+  state.status = `Checking ${ids.len()} loans`;
+  for id in ids {
+    let t = loans.get(id);
+    let late = t.due_on != () && `${t.due_on}`.sub_string(0, 10) < today;
+    if late != t.overdue {
+      table("tool").patch(id, #{ overdue: late });
+    }
+    if late {
+      state.overdue = state.overdue + 1;
+      emit("overdue_tool", #{ name: t.name, borrower: t.borrower, due_on: `${t.due_on}`.sub_string(0, 10) });
+    }
+    state.progress = state.progress + 1;
+    state.status = `Checked ${t.name}`;
+    sleep(150);
+  }
+  // A tool back on the shelf or in repair is never overdue.
+  for id in table("tool").where("status", "ne", "on_loan").where("overdue", true).ids() {
+    table("tool").patch(id, #{ overdue: false });
+  }
+  let message = if state.overdue == 1 { "1 tool is overdue" } else { `${state.overdue} tools are overdue` };
+  state.status = message;
+  #{ overdue: state.overdue, checked: ids.len(), message: message }

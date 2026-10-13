@@ -6,3 +6,16 @@ afterEach(() => {
   cleanup();
   sessionStorage.clear();
 });
+
+// Atlaskit reads the colour-scheme and reduced-motion media queries.
+window.matchMedia ??= (query: string) =>
+  ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener() {},
+    removeListener() {},
+    addEventListener() {},
+    removeEventListener() {},
+    dispatchEvent: () => false,
+  }) as MediaQueryList;

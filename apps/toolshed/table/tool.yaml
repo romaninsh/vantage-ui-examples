@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: toolshed
+columns:
+  - name: id
+    type: int
+    flags: [id, auto, hidden]
+  - name: name
+    type: string
+    flags: [title, mandatory, searchable]
+  - name: category
+    type: string
+    flags: [mandatory]
+  - name: status
+    type: string
+    default: available
+    enum: [available, on_loan, repair]
+  - name: borrower
+    type: string
+    flags: [searchable]
+  - name: due_on
+    type: date
+  - name: overdue
+    type: bool

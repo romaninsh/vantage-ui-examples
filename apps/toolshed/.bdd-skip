@@ -1,0 +1,9 @@
+Needs its SQLite file: `datasource/toolshed.yaml` opens `data/toolshed.db`, which
+is machine-local and gitignored, so on a fresh checkout the app logs a connect
+ERROR and the shared "clean startup" check fails.
+
+Create the database, then run it explicitly:
+  mkdir -p apps/toolshed/data
+  sqlite3 apps/toolshed/data/toolshed.db < apps/toolshed/tests/schema.sql
+  sqlite3 apps/toolshed/data/toolshed.db < apps/toolshed/tests/seed.sql
+  cargo run -p test-framework -- apps/toolshed

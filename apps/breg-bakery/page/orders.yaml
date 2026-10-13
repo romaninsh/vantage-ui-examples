@@ -75,9 +75,12 @@ body:
           # An invoiced order is no longer the order desk's to cancel; it
           # would leave the invoice quoting a total nobody owes.
           when: 'row.status != "cancelled" && row.status != "delivered" && row.status != "picked_up"'
+          # A web client sends the form's values (`reason`, `note`) with the
+          # invoke; the desktop asks the form. (A scoped API principal can't
+          # dispatch the form action from a body at all.)
           # language=rhai
           action: |
-            let r = actions.cancel_order();
+            let r = if "reason" in args { args } else { actions.cancel_order() };
             row.status              = "cancelled";
             row.cancellation_reason = r.reason;
             row.cancellation_note   = r.note;

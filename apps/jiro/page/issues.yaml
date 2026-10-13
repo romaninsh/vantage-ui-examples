@@ -9,6 +9,17 @@ body:
       form: issue-form
       default_sort: { column: updated_at, direction: desc }
       filter: [type, status, priority, project_key, assignee_name, sprint_name, "~labels"]
+      row_actions:
+        # Served to the staff web app as `issue.$run.close_issue`; the app
+        # asks for confirmation first. The result is the closed issue.
+        - label: "Close issue"
+          icon: CircleCheck
+          when: 'row.status != "done" && row.status != "wont_do"'
+          # language=rhai
+          action: |
+            row.status = "done";
+            row.save();
+            #{ key: row.key, title: row.title, status: row.status }
       columns:
         key: { label: Key, pin: true, width: 110 }
         type:

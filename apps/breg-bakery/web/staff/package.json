@@ -7,22 +7,38 @@
     "node": ">=22"
   },
   "scripts": {
-    "gen": "vantage-client generate --from ${VANTAGE_SCHEMA:-http://127.0.0.1:18091/v1/schema} --out src/vantage.gen.ts",
+    "gen": "vantage-client generate --from schema.json --out src/vantage.gen.ts",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
+    "e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@vantage-ui/client": "file:../../../../vendor/vantage-ui-client-0.3.0.tgz",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "@atlaskit/button": "25.4.7",
+    "@atlaskit/checkbox": "19.3.0",
+    "@atlaskit/flag": "19.0.0",
+    "@atlaskit/icon": "38.0.2",
+    "@atlaskit/progress-bar": "5.3.7",
+    "@atlaskit/progress-tracker": "11.4.4",
+    "@atlaskit/section-message": "10.2.6",
+    "@atlaskit/select": "23.1.2",
+    "@atlaskit/tokens": "20.4.1",
+    "@vantage-ui/client": "file:vendor/vantage-ui-client-0.4.3.tgz",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "react-router": "^7.0.0"
   },
+  "overrides": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
   "devDependencies": {
+    "@compiled/css": "2.0.0",
+    "@playwright/test": "1.64.0",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
     "@vitejs/plugin-react": "^5.0.0",
     "jsdom": "^26.0.0",
     "typescript": "^5.6.0",

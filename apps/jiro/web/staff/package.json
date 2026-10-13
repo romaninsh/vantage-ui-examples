@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "gen": "vantage-client generate --from ${VANTAGE_SCHEMA:-http://127.0.0.1:18090/v1/schema} --out src/vantage.gen.ts",
+    "gen": "vantage-client generate --from schema.json --out src/vantage.gen.ts",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "e2e": "playwright test",
@@ -28,6 +28,7 @@
     "@atlaskit/modal-dialog": "17.0.2",
     "@atlaskit/navigation-system": "11.2.2",
     "@atlaskit/pragmatic-drag-and-drop": "4.0.0",
+    "@atlaskit/progress-bar": "5.3.7",
     "@atlaskit/select": "23.1.2",
     "@atlaskit/side-nav-items": "2.5.7",
     "@atlaskit/spinner": "20.4.4",
@@ -36,7 +37,7 @@
     "@atlaskit/tile": "5.0.0",
     "@atlaskit/tokens": "20.4.1",
     "@tanstack/react-virtual": "3.14.17",
-    "@vantage-ui/client": "file:../../../../vendor/vantage-ui-client-0.3.0.tgz",
+    "@vantage-ui/client": "file:vendor/vantage-ui-client-0.4.3.tgz",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router": "7.18.4"

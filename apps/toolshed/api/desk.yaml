@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./api-schema-1.json
+title: Toolshed desk
+description: Tools and loans for the Saturday lending desk's laptop.
+
+entities:
+  - name: tools
+    observe: tool
+    params:
+      columns: [name, category, status, borrower, due_on, overdue]
+      filter: [status]
+      default_sort: name
+    api: { collection_limit: 500 }
+
+actions: [check-overdue]
+
+auth:
+  local: none

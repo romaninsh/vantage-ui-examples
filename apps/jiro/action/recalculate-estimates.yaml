@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=./action-schema-1.json
+#
+# Every epic's estimate becomes the sum of its children's points. A run:
+# `progress` of `total` counts the issues checked, and a `notify` at the
+# end says how many epics changed. Running it twice changes nothing more.
+
+kind: script
+description: |
+  Recalculate each epic's estimate as the sum of its child issues'
+  points, in one project or in all of them.
+state:
+  total: { type: int }
+  progress: { type: int }
+  changed: { type: int }
+# `args.project`: a project key ("BOOK"); without it, every project.
+# language=rhai
+body: |
+  let only = if "project" in args { args.project } else { () };
+  let issues = if only == () { table("issue").list() } else { table("issue").where("project_key", only).list() };
+  state.total = issues.len();
+  let points = #{};
+  for i in issues {
+    if i.parent != () && i.estimate != () {
+      points[i.parent] = (points[i.parent] ?? 0) + i.estimate;
+    }
+  }
+  for i in issues {
+    sleep(60);
+    if i.type == "epic" {
+      let sum = points[i._id] ?? 0;
+      if i.estimate != sum {
+        table("issue").patch(i._id, #{ estimate: sum });
+        state.changed = state.changed + 1;
+      }
+    }
+    state.progress = state.progress + 1;
+  }
+  let scope = if only == () { "all projects" } else { only };
+  let epics = if state.changed == 1 { "epic" } else { "epics" };
+  notify(`Estimates recalculated in ${scope}: ${state.changed} ${epics} changed.`);
+  #{ checked: issues.len(), changed: state.changed }
