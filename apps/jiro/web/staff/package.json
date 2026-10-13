@@ -1,0 +1,61 @@
+{
+  "name": "jiro-staff-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "gen": "vantage-client generate --from ${VANTAGE_SCHEMA:-http://127.0.0.1:18090/v1/schema} --out src/vantage.gen.ts",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@atlaskit/app-provider": "8.1.0",
+    "@atlaskit/avatar": "30.0.4",
+    "@atlaskit/banner": "15.3.4",
+    "@atlaskit/breadcrumbs": "17.8.6",
+    "@atlaskit/button": "25.4.7",
+    "@atlaskit/css-reset": "8.4.6",
+    "@atlaskit/dropdown-menu": "21.0.0",
+    "@atlaskit/flag": "19.0.0",
+    "@atlaskit/heading": "8.0.0",
+    "@atlaskit/icon": "38.0.2",
+    "@atlaskit/lozenge": "17.0.5",
+    "@atlaskit/modal-dialog": "17.0.2",
+    "@atlaskit/navigation-system": "11.2.2",
+    "@atlaskit/pragmatic-drag-and-drop": "4.0.0",
+    "@atlaskit/select": "23.1.2",
+    "@atlaskit/side-nav-items": "2.5.7",
+    "@atlaskit/spinner": "20.4.4",
+    "@atlaskit/textarea": "10.2.7",
+    "@atlaskit/textfield": "10.2.6",
+    "@atlaskit/tile": "5.0.0",
+    "@atlaskit/tokens": "20.4.1",
+    "@tanstack/react-virtual": "3.14.17",
+    "@vantage-ui/client": "file:../../../../vendor/vantage-ui-client-0.3.0.tgz",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router": "7.18.4"
+  },
+  "overrides": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@compiled/css": "2.0.0",
+    "@playwright/test": "1.64.0",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.3",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "5.2.0",
+    "jsdom": "26.1.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.7",
+    "vitest": "3.2.7"
+  }
+}

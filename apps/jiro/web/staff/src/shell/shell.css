@@ -1,0 +1,22 @@
+/* Keep a list's column headers in view while its rows scroll. */
+.jiro-list-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--ds-surface, #ffffff);
+}
+
+/* Jira's list rows: a light hover and a hairline between rows. */
+.jiro-list-table tbody tr:hover {
+  background: var(--ds-background-neutral-subtle-hovered, #091e420f);
+}
+.jiro-list-table tbody td {
+  border-bottom: 1px solid var(--ds-border, #091e4224);
+  vertical-align: middle;
+}
+.jiro-list-table a {
+  text-decoration: none;
+}
+.jiro-list-table a:hover {
+  text-decoration: underline;
+}
