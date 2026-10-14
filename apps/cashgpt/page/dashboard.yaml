@@ -13,12 +13,14 @@ body:
             query:
               datasource: warehouse
               rhai: |
-                select().from("mart_spend_agg")
+                sql::select().from("mart_spend_agg")
                     .field("month_key")
-                    .expression(expr("to_char(to_date(month_key || '-01', 'YYYY-MM-DD'), 'Mon YYYY')").alias("label"))
-                    .expression(expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M'").alias("detail"))
-                    .group_by(ident("month_key"))
-                    .order_by(ident("month_key"), "desc")
+                    // TODO(no-expr): to_char/to_date and string concat (||) have no sql:: builder; an inline page query has no lazy: column to format in
+                    .expression(sql::expr("to_char(to_date(month_key || '-01', 'YYYY-MM-DD'), 'Mon YYYY')").alias("label"))
+                    // TODO(no-expr): string concat (||) and to_char have no sql:: builder; an inline page query has no lazy: column to format in
+                    .expression(sql::expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M'").alias("detail"))
+                    .group_by(sql::ident("month_key"))
+                    .order_by(sql::ident("month_key"), "desc")
             params:
               label: Month
               all_label: "All months"
@@ -27,12 +29,13 @@ body:
             query:
               datasource: warehouse
               rhai: |
-                select().from("mart_filter_totals")
-                    .where(ident("dimension") == "lob")
+                sql::select().from("mart_filter_totals")
+                    .where(sql::ident("dimension") == "lob")
                     .field("member_key")
-                    .expression(expr("member_label").alias("label"))
-                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
-                    .order_by(expr("spend_usd"), "desc")
+                    .expression(sql::ident("member_label").alias("label"))
+                    // TODO(no-expr): string concat (||) and CASE with literal results have no sql:: builder; an inline page query has no lazy: column to format in
+                    .expression(sql::expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(sql::ident("spend_usd"), "desc")
             params:
               label: "Billable Org"
               all_label: "All billable orgs"
@@ -41,12 +44,13 @@ body:
             query:
               datasource: warehouse
               rhai: |
-                select().from("mart_filter_totals")
-                    .where(ident("dimension") == "resource_org")
+                sql::select().from("mart_filter_totals")
+                    .where(sql::ident("dimension") == "resource_org")
                     .field("member_key")
-                    .expression(expr("member_label").alias("label"))
-                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
-                    .order_by(expr("spend_usd"), "desc")
+                    .expression(sql::ident("member_label").alias("label"))
+                    // TODO(no-expr): string concat (||) and CASE with literal results have no sql:: builder; an inline page query has no lazy: column to format in
+                    .expression(sql::expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(sql::ident("spend_usd"), "desc")
             params:
               label: "Resource Org"
               all_label: "All resource orgs"
@@ -55,12 +59,13 @@ body:
             query:
               datasource: warehouse
               rhai: |
-                select().from("mart_filter_totals")
-                    .where(ident("dimension") == "usage_driver")
+                sql::select().from("mart_filter_totals")
+                    .where(sql::ident("dimension") == "usage_driver")
                     .field("member_key")
-                    .expression(expr("member_label").alias("label"))
-                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
-                    .order_by(expr("spend_usd"), "desc")
+                    .expression(sql::ident("member_label").alias("label"))
+                    // TODO(no-expr): string concat (||) and CASE with literal results have no sql:: builder; an inline page query has no lazy: column to format in
+                    .expression(sql::expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(sql::ident("spend_usd"), "desc")
             params:
               label: "Usage Driver"
               all_label: "All usage drivers"
@@ -69,12 +74,13 @@ body:
             query:
               datasource: warehouse
               rhai: |
-                select().from("mart_filter_totals")
-                    .where(ident("dimension") == "platform")
+                sql::select().from("mart_filter_totals")
+                    .where(sql::ident("dimension") == "platform")
                     .field("member_key")
-                    .expression(expr("member_label").alias("label"))
-                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
-                    .order_by(expr("spend_usd"), "desc")
+                    .expression(sql::ident("member_label").alias("label"))
+                    // TODO(no-expr): string concat (||) and CASE with literal results have no sql:: builder; an inline page query has no lazy: column to format in
+                    .expression(sql::expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(sql::ident("spend_usd"), "desc")
             params:
               label: "Platform"
               all_label: "All platforms"
@@ -83,12 +89,13 @@ body:
             query:
               datasource: warehouse
               rhai: |
-                select().from("mart_filter_totals")
-                    .where(ident("dimension") == "model")
+                sql::select().from("mart_filter_totals")
+                    .where(sql::ident("dimension") == "model")
                     .field("member_key")
-                    .expression(expr("member_label").alias("label"))
-                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
-                    .order_by(expr("spend_usd"), "desc")
+                    .expression(sql::ident("member_label").alias("label"))
+                    // TODO(no-expr): string concat (||) and CASE with literal results have no sql:: builder; an inline page query has no lazy: column to format in
+                    .expression(sql::expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(sql::ident("spend_usd"), "desc")
             params:
               label: "Model"
               all_label: "All models"
@@ -97,12 +104,13 @@ body:
             query:
               datasource: warehouse
               rhai: |
-                select().from("mart_filter_totals")
-                    .where(ident("dimension") == "job_function")
+                sql::select().from("mart_filter_totals")
+                    .where(sql::ident("dimension") == "job_function")
                     .field("member_key")
-                    .expression(expr("member_label").alias("label"))
-                    .expression(expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
-                    .order_by(expr("spend_usd"), "desc")
+                    .expression(sql::ident("member_label").alias("label"))
+                    // TODO(no-expr): string concat (||) and CASE with literal results have no sql:: builder; an inline page query has no lazy: column to format in
+                    .expression(sql::expr("CASE WHEN spend_usd >= 1e6 THEN '$' || to_char(spend_usd / 1e6, 'FM999,990.00') || 'M' WHEN spend_usd >= 1e3 THEN '$' || to_char(round(spend_usd / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(spend_usd), 'FM999,990') END").alias("detail"))
+                    .order_by(sql::ident("spend_usd"), "desc")
             params:
               label: "Job Function"
               all_label: "All job functions"

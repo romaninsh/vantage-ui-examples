@@ -18,4 +18,5 @@ columns:
   - { name: restarts, type: int }
   - { name: podIP, type: string }
   - { name: ownerDeployment, type: string, flags: [hidden], references: deployments }
+  - { name: ownerName, type: string, flags: [hidden] }
   - { name: age, type: string }

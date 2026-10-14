@@ -24,8 +24,9 @@ columns:
 postgres:
   # language=rhai
   rhai: |
-    select().from("mart_team_month")
-        .expression(expr("coalesce(org_id,'') || ':' || coalesce(org_name,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(work_type,'') || ':' || coalesce(city,'') || ':' || coalesce(month_key,'')").alias("rid"))
+    sql::select().from("mart_team_month")
+        // TODO(no-expr): string concat (||) and a literal in coalesce(x, '') have no sql:: builder
+        .expression(sql::expr("coalesce(org_id,'') || ':' || coalesce(org_name,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(work_type,'') || ':' || coalesce(city,'') || ':' || coalesce(month_key,'')").alias("rid"))
         .field("org_id")
         .field("org_name")
         .field("org_level")

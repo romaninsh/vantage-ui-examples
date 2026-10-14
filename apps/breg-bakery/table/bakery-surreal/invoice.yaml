@@ -35,15 +35,34 @@ columns:
   paid:
     type: int
     unit: { currency: "£", minor_units: true }
-    expr: 'expr("(SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0")'
+    expr: |
+      surreal::sum(
+          surreal::select().value().expression(surreal::ident("amount")).from("payment")
+              .where(surreal::ident("invoice") == surreal::parent("id"))
+              .subquery())
   outstanding:
     type: int
     unit: { currency: "£", minor_units: true }
-    expr: 'expr("total - ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0)")'
+    expr: |
+      let paid = surreal::sum(
+          surreal::select().value().expression(surreal::ident("amount")).from("payment")
+              .where(surreal::ident("invoice") == surreal::parent("id"))
+              .subquery());
+      surreal::sub(surreal::ident("total"), paid)
   settlement:
     type: string
     enum: [settled, part_paid, overdue, open]
-    expr: 'expr("IF total - ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0) <= 0 THEN ''settled'' ELSE IF ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0) > 0 THEN ''part_paid'' ELSE IF due_at < time::now() THEN ''overdue'' ELSE ''open'' END")'
+    expr: |
+      let paid = surreal::sum(
+          surreal::select().value().expression(surreal::ident("amount")).from("payment")
+              .where(surreal::ident("invoice") == surreal::parent("id"))
+              .subquery());
+      surreal::case_when()
+          .when(surreal::sub(surreal::ident("total"), paid) <= 0, "settled")
+          .when(paid > 0, "part_paid")
+          .when(surreal::ident("due_at") < surreal::time_now(), "overdue")
+          .else_("open")
+          .expr()
 
 references:
   orders:

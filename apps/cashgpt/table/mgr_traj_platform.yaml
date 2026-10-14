@@ -4,32 +4,80 @@ title: Manager trajectory (chart)
 id_column: month_key
 columns:
   - { name: month_key, type: string, flags: [id, hidden] }
-  - { name: month, type: string }
-  - { name: "Azure OpenAI", type: float }
-  - { name: "Claude", type: float }
-  - { name: "Google Vertex AI", type: float }
-  - { name: "Databricks Mosaic AI", type: float }
-  - { name: "GitHub Copilot", type: float }
-  - { name: "Amazon Bedrock", type: float }
+  - { name: raw_azure_openai, type: float, flags: [hidden], optional: true }
+  - { name: raw_claude, type: float, flags: [hidden], optional: true }
+  - { name: raw_google_vertex_ai, type: float, flags: [hidden], optional: true }
+  - { name: raw_databricks_mosaic_ai, type: float, flags: [hidden], optional: true }
+  - { name: raw_github_copilot, type: float, flags: [hidden], optional: true }
+  - { name: raw_amazon_bedrock, type: float, flags: [hidden], optional: true }
+  - name: month
+    type: string
+    lazy: |
+      let names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      names[parse_int(row.month_key.sub_string(5, 2)) - 1]
+  - name: "Azure OpenAI"
+    type: float
+    lazy: |
+      let v = row.raw_azure_openai;
+      if v == () { 0.0 } else if type_of(v) == "string" { parse_float(v) } else { v + 0.0 }
+  - name: "Claude"
+    type: float
+    lazy: |
+      let v = row.raw_claude;
+      if v == () { 0.0 } else if type_of(v) == "string" { parse_float(v) } else { v + 0.0 }
+  - name: "Google Vertex AI"
+    type: float
+    lazy: |
+      let v = row.raw_google_vertex_ai;
+      if v == () { 0.0 } else if type_of(v) == "string" { parse_float(v) } else { v + 0.0 }
+  - name: "Databricks Mosaic AI"
+    type: float
+    lazy: |
+      let v = row.raw_databricks_mosaic_ai;
+      if v == () { 0.0 } else if type_of(v) == "string" { parse_float(v) } else { v + 0.0 }
+  - name: "GitHub Copilot"
+    type: float
+    lazy: |
+      let v = row.raw_github_copilot;
+      if v == () { 0.0 } else if type_of(v) == "string" { parse_float(v) } else { v + 0.0 }
+  - name: "Amazon Bedrock"
+    type: float
+    lazy: |
+      let v = row.raw_amazon_bedrock;
+      if v == () { 0.0 } else if type_of(v) == "string" { parse_float(v) } else { v + 0.0 }
 postgres:
   # Reference: manager.trajectory — the fact joined to the manager's people
-  # by org_path prefix, month x member, pivoted for the stacked chart.
+  # by org_path prefix, month x member, pivoted for the stacked chart. A
+  # series with no spend in a month reads 0 (the lazy columns), as the old
+  # coalesce did. The join's second key sits in a where: same rows on an
+  # inner join.
   # language=rhai
   rhai: |
     let org = if "org" in args { args.org } else { "" };
     let mo = if "month" in args { args.month } else { "" };
-    select().from("fct_usage")
-        .inner_join("mart_employee_month", "e", expr("e.employee_id = fct_usage.employee_id AND e.month_key = fct_usage.month_key"))
-        .inner_join("dim_platform", "p", expr("p.platform_id = fct_usage.platform_id"))
-        .where(expr("(e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%')", [org, org]))
-        .where(expr("({} = '' OR fct_usage.month_key = {})", [mo, mo]))
-        .expression(expr("fct_usage.month_key").alias("month_key"))
-        .expression(expr("to_char(to_date(fct_usage.month_key || '-01', 'YYYY-MM-DD'), 'Mon')").alias("month"))
-        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["Azure OpenAI"]).alias("Azure OpenAI"))
-        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["Claude"]).alias("Claude"))
-        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["Google Vertex AI"]).alias("Google Vertex AI"))
-        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["Databricks Mosaic AI"]).alias("Databricks Mosaic AI"))
-        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["GitHub Copilot"]).alias("GitHub Copilot"))
-        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE p.platform_name = {}), 0)", ["Amazon Bedrock"]).alias("Amazon Bedrock"))
-        .group_by(expr("fct_usage.month_key"))
-        .order_by(expr("fct_usage.month_key"), "asc")
+    let f = sql::ident("fct_usage");
+    let e = sql::ident("e");
+    let p = sql::ident("p");
+    fn platform_spend(name) {
+        let f = sql::ident("fct_usage");
+        let p = sql::ident("p");
+        let spend = sql::coalesce(f["spend_usd"], f["spend_usd"]);
+        sql::sum(sql::case_when().when(p["platform_name"] == name, spend).expr())
+    }
+    // TODO(no-expr): OR / LIKE / scalar subquery / string concat for the org_path prefix scope
+    let scope = sql::expr("(e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%')", [org, org]);
+    let q = sql::select().from("fct_usage")
+        .inner_join("mart_employee_month", "e", e["employee_id"] == f["employee_id"])
+        .inner_join("dim_platform", "p", p["platform_id"] == f["platform_id"])
+        .where(e["month_key"] == f["month_key"])
+        .where(scope);
+    if mo != "" { q = q.where(f["month_key"] == mo); }
+    q.expression(f["month_key"].alias("month_key"))
+        .expression(platform_spend("Azure OpenAI").alias("raw_azure_openai"))
+        .expression(platform_spend("Claude").alias("raw_claude"))
+        .expression(platform_spend("Google Vertex AI").alias("raw_google_vertex_ai"))
+        .expression(platform_spend("Databricks Mosaic AI").alias("raw_databricks_mosaic_ai"))
+        .expression(platform_spend("GitHub Copilot").alias("raw_github_copilot"))
+        .expression(platform_spend("Amazon Bedrock").alias("raw_amazon_bedrock"))
+        .group_by(f["month_key"])
+        .order_by(f["month_key"], "asc")

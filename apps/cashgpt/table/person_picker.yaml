@@ -5,18 +5,24 @@ id_column: employee_id
 columns:
   - { name: employee_id, type: string, flags: [id, hidden] }
   - { name: full_name, type: string, flags: [title] }
-  - { name: role, type: string }
+  - name: role
+    type: string
+    lazy: 'row.job_function + " · " + row.seniority_code'
   - { name: lob_name, type: string }
   - { name: city, type: string }
+  - { name: job_function, type: string, flags: [hidden] }
+  - { name: seniority_code, type: string, flags: [hidden] }
 postgres:
   # Reference: individual.search — everyone, ordered by name; the term is
   # the grid's quicksearch (server-side ILIKE over these columns).
+  # role is a lazy column over job_function / seniority_code.
   # language=rhai
   rhai: |
-    select().from("dim_employee")
+    sql::select().from("dim_employee")
         .field("employee_id")
         .field("full_name")
-        .expression(expr("job_function || ' · ' || seniority_code").alias("role"))
+        .field("job_function")
+        .field("seniority_code")
         .field("lob_name")
         .field("city")
-        .order_by(ident("full_name"), "asc")
+        .order_by(sql::ident("full_name"), "asc")

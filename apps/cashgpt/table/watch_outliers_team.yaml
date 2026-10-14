@@ -6,13 +6,48 @@ columns:
   - { name: rid, type: string, flags: [id, hidden] }
   - { name: month_key, type: string, flags: [hidden] }
   - { name: full_name, type: string, flags: [title] }
-  - { name: role_team, type: string }
+  - { name: job_function, type: string, flags: [hidden], optional: true }
+  - { name: team_name, type: string, flags: [hidden], optional: true }
+  - name: role_team
+    type: string
+    lazy: |
+      if row.job_function == () || row.team_name == () { () } else { row.job_function + " · " + row.team_name }
   - { name: manager_name, type: string, optional: true }
-  - { name: spend_display, type: string }
-  - { name: peer_mean_display, type: string }
-  - { name: multiple_display, type: string }
-  - { name: band, type: string }
-  - { name: sigma_display, type: string }
+  - { name: peer_mean, type: float, flags: [hidden], optional: true }
+  - { name: multiple, type: float, flags: [hidden], optional: true }
+  - name: spend_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      if row.spend_usd == () { () } else { "$" + grp(num(row.spend_usd).round().to_int()) }
+  - name: peer_mean_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      "$" + grp((if row.peer_mean == () { 0.0 } else { num(row.peer_mean) }).round().to_int())
+  - name: multiple_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      if row.multiple == () || num(row.multiple).round() == 0.0 { "—" } else { grp(num(row.multiple).round().to_int()) + "×" }
+  - name: band
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      let s = if row.sigma == () { 0.0 } else { num(row.sigma) };
+      if s >= 4.0 { "extremely unusual" } else if s >= 3.0 { "very unusual" } else { "unusual" }
+  - name: sigma_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      if row.sigma == () { () } else {
+          let c = (num(row.sigma).abs() * 10.0).round().to_int();
+          (if num(row.sigma) < 0.0 && c > 0 { "-" } else { "" }) + grp(c / 10) + "." + (c % 10).to_string() + "σ"
+      }
   - { name: sigma, type: float, flags: [hidden] }
   - { name: spend_usd, type: float, flags: [hidden] }
   - { name: top_platform, type: string, optional: true }
@@ -20,23 +55,28 @@ columns:
 postgres:
   # Reference: watch outliers, team peer definition. Leave-one-out stats
   # arrive precomputed in mart_peer_benchmark; joins to dims replicate the
-  # reference's manager/top-platform lookups.
+  # reference's manager/top-platform lookups (one head per team, one row
+  # per platform, so the left joins add no rows).
   # language=rhai
   rhai: |
-    select().from("mart_peer_benchmark")
-        .where(expr("team_sigma IS NOT NULL AND team_sigma >= 2"))
-        .expression(expr("employee_id || ':' || month_key").alias("rid"))
-        .field("month_key")
-        .field("full_name")
-        .expression(expr("job_function || ' · ' || team_name").alias("role_team"))
-        .expression(expr("(SELECT e.full_name FROM silver.dim_employee e WHERE e.heads_org_id = mart_peer_benchmark.team_org_id)").alias("manager_name"))
-        .expression(expr("'$' || to_char(round(spend_usd), 'FM999,999,999')").alias("spend_display"))
-        .expression(expr("'$' || to_char(round(coalesce(team_mean, 0)), 'FM999,999,999')").alias("peer_mean_display"))
-        .expression(expr("CASE WHEN team_multiple IS NULL OR round(team_multiple) = 0 THEN '—' ELSE to_char(round(team_multiple), 'FM999,999') || '×' END").alias("multiple_display"))
-        .expression(expr("CASE WHEN team_sigma >= 4 THEN 'extremely unusual' WHEN team_sigma >= 3 THEN 'very unusual' ELSE 'unusual' END").alias("band"))
-        .expression(expr("to_char(team_sigma, 'FM999,999,990.0') || 'σ'").alias("sigma_display"))
-        .expression(expr("team_sigma").alias("sigma"))
-        .field("spend_usd")
-        .expression(expr("(SELECT p.platform_name FROM silver.dim_platform p WHERE p.platform_id = mart_peer_benchmark.top_platform_id)").alias("top_platform"))
-        .expression(expr("team_peers").alias("peers"))
-        .order_by(expr("team_sigma"), "desc")
+    let b = sql::ident("mart_peer_benchmark");
+    let e = sql::ident("e");
+    let pl = sql::ident("pl");
+    sql::select().from("mart_peer_benchmark")
+        .left_join("dim_employee", "e", e["heads_org_id"] == b["team_org_id"])
+        .left_join("dim_platform", "pl", pl["platform_id"] == b["top_platform_id"])
+        .where(b["team_sigma"] >= 2)
+        // TODO(no-expr): string concat for the row id
+        .expression(sql::expr("mart_peer_benchmark.employee_id || ':' || mart_peer_benchmark.month_key").alias("rid"))
+        .expression(b["month_key"].alias("month_key"))
+        .expression(b["full_name"].alias("full_name"))
+        .expression(b["job_function"].alias("job_function"))
+        .expression(b["team_name"].alias("team_name"))
+        .expression(e["full_name"].alias("manager_name"))
+        .expression(b["team_mean"].alias("peer_mean"))
+        .expression(b["team_multiple"].alias("multiple"))
+        .expression(b["team_sigma"].alias("sigma"))
+        .expression(b["spend_usd"].alias("spend_usd"))
+        .expression(pl["platform_name"].alias("top_platform"))
+        .expression(b["team_peers"].alias("peers"))
+        .order_by(b["team_sigma"], "desc")

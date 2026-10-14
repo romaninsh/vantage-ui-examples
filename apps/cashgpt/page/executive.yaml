@@ -27,11 +27,12 @@ body:
                 query:
                   datasource: warehouse
                   rhai: |
-                    select().from("mart_spend_agg")
+                    sql::select().from("mart_spend_agg")
                         .field("month_key")
-                        .expression(expr("to_char(to_date(month_key || '-01', 'YYYY-MM-DD'), 'FMMonth YYYY')").alias("label"))
-                        .group_by(ident("month_key"))
-                        .order_by(ident("month_key"), "desc")
+                        // TODO(no-expr): to_char/to_date and string concat (||) have no sql:: builder; an inline page query has no lazy: column to format in
+                        .expression(sql::expr("to_char(to_date(month_key || '-01', 'YYYY-MM-DD'), 'FMMonth YYYY')").alias("label"))
+                        .group_by(sql::ident("month_key"))
+                        .order_by(sql::ident("month_key"), "desc")
                 params:
                   label: Period
                   all_label: "Year to date"

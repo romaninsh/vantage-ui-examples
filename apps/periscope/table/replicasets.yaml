@@ -13,6 +13,7 @@ columns:
   - { name: replicas, type: int }
   - { name: ready, type: int }
   - { name: available, type: int }
+  - { name: ownerName, type: string, flags: [hidden] }
   - { name: age, type: string }
 
 references:

@@ -25,7 +25,7 @@ body:
             let r = actions.add_product();
             let p = table("product").record();
             p.set(r);
-            p.save();
+            p.flash();
         - label: "Import products"
           icon: Upload
           # language=rhai

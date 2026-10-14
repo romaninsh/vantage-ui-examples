@@ -4,18 +4,114 @@ title: Executive islands
 id_column: month_key
 columns:
   - { name: month_key, type: string, flags: [id] }
-  - { name: latest_display, type: string, optional: true }
-  - { name: latest_change, type: string, optional: true }
-  - { name: latest_text, type: string, optional: true }
-  - { name: period_display, type: string, optional: true }
-  - { name: period_note, type: string, optional: true }
-  - { name: tier_display, type: string, optional: true }
-  - { name: tier_note, type: string, optional: true }
-  - { name: people_display, type: string, optional: true }
-  - { name: people_change, type: string, optional: true }
-  - { name: people_text, type: string, optional: true }
-  - { name: tokens_display, type: string, optional: true }
-  - { name: tokens_note, type: string, optional: true }
+  - { name: latest_raw, type: float, flags: [hidden], optional: true }
+  - { name: latest_change_pct, type: float, flags: [hidden], optional: true }
+  - { name: latest_up, type: int, flags: [hidden], optional: true }
+  - { name: period_raw, type: float, flags: [hidden], optional: true }
+  - { name: period_months, type: int, flags: [hidden], optional: true }
+  - { name: per_lob_raw, type: float, flags: [hidden], optional: true }
+  - { name: tier_pct, type: float, flags: [hidden], optional: true }
+  - { name: people_raw, type: int, flags: [hidden], optional: true }
+  - { name: people_change_pct, type: float, flags: [hidden], optional: true }
+  - { name: people_up, type: int, flags: [hidden], optional: true }
+  - { name: tokens_raw, type: float, flags: [hidden], optional: true }
+  - { name: tokens_rate_raw, type: float, flags: [hidden], optional: true }
+  - name: latest_display
+    type: string
+    optional: true
+    lazy: |
+      let n = row.latest_raw;
+      if n == () { () } else {
+        let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+        let c = ((n + 0.0) / 10000.0).round().to_int();
+        "$" + g.call(c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "M"
+      }
+  - name: latest_change
+    type: string
+    optional: true
+    lazy: |
+      let p = row.latest_change_pct;
+      if p == () { () } else {
+        let c = ((p + 0.0) * 10.0).round().to_int(); let a = c.abs();
+        (if row.latest_up == 1 { "+" } else { "" }) + (if c < 0 { "-" } else { "" }) + (a / 10) + "." + (a % 10) + "%"
+      }
+  - name: latest_text
+    type: string
+    optional: true
+    lazy: '"vs previous month"'
+  - name: period_display
+    type: string
+    optional: true
+    lazy: |
+      let n = row.period_raw;
+      if n == () { () } else {
+        let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+        let c = ((n + 0.0) / 10000.0).round().to_int();
+        "$" + g.call(c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "M"
+      }
+  - name: period_note
+    type: string
+    optional: true
+    lazy: |
+      let n = row.period_months; let t = row.per_lob_raw;
+      if n == () || t == () { () } else {
+        let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+        let c = ((t + 0.0) / 10000.0).round().to_int();
+        n + (if n == 1 { " month · $" } else { " months · $" }) + g.call(c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "M per line of business"
+      }
+  - name: tier_display
+    type: string
+    optional: true
+    lazy: |
+      let p = row.tier_pct;
+      if p == () { () } else {
+        let c = ((p + 0.0) * 10.0).round().to_int(); let a = c.abs();
+        (if c < 0 { "-" } else { "" }) + (a / 10) + "." + (a % 10) + "%"
+      }
+  - name: tier_note
+    type: string
+    optional: true
+    lazy: '"of spend on frontier models, cost-weighted"'
+  - name: people_display
+    type: string
+    optional: true
+    lazy: |
+      let n = row.people_raw;
+      if n == () { () } else {
+        let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+        g.call((n + 0.0).round().to_int())
+      }
+  - name: people_change
+    type: string
+    optional: true
+    lazy: |
+      let p = row.people_change_pct;
+      if p == () { () } else {
+        let c = ((p + 0.0) * 10.0).round().to_int(); let a = c.abs();
+        (if row.people_up == 1 { "+" } else { "" }) + (if c < 0 { "-" } else { "" }) + (a / 10) + "." + (a % 10) + "%"
+      }
+  - name: people_text
+    type: string
+    optional: true
+    lazy: '"vs previous month"'
+  - name: tokens_display
+    type: string
+    optional: true
+    lazy: |
+      let n = row.tokens_raw;
+      if n == () { () } else {
+        let c = ((n + 0.0) / 10000000000.0).round().to_int();
+        (c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "T"
+      }
+  - name: tokens_note
+    type: string
+    optional: true
+    lazy: |
+      let r = row.tokens_rate_raw;
+      if r == () { () } else {
+        let c = ((r + 0.0) * 100.0).round().to_int();
+        "$" + (c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + " per million tokens, blended"
+      }
   - { name: spend_spark, type: string, optional: true }
   - { name: tier_spark, type: string, optional: true }
   - { name: people_spark, type: string, optional: true }
@@ -23,25 +119,45 @@ columns:
 postgres:
   # Reference: exec.islands + ExecutiveBriefPage KPIS — five tiles from one
   # row per scope. Latest/prev month figures switch on GROUPING(); sparks
-  # are the full monthly series. All formatting is here; stats render.
+  # are the full monthly series. Figures are raw here; the display columns
+  # format them.
   # language=rhai
   rhai: |
-    select().from("mart_spend_agg")
-            .expression(expr("coalesce(month_key, {})", ["Year to date"]).alias("month_key"))
-            .expression(expr("'$' || to_char((SELECT v FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk = (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)) / 1e6, 'FM999,990.00') || 'M'").alias("latest_display"))
-            .expression(expr("CASE WHEN (SELECT v FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk = ((SELECT max(t.mk) FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk < (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)))) IS NULL OR (SELECT v FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk = ((SELECT max(t.mk) FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk < (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)))) = 0 THEN NULL ELSE (CASE WHEN (SELECT v FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk = (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)) >= (SELECT v FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk = ((SELECT max(t.mk) FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk < (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)))) THEN '+' ELSE '' END) || to_char(round(100.0 * ((SELECT v FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk = (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)) - (SELECT v FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk = ((SELECT max(t.mk) FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk < (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END))))) / (SELECT v FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk = ((SELECT max(t.mk) FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk < (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)))), 1), 'FM990.0') || '%' END").alias("latest_change"))
-            .expression(expr("'vs previous month'").alias("latest_text"))
-            .expression(expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M'").alias("period_display"))
-            .expression(expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT month_key) FROM mart_spend_agg) ELSE 1 END, 'FM9') || CASE WHEN CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT month_key) FROM mart_spend_agg) ELSE 1 END = 1 THEN ' month · $' ELSE ' months · $' END || to_char(sum(spend_usd) / (SELECT count(DISTINCT lob_id) FROM mart_spend_agg) / 1e6, 'FM999,990.00') || 'M per line of business'").alias("period_note"))
-            .expression(expr("to_char(round(100.0 * sum(spend_usd) FILTER (WHERE model_tier = 'top') / nullif(sum(spend_usd), 0), 1), 'FM990.0') || '%'").alias("tier_display"))
-            .expression(expr("'of spend on frontier models, cost-weighted'").alias("tier_note"))
-            .expression(expr("to_char((SELECT u FROM (SELECT month_key AS mk, sum(users) AS u FROM mart_active_month GROUP BY 1) t WHERE t.mk = (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)), 'FM999,999,999')").alias("people_display"))
-            .expression(expr("CASE WHEN (SELECT u FROM (SELECT month_key AS mk, sum(users) AS u FROM mart_active_month GROUP BY 1) t WHERE t.mk = ((SELECT max(t.mk) FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk < (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)))) IS NULL OR (SELECT u FROM (SELECT month_key AS mk, sum(users) AS u FROM mart_active_month GROUP BY 1) t WHERE t.mk = ((SELECT max(t.mk) FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk < (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)))) = 0 THEN NULL ELSE (CASE WHEN (SELECT u FROM (SELECT month_key AS mk, sum(users) AS u FROM mart_active_month GROUP BY 1) t WHERE t.mk = (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)) >= (SELECT u FROM (SELECT month_key AS mk, sum(users) AS u FROM mart_active_month GROUP BY 1) t WHERE t.mk = ((SELECT max(t.mk) FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk < (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)))) THEN '+' ELSE '' END) || to_char(round(100.0 * ((SELECT u FROM (SELECT month_key AS mk, sum(users) AS u FROM mart_active_month GROUP BY 1) t WHERE t.mk = (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)) - (SELECT u FROM (SELECT month_key AS mk, sum(users) AS u FROM mart_active_month GROUP BY 1) t WHERE t.mk = ((SELECT max(t.mk) FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk < (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END))))) / (SELECT u FROM (SELECT month_key AS mk, sum(users) AS u FROM mart_active_month GROUP BY 1) t WHERE t.mk = ((SELECT max(t.mk) FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t WHERE t.mk < (CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)))), 1), 'FM990.0') || '%' END").alias("people_change"))
-            .expression(expr("'vs previous month'").alias("people_text"))
-            .expression(expr("to_char(sum(tokens) / 1e12, 'FM990.00') || 'T'").alias("tokens_display"))
-            .expression(expr("'$' || to_char(round(sum(spend_usd) / nullif(sum(tokens) / 1e6, 0), 2), 'FM990.00') || ' per million tokens, blended'").alias("tokens_note"))
-            .expression(expr("(SELECT json_agg(s ORDER BY mk) FROM (SELECT mk, round(t.v) AS s FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t) x)").alias("spend_spark"))
-            .expression(expr("(SELECT json_agg(s ORDER BY mk) FROM (SELECT mk, round(100.0 * t.tt / nullif(t.v, 0), 1) AS s FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t) x)").alias("tier_spark"))
-            .expression(expr("(SELECT json_agg(t.u ORDER BY t.mk) FROM (SELECT month_key AS mk, sum(users) AS u FROM mart_active_month GROUP BY 1) t)").alias("people_spark"))
-            .expression(expr("(SELECT json_agg(s ORDER BY mk) FROM (SELECT mk, round(t.tk / 1e9) AS s FROM (SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1) t) x)").alias("tokens_spark"))
-            .group_by(expr("ROLLUP(month_key)"))
+    let series = "(SELECT month_key AS mk, sum(spend_usd) AS v, sum(tokens) AS tk, sum(spend_usd) FILTER (WHERE model_tier = 'top') AS tt FROM mart_spend_agg GROUP BY 1)";
+    let users = "(SELECT month_key AS mk, sum(users) AS u FROM mart_active_month GROUP BY 1)";
+    let cur_mk = "(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(mk) FROM (SELECT month_key AS mk FROM mart_spend_agg GROUP BY 1) lm) ELSE mart_spend_agg.month_key END)";
+    let prev_mk = "((SELECT max(t.mk) FROM " + series + " t WHERE t.mk < " + cur_mk + "))";
+    let cur_v = "(SELECT v FROM " + series + " t WHERE t.mk = " + cur_mk + ")";
+    let prev_v = "(SELECT v FROM " + series + " t WHERE t.mk = " + prev_mk + ")";
+    let cur_u = "(SELECT u FROM " + users + " t WHERE t.mk = " + cur_mk + ")";
+    let prev_u = "(SELECT u FROM " + users + " t WHERE t.mk = " + prev_mk + ")";
+    sql::select().from("mart_spend_agg")
+            // TODO(no-expr): a string literal in coalesce has no sql:: builder
+            .expression(sql::expr("coalesce(month_key, {})", ["Year to date"]).alias("month_key"))
+            // TODO(no-expr): GROUPING() and scalar subqueries have no sql:: builder
+            .expression(sql::cast(sql::expr(cur_v), "double precision").alias("latest_raw"))
+            // TODO(no-expr): GROUPING(), scalar subqueries and CASE have no sql:: builder
+            .expression(sql::cast(sql::expr("CASE WHEN " + prev_v + " IS NULL OR " + prev_v + " = 0 THEN NULL ELSE round(100.0 * (" + cur_v + " - " + prev_v + ") / " + prev_v + ", 1) END"), "double precision").alias("latest_change_pct"))
+            .expression(sql::expr("CASE WHEN " + cur_v + " >= " + prev_v + " THEN 1 ELSE 0 END").alias("latest_up"))
+            .expression(sql::cast(sql::sum(sql::ident("spend_usd")), "double precision").alias("period_raw"))
+            // TODO(no-expr): GROUPING() and scalar subqueries have no sql:: builder
+            .expression(sql::expr("CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT month_key) FROM mart_spend_agg) ELSE 1 END").alias("period_months"))
+            // TODO(no-expr): scalar subqueries have no sql:: builder
+            .expression(sql::cast(sql::expr("sum(spend_usd) / (SELECT count(DISTINCT lob_id) FROM mart_spend_agg)"), "double precision").alias("per_lob_raw"))
+            // TODO(no-expr): aggregate FILTER (WHERE ..) has no sql:: builder
+            .expression(sql::cast(sql::expr("round(100.0 * sum(spend_usd) FILTER (WHERE model_tier = 'top') / nullif(sum(spend_usd), 0), 1)"), "double precision").alias("tier_pct"))
+            // TODO(no-expr): GROUPING() and scalar subqueries have no sql:: builder
+            .expression(sql::expr(cur_u).alias("people_raw"))
+            // TODO(no-expr): GROUPING(), scalar subqueries and CASE have no sql:: builder
+            .expression(sql::cast(sql::expr("CASE WHEN " + prev_u + " IS NULL OR " + prev_u + " = 0 THEN NULL ELSE round(100.0 * (" + cur_u + " - " + prev_u + ") / " + prev_u + ", 1) END"), "double precision").alias("people_change_pct"))
+            .expression(sql::expr("CASE WHEN " + cur_u + " >= " + prev_u + " THEN 1 ELSE 0 END").alias("people_up"))
+            .expression(sql::cast(sql::sum(sql::ident("tokens")), "double precision").alias("tokens_raw"))
+            // TODO(no-expr): scalar division by a literal with nullif has no sql:: builder
+            .expression(sql::cast(sql::expr("round(sum(spend_usd) / nullif(sum(tokens) / 1e6, 0), 2)"), "double precision").alias("tokens_rate_raw"))
+            // TODO(no-expr): json_agg over scalar subqueries has no sql:: builder
+            .expression(sql::expr("(SELECT json_agg(s ORDER BY mk) FROM (SELECT mk, round(t.v) AS s FROM " + series + " t) x)").alias("spend_spark"))
+            .expression(sql::expr("(SELECT json_agg(s ORDER BY mk) FROM (SELECT mk, round(100.0 * t.tt / nullif(t.v, 0), 1) AS s FROM " + series + " t) x)").alias("tier_spark"))
+            .expression(sql::expr("(SELECT json_agg(t.u ORDER BY t.mk) FROM " + users + " t)").alias("people_spark"))
+            .expression(sql::expr("(SELECT json_agg(s ORDER BY mk) FROM (SELECT mk, round(t.tk / 1e9) AS s FROM " + series + " t) x)").alias("tokens_spark"))
+            // TODO(no-expr): ROLLUP has no sql:: builder
+            .group_by(sql::expr("ROLLUP(month_key)"))

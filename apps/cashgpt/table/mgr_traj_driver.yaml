@@ -4,26 +4,59 @@ title: Manager trajectory (chart)
 id_column: month_key
 columns:
   - { name: month_key, type: string, flags: [id, hidden] }
-  - { name: month, type: string }
-  - { name: "Productivity", type: float }
-  - { name: "Application", type: float }
-  - { name: "Developer", type: float }
+  - { name: raw_productivity, type: float, flags: [hidden], optional: true }
+  - { name: raw_application, type: float, flags: [hidden], optional: true }
+  - { name: raw_developer, type: float, flags: [hidden], optional: true }
+  - name: month
+    type: string
+    lazy: |
+      let names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      names[parse_int(row.month_key.sub_string(5, 2)) - 1]
+  - name: "Productivity"
+    type: float
+    lazy: |
+      let v = row.raw_productivity;
+      if v == () { 0.0 } else if type_of(v) == "string" { parse_float(v) } else { v + 0.0 }
+  - name: "Application"
+    type: float
+    lazy: |
+      let v = row.raw_application;
+      if v == () { 0.0 } else if type_of(v) == "string" { parse_float(v) } else { v + 0.0 }
+  - name: "Developer"
+    type: float
+    lazy: |
+      let v = row.raw_developer;
+      if v == () { 0.0 } else if type_of(v) == "string" { parse_float(v) } else { v + 0.0 }
 postgres:
   # Reference: manager.trajectory — the fact joined to the manager's people
-  # by org_path prefix, month x member, pivoted for the stacked chart.
+  # by org_path prefix, month x member, pivoted for the stacked chart. A
+  # series with no spend in a month reads 0 (the lazy columns), as the old
+  # coalesce did. The join's second key sits in a where: same rows on an
+  # inner join.
   # language=rhai
   rhai: |
     let org = if "org" in args { args.org } else { "" };
     let mo = if "month" in args { args.month } else { "" };
-    select().from("fct_usage")
-        .inner_join("mart_employee_month", "e", expr("e.employee_id = fct_usage.employee_id AND e.month_key = fct_usage.month_key"))
-        .inner_join("dim_app", "a", expr("a.app_id = fct_usage.app_id"))
-        .where(expr("(e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%')", [org, org]))
-        .where(expr("({} = '' OR fct_usage.month_key = {})", [mo, mo]))
-        .expression(expr("fct_usage.month_key").alias("month_key"))
-        .expression(expr("to_char(to_date(fct_usage.month_key || '-01', 'YYYY-MM-DD'), 'Mon')").alias("month"))
-        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE initcap(a.usage_driver) = {}), 0)", ["Productivity"]).alias("Productivity"))
-        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE initcap(a.usage_driver) = {}), 0)", ["Application"]).alias("Application"))
-        .expression(expr("coalesce(sum(fct_usage.spend_usd) FILTER (WHERE initcap(a.usage_driver) = {}), 0)", ["Developer"]).alias("Developer"))
-        .group_by(expr("fct_usage.month_key"))
-        .order_by(expr("fct_usage.month_key"), "asc")
+    let f = sql::ident("fct_usage");
+    let e = sql::ident("e");
+    let a = sql::ident("a");
+    fn driver_spend(name) {
+        let f = sql::ident("fct_usage");
+        let a = sql::ident("a");
+        let spend = sql::coalesce(f["spend_usd"], f["spend_usd"]);
+        sql::sum(sql::case_when().when(sql::fx("initcap", [a["usage_driver"]]) == name, spend).expr())
+    }
+    // TODO(no-expr): OR / LIKE / scalar subquery / string concat for the org_path prefix scope
+    let scope = sql::expr("(e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%')", [org, org]);
+    let q = sql::select().from("fct_usage")
+        .inner_join("mart_employee_month", "e", e["employee_id"] == f["employee_id"])
+        .inner_join("dim_app", "a", a["app_id"] == f["app_id"])
+        .where(e["month_key"] == f["month_key"])
+        .where(scope);
+    if mo != "" { q = q.where(f["month_key"] == mo); }
+    q.expression(f["month_key"].alias("month_key"))
+        .expression(driver_spend("Productivity").alias("raw_productivity"))
+        .expression(driver_spend("Application").alias("raw_application"))
+        .expression(driver_spend("Developer").alias("raw_developer"))
+        .group_by(f["month_key"])
+        .order_by(f["month_key"], "asc")

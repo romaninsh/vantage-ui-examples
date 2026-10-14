@@ -4,33 +4,85 @@ title: Apps · metrics
 id_column: rid
 columns:
   - { name: rid, type: string, flags: [id, hidden] }
-  - { name: spend_display, type: string }
-  - { name: users_display, type: string }
-  - { name: cpu_display, type: string }
-  - { name: tokens_display, type: string }
-  - { name: lobs_display, type: string }
-  - { name: top_model, type: string }
-  - { name: rollout, type: string }
-  - { name: mom_display, type: string }
+  - { name: spend, type: float, flags: [hidden], optional: true }
+  - { name: peak_users, type: float, flags: [hidden], optional: true }
+  - { name: tokens, type: float, flags: [hidden], optional: true }
+  - { name: lobs, type: int, flags: [hidden], optional: true }
+  - { name: top_model_raw, type: string, flags: [hidden], optional: true }
+  - { name: rollout_raw, type: string, flags: [hidden], optional: true }
+  - { name: mom_pct, type: float, flags: [hidden], optional: true }
+  - name: spend_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      fn f2(x) { let c = (x * 100.0).round().to_int(); let f = c % 100; grp(c / 100) + "." + (if f < 10 { "0" } else { "" }) + f }
+      let s = if row.spend == () { 0.0 } else { num(row.spend) };
+      "$" + f2(s / 1000000.0) + "M"
+  - name: users_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      if row.peak_users == () { () } else { grp(num(row.peak_users).round().to_int()) }
+  - name: cpu_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      let per = if row.spend == () || row.peak_users == () || num(row.peak_users) == 0.0 { 0.0 } else { num(row.spend) / num(row.peak_users) };
+      "$" + grp(per.round().to_int())
+  - name: tokens_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      let t = if row.tokens == () { 0.0 } else { num(row.tokens) };
+      let c = (t / 1000000000.0 * 10.0).round().to_int();
+      (c / 10).to_string() + "." + (c % 10).to_string() + "B"
+  - name: lobs_display
+    type: string
+    lazy: |
+      if row.lobs == () { () } else { row.lobs.to_string() }
+  - name: top_model
+    type: string
+    lazy: |
+      if row.top_model_raw == () { "—" } else { row.top_model_raw }
+  - name: rollout
+    type: string
+    lazy: |
+      if row.rollout_raw == () { "—" } else { row.rollout_raw }
+  - name: mom_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      if row.mom_pct == () {
+          "—"
+      } else {
+          let p = num(row.mom_pct);
+          let c = (p.abs() * 10.0).round().to_int();
+          (if p < 0.0 && c > 0 { "-" } else { "" }) + (c / 10).to_string() + "." + (c % 10).to_string() + "%"
+      }
 postgres:
   # Reference: apps.metrics — spend/tokens/lobs/rollout from the consume
   # scope; users are PEAK monthly active (never a distinct over the fact);
-  # cost/user divides in SQL; the MoM trend deliberately ignores the month
-  # filter (reference: `trend` binds no months). usdM verbatim.
+  # cost/user divides in the lazy column; the MoM trend deliberately ignores
+  # the month filter (reference: `trend` binds no months). usdM as before.
   # language=rhai
   rhai: |
     let app = if "app" in args { args.app } else { "" };
     let mo = if "month" in args { args.month } else { "" };
-    let peak = "(SELECT max(x.u) FROM (SELECT mm.month_key, sum(mm.users) AS u FROM mart_app_month mm WHERE mm.app_id = {} AND ({} = '' OR mm.month_key = {}) GROUP BY 1) x)";
-    select().from("mart_app_month")
-        .where(expr("app_id = {}", [app]))
-        .where(expr("({} = '' OR month_key = {})", [mo, mo]))
-        .expression(expr("'m'").alias("rid"))
-        .expression(expr("'$' || to_char(coalesce(sum(spend_usd), 0) / 1e6, 'FM999,990.00') || 'M'").alias("spend_display"))
-        .expression(expr("to_char(" + peak + ", 'FM999,999,999')", [app, mo, mo]).alias("users_display"))
-        .expression(expr("'$' || to_char(round(coalesce(sum(spend_usd) / NULLIF(" + peak + ", 0), 0)), 'FM999,999')", [app, mo, mo]).alias("cpu_display"))
-        .expression(expr("to_char(coalesce(sum(tokens), 0) / 1e9, 'FM999999990.0') || 'B'").alias("tokens_display"))
-        .expression(expr("to_char(count(DISTINCT consumer_lob_id), 'FM99')").alias("lobs_display"))
-        .expression(expr("coalesce((SELECT t.model_name FROM (SELECT amm.model_name, sum(amm.spend_usd) AS s FROM mart_app_model_month amm WHERE amm.app_id = {} AND ({} = '' OR amm.month_key = {}) GROUP BY 1 ORDER BY 2 DESC LIMIT 1) t), '—')", [app, mo, mo]).alias("top_model"))
-        .expression(expr("coalesce(max(rollout_status), '—')").alias("rollout"))
-        .expression(expr("coalesce((SELECT to_char(round(100.0 * (t.spend / NULLIF(lag(t.spend) OVER (ORDER BY t.month_key), 0) - 1), 1), 'FM990.0') || '%' FROM (SELECT mm.month_key, sum(mm.spend_usd) AS spend FROM mart_app_month mm WHERE mm.app_id = {} GROUP BY 1) t ORDER BY t.month_key DESC LIMIT 1), '—')", [app]).alias("mom_display"))
+    let q = sql::select().from("mart_app_month")
+        .where(sql::ident("app_id") == app);
+    if mo != "" { q = q.where(sql::ident("month_key") == mo); }
+    // TODO(no-expr): a string literal as a select expression
+    q.expression(sql::expr("'m'").alias("rid"))
+        .expression(sql::sum(sql::ident("spend_usd")).alias("spend"))
+        // TODO(no-expr): scalar subquery over a per-month derived table (peak monthly users)
+        .expression(sql::expr("(SELECT max(x.u) FROM (SELECT mm.month_key, sum(mm.users) AS u FROM mart_app_month mm WHERE mm.app_id = {} AND ({} = '' OR mm.month_key = {}) GROUP BY 1) x)", [app, mo, mo]).alias("peak_users"))
+        .expression(sql::sum(sql::ident("tokens")).alias("tokens"))
+        .expression(sql::count_distinct(sql::ident("consumer_lob_id")).alias("lobs"))
+        // TODO(no-expr): scalar subquery over a grouped, limited derived table (top model by spend)
+        .expression(sql::expr("(SELECT t.model_name FROM (SELECT amm.model_name, sum(amm.spend_usd) AS s FROM mart_app_model_month amm WHERE amm.app_id = {} AND ({} = '' OR amm.month_key = {}) GROUP BY 1 ORDER BY 2 DESC LIMIT 1) t)", [app, mo, mo]).alias("top_model_raw"))
+        .expression(sql::max(sql::ident("rollout_status")).alias("rollout_raw"))
+        // TODO(no-expr): scalar subquery with a lag() window over a per-month derived table (latest month-over-month)
+        .expression(sql::expr("(SELECT round(100.0 * (t.spend / NULLIF(lag(t.spend) OVER (ORDER BY t.month_key), 0) - 1), 1) FROM (SELECT mm.month_key, sum(mm.spend_usd) AS spend FROM mart_app_month mm WHERE mm.app_id = {} GROUP BY 1) t ORDER BY t.month_key DESC LIMIT 1)", [app]).alias("mom_pct"))

@@ -16,8 +16,9 @@ columns:
 postgres:
   # language=rhai
   rhai: |
-    select().from("mart_filter_totals")
-        .expression(expr("coalesce(dimension,'') || ':' || coalesce(member_key,'') || ':' || coalesce(member_label,'')").alias("rid"))
+    sql::select().from("mart_filter_totals")
+        // TODO(no-expr): string concat (||) and a literal in coalesce(x, '') have no sql:: builder
+        .expression(sql::expr("coalesce(dimension,'') || ':' || coalesce(member_key,'') || ':' || coalesce(member_label,'')").alias("rid"))
         .field("dimension")
         .field("member_key")
         .field("member_label")

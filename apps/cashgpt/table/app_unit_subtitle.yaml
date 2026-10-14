@@ -4,14 +4,19 @@ title: Apps · unit subtitle
 id_column: rid
 columns:
   - { name: rid, type: string, flags: [id, hidden] }
-  - { name: line, type: string }
+  - { name: primary_unit, type: string, flags: [hidden], optional: true }
+  - name: line
+    type: string
+    lazy: |
+      if row.primary_unit == () { () } else { row.primary_unit + " per month, by consuming line of business" }
 postgres:
   # Reference subtitle: "{primary_unit} per month, by consuming line of
   # business" — the unit is a property of the app.
   # language=rhai
   rhai: |
     let app = if "app" in args { args.app } else { "" };
-    select().from_as("dim_app", "a")
-        .where(expr("a.app_id = {}", [app]))
-        .expression(expr("a.app_id").alias("rid"))
-        .expression(expr("a.primary_unit || ' per month, by consuming line of business'").alias("line"))
+    let a = sql::ident("a");
+    sql::select().from_as("dim_app", "a")
+        .where(a["app_id"] == app)
+        .expression(a["app_id"].alias("rid"))
+        .expression(a["primary_unit"].alias("primary_unit"))

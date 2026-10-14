@@ -13,10 +13,10 @@ columns:
     flags: [mandatory]
     references: { table: user, kind: has_one, name: author }
   author.username: { type: string, label: Author }
-  author_name: { type: string, flags: [hidden], expr: 'expr("author.username")' }
-  article_title: { type: string, flags: [hidden], expr: 'expr("article.title")' }
+  author_name: { type: string, flags: [hidden], expr: 'surreal::ident("author")["username"]' }
+  article_title: { type: string, flags: [hidden], expr: 'surreal::ident("article")["title"]' }
   # Pill when the article's own author replies.
-  reply_kind: { type: string, label: Reply, flags: [label], expr: 'expr("IF author = article.author THEN ''author reply'' ELSE '''' END")' }
-  posted_ago: { type: string, label: Posted, expr: 'expr("fn::ago(created_at)")' }
+  reply_kind: { type: string, label: Reply, flags: [label], expr: 'surreal::case_when().when(surreal::ident("author") == surreal::ident("article")["author"], "author reply").else_("").expr()' }
+  posted_ago: { type: string, label: Posted, expr: 'surreal::fx("fn::ago", [surreal::ident("created_at")])' }
   created_at: { type: timestamp, label: Posted on, time_precision: minutes }
   updated_at: { type: timestamp, label: Updated on, time_precision: minutes }

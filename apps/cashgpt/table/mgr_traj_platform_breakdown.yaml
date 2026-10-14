@@ -4,33 +4,72 @@ title: Manager trajectory breakdown
 id_column: member
 columns:
   - { name: member, type: string, flags: [id, title] }
-  - { name: rank, type: int, flags: [hidden] }
+  - { name: spend, type: float, flags: [hidden], optional: true }
+  - { name: scope_total, type: float, flags: [hidden], optional: true }
+  - name: rank
+    type: int
+    flags: [hidden]
+    lazy: |
+      let p = row.member;
+      if p == "Azure OpenAI" { 1 } else if p == "Claude" { 2 } else if p == "Google Vertex AI" { 3 } else if p == "Databricks Mosaic AI" { 4 } else if p == "GitHub Copilot" { 5 } else if p == "Amazon Bedrock" { 6 } else { 99 }
   - { name: mom, type: string }
-  - { name: total_display, type: string }
-  - { name: share, type: string }
-  - { name: share_pct, type: float }
+  - name: total_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      fn f2(x) { let c = (x * 100.0).round().to_int(); let f = c % 100; grp(c / 100) + "." + (if f < 10 { "0" } else { "" }) + f }
+      fn usd(x) { if x >= 1000000.0 { "$" + f2(x / 1000000.0) + "M" } else if x >= 1000.0 { "$" + (x / 1000.0).round().to_int() + "K" } else { "$" + grp(x.round().to_int()) } }
+      if row.spend == () { () } else { usd(num(row.spend)) }
+  - name: share
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      if row.spend == () || row.scope_total == () || num(row.scope_total) == 0.0 {
+          ()
+      } else {
+          let c = (1000.0 * num(row.spend) / num(row.scope_total)).round().to_int();
+          (c / 10).to_string() + "." + (c % 10).to_string() + "%"
+      }
+  - name: share_pct
+    type: float
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      if row.spend == () || row.scope_total == () || num(row.scope_total) == 0.0 {
+          ()
+      } else {
+          (1000.0 * num(row.spend) / num(row.scope_total)).round() / 10.0
+      }
 postgres:
   # Reference: the BreakdownList beside the manager trajectory — per-member
   # total, share of the scope, and MoM of the last two months in scope
   # ('—' when a single month is picked or the previous month is 0). Totals
   # format adaptively where the reference reused usdMillions and would
-  # print $0.00M at section scale — display drift, not intent.
+  # print $0.00M at section scale — display drift, not intent. The scope
+  # total is a window over the grouped rows, the same rows the old
+  # subquery summed. The join's second key sits in a where: same rows on
+  # an inner join.
   # language=rhai
   rhai: |
     let org = if "org" in args { args.org } else { "" };
     let mo = if "month" in args { args.month } else { "" };
+    let f = sql::ident("fct_usage");
+    let e = sql::ident("e");
+    let p = sql::ident("p");
     let mm = "(SELECT u2.month_key AS mk, p2.platform_name AS mem, sum(u2.spend_usd) AS v FROM fct_usage u2 JOIN mart_employee_month e ON e.employee_id = u2.employee_id AND e.month_key = u2.month_key JOIN dim_platform p2 ON p2.platform_id = u2.platform_id WHERE (e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%') AND ({} = '' OR u2.month_key = {}) GROUP BY 1, 2)";
     let ma = [org, org, mo, mo];
-    select().from("fct_usage")
-        .inner_join("mart_employee_month", "e", expr("e.employee_id = fct_usage.employee_id AND e.month_key = fct_usage.month_key"))
-        .inner_join("dim_platform", "p", expr("p.platform_id = fct_usage.platform_id"))
-        .where(expr("(e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%')", [org, org]))
-        .where(expr("({} = '' OR fct_usage.month_key = {})", [mo, mo]))
-        .expression(expr("p.platform_name").alias("member"))
-        .expression(expr("CASE WHEN p.platform_name = 'Azure OpenAI' THEN 1 WHEN p.platform_name = 'Claude' THEN 2 WHEN p.platform_name = 'Google Vertex AI' THEN 3 WHEN p.platform_name = 'Databricks Mosaic AI' THEN 4 WHEN p.platform_name = 'GitHub Copilot' THEN 5 WHEN p.platform_name = 'Amazon Bedrock' THEN 6 ELSE 99 END").alias("rank"))
-        .expression(expr("CASE WHEN (SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1) IS NULL OR (SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1) = 0 THEN '—' ELSE (CASE WHEN coalesce((SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk = (SELECT max(t2.mk) FROM " + mm + " t2)), 0) >= (SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1) THEN '▲' ELSE '▼' END) || to_char(abs(round(100.0 * (coalesce((SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk = (SELECT max(t2.mk) FROM " + mm + " t2)), 0) - (SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1)) / (SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1), 1)), 'FM990.0') || '%' END", ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma).alias("mom"))
-        .expression(expr("CASE WHEN sum(fct_usage.spend_usd) >= 1e6 THEN '$' || to_char((sum(fct_usage.spend_usd)) / 1e6, 'FM999,990.00') || 'M' WHEN sum(fct_usage.spend_usd) >= 1e3 THEN '$' || to_char(round((sum(fct_usage.spend_usd)) / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(sum(fct_usage.spend_usd)), 'FM999,990') END").alias("total_display"))
-        .expression(expr("to_char(round(100.0 * sum(fct_usage.spend_usd) / NULLIF((SELECT sum(t.v) FROM " + mm + " t), 0), 1), 'FM990.0') || '%'", ma).alias("share"))
-        .expression(expr("round(100.0 * sum(fct_usage.spend_usd) / NULLIF((SELECT sum(t.v) FROM " + mm + " t), 0), 1)", ma).alias("share_pct"))
-        .group_by(expr("p.platform_name"))
-        .order_by(expr("sum(fct_usage.spend_usd)"), "desc")
+    // TODO(no-expr): OR / LIKE / scalar subquery / string concat for the org_path prefix scope
+    let scope = sql::expr("(e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%')", [org, org]);
+    let q = sql::select().from("fct_usage")
+        .inner_join("mart_employee_month", "e", e["employee_id"] == f["employee_id"])
+        .inner_join("dim_platform", "p", p["platform_id"] == f["platform_id"])
+        .where(e["month_key"] == f["month_key"])
+        .where(scope);
+    if mo != "" { q = q.where(f["month_key"] == mo); }
+    q.expression(p["platform_name"].alias("member"))
+        // TODO(no-expr): month-over-month needs correlated scalar subqueries over a per-month derived table, plus string concat
+        .expression(sql::expr("CASE WHEN (SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1) IS NULL OR (SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1) = 0 THEN '—' ELSE (CASE WHEN coalesce((SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk = (SELECT max(t2.mk) FROM " + mm + " t2)), 0) >= (SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1) THEN '▲' ELSE '▼' END) || to_char(abs(round(100.0 * (coalesce((SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk = (SELECT max(t2.mk) FROM " + mm + " t2)), 0) - (SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1)) / (SELECT t.v FROM " + mm + " t WHERE t.mem = p.platform_name AND t.mk < (SELECT max(t2.mk) FROM " + mm + " t2) ORDER BY t.mk DESC LIMIT 1), 1)), 'FM990.0') || '%' END", ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma + ma).alias("mom"))
+        .expression(sql::sum(f["spend_usd"]).alias("spend"))
+        .expression(sql::window().apply(sql::sum(sql::sum(f["spend_usd"]))).alias("scope_total"))
+        .group_by(p["platform_name"])
+        .order_by(sql::sum(f["spend_usd"]), "desc")

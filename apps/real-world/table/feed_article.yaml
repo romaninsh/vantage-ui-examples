@@ -20,19 +20,35 @@ surreal:
   rhai: |
     let reader = args.get("reader") ?? "";
     let tag = args.get("tag") ?? "";
-    select()
+    // The separator goes through type::string(..): fx takes no bare strings.
+    let q = surreal::select()
         .from("article")
         .field("id")
         .field("slug")
         .field("title")
         .field("description")
-        .expression(expr("author.username").alias("author_name"))
-        .expression(expr("fn::ago(created_at)").alias("published"))
-        .expression(expr("array::join(array::sort((SELECT VALUE tag.name FROM article_tag WHERE article = $parent.id)), ' · ')").alias("tags"))
-        .expression(expr("(SELECT VALUE count() FROM favorite WHERE article = $parent.id GROUP ALL)[0] ?? 0").alias("favorites"))
-        .expression(expr("(SELECT VALUE count() FROM comment WHERE article = $parent.id GROUP ALL)[0] ?? 0").alias("comments"))
-        .field("created_at")
-        .where(expr("({} = '' OR <string>author INSIDE (SELECT VALUE <string>author FROM follow WHERE <string>follower = {}))", [reader, reader]))
-        .where(expr("({} = '' OR id INSIDE (SELECT VALUE article FROM article_tag WHERE tag.name = {}))", [tag, tag]))
-        .order_by(ident("created_at"), "desc")
+        .expression(surreal::ident("author")["username"].alias("author_name"))
+        .expression(surreal::fx("fn::ago", [surreal::ident("created_at")]).alias("published"))
+        .expression(surreal::fx("array::join", [
+            surreal::fx("array::sort", [surreal::select().value().expression(surreal::ident("tag")["name"]).from("article_tag").where(surreal::ident("article") == surreal::parent("id")).subquery()]),
+            surreal::cast(" · ", "string")
+        ]).alias("tags"))
+        .expression(surreal::coalesce(surreal::select().value().expression(surreal::count()).from("favorite").where(surreal::ident("article") == surreal::parent("id")).group_all().subquery()[0], 0).alias("favorites"))
+        .expression(surreal::coalesce(surreal::select().value().expression(surreal::count()).from("comment").where(surreal::ident("article") == surreal::parent("id")).group_all().subquery()[0], 0).alias("comments"))
+        .field("created_at");
+    if reader != "" {
+        q = q.where(
+            surreal::select().value().expression(surreal::count()).from("follow")
+                .where(surreal::cast(surreal::ident("follower"), "string") == reader)
+                .where(surreal::cast(surreal::ident("author"), "string") == surreal::cast(surreal::parent("author"), "string"))
+                .group_all().subquery()[0] > 0);
+    }
+    if tag != "" {
+        q = q.where(
+            surreal::select().value().expression(surreal::count()).from("article_tag")
+                .where(surreal::ident("tag")["name"] == tag)
+                .where(surreal::ident("article") == surreal::parent("id"))
+                .group_all().subquery()[0] > 0);
+    }
+    q.order_by(surreal::ident("created_at"), "desc")
         .limit(20, 0)

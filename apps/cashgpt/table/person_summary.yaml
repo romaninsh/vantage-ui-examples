@@ -4,26 +4,71 @@ title: Person · summary
 id_column: rid
 columns:
   - { name: rid, type: string, flags: [id, hidden] }
-  - { name: who_line, type: string }
-  - { name: where_line, type: string }
-  - { name: spend_display, type: string }
-  - { name: months_display, type: string }
-  - { name: profile_display, type: string }
-  - { name: peak_display, type: string }
+  - name: who_line
+    type: string
+    lazy: 'row.full_name + " — " + row.job_function + " · " + row.seniority_code + " · " + row.org_name'
+  - name: where_line
+    type: string
+    lazy: 'row.city + ", " + row.country + " · manager " + (if row.manager == () { "—" } else { row.manager })'
+  - name: spend_display
+    type: string
+    lazy: |
+      let v = if row.spend_total == () { 0.0 } else { row.spend_total };
+      let s = (v * 1.0).round().to_int().to_string();
+      let t = "";
+      while s.len() > 3 { t = "," + s.sub_string(s.len() - 3) + t; s = s.sub_string(0, s.len() - 3); }
+      "$" + s + t
+  - name: months_display
+    type: string
+    lazy: 'if row.months == () { "0" } else { row.months.to_string() }'
+  - name: profile_display
+    type: string
+    lazy: 'if row.profile_code == () { "—" } else { row.profile_code }'
+  - name: peak_display
+    type: string
+    lazy: |
+      if row.peak_multiple == () { "—" } else {
+        let s = (row.peak_multiple * 1.0).round().to_int().to_string();
+        let t = "";
+        while s.len() > 3 { t = "," + s.sub_string(s.len() - 3) + t; s = s.sub_string(0, s.len() - 3); }
+        s + t + "×"
+      }
+  - { name: full_name, type: string, flags: [hidden] }
+  - { name: job_function, type: string, flags: [hidden] }
+  - { name: seniority_code, type: string, flags: [hidden] }
+  - { name: org_name, type: string, flags: [hidden] }
+  - { name: city, type: string, flags: [hidden] }
+  - { name: country, type: string, flags: [hidden] }
+  - { name: manager, type: string, flags: [hidden] }
+  - { name: spend_total, type: float, flags: [hidden] }
+  - { name: months, type: int, flags: [hidden] }
+  - { name: profile_code, type: string, flags: [hidden] }
+  - { name: peak_multiple, type: float, flags: [hidden] }
 postgres:
   # Reference: individual.summary — identity from the dims, usage totals
   # from the person-month mart, behaviour profile, and the peak
   # peer-multiple from the benchmark mart. usdExact for spend.
+  # The display lines are lazy columns over the raw fields selected below.
   # language=rhai
   rhai: |
     let person = if "person" in args { args.person } else { "" };
-    select().from_as("dim_employee", "e")
-        .inner_join("dim_org_unit", "o", expr("o.org_id = e.team_org_id"))
-        .where(expr("e.employee_id = {}", [person]))
-        .expression(expr("e.employee_id").alias("rid"))
-        .expression(expr("e.full_name || ' — ' || e.job_function || ' · ' || e.seniority_code || ' · ' || o.org_name").alias("who_line"))
-        .expression(expr("e.city || ', ' || e.country || ' · manager ' || coalesce((SELECT m.full_name FROM dim_employee m WHERE m.heads_org_id = e.team_org_id LIMIT 1), '—')").alias("where_line"))
-        .expression(expr("'$' || to_char(round(coalesce((SELECT sum(u.spend_usd) FROM mart_employee_month u WHERE u.employee_id = e.employee_id), 0)), 'FM999,999,999')").alias("spend_display"))
-        .expression(expr("to_char(coalesce((SELECT count(*) FROM mart_employee_month u WHERE u.employee_id = e.employee_id), 0), 'FM99')").alias("months_display"))
-        .expression(expr("coalesce((SELECT b.profile_code FROM dim_employee_behaviour b WHERE b.employee_id = e.employee_id), '—')").alias("profile_display"))
-        .expression(expr("coalesce((SELECT to_char(round(max(pb.team_multiple)), 'FM999,999,999') || '×' FROM mart_peer_benchmark pb WHERE pb.employee_id = e.employee_id), '—')").alias("peak_display"))
+    sql::select().from_as("dim_employee", "e")
+        .inner_join("dim_org_unit", "o", sql::ident("o")["org_id"] == sql::ident("e")["team_org_id"])
+        .left_join("dim_employee_behaviour", "b", sql::ident("b")["employee_id"] == sql::ident("e")["employee_id"])
+        .where(sql::ident("e")["employee_id"] == person)
+        .expression(sql::ident("e")["employee_id"].alias("rid"))
+        .expression(sql::ident("e")["full_name"].alias("full_name"))
+        .expression(sql::ident("e")["job_function"].alias("job_function"))
+        .expression(sql::ident("e")["seniority_code"].alias("seniority_code"))
+        .expression(sql::ident("o")["org_name"].alias("org_name"))
+        .expression(sql::ident("e")["city"].alias("city"))
+        .expression(sql::ident("e")["country"].alias("country"))
+        // TODO(no-expr): scalar correlated subquery with LIMIT (no scalar .subquery() in sql::)
+        .expression(sql::expr("(SELECT m.full_name FROM dim_employee m WHERE m.heads_org_id = e.team_org_id LIMIT 1)").alias("manager"))
+        // TODO(no-expr): scalar correlated aggregate subquery (no scalar .subquery() in sql::)
+        .expression(sql::expr("(SELECT sum(u.spend_usd) FROM mart_employee_month u WHERE u.employee_id = e.employee_id)").alias("spend_total"))
+        // TODO(no-expr): scalar correlated aggregate subquery (no scalar .subquery() in sql::)
+        .expression(sql::expr("(SELECT count(*) FROM mart_employee_month u WHERE u.employee_id = e.employee_id)").alias("months"))
+        .expression(sql::ident("b")["profile_code"].alias("profile_code"))
+        // TODO(no-expr): scalar correlated aggregate subquery (no scalar .subquery() in sql::)
+        .expression(sql::expr("(SELECT max(pb.team_multiple) FROM mart_peer_benchmark pb WHERE pb.employee_id = e.employee_id)").alias("peak_multiple"))

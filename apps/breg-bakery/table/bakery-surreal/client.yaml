@@ -29,14 +29,38 @@ columns:
   # stale — the previous stored `balance` column was exactly that bug.
   order_count:
     type: int
-    expr: 'expr("(SELECT VALUE count() FROM order WHERE client = $parent.id GROUP ALL)[0] ?? 0")'
+    expr: |
+      surreal::coalesce(
+          surreal::select().value().expression(surreal::count()).from("order")
+              .where(surreal::ident("client") == surreal::parent("id"))
+              .group_all().subquery()[0],
+          0)
   invoice_count:
     type: int
-    expr: 'expr("(SELECT VALUE count() FROM invoice WHERE client = $parent.id GROUP ALL)[0] ?? 0")'
+    expr: |
+      surreal::coalesce(
+          surreal::select().value().expression(surreal::count()).from("invoice")
+              .where(surreal::ident("client") == surreal::parent("id"))
+              .group_all().subquery()[0],
+          0)
   balance:
     type: int
     unit: { currency: "£", minor_units: true }
-    expr: 'expr("(SELECT VALUE math::sum(owed) FROM (SELECT total - ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0) AS owed FROM invoice WHERE client = $parent.id AND status = ''issued'') WHERE owed > 0 GROUP ALL)[0] ?? 0")'
+    expr: |
+      let paid = surreal::sum(
+          surreal::select().value().expression(surreal::ident("amount")).from("payment")
+              .where(surreal::ident("invoice") == surreal::parent("id"))
+              .subquery());
+      let per_invoice = surreal::select()
+          .expression(surreal::sub(surreal::ident("total"), paid).alias("owed"))
+          .from("invoice")
+          .where(surreal::ident("client") == surreal::parent("id"))
+          .where(surreal::ident("status") == "issued");
+      surreal::sum(
+          surreal::select().value().expression(surreal::ident("owed"))
+              .from(per_invoice.subquery())
+              .where(surreal::ident("owed") > 0)
+              .subquery())
 
 # What an account has done, reachable from the row: the binder turns each of
 # these into a detail tab, and right-click → "Open …" into a drill-down tab.

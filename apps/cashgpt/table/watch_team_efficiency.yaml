@@ -4,44 +4,113 @@ title: Watch · team efficiency
 id_column: org_id
 columns:
   - { name: org_id, type: string, flags: [id, hidden] }
-  - { name: level, type: string }
+  - { name: level_no, type: int, flags: [hidden], optional: true }
+  - { name: spend, type: float, flags: [hidden], optional: true }
+  - { name: active, type: int, flags: [hidden], optional: true }
+  - { name: top_tier_share, type: float, flags: [hidden], optional: true }
+  - { name: median_pu, type: float, flags: [hidden], optional: true }
+  - { name: median_tt, type: float, flags: [hidden], optional: true }
+  - { name: excess, type: float, flags: [hidden], optional: true }
+  - name: level
+    type: string
+    lazy: |
+      if row.level_no == () { () } else { "L" + row.level_no }
   - { name: org_name, type: string, flags: [title] }
   - { name: unit_meta, type: string }
-  - { name: users_display, type: string }
-  - { name: spend_display, type: string }
-  - { name: per_user_display, type: string }
-  - { name: vs_median_display, type: string }
-  - { name: quadrant, type: string }
-  - { name: tier_display, type: string }
-  - { name: excess_display, type: string }
+  - name: users_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      if row.active == () { () } else { grp(num(row.active).round().to_int()) }
+  - name: spend_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      fn f2(x) { let c = (x * 100.0).round().to_int(); let f = c % 100; grp(c / 100) + "." + (if f < 10 { "0" } else { "" }) + f }
+      fn signed_usd(x) { let a = x.abs(); (if x < 0.0 { "−" } else { "" }) + "$" + (if a >= 1000000.0 { f2(a / 1000000.0) + "M" } else { grp(a.round().to_int()) }) }
+      if row.spend == () { () } else { signed_usd(num(row.spend)) }
+  - name: per_user_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      let pu = if row.spend == () || row.active == () || num(row.active) == 0.0 { 0.0 } else { num(row.spend) / num(row.active) };
+      "$" + grp(pu.round().to_int())
+  - name: vs_median_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      if row.spend == () || row.active == () || num(row.active) == 0.0 || row.median_pu == () || num(row.median_pu) == 0.0 {
+          ()
+      } else {
+          let r = (num(row.spend) / num(row.active)) / num(row.median_pu);
+          let c = (r.abs() * 10.0).round().to_int();
+          (if r < 0.0 && c > 0 { "-" } else { "" }) + grp(c / 10) + "." + (c % 10).to_string() + "x"
+      }
+  - name: quadrant
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      let pu = if row.spend == () || row.active == () || num(row.active) == 0.0 { () } else { num(row.spend) / num(row.active) };
+      let heavy = pu != () && row.median_pu != () && pu >= num(row.median_pu);
+      let pricey = row.top_tier_share != () && row.median_tt != () && num(row.top_tier_share) >= num(row.median_tt);
+      if heavy {
+          if pricey { "Heavy and pricey" } else { "Heavy but lean" }
+      } else {
+          if pricey { "Light but pricey" } else { "Light and lean" }
+      }
+  - name: tier_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      let tt = if row.top_tier_share == () { 0.0 } else { num(row.top_tier_share) };
+      (100.0 * tt).round().to_int().to_string() + "%"
+  - name: excess_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      fn f2(x) { let c = (x * 100.0).round().to_int(); let f = c % 100; grp(c / 100) + "." + (if f < 10 { "0" } else { "" }) + f }
+      fn signed_usd(x) { let a = x.abs(); (if x < 0.0 { "−" } else { "" }) + "$" + (if a >= 1000000.0 { f2(a / 1000000.0) + "M" } else { grp(a.round().to_int()) }) }
+      if row.excess == () { () } else { signed_usd(num(row.excess)) }
 postgres:
   # Prototype semantics (src/ TeamEfficiencyPanel): medians across L6 teams
   # as the single yardstick; vs-median ratio; four quadrants; SIGNED excess
   # = spend x (tier - median)/1 x (1 - base_rate/top_rate) — only the rate
   # gap is recoverable, negative means below benchmark. Flat rows (the
-  # manager tree waits on the expandable grid, VAN-209).
+  # manager tree waits on the expandable grid, VAN-209). The query returns
+  # the raw figures and the two medians; the lazy columns do the ratios,
+  # the quadrant and every display string.
   # language=rhai
   rhai: |
-    let scoped = select().from("mart_team_month")
-        .expression(expr("org_id").alias("org_id"))
-        .expression(expr("'L' || max(org_level)").alias("level"))
-        .expression(expr("max(org_name)").alias("org_name"))
-        .expression(expr("max(lob_name)").alias("lob_name"))
-        .expression(expr("sum(spend_usd)").alias("spend"))
-        .expression(expr("max(active)").alias("active"))
-        .expression(expr("sum(spend_usd) / NULLIF(max(active), 0)").alias("per_user"))
-        .expression(expr("round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4)").alias("top_tier_share"))
-        .group_by(expr("org_id"));
-    select().from_as(scoped, "s")
+    let lf = "(SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf";
+    let med_pu = "(SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY s / NULLIF(a, 0))::numeric FROM " + lf + ")";
+    let med_tt = "(SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM " + lf + ")";
+    let scoped = sql::select().from("mart_team_month")
+        .expression(sql::ident("org_id").alias("org_id"))
+        .expression(sql::max(sql::ident("org_level")).alias("level_no"))
+        .expression(sql::max(sql::ident("org_name")).alias("org_name"))
+        .expression(sql::max(sql::ident("lob_name")).alias("lob_name"))
+        .expression(sql::sum(sql::ident("spend_usd")).alias("spend"))
+        .expression(sql::max(sql::ident("active")).alias("active"))
+        // TODO(no-expr): division guarded by NULLIF(.., 0) needs a numeric literal argument
+        .expression(sql::expr("round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4)").alias("top_tier_share"))
+        .group_by(sql::ident("org_id"));
+    sql::select().from_as(scoped, "s")
         .field("org_id")
-        .field("level")
+        .field("level_no")
         .field("org_name")
-        .expression(expr("lob_name").alias("unit_meta"))
-        .expression(expr("to_char(active, 'FM999,999,999')").alias("users_display"))
-        .expression(expr("CASE WHEN abs(spend) >= 1e6 THEN (CASE WHEN (spend) < 0 THEN '−' ELSE '' END) || '$' || to_char(abs(spend) / 1e6, 'FM999,990.00') || 'M' ELSE (CASE WHEN (spend) < 0 THEN '−' ELSE '' END) || '$' || to_char(round(abs(spend)), 'FM999,999,999') END").alias("spend_display"))
-        .expression(expr("'$' || to_char(round(coalesce(per_user, 0)), 'FM999,999')").alias("per_user_display"))
-        .expression(expr("to_char(round(per_user / NULLIF((SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY s / NULLIF(a, 0))::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf), 0), 1), 'FM999,990.0') || 'x'").alias("vs_median_display"))
-        .expression(expr("CASE WHEN per_user >= (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY s / NULLIF(a, 0))::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf) THEN (CASE WHEN top_tier_share >= (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf) THEN 'Heavy and pricey' ELSE 'Heavy but lean' END) ELSE (CASE WHEN top_tier_share >= (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf) THEN 'Light but pricey' ELSE 'Light and lean' END) END").alias("quadrant"))
-        .expression(expr("to_char(round(100.0 * coalesce(top_tier_share, 0)), 'FM990') || '%'").alias("tier_display"))
-        .expression(expr("CASE WHEN abs(round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0)) >= 1e6 THEN (CASE WHEN (round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0)) < 0 THEN '−' ELSE '' END) || '$' || to_char(abs(round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0)) / 1e6, 'FM999,990.00') || 'M' ELSE (CASE WHEN (round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0)) < 0 THEN '−' ELSE '' END) || '$' || to_char(round(abs(round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0))), 'FM999,999,999') END").alias("excess_display"))
-        .order_by(expr("round(spend * (top_tier_share - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10), 0)"), "desc")
+        .expression(sql::ident("lob_name").alias("unit_meta"))
+        .field("spend")
+        .field("active")
+        .field("top_tier_share")
+        // TODO(no-expr): ordered-set aggregate (percentile_cont) over a derived table, as a scalar subquery
+        .expression(sql::expr(med_pu).alias("median_pu"))
+        // TODO(no-expr): ordered-set aggregate (percentile_cont) over a derived table, as a scalar subquery
+        .expression(sql::expr(med_tt).alias("median_tt"))
+        // TODO(no-expr): arithmetic with numeric literals around a scalar subquery (the tier median)
+        .expression(sql::expr("round(spend * (top_tier_share - " + med_tt + ") * (1 - 0.84 / 6.10), 0)").alias("excess"))
+        .order_by(sql::ident("excess"), "desc")

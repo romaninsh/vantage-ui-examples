@@ -17,8 +17,9 @@ columns:
 postgres:
   # language=rhai
   rhai: |
-    select().from("mart_lob_channel")
-        .expression(expr("coalesce(org_id,'') || ':' || coalesce(month_key,'') || ':' || coalesce(channel,'')").alias("rid"))
+    sql::select().from("mart_lob_channel")
+        // TODO(no-expr): string concat (||) and a literal in coalesce(x, '') have no sql:: builder
+        .expression(sql::expr("coalesce(org_id,'') || ':' || coalesce(month_key,'') || ':' || coalesce(channel,'')").alias("rid"))
         .field("org_id")
         .field("org_level")
         .field("month_key")
