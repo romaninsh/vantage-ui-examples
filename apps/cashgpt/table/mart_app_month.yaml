@@ -30,8 +30,9 @@ columns:
 postgres:
   # language=rhai
   rhai: |
-    select().from("mart_app_month")
-        .expression(expr("coalesce(month_key,'') || ':' || coalesce(app_id,'') || ':' || coalesce(app_name,'') || ':' || coalesce(kind,'') || ':' || coalesce(usage_driver,'') || ':' || coalesce(status,'') || ':' || coalesce(audience,'') || ':' || coalesce(primary_unit,'') || ':' || coalesce(launched_month,'') || ':' || coalesce(owner_lob_id,'') || ':' || coalesce(owner_lob_name,'') || ':' || coalesce(owner_department,'') || ':' || coalesce(consumer_lob_id,'') || ':' || coalesce(consumer_lob_name,'') || ':' || coalesce(rollout_status,'')").alias("rid"))
+    sql::select().from("mart_app_month")
+        // TODO(no-expr): string concat (||) and a literal in coalesce(x, '') have no sql:: builder
+        .expression(sql::expr("coalesce(month_key,'') || ':' || coalesce(app_id,'') || ':' || coalesce(app_name,'') || ':' || coalesce(kind,'') || ':' || coalesce(usage_driver,'') || ':' || coalesce(status,'') || ':' || coalesce(audience,'') || ':' || coalesce(primary_unit,'') || ':' || coalesce(launched_month,'') || ':' || coalesce(owner_lob_id,'') || ':' || coalesce(owner_lob_name,'') || ':' || coalesce(owner_department,'') || ':' || coalesce(consumer_lob_id,'') || ':' || coalesce(consumer_lob_name,'') || ':' || coalesce(rollout_status,'')").alias("rid"))
         .field("month_key")
         .field("app_id")
         .field("app_name")

@@ -6,7 +6,7 @@ title: Slow search
 faker:
   count: 50000
   shape:
-    capabilities: [count, fetch_window, order, search]
+    capabilities: [window, order, search]
     latency:
       window: 20ms..60ms
       get: 10ms..30ms

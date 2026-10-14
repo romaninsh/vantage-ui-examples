@@ -11,15 +11,31 @@ columns:
 surreal:
   # language=rhai
   rhai: |
-    select()
+    // fx takes no bare numbers or strings, so they pass through type::int / type::string.
+    let one_week = surreal::fx("duration::from_weeks", [surreal::cast(1, "int")]);
+    let bucket_dates = surreal::fx("array::range", [surreal::cast(0, "int"), surreal::cast(16, "int")])
+        .map(|i| #{ bucket: surreal::fx("time::floor", [surreal::time_now(), surreal::fx("duration::from_weeks", [surreal::cast(1, "int")])]) - surreal::fx("duration::from_weeks", [15 - i]) });
+    let articles_in_week = surreal::coalesce(
+        surreal::select().value().expression(surreal::count()).from("article")
+            .where(surreal::ident("created_at") >= surreal::parent("bucket"))
+            .where(surreal::ident("created_at") < surreal::parent("bucket") + one_week)
+            .group_all().subquery()[0],
+        0);
+    let comments_in_week = surreal::coalesce(
+        surreal::select().value().expression(surreal::count()).from("comment")
+            .where(surreal::ident("created_at") >= surreal::parent("bucket"))
+            .where(surreal::ident("created_at") < surreal::parent("bucket") + one_week)
+            .group_all().subquery()[0],
+        0);
+    surreal::select()
         .from(
-            select()
+            surreal::select()
                 .field("bucket")
-                .expression(expr("time::format(bucket, '%Y-%m-%d')").alias("week"))
-                .from(expr("array::range(0, 16).map(|$i| { bucket: time::floor(time::now(), 1w) - duration::from_weeks(15 - $i) })"))
+                .expression(surreal::date_format(surreal::ident("bucket"), "%Y-%m-%d").alias("week"))
+                .from(bucket_dates)
                 .subquery())
-        .expression(fx("type::record", [expr("'weekly_activity'"), ident("week")]).alias("id"))
+        .expression(surreal::fx("type::record", [surreal::cast("weekly_activity", "string"), surreal::ident("week")]).alias("id"))
         .field("week")
-        .expression(expr("(SELECT VALUE count() FROM article WHERE created_at >= $parent.bucket AND created_at < $parent.bucket + 1w GROUP ALL)[0] ?? 0").alias("articles"))
-        .expression(expr("(SELECT VALUE count() FROM comment WHERE created_at >= $parent.bucket AND created_at < $parent.bucket + 1w GROUP ALL)[0] ?? 0").alias("comments"))
-        .order_by(ident("week"), "asc")
+        .expression(articles_in_week.alias("articles"))
+        .expression(comments_in_week.alias("comments"))
+        .order_by(surreal::ident("week"), "asc")

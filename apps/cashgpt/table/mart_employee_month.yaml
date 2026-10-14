@@ -38,8 +38,9 @@ columns:
 postgres:
   # language=rhai
   rhai: |
-    select().from("mart_employee_month")
-        .expression(expr("coalesce(month_key,'') || ':' || coalesce(employee_id,'') || ':' || coalesce(full_name,'') || ':' || coalesce(job_function,'') || ':' || coalesce(seniority_code,'') || ':' || coalesce(work_type,'') || ':' || coalesce(location_region,'') || ':' || coalesce(city,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(team_org_id,'') || ':' || coalesce(team_code,'') || ':' || coalesce(team_name,'') || ':' || coalesce(section_id,'') || ':' || coalesce(department_id,'') || ':' || coalesce(division_id,'') || ':' || coalesce(org_path,'') || ':' || coalesce(top_platform_id,'') || ':' || coalesce(top_model_id,'')").alias("rid"))
+    sql::select().from("mart_employee_month")
+        // TODO(no-expr): string concat (||) and a literal in coalesce(x, '') have no sql:: builder
+        .expression(sql::expr("coalesce(month_key,'') || ':' || coalesce(employee_id,'') || ':' || coalesce(full_name,'') || ':' || coalesce(job_function,'') || ':' || coalesce(seniority_code,'') || ':' || coalesce(work_type,'') || ':' || coalesce(location_region,'') || ':' || coalesce(city,'') || ':' || coalesce(lob_id,'') || ':' || coalesce(lob_name,'') || ':' || coalesce(resource_org,'') || ':' || coalesce(team_org_id,'') || ':' || coalesce(team_code,'') || ':' || coalesce(team_name,'') || ':' || coalesce(section_id,'') || ':' || coalesce(department_id,'') || ':' || coalesce(division_id,'') || ':' || coalesce(org_path,'') || ':' || coalesce(top_platform_id,'') || ':' || coalesce(top_model_id,'')").alias("rid"))
         .field("month_key")
         .field("employee_id")
         .field("full_name")

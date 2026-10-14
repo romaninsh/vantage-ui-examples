@@ -25,10 +25,20 @@ postgres:
     if jf != "" { m = "mart_fact_agg"; g += " AND ({} = '' OR job_function = {})"; ga += [jf, jf]; }
     let umonthly = "(SELECT month_key AS mk, coalesce(sum(spend_usd) FILTER (WHERE lob_id IN ('LB-07','LB-08','LB-09')), 0) AS v FROM " + m + " WHERE " + g + " GROUP BY 1)";
     let monthly = "(SELECT month_key AS mk, sum(spend_usd) AS v FROM " + m + " WHERE " + g + " GROUP BY 1)";
-    select().from(m)
-            .where(expr(g, ga))
-            .expression(expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
-            .expression(expr("'$' || to_char((CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(t.v) FROM " + umonthly + " t) ELSE coalesce(sum(spend_usd) FILTER (WHERE lob_id IN ('LB-07','LB-08','LB-09')), 0) END) / 1e6, 'FM999,990.00') || 'M'", ga).alias("display"))
-            .expression(expr("to_char(100.0 * (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(t.v) FROM " + umonthly + " t) ELSE coalesce(sum(spend_usd) FILTER (WHERE lob_id IN ('LB-07','LB-08','LB-09')), 0) END) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(t.v) FROM " + monthly + " t) ELSE sum(spend_usd) END, 0), 'FM990.0') || '% of year-to-date spend'", ga + ga).alias("change_text"))
-            .expression(expr("(SELECT string_agg(round(t.v)::text, ',' ORDER BY t.mk) FROM " + umonthly + " t)", ga).alias("spark"))
-            .group_by(expr("ROLLUP(month_key)"))
+    let q = sql::select().from(m);
+    if lob != "" { q = q.where(sql::ident("lob_id") == lob); }
+    if rorg != "" { q = q.where(sql::ident("resource_org") == rorg); }
+    if drv != "" { q = q.where(sql::ident("usage_driver") == drv); }
+    if plat != "" { q = q.where(sql::ident("platform_id") == plat); }
+    if mdl != "" { q = q.where(sql::ident("model_id") == mdl); }
+    if jf != "" { q = q.where(sql::ident("job_function") == jf); }
+    q
+            // TODO(no-expr): literal argument to coalesce (sql::coalesce takes expressions or identifiers only)
+            .expression(sql::expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
+            // TODO(no-expr): scalar subquery (SQL has no scalar .subquery()), aggregate FILTER, CASE with literal branches, to_char
+            .expression(sql::expr("'$' || to_char((CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(t.v) FROM " + umonthly + " t) ELSE coalesce(sum(spend_usd) FILTER (WHERE lob_id IN ('LB-07','LB-08','LB-09')), 0) END) / 1e6, 'FM999,990.00') || 'M'", ga).alias("display"))
+            // TODO(no-expr): scalar subquery (SQL has no scalar .subquery()), aggregate FILTER, nullif/CASE with GROUPING, to_char, string concat
+            .expression(sql::expr("to_char(100.0 * (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(t.v) FROM " + umonthly + " t) ELSE coalesce(sum(spend_usd) FILTER (WHERE lob_id IN ('LB-07','LB-08','LB-09')), 0) END) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(t.v) FROM " + monthly + " t) ELSE sum(spend_usd) END, 0), 'FM990.0') || '% of year-to-date spend'", ga + ga).alias("change_text"))
+            // TODO(no-expr): scalar subquery with string_agg ... ORDER BY
+            .expression(sql::expr("(SELECT string_agg(round(t.v)::text, ',' ORDER BY t.mk) FROM " + umonthly + " t)", ga).alias("spark"))
+            .group_by(sql::fx("ROLLUP", [sql::ident("month_key")]))

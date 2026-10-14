@@ -15,13 +15,15 @@ postgres:
   # as the reference's trigram term).
   # language=rhai
   rhai: |
-    select().from("dim_employee")
-        .inner_join("dim_org_unit", "o", expr("o.org_id = dim_employee.heads_org_id"))
-        .where(expr("o.org_level = 5"))
-        .expression(expr("o.org_id").alias("org_id"))
-        .expression(expr("dim_employee.full_name").alias("full_name"))
-        .expression(expr("o.org_name").alias("org_name"))
-        .expression(expr("dim_employee.lob_name").alias("lob_name"))
-        .expression(expr("dim_employee.city").alias("city"))
-        .expression(expr("o.headcount").alias("headcount"))
-        .order_by(expr("o.headcount"), "desc")
+    let e = sql::ident("dim_employee");
+    let o = sql::ident("o");
+    sql::select().from("dim_employee")
+        .inner_join("dim_org_unit", "o", o["org_id"] == e["heads_org_id"])
+        .where(o["org_level"] == 5)
+        .expression(o["org_id"].alias("org_id"))
+        .expression(e["full_name"].alias("full_name"))
+        .expression(o["org_name"].alias("org_name"))
+        .expression(e["lob_name"].alias("lob_name"))
+        .expression(e["city"].alias("city"))
+        .expression(o["headcount"].alias("headcount"))
+        .order_by(o["headcount"], "desc")

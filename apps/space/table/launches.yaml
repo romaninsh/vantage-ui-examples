@@ -55,6 +55,17 @@ columns:
   - { name: pad_launch_attempt_count_year, type: int }
   - { name: agency_launch_attempt_count_year, type: int }
   - { name: pad_turnaround, type: string }
+  # Query params the has-many drills (agencies / launcher_configurations /
+  # locations / pads / programs) filter by; sent to the server, never displayed.
+  - { name: lsp__id, type: string, flags: [hidden, request_param] }
+  - { name: location__ids, type: string, flags: [hidden, request_param] }
+  - { name: pad, type: string, flags: [hidden, request_param] }
+  - { name: program, type: string, flags: [hidden, request_param] }
+  - {
+      name: rocket__configuration__id,
+      type: string,
+      flags: [hidden, request_param],
+    }
 
 references:
   payloads:

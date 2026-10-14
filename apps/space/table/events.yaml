@@ -18,3 +18,5 @@ columns:
   - { name: duration, type: string }
   - { name: description, type: string, flags: [searchable] }
   - { name: webcast_live, type: bool }
+  - { name: program, type: string, flags: [hidden, request_param] }
+  - { name: type, type: string, flags: [hidden, request_param] }

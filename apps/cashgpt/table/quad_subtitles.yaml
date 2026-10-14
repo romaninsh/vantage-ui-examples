@@ -30,11 +30,21 @@ postgres:
     let sga = [lob, lob, rorg, rorg, drv, drv, plat, plat, mdl, mdl];
     let ag = "({} = '' OR lob_id = {}) AND ({} = '' OR resource_org = {}) AND ({} = '' OR job_function = {})";
     let aga = [lob, lob, rorg, rorg, jf, jf];
-    select().from("mart_spend_agg")
-        .where(expr(sg, sga))
-        .expression(expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
-        .expression(expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT job_function) FROM mart_people_agg WHERE " + pg + ") ELSE (SELECT count(DISTINCT job_function) FROM mart_people_agg t WHERE " + pg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' job functions'", pga + pga).alias("fn_sub"))
-        .expression(expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT seniority_code) FROM mart_people_agg WHERE " + pg + ") ELSE (SELECT count(DISTINCT seniority_code) FROM mart_people_agg t WHERE " + pg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' title tiers · ' || to_char((SELECT sum(headcount) FROM silver.dim_org_unit WHERE org_level = 2), 'FM999,999,999') || ' employees · ' || to_char((SELECT sum(users) FROM mart_active_month a WHERE " + ag + " AND a.month_key = CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(month_key) FROM mart_active_month) ELSE mart_spend_agg.month_key END), 'FM999,999,999') || ' active'", pga + pga + aga).alias("title_sub"))
-        .expression(expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT lob_id) FROM mart_spend_agg WHERE " + sg + ") ELSE (SELECT count(DISTINCT lob_id) FROM mart_spend_agg t WHERE " + sg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' billable orgs'", sga + sga).alias("lob_sub"))
-        .expression(expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT kind) FROM mart_spend_agg WHERE " + sg + ") ELSE (SELECT count(DISTINCT kind) FROM mart_spend_agg t WHERE " + sg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' suites · ' || to_char((SELECT count(*) FROM silver.dim_app), 'FM999') || ' use cases'", sga + sga).alias("suite_sub"))
-        .group_by(expr("ROLLUP(month_key)"))
+    let q = sql::select().from("mart_spend_agg");
+    if lob != "" { q = q.where(sql::ident("lob_id") == lob); }
+    if rorg != "" { q = q.where(sql::ident("resource_org") == rorg); }
+    if drv != "" { q = q.where(sql::ident("usage_driver") == drv); }
+    if plat != "" { q = q.where(sql::ident("platform_id") == plat); }
+    if mdl != "" { q = q.where(sql::ident("model_id") == mdl); }
+    q
+        // TODO(no-expr): literal argument to coalesce (sql::coalesce takes expressions or identifiers only)
+        .expression(sql::expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
+        // TODO(no-expr): scalar subqueries over other marts (SQL has no scalar .subquery()), CASE with GROUPING, to_char, string concat
+        .expression(sql::expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT job_function) FROM mart_people_agg WHERE " + pg + ") ELSE (SELECT count(DISTINCT job_function) FROM mart_people_agg t WHERE " + pg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' job functions'", pga + pga).alias("fn_sub"))
+        // TODO(no-expr): scalar subqueries over other marts and silver.dim_org_unit, CASE with GROUPING, to_char, string concat
+        .expression(sql::expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT seniority_code) FROM mart_people_agg WHERE " + pg + ") ELSE (SELECT count(DISTINCT seniority_code) FROM mart_people_agg t WHERE " + pg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' title tiers · ' || to_char((SELECT sum(headcount) FROM silver.dim_org_unit WHERE org_level = 2), 'FM999,999,999') || ' employees · ' || to_char((SELECT sum(users) FROM mart_active_month a WHERE " + ag + " AND a.month_key = CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT max(month_key) FROM mart_active_month) ELSE mart_spend_agg.month_key END), 'FM999,999,999') || ' active'", pga + pga + aga).alias("title_sub"))
+        // TODO(no-expr): scalar subqueries (SQL has no scalar .subquery()), CASE with GROUPING, to_char, string concat
+        .expression(sql::expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT lob_id) FROM mart_spend_agg WHERE " + sg + ") ELSE (SELECT count(DISTINCT lob_id) FROM mart_spend_agg t WHERE " + sg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' billable orgs'", sga + sga).alias("lob_sub"))
+        // TODO(no-expr): scalar subqueries incl. silver.dim_app (SQL has no scalar .subquery()), CASE with GROUPING, to_char, string concat
+        .expression(sql::expr("to_char(CASE WHEN GROUPING(mart_spend_agg.month_key) = 1 THEN (SELECT count(DISTINCT kind) FROM mart_spend_agg WHERE " + sg + ") ELSE (SELECT count(DISTINCT kind) FROM mart_spend_agg t WHERE " + sg + " AND t.month_key = mart_spend_agg.month_key) END, 'FM99') || ' suites · ' || to_char((SELECT count(*) FROM silver.dim_app), 'FM999') || ' use cases'", sga + sga).alias("suite_sub"))
+        .group_by(sql::fx("ROLLUP", [sql::ident("month_key")]))

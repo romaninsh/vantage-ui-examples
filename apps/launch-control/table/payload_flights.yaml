@@ -17,3 +17,5 @@ columns:
   - { name: payload.mass, type: float }
   - { name: destination, type: string }
   - { name: amount, type: int }
+  - { name: launch__id, type: string, flags: [hidden, request_param] }
+  - { name: payload__id, type: string, flags: [hidden, request_param] }

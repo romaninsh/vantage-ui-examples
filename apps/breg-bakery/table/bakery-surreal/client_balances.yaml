@@ -15,8 +15,13 @@ columns:
   owed: { type: int, unit: { currency: "£", minor_units: true } }
   overdue: { type: int, unit: { currency: "£", minor_units: true } }
   # A grid renders `owed` as money from its `unit`. A list label is a string,
-  # so it needs one built here.
-  owed_display: { type: string }
+  # so it needs one built here, from the row, after the read.
+  owed_display:
+    type: string
+    lazy: |
+      let owed = row.owed.to_int();
+      let pence = owed % 100;
+      "£" + (owed / 100) + "." + (if pence < 10 { "0" } else { "" }) + pence
   # The branch the account belongs to — filled only on the unfiltered
   # ("All bakeries") read, so the dashboard's `sub:` line appears exactly
   # when the row's branch isn't already implied by the filter.
@@ -26,19 +31,46 @@ surreal:
   # language=rhai
   rhai: |
     let b = args.get("bakery") ?? "";
-    let branch = if b == "" { expr("bakery.name") } else { expr("''") };
-    let per_client = select()
+    // What one invoice still owes: its total less the payments against it.
+    let paid = surreal::sum(
+        surreal::select().value().expression(surreal::ident("amount")).from("payment")
+            .where(surreal::ident("invoice") == surreal::parent("id"))
+            .subquery());
+    let owed = surreal::sum(
+        surreal::select().value().expression(surreal::ident("owed"))
+            .from(surreal::select()
+                .expression(surreal::sub(surreal::ident("total"), paid).alias("owed"))
+                .from("invoice")
+                .where(surreal::ident("client") == surreal::parent("id"))
+                .where(surreal::ident("status") == "issued")
+                .subquery())
+            .where(surreal::ident("owed") > 0)
+            .subquery());
+    let overdue = surreal::sum(
+        surreal::select().value().expression(surreal::ident("owed"))
+            .from(surreal::select()
+                .expression(surreal::sub(surreal::ident("total"), paid).alias("owed"))
+                .from("invoice")
+                .where(surreal::ident("client") == surreal::parent("id"))
+                .where(surreal::ident("status") == "issued")
+                .where(surreal::ident("due_at") < surreal::time_now())
+                .subquery())
+            .where(surreal::ident("owed") > 0)
+            .subquery());
+    let per_client = surreal::select()
         .field("id").field("name").field("bakery")
-        .expression(branch.alias("branch"))
-        .expression(expr("(SELECT VALUE math::sum(owed) FROM (SELECT total - ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0) AS owed FROM invoice WHERE client = $parent.id AND status = 'issued') WHERE owed > 0 GROUP ALL)[0] ?? 0").alias("owed"))
-        .expression(expr("(SELECT VALUE math::sum(owed) FROM (SELECT total - ((SELECT VALUE math::sum(amount) FROM payment WHERE invoice = $parent.id GROUP ALL)[0] ?? 0) AS owed FROM invoice WHERE client = $parent.id AND status = 'issued' AND due_at < time::now()) WHERE owed > 0 GROUP ALL)[0] ?? 0").alias("overdue"))
+        .expression(owed.alias("owed"))
+        .expression(overdue.alias("overdue"))
         .from("client");
-    if b != "" {
-        per_client = per_client.where(expr("bakery.name = {}", [b]));
+    if b == "" {
+        per_client = per_client.expression(surreal::ident("bakery")["name"].alias("branch"));
+    } else {
+        per_client = per_client
+            .expression(surreal::cast("", "string").alias("branch"))
+            .where(surreal::ident("bakery")["name"] == b);
     }
-    select()
+    surreal::select()
         .from(per_client.subquery())
-        .expression(expr("*"))
-        .expression(expr("string::concat('£', owed / 100, '.', IF owed % 100 < 10 THEN '0' ELSE '' END, owed % 100)").alias("owed_display"))
-        .where(ident("owed") > 0)
-        .order_by(ident("owed"), "desc")
+        .field("id").field("name").field("bakery").field("branch").field("owed").field("overdue")
+        .where(surreal::ident("owed") > 0)
+        .order_by(surreal::ident("owed"), "desc")

@@ -20,8 +20,9 @@ columns:
 postgres:
   # language=rhai
   rhai: |
-    select().from("mart_app_model_month")
-        .expression(expr("coalesce(month_key,'') || ':' || coalesce(app_id,'') || ':' || coalesce(provider_group,'') || ':' || coalesce(model_id,'') || ':' || coalesce(model_name,'') || ':' || coalesce(model_tier,'') || ':' || coalesce(platform_id,'')").alias("rid"))
+    sql::select().from("mart_app_model_month")
+        // TODO(no-expr): string concat (||) and a literal in coalesce(x, '') have no sql:: builder
+        .expression(sql::expr("coalesce(month_key,'') || ':' || coalesce(app_id,'') || ':' || coalesce(provider_group,'') || ':' || coalesce(model_id,'') || ':' || coalesce(model_name,'') || ':' || coalesce(model_tier,'') || ':' || coalesce(platform_id,'')").alias("rid"))
         .field("month_key")
         .field("app_id")
         .field("provider_group")

@@ -7,20 +7,34 @@ columns:
   - { name: month_key, type: string, flags: [hidden] }
   - { name: rank, type: int, flags: [hidden] }
   - { name: member, type: string, flags: [title] }
-  - { name: total_display, type: string }
+  - { name: total_raw, type: float, flags: [hidden] }
+  - name: total_display
+    type: string
+    lazy: |
+      let n = row.total_raw; let v = if n == () { 0.0 } else { n + 0.0 };
+      let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+      if v >= 1000000.0 { let c = (v / 10000.0).round().to_int(); "$" + g.call(c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "M" }
+      else if v >= 1000.0 { "$" + g.call((v / 1000.0).round().to_int()) + "K" }
+      else { "$" + g.call(v.round().to_int()) }
   - { name: bar_pct, type: float }
 postgres:
   # Reference: exec.reasoningTier collapsed over months, fixed order
   # top/high/base/untiered, RAW lowercase tier keys as labels.
   # language=rhai
   rhai: |
-    select().from("mart_spend_agg")
-            .expression(expr("(model_tier) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))
-            .expression(expr("coalesce(month_key, {})", ["Year to date"]).alias("month_key"))
-            .expression(expr("model_tier").alias("member"))
-            .expression(expr("CASE model_tier WHEN 'top' THEN 1 WHEN 'high' THEN 2 WHEN 'base' THEN 3 ELSE 4 END").alias("rank"))
-            .expression(expr("CASE WHEN (sum(spend_usd)) >= 1e6 THEN '$' || to_char((sum(spend_usd)) / 1e6, 'FM999,990.00') || 'M' WHEN (sum(spend_usd)) >= 1e3 THEN '$' || to_char(round((sum(spend_usd)) / 1e3), 'FM999,999') || 'K' ELSE '$' || to_char(round(coalesce((sum(spend_usd)), 0)), 'FM999,999') END").alias("total_display"))
-            .expression(expr("round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(s) FROM (SELECT sum(spend_usd) AS s FROM mart_spend_agg GROUP BY model_tier) x) ELSE (SELECT max(s) FROM (SELECT t.month_key AS mk, t.model_tier, sum(t.spend_usd) AS s FROM mart_spend_agg t GROUP BY 1, 2) x WHERE x.mk = mart_spend_agg.month_key) END, 0), 1)").alias("bar_pct"))
-            .group_by(expr("model_tier"))
-            .group_by(expr("ROLLUP(month_key)"))
-            .order_by(expr("CASE model_tier WHEN 'top' THEN 1 WHEN 'high' THEN 2 WHEN 'base' THEN 3 ELSE 4 END"), "asc")
+    sql::select().from("mart_spend_agg")
+            // TODO(no-expr): string concat (||) and a string literal in coalesce have no sql:: builder
+            .expression(sql::expr("(model_tier) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))
+            // TODO(no-expr): a string literal in coalesce has no sql:: builder
+            .expression(sql::expr("coalesce(month_key, {})", ["Year to date"]).alias("month_key"))
+            .expression(sql::ident("model_tier").alias("member"))
+            // TODO(no-expr): CASE with literal results has no sql:: builder
+            .expression(sql::expr("CASE model_tier WHEN 'top' THEN 1 WHEN 'high' THEN 2 WHEN 'base' THEN 3 ELSE 4 END").alias("rank"))
+            .expression(sql::cast(sql::sum(sql::ident("spend_usd")), "double precision").alias("total_raw"))
+            // TODO(no-expr): GROUPING() and scalar subqueries have no sql:: builder
+            .expression(sql::expr("round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(s) FROM (SELECT sum(spend_usd) AS s FROM mart_spend_agg GROUP BY model_tier) x) ELSE (SELECT max(s) FROM (SELECT t.month_key AS mk, t.model_tier, sum(t.spend_usd) AS s FROM mart_spend_agg t GROUP BY 1, 2) x WHERE x.mk = mart_spend_agg.month_key) END, 0), 1)").alias("bar_pct"))
+            .group_by(sql::ident("model_tier"))
+            // TODO(no-expr): ROLLUP has no sql:: builder
+            .group_by(sql::expr("ROLLUP(month_key)"))
+            // TODO(no-expr): CASE with literal results has no sql:: builder
+            .order_by(sql::expr("CASE model_tier WHEN 'top' THEN 1 WHEN 'high' THEN 2 WHEN 'base' THEN 3 ELSE 4 END"), "asc")

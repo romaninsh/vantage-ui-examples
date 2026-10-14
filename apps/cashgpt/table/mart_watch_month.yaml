@@ -21,8 +21,9 @@ columns:
 postgres:
   # language=rhai
   rhai: |
-    select().from("mart_watch_month")
-        .expression(expr("coalesce(month_key,'') || ':' || coalesce(peer_group,'') || ':' || coalesce(worst_name,'')").alias("rid"))
+    sql::select().from("mart_watch_month")
+        // TODO(no-expr): string concat (||) and a literal in coalesce(x, '') have no sql:: builder
+        .expression(sql::expr("coalesce(month_key,'') || ':' || coalesce(peer_group,'') || ':' || coalesce(worst_name,'')").alias("rid"))
         .field("month_key")
         .field("peer_group")
         .field("worst_name")

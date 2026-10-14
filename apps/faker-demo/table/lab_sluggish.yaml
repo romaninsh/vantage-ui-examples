@@ -6,7 +6,7 @@ title: Sluggish backend
 faker:
   count: 500
   shape:
-    capabilities: [count, fetch_page, order]
+    capabilities: [window, order]
     page_size: 50
     latency:
       list: 800ms..2500ms

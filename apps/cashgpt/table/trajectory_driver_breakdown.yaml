@@ -5,16 +5,52 @@ id_column: rid
 columns:
   - { name: rid, type: string, flags: [id, hidden] }
   - { name: month_key, type: string, flags: [hidden] }
-  - { name: rank, type: int, flags: [hidden] }
+  - name: rank
+    type: int
+    flags: [hidden]
+    lazy: |
+      let order = ["Developer", "Productivity", "Application"];
+      let r = 99;
+      for i in 0..order.len() { if order[i] == row.member { r = i + 1; break; } }
+      r
   - { name: member, type: string, flags: [title] }
-  - { name: mom, type: string }
-  - { name: total_display, type: string }
-  - { name: share, type: string }
+  - name: mom
+    type: string
+    lazy: |
+      let c = row.cur_v;
+      let p = row.prev_v;
+      if p == () || p == 0.0 { "—" }
+      else if c == () { () }
+      else {
+        let t = (100.0 * (c - p).abs() / p * 10.0).round().to_int();
+        (if c >= p { "▲" } else { "▼" }) + (t / 10).to_string() + "." + (t % 10).to_string() + "%"
+      }
+  - name: total_display
+    type: string
+    lazy: |
+      let c = (row.total_usd / 1e6 * 100.0).round().to_int();
+      let s = (c / 100).to_string();
+      let t = "";
+      while s.len() > 3 { t = "," + s.sub_string(s.len() - 3) + t; s = s.sub_string(0, s.len() - 3); }
+      let f = c % 100;
+      "$" + s + t + "." + (if f < 10 { "0" } else { "" }) + f + "M"
+  - name: share
+    type: string
+    lazy: |
+      if row.share_pct == () { () } else {
+        let t = (row.share_pct * 10.0).round().to_int();
+        (t / 10).to_string() + "." + (t % 10).to_string() + "%"
+      }
   - { name: share_pct, type: float }
+  - { name: total_usd, type: float, flags: [hidden] }
+  - { name: cur_v, type: float, flags: [hidden] }
+  - { name: prev_v, type: float, flags: [hidden] }
 postgres:
   # GROUP BY the RAW column — correlated subqueries may only reference
   # grouping columns, and an expression group (initcap(...)) makes the
   # raw column illegal in them. Display casing happens in projection.
+  # mom, total_display and share are lazy columns over cur_v / prev_v,
+  # total_usd and share_pct; rank is lazy over member.
   # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
@@ -28,16 +64,27 @@ postgres:
     let ga = [lob, lob, rorg, rorg, drv, drv, plat, plat, mdl, mdl];
     if jf != "" { m = "mart_fact_agg"; g += " AND ({} = '' OR job_function = {})"; ga += [jf, jf]; }
     let monthly = "(SELECT month_key AS mk, usage_driver AS mem, sum(spend_usd) AS v FROM " + m + " WHERE " + g + " GROUP BY 1, 2)";
-    select().from(m)
-            .where(expr(g, ga))
-            .expression(expr("(initcap(usage_driver)) || ':' || coalesce(month_key, {})", ["All months"]).alias("rid"))
-            .expression(expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
-            .expression(expr("CASE WHEN initcap(usage_driver) = 'Developer' THEN 1 WHEN initcap(usage_driver) = 'Productivity' THEN 2 WHEN initcap(usage_driver) = 'Application' THEN 3 ELSE 99 END").alias("rank"))
-            .expression(expr("initcap(usage_driver)").alias("member"))
-            .expression(expr("CASE WHEN (SELECT v FROM " + monthly + " t WHERE t.mem = usage_driver AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1) IS NULL OR (SELECT v FROM " + monthly + " t WHERE t.mem = usage_driver AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1) = 0 THEN '—' ELSE (CASE WHEN (SELECT v FROM " + monthly + " t WHERE t.mem = usage_driver AND t.mk = (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END)) >= (SELECT v FROM " + monthly + " t WHERE t.mem = usage_driver AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1) THEN '▲' ELSE '▼' END) || to_char(round(100.0 * abs((SELECT v FROM " + monthly + " t WHERE t.mem = usage_driver AND t.mk = (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END)) - (SELECT v FROM " + monthly + " t WHERE t.mem = usage_driver AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1)) / (SELECT v FROM " + monthly + " t WHERE t.mem = usage_driver AND t.mk < (CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END) ORDER BY t.mk DESC LIMIT 1), 1), 'FM990.0') || '%' END", ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga + ga).alias("mom"))
-            .expression(expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M'").alias("total_display"))
-            .expression(expr("to_char(round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(v) FROM " + monthly + " t) ELSE (SELECT sum(v) FROM " + monthly + " t WHERE t.mk = month_key) END, 0), 1), 'FM990.0') || '%'", ga + ga).alias("share"))
-            .expression(expr("round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(v) FROM " + monthly + " t) ELSE (SELECT sum(v) FROM " + monthly + " t WHERE t.mk = month_key) END, 0), 1)", ga + ga).alias("share_pct"))
-            .group_by(expr("usage_driver"))
-            .group_by(expr("ROLLUP(month_key)"))
-        .order_by(expr("sum(spend_usd)"), "desc")
+    let scope_mk = "(CASE WHEN GROUPING(month_key) = 1 THEN (SELECT max(mk) FROM " + monthly + " lm) ELSE month_key END)";
+    let scope_total = "CASE WHEN GROUPING(month_key) = 1 THEN (SELECT sum(v) FROM " + monthly + " t) ELSE (SELECT sum(v) FROM " + monthly + " t WHERE t.mk = month_key) END";
+    let q = sql::select().from(m);
+    if lob != "" { q = q.where(sql::ident("lob_id") == lob); }
+    if rorg != "" { q = q.where(sql::ident("resource_org") == rorg); }
+    if drv != "" { q = q.where(sql::ident("usage_driver") == drv); }
+    if plat != "" { q = q.where(sql::ident("platform_id") == plat); }
+    if mdl != "" { q = q.where(sql::ident("model_id") == mdl); }
+    if jf != "" { q = q.where(sql::ident("job_function") == jf); }
+    // TODO(no-expr): string concat (||) and a literal in coalesce(x, 'All months') have no sql:: builder
+    q.expression(sql::expr("(initcap(usage_driver)) || ':' || coalesce(month_key, {})", ["All months"]).alias("rid"))
+        // TODO(no-expr): literal argument to coalesce (sql::coalesce takes expressions or identifiers only)
+        .expression(sql::expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
+        .expression(sql::fx("initcap", [sql::ident("usage_driver")]).alias("member"))
+        // TODO(no-expr): scalar correlated subquery with GROUPING() (no scalar .subquery() in sql::)
+        .expression(sql::cast(sql::expr("(SELECT v FROM " + monthly + " t WHERE t.mem = usage_driver AND t.mk = " + scope_mk + ")", ga + ga), "double precision").alias("cur_v"))
+        // TODO(no-expr): scalar correlated subquery with GROUPING() (no scalar .subquery() in sql::)
+        .expression(sql::cast(sql::expr("(SELECT v FROM " + monthly + " t WHERE t.mem = usage_driver AND t.mk < " + scope_mk + " ORDER BY t.mk DESC LIMIT 1)", ga + ga), "double precision").alias("prev_v"))
+        .expression(sql::cast(sql::sum(sql::ident("spend_usd")), "double precision").alias("total_usd"))
+        // TODO(no-expr): scalar correlated subqueries with GROUPING(), a literal 100.0 and nullif(x, 0)
+        .expression(sql::cast(sql::expr("round(100.0 * sum(spend_usd) / nullif(" + scope_total + ", 0), 1)", ga + ga), "double precision").alias("share_pct"))
+        .group_by(sql::ident("usage_driver"))
+        .group_by(sql::fx("ROLLUP", [sql::ident("month_key")]))
+        .order_by(sql::sum(sql::ident("spend_usd")), "desc")

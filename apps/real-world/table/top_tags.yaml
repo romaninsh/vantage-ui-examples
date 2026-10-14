@@ -10,18 +10,24 @@ columns:
 surreal:
   # language=rhai
   rhai: |
-    select()
+    let per_tag = surreal::select()
+        .expression(surreal::count().alias("c"))
+        .field("tag")
+        .from("article_tag")
+        .group_by(surreal::ident("tag"))
+        .subquery();
+    surreal::select()
         .from(
-            select()
-                .expression(expr("tag.name").alias("tag"))
-                .expression(expr("count()").alias("articles"))
+            surreal::select()
+                .expression(surreal::ident("tag")["name"].alias("tag"))
+                .expression(surreal::count().alias("articles"))
                 .from("article_tag")
-                .group_by(ident("tag"))
+                .group_by(surreal::ident("tag"))
                 .subquery())
-        .expression(fx("type::record", [expr("'top_tags'"), ident("tag")]).alias("id"))
+        .expression(surreal::fx("type::record", [surreal::cast("top_tags", "string"), surreal::ident("tag")]).alias("id"))
         .field("tag")
         .field("articles")
-        .expression(expr("math::round(articles * 100.0 / math::max((SELECT count() AS c, tag FROM article_tag GROUP BY tag).c))").alias("share_pct"))
-        .order_by(ident("articles"), "desc")
-        .order_by(ident("tag"), "asc")
+        .expression(surreal::round(surreal::cast(surreal::ident("articles"), "float") * 100.0 / surreal::max(per_tag["c"])).alias("share_pct"))
+        .order_by(surreal::ident("articles"), "desc")
+        .order_by(surreal::ident("tag"), "asc")
         .limit(8, 0)

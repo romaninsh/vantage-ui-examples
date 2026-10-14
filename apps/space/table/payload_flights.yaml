@@ -21,3 +21,4 @@ columns:
   - { name: payload.type.name, type: string }
   - { name: destination, type: string }
   - { name: amount, type: int }
+  - { name: payload.id, type: string, flags: [hidden, request_param] }

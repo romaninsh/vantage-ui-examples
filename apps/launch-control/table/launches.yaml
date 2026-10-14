@@ -53,6 +53,15 @@ columns:
   - { name: pad_id, type: string, flags: [hidden], references: pads }
   - { name: pad.name, type: string }
   - { name: pad.location.name, type: string }
+  # Query params the has-many drills (agencies / launcher_configurations /
+  # pads) filter by; sent to the server, never displayed.
+  - { name: lsp__id, type: string, flags: [hidden, request_param] }
+  - { name: pad, type: string, flags: [hidden, request_param] }
+  - {
+      name: rocket__configuration__id,
+      type: string,
+      flags: [hidden, request_param],
+    }
   - { name: payload_count, type: int }
   - { name: total_payload_mass, type: float, unit: kg }
   - { name: crew_count, type: int }

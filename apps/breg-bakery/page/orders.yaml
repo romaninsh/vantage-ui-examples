@@ -41,35 +41,35 @@ body:
           # language=rhai
           action: |
             row.status = "confirmed";
-            row.save();
+            row.flash();
         - label: "Start production"
           icon: Factory
           when: 'row.status == "confirmed"'
           # language=rhai
           action: |
             row.status = "in_production";
-            row.save();
+            row.flash();
         - label: "Mark ready"
           icon: Package
           when: 'row.status == "in_production"'
           # language=rhai
           action: |
             row.status = "ready";
-            row.save();
+            row.flash();
         - label: "Mark delivered"
           icon: Truck
           when: 'row.status == "ready"'
           # language=rhai
           action: |
             row.status = "delivered";
-            row.save();
+            row.flash();
         - label: "Mark picked up"
           icon: ShoppingCart
           when: 'row.status == "ready"'
           # language=rhai
           action: |
             row.status = "picked_up";
-            row.save();
+            row.flash();
         - label: "Cancel order"
           icon: X
           # An invoiced order is no longer the order desk's to cancel; it
@@ -84,4 +84,4 @@ body:
             row.status              = "cancelled";
             row.cancellation_reason = r.reason;
             row.cancellation_note   = r.note;
-            row.save();
+            row.flash();

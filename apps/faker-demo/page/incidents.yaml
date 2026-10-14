@@ -36,16 +36,16 @@ body:
           when: 'row.status == "open"'
           action: |
             row.status = "acknowledged";
-            row.save();
+            row.flash();
         - label: Resolve
           icon: CircleCheck
           when: 'row.status != "resolved"'
           action: |
             row.status = "resolved";
-            row.save();
+            row.flash();
         - label: Reopen
           icon: RefreshCw
           when: 'row.status == "resolved"'
           action: |
             row.set(#{ status: "open", age_min: 0 });
-            row.save();
+            row.flash();

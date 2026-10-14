@@ -14,3 +14,4 @@ columns:
   - { name: agency.name, type: string }
   - { name: priority, type: int }
   - { name: image_url, type: string }
+  - { name: agency__id, type: int, flags: [hidden, request_param] }

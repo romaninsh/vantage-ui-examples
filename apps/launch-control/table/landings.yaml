@@ -23,3 +23,6 @@ columns:
   - { name: success, type: bool }
   - { name: attempt, type: bool }
   - { name: description, type: string, flags: [searchable] }
+  - { name: launch__id, type: string, flags: [hidden, request_param] }
+  - { name: landing_location__id, type: string, flags: [hidden, request_param] }
+  - { name: launcher__id, type: string, flags: [hidden, request_param] }
