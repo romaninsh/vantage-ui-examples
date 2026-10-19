@@ -131,12 +131,6 @@ Expected output, all ✓:
 all checks passed
 ```
 
-The two update checks (`f2` moved to dev, `f1` renamed) need vantage-lib to
-hand the rule script's `before_update(|record, stored| …)` the stored row.
-Until it does, `stored` is `()`: both patches are refused with "Unknown
-property 'environment' … for type '()'". That fails closed, so no prod flag
-moves, but an editor can't patch at all.
-
 The frames it sends, in order:
 1. `hello {protocol: 1}`;
 2. `invoke {run, action: "password_sign_in", args: {email:
