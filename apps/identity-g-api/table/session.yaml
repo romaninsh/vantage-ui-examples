@@ -6,4 +6,5 @@ columns:
   person_id: { type: string, references: person }
   name: { type: string }
   role: { type: string }
+  app: { type: string }
   expires_at: { type: string }

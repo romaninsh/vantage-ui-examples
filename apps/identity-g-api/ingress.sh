@@ -14,7 +14,7 @@ CREATE TABLE person (
 CREATE TABLE session (
   id TEXT PRIMARY KEY,
   person_id TEXT NOT NULL REFERENCES person(id) ON DELETE CASCADE,
-  name TEXT, role TEXT,
+  name TEXT, role TEXT, app TEXT,
   expires_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '+8 hours'))
 );
 INSERT INTO person VALUES

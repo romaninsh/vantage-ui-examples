@@ -7,10 +7,14 @@ home: status
 session:
   table: session
   identity: person
-  # A view (MCP `app`/`session`) has no row and no expiry; a signed-in
-  # session expires (`expires_at` is the column's database default).
-  valid: 'session.assumed || session.expires_at > now()'
+  # A session is valid only in the app that issued it, so a `public` token
+  # doesn't load on `staff`. A signed-in session also expires (`expires_at`
+  # is the column's database default); a view (MCP `app`/`session`) has no
+  # row and no expiry.
+  valid: 'session.app == app.name && (session.assumed || session.expires_at > now())'
   fields:
     person_id: {}
     name: {}
     role: {}
+    # The API that issued the session, stamped by its sign-in.
+    app: {}

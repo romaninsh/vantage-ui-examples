@@ -9,7 +9,7 @@ entities:
     params:
       columns: [title, owner_id, status]
       default_sort: title
-actions: [customer_sign_in, staff_sign_in]
+actions: [staff_sign_in]
 auth:
   local:
     session:

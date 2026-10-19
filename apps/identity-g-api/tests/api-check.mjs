@@ -1,9 +1,13 @@
 // API checks for scenario G, over raw WebSocket frames (Node 22+).
-//   node tests/api-check.mjs staff  [ws://127.0.0.1:8092/v1/ws]
 //   node tests/api-check.mjs public [ws://127.0.0.1:8092/v1/ws]
+//   node tests/api-check.mjs staff  [ws://127.0.0.1:8092/v1/ws]
 // Checks the one API the server on that URL serves (see README.md: two
-// servers of one project can't run at once). Needs a fresh ./ingress.sh.
+// servers of one project can't run at once). Run `public` first: it saves
+// Cleo's public token in data/public-token.txt, and the `staff` run checks
+// that the token gets nothing on `staff`. Needs a fresh ./ingress.sh.
 // Exits 1 when a check fails.
+import { readFileSync, writeFileSync } from "node:fs";
+const tokenFile = new URL("../data/public-token.txt", import.meta.url);
 const api = process.argv[2];
 if (api !== "staff" && api !== "public") {
   console.error("usage: node tests/api-check.mjs staff|public [ws url]");
@@ -80,6 +84,30 @@ check(session.welcome.principal === who, `hello as ${session.welcome.principal}`
 const rows = await session.send({ t: "open_table", table: "tickets" });
 check(rows.t === "rows" && rows.total === total, `${who} on ${api} sees ${total} tickets`, rows);
 session.ws.close();
+
+if (api === "public") {
+  writeFileSync(tokenFile, signed.result?.token ?? "");
+} else {
+  // A session issued by `public` is valid only there: on `staff` its
+  // `session.app` doesn't match `app.name`, so `hello` doesn't seat it.
+  let publicToken = "";
+  try {
+    publicToken = readFileSync(tokenFile, "utf8").trim();
+  } catch {}
+  if (!publicToken) {
+    check(false, "a public token to try on staff (run `public` first)", null);
+  } else {
+    const borrowed = await connect(url, publicToken);
+    const notSeated =
+      borrowed.welcome.t === "error" || borrowed.welcome.principal_id?.startsWith("anonymous:");
+    check(notSeated, "Cleo's public token on staff isn't seated at hello", borrowed.welcome);
+    if (borrowed.welcome.t !== "error") {
+      const seen = await borrowed.send({ t: "open_table", table: "tickets" });
+      check(seen.t === "error" && seen.kind === "forbidden", "…and it reads no tickets (forbidden)", seen);
+    }
+    borrowed.ws.close();
+  }
+}
 
 console.log(failures ? `${failures} check(s) failed` : "all checks passed");
 process.exit(failures ? 1 : 0);

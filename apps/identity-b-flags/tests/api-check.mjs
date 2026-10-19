@@ -88,12 +88,33 @@ check(
 // 5. One inside them is written.
 const dev = await eve.send({ t: "flash", table: "flags", patch: { name: "eve-dev", environment: "dev", enabled: true } });
 check(dev.t === "flashed", "Eve's dev insert → flashed", dev);
+
+// 6. An update is judged on where the row is going and where it was: moving
+//    the prod flag f2 into dev is refused; renaming the dev flag f1 is not.
+const move = await eve.send({ t: "flash", table: "flags", rid: "f2", patch: { environment: "dev" } });
+check(
+  move.t === "rejected" && move.code === "forbidden" && move.reason === "editors change only their environments",
+  "Eve's patch moving prod flag f2 to dev → forbidden",
+  move,
+);
+const rename = await eve.send({ t: "flash", table: "flags", rid: "f1", patch: { name: "checkout-v3" } });
+check(rename.t === "flashed", "Eve's rename of dev flag f1 → flashed", rename);
+
+// 7. A delete is judged on the stored row: the prod flag f4 stays.
+const del = await eve.send({ t: "delete", table: "flags", rid: "f4" });
+check(
+  del.t === "rejected" && del.code === "forbidden" && del.reason === "editors change only their environments",
+  "Eve's delete of prod flag f4 → forbidden",
+  del,
+);
 eve.ws.close();
 
-// 6. Vic (viewer) changes nothing.
+// 8. Any other role (here a viewer) changes nothing.
 const vic = await connect((await signIn("vic@flags.test", "flags-demo-pw")).result?.token);
 const vicWrite = await vic.send({ t: "flash", table: "flags", patch: { name: "vic", environment: "dev" } });
-check(vicWrite.t === "rejected" && vicWrite.code === "forbidden" && vicWrite.reason === "viewers change nothing", "Vic's insert → forbidden, viewers change nothing", vicWrite);
+check(vicWrite.t === "rejected" && vicWrite.code === "forbidden" && vicWrite.reason === "this role changes nothing", "Vic's insert → forbidden, this role changes nothing", vicWrite);
+const vicDel = await vic.send({ t: "delete", table: "flags", rid: "f1" });
+check(vicDel.t === "rejected" && vicDel.code === "forbidden", "Vic's delete → forbidden", vicDel);
 vic.ws.close();
 
 console.log(failures ? `${failures} check(s) failed` : "all checks passed");

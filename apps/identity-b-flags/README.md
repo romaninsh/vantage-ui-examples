@@ -4,8 +4,15 @@ Feature flags per environment. The desktop holds the database credentials
 and opens with its own session (`session.desktop`:
 `#{ name: env("USER") + "@desktop", role: "admin" }`) and full access. Staff
 sign in with a password over the `flags` API. One rule script on the
-`environment` column checks writes: an editor changes only the environments
-in `session.envs`, a viewer changes nothing. The title bar's identity menu
+`environment` column checks writes, deny by default:
+- an admin changes anything;
+- an editor changes only flags in the environments of `session.envs`: an
+  insert is checked on the new row, an update on both the new row and the
+  stored one (so a prod flag can't be moved into dev), and a delete on the
+  stored row;
+- any other role (a viewer, or one the script doesn't know) changes nothing.
+
+The title bar's identity menu
 lets the admin step into someone's shoes (`session.assume`) and back
 (`session.restore`).
 
@@ -50,7 +57,7 @@ Turn on "Allow MCP agents to read data" and "Allow MCP agents to write data".
 3. `explain_access { "table": "feature_flag", "app": "flags", "session": { "role":
    "editor", "envs": "dev,test" } }` returns `"app": "flags"`, `"assumed": true`,
    `"applied": []`, and `hooks`: `[{ "rule": "main.invariants.environment.script",
-   "on": ["before_insert", "before_update"], "last_refusal": null }]`. These are the
+   "on": ["before_insert", "before_update", "before_delete"], "last_refusal": null }]`. These are the
    chips an editor's Flags page shows ("writes checked by …").
 4. An editor's write outside their environments:
    `run_data_script { "script": "table(\"feature_flag\").insert(#{ id: \"f9\", name:
@@ -116,9 +123,19 @@ Expected output, all ✓:
 ✓ Eve reads the 4 flags
 ✓ Eve's prod insert → rejected, code forbidden, the rule and its reason
 ✓ Eve's dev insert → flashed
-✓ Vic's insert → forbidden, viewers change nothing
+✓ Eve's patch moving prod flag f2 to dev → forbidden
+✓ Eve's rename of dev flag f1 → flashed
+✓ Eve's delete of prod flag f4 → forbidden
+✓ Vic's insert → forbidden, this role changes nothing
+✓ Vic's delete → forbidden
 all checks passed
 ```
+
+The two update checks (`f2` moved to dev, `f1` renamed) need vantage-lib to
+hand the rule script's `before_update(|record, stored| …)` the stored row.
+Until it does, `stored` is `()`: both patches are refused with "Unknown
+property 'environment' … for type '()'". That fails closed, so no prod flag
+moves, but an editor can't patch at all.
 
 The frames it sends, in order:
 1. `hello {protocol: 1}`;
@@ -130,6 +147,10 @@ The frames it sends, in order:
 5. `flash {table: "flags", patch: {name: "eve-prod", environment: "prod"}}`,
    answered with `rejected {code: "forbidden", rule:
    "main.invariants.environment.script", reason: "editors change only their
-   environments"}`.
+   environments"}`;
+6. `flash {table: "flags", rid: "f2", patch: {environment: "dev"}}`, answered
+   with `rejected` and the same reason;
+7. `delete {table: "flags", rid: "f4"}`, answered with `rejected` and the same
+   reason.
 
-The script writes one dev flag; run `./ingress.sh` to reset.
+The script writes one dev flag and renames f1; run `./ingress.sh` to reset.
