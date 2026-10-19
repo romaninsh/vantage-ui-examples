@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./api-schema-1.json
+# The shops' staff app. The desktop assumes into it to check what a shop's
+# staff would see; this demo doesn't sign anyone in over it.
+title: Staff
+description: A bakery's products and orders.
+entities:
+  - name: products
+    observe: product
+    params:
+      columns: [name, price]
+  - name: orders
+    observe: order
+    params:
+      columns: [client_id, product_id, qty]
+auth:
+  local: session

@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# The desktop's only page: it reads with full access, so it counts them all.
+title: Status
+body:
+  - kind: label
+    params: { text: "Tickets are served by the staff and public APIs", style: heading }
+  - kind: stat
+    observe: ticket#total
+    params: { label: Tickets, icon: Inbox }

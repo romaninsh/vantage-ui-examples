@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: auth
+title: Session
+columns:
+  id: { type: string, flags: [id] }
+  staff_member_id: { type: string, references: staff_member }
+  name: { type: string }
+  role: { type: string }
+  bakery_id: { type: int }
+  office: { type: string }

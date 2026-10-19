@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Each bakery's products, clients and orders (data/shop.db). A session
+# scoped to one bakery sees only its rows, and its script drops the bakery
+# columns, which say nothing there. The desktop's own session isn't
+# narrowed (its app's default exception lifts the rule).
+type: sqlite
+description: Shop data per bakery
+url: sqlite:data/shop.db
+invariants:
+  bakery_id:
+    must_be: session.bakery_id
+    script: |
+      table.remove_column("bakery_id");    // one bakery: the column says nothing
+      table.remove_column("bakery_name");

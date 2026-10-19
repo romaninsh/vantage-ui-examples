@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Feature flags (data/main.db). Everyone reads every flag. The rule script
+# checks writes, deny by default: an admin changes anything; an editor
+# changes only flags in the environments of `session.envs`, both where a row
+# is going and where it was; any other role (a viewer, or a role the script
+# doesn't know) changes nothing. The desktop's own session isn't checked (its
+# app's default exception lifts the rule).
+type: sqlite
+description: Feature flags per environment
+url: sqlite:data/main.db
+invariants:
+  environment:
+    script: |
+      // Deny by default: admins change anything, editors only their environments, anyone else nothing.
+      if session.role == "admin" {
+        // no write checks
+      } else if session.role == "editor" {
+        let mine = session.envs.split(",");
+        let refuse = "editors change only their environments";
+        table.before_insert(|record| if !mine.contains(record.environment) { throw refuse });
+        // Both where the row is going and where it was: an editor can't move a prod row into dev.
+        table.before_update(|record, stored| if !mine.contains(record.environment) || !mine.contains(stored.environment) { throw refuse });
+        table.before_delete(|id, row| if !mine.contains(row.environment) { throw refuse });
+      } else {
+        table.before_insert(|record| throw "this role changes nothing");
+        table.before_update(|record| throw "this role changes nothing");
+        table.before_delete(|id| throw "this role changes nothing");
+      }

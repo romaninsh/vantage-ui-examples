@@ -1,0 +1,22 @@
+# Scenario B: an admin desktop and a staff web app over feature flags.
+#
+# The desktop holds the database credentials, so it opens with its own
+# session (filled by `desktop:` below) and full access. Staff sign in over
+# the `flags` API (api/flags.yaml) with a password. The title bar's identity
+# menu lets the admin step into a person's or a role's shoes (`assume`) to
+# check what they would see, and step back (`restore`).
+home: flags
+layout: flags
+
+session:
+  table: session
+  identity: person
+  desktop: '#{ name: env("USER") + "@desktop", role: "admin" }'
+  # An assumed session has no row, so no expiry; a signed-in one expires
+  # (`expires_at` is the column's database default, 8 hours on).
+  valid: 'session.assumed || session.expires_at > now()'
+  fields:
+    person_id: {}
+    name: {}
+    role: {}
+    envs: {}

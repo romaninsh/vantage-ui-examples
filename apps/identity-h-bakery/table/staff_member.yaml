@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# The identity table. Nobody signs in to this demo, but `session:` needs one.
+datasource: auth
+title: Staff member
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [title] }
+  role: { type: string, enum: [manager, baker] }
+  bakery_id: { type: int }

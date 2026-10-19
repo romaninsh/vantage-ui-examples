@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Orders
+body:
+  - kind: binder
+    observe: order
+    params:
+      columns:
+        client_id: { label: Client }
+        product_id: { label: Product }
+        qty: { label: Qty }
+        bakery_name: { label: Bakery }

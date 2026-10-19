@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: main
+title: Feature flag
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [title, searchable] }
+  environment: { type: string, enum: [dev, test, prod] }
+  enabled: { type: bool, default: false }

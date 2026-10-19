@@ -1,0 +1,15 @@
+# Scenario H: a bakery chain whose desktop admin checks what a shop's staff
+# would see. The identity menu's "View as a role" assumes a role scoped to
+# one bakery in the `staff` app: every shop table narrows to that bakery and
+# drops its bakery columns, and the head-office payroll is refused.
+home: products
+layout: bakery
+
+session:
+  table: session
+  identity: staff_member
+  fields:
+    name: {}
+    role: {}
+    bakery_id: {}
+    office: {}

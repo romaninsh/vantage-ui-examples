@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+items:
+  - { page: flags, label: Flags, icon: Flag }
+  - { page: people, label: People, icon: Users }

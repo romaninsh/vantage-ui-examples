@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# One row per sign-in over the API; `id` is the token's hash.
+datasource: auth
+title: Session
+columns:
+  id: { type: string, flags: [id] }
+  person_id: { type: string, references: person }
+  name: { type: string }
+  role: { type: string }
+  envs: { type: string }
+  expires_at: { type: string }

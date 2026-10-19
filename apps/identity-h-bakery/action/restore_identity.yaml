@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# Identity menu: back to the desktop's own session.
+kind: script
+body: |
+  session.restore();

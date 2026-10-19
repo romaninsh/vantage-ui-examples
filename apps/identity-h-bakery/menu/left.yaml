@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=./menu-schema-1.json
+items:
+  - { page: products, label: Products, icon: Package }
+  - { page: orders, label: Orders, icon: ShoppingCart }
+  - { page: clients, label: Clients, icon: Users }
+  - { page: bakeries, label: Bakeries, icon: Store }
+  - { page: payroll, label: Payroll, icon: Lock }

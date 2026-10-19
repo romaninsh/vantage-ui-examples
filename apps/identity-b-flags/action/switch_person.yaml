@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# Identity menu: become a person. The menu runs as the desktop's own session,
+# so it reads the people table; the assumed session is that person's, in the
+# `flags` app, exactly as if they had signed in over the API.
+kind: script
+body: |
+  let picked = actions.switch_person_form();
+  let p = table("person").get(picked.person);
+  if p == () { throw "No such person"; }
+  session.assume(#{
+    app: "flags",
+    fields: #{ person_id: p.id, name: p.name, role: p.role, envs: p.envs },
+  });

@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# Identity menu: the one-click version of switch_role, a manager of
+# bakery 3 (Leeds). No dialog, so an agent can run it over MCP.
+kind: script
+body: |
+  session.assume(#{ app: "staff", fields: #{ role: "manager", bakery_id: 3 } });

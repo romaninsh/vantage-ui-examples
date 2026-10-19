@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: main
+title: Ticket
+columns:
+  id: { type: string, flags: [id] }
+  title: { type: string, flags: [title] }
+  owner_id: { type: string }
+  status: { type: string, enum: [open, closed] }
+aggregates:
+  total: { op: count }

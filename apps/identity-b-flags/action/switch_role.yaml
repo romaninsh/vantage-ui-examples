@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# Identity menu: become a role, with no person behind it.
+kind: script
+body: |
+  let picked = actions.switch_role_form();
+  session.assume(#{
+    app: "flags",
+    fields: #{ name: picked.role, role: picked.role, envs: picked.envs },
+  });

@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: auth
+title: Person
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [title] }
+  email: { type: string }
+  role: { type: string, enum: [staff, customer] }
+  password_hash: { type: string, flags: [hidden] }

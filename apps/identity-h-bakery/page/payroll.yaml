@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# Head office only: a shop session gets the 403 panel here.
+title: Payroll
+body:
+  - kind: binder
+    observe: payroll
+    params:
+      columns:
+        employee: { label: Employee }
+        monthly: { label: Monthly (£) }
+        office: { label: Office }

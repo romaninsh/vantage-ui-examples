@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./api-schema-1.json
+# Staff. Signed out, only `staff_sign_in` runs here; every build of this
+# API is app `staff`, which the ticket rule's exception names.
+title: Staff
+description: Every ticket, for the support team.
+entities:
+  - name: tickets
+    observe: ticket
+    params:
+      columns: [title, owner_id, status]
+      default_sort: title
+actions: [staff_sign_in]
+auth:
+  local:
+    session:
+      sign_in: [staff_sign_in]

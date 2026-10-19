@@ -1,0 +1,20 @@
+# Scenario G: web and API only. Two APIs over one ticket table, each with
+# its own sign-in: customers sign in to `public` and see their own tickets;
+# staff sign in to `staff`, whose app exception lifts the rule. The desktop
+# has a status page and nothing else.
+home: status
+
+session:
+  table: session
+  identity: person
+  # A session is valid only in the app that issued it, so a `public` token
+  # doesn't load on `staff`. A signed-in session also expires (`expires_at`
+  # is the column's database default); a view (MCP `app`/`session`) has no
+  # row and no expiry.
+  valid: 'session.app == app.name && (session.assumed || session.expires_at > now())'
+  fields:
+    person_id: {}
+    name: {}
+    role: {}
+    # The API that issued the session, stamped by its sign-in.
+    app: {}

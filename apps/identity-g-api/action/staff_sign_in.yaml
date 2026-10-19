@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# The `staff` API's sign-in: staff only. The session is stamped
+# `app: "staff"`, and the ticket rule serves it only there.
+kind: script
+body: |
+  let id = session.check_password(#{ email: args.email }, args.password, "password_hash");
+  if id == () { throw "Wrong email or password"; }
+  let p = session.identity(id);
+  if p.role != "staff" { throw "Staff only"; }
+  #{ token: session.create(id, #{ name: p.name, role: p.role, app: "staff" }) }

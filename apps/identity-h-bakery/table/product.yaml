@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: shop
+title: Product
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [title, searchable] }
+  price: { type: int }
+  bakery_id: { type: int }
+  bakery_name: { type: string }

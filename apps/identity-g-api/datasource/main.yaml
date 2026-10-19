@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Tickets (data/main.db). A session sees the tickets it owns; a staff
+# member signed in to `staff` sees every ticket. A session only loads on
+# the API that issued it (`valid:` in application.yaml).
+type: sqlite
+description: Support tickets
+url: sqlite:data/main.db
+invariants:
+  owner_id:
+    must_be: session.person_id
+    exceptions:
+      - type: app
+        name: staff
+        when: 'session.role == "staff" && session.app == "staff"'
