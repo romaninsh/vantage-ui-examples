@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# Identity menu: the one-click version of switch_role, an editor of dev and
+# test. No dialog, so an agent can run it over MCP (`ui_interact`).
+kind: script
+body: |
+  session.assume(#{
+    app: "flags",
+    fields: #{ name: "editor", role: "editor", envs: "dev,test" },
+  });

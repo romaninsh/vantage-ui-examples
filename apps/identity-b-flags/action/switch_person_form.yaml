@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./action-schema-1.json
+kind: form
+dialog:
+  title: View as a person
+  confirm_label: View as
+  size: sm
+form:
+  fields:
+    - name: person
+      label: Person
+      type: string
+      widget: dropdown
+      # language=rhai
+      options: |
+        table("person").sort("name", "asc")
+      option_value: id
+      option_label: name

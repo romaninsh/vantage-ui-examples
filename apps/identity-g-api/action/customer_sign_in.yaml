@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# The `public` API's sign-in.
+kind: script
+body: |
+  let id = session.check_password(#{ email: args.email }, args.password, "password_hash");
+  if id == () { throw "Wrong email or password"; }
+  let p = session.identity(id);
+  #{ token: session.create(id, #{ name: p.name, role: p.role }) }

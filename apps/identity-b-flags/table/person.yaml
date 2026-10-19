@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./table-schema-1.json
+# The identity table. Only the desktop's own session reads it; the
+# password hash is hidden from every page and script.
+datasource: auth
+title: Person
+columns:
+  id: { type: string, flags: [id] }
+  name: { type: string, flags: [title, searchable] }
+  email: { type: string }
+  role: { type: string, enum: [admin, editor, viewer] }
+  envs: { type: string }
+  password_hash: { type: string, flags: [hidden] }

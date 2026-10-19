@@ -1,0 +1,5 @@
+# Scenario A: a personal tool. No `session:`, so nobody signs in and the
+# desktop reads everything. The layout still lists a `kind: identity` item:
+# without `session:` it draws nothing.
+home: notes
+layout: personal

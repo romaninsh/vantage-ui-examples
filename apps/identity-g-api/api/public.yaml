@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./api-schema-1.json
+# Customers. Signed out, only `customer_sign_in` runs here.
+title: Public
+description: A customer's own tickets.
+entities:
+  - name: tickets
+    observe: ticket
+    params:
+      columns: [title, status]
+      default_sort: title
+actions: [customer_sign_in, staff_sign_in]
+auth:
+  local:
+    session:
+      sign_in: [customer_sign_in]

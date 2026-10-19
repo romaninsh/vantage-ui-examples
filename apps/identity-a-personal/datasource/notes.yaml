@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+type: sqlite
+description: My notes (data/notes.db, made by ingress.sh)
+url: sqlite:data/notes.db

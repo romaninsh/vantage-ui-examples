@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Notes
+body:
+  - kind: binder
+    observe: note
+    params:
+      columns:
+        text: { label: Note }
+        done: { label: Done }

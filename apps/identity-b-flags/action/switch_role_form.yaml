@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=./action-schema-1.json
+kind: form
+dialog:
+  title: View as a role
+  confirm_label: View as
+  size: sm
+form:
+  fields:
+    - { name: role, label: Role, type: string, choices: [editor, viewer, admin], default: editor }
+    - { name: envs, label: "Environments (comma-separated)", type: string, default: "dev,test" }

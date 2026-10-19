@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: notes
+title: Note
+columns:
+  id: { type: string, flags: [id] }
+  text: { type: string, flags: [title, searchable] }
+  done: { type: bool, default: false }

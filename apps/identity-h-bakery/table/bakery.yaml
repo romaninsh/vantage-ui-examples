@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: directory
+title: Bakery
+columns:
+  id: { type: int, flags: [id] }
+  name: { type: string, flags: [title] }
+  city: { type: string }

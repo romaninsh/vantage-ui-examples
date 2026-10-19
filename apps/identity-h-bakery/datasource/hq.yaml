@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Head office (data/hq.db). Its rule reads `session.office`, which no shop
+# session carries, so only the desktop's own session opens it.
+type: sqlite
+description: Head-office records
+url: sqlite:data/hq.db
+invariants:
+  office:
+    must_be: session.office

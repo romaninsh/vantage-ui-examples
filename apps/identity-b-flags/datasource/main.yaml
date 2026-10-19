@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Feature flags (data/main.db). Everyone reads every flag; the rule script
+# checks writes: an editor changes only the environments in `session.envs`,
+# a viewer changes nothing. The desktop's own session isn't checked (its
+# app's default exception lifts the rule).
+type: sqlite
+description: Feature flags per environment
+url: sqlite:data/main.db
+invariants:
+  environment:
+    script: |
+      if session.role == "editor" {
+        let mine = session.envs.split(",");
+        table.before_insert(|record| if !mine.contains(record.environment) { throw "editors change only their environments" });
+        table.before_update(|record| if !mine.contains(record.environment) { throw "editors change only their environments" });
+      }
+      if session.role == "viewer" {
+        table.before_insert(|record| throw "viewers change nothing");
+        table.before_update(|record| throw "viewers change nothing");
+        table.before_delete(|id| throw "viewers change nothing");
+      }

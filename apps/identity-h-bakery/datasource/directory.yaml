@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+type: sqlite
+description: The chain's bakeries (data/directory.db)
+url: sqlite:data/directory.db

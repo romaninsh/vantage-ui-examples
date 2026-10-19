@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=./page-schema-1.json
+# The desktop's own session lists people; an assumed one gets the 403 panel.
+title: People
+body:
+  - kind: binder
+    observe: person
+    params:
+      columns:
+        name: { label: Name }
+        email: { label: Email }
+        role: { label: Role }
+        envs: { label: Environments }

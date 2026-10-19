@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+type: sqlite
+description: People and their sign-in sessions (data/auth.db)
+url: sqlite:data/auth.db

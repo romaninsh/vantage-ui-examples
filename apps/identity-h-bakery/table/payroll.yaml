@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: hq
+title: Payroll
+columns:
+  id: { type: string, flags: [id] }
+  employee: { type: string, flags: [title] }
+  monthly: { type: int }
+  office: { type: string }

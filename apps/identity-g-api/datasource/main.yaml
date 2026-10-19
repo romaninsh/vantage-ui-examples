@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./datasource-schema-1.json
+# Tickets (data/main.db). A session sees the tickets it owns; every build
+# of the `staff` API sees them all.
+type: sqlite
+description: Support tickets
+url: sqlite:data/main.db
+invariants:
+  owner_id:
+    must_be: session.person_id
+    exceptions:
+      - { type: app, name: staff }

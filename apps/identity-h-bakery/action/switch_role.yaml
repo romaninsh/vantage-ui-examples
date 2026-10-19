@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# Identity menu: a role scoped to one bakery, in the `staff` app.
+kind: script
+body: |
+  let picked = actions.switch_role_form();
+  let bakery = picked.bakery;
+  if type_of(bakery) == "string" { bakery = parse_int(bakery); }
+  session.assume(#{ app: "staff", fields: #{ role: picked.role, bakery_id: bakery } });

@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./api-schema-1.json
+# The staff web app's API. Builds here run as app `flags`: no default
+# exception, so an editor's writes are checked by the environment rule.
+title: Flags
+description: Feature flags for staff, signed in with a password.
+entities:
+  - name: flags
+    observe: feature_flag
+    params:
+      columns: [name, environment, enabled]
+      filter: [environment]
+      default_sort: name
+actions: [password_sign_in]
+auth:
+  local:
+    session:
+      sign_in: [password_sign_in]

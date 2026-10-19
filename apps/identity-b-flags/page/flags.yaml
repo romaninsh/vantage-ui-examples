@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=./page-schema-1.json
+title: Flags
+body:
+  - kind: binder
+    observe: feature_flag
+    params:
+      columns:
+        name: { label: Flag }
+        environment: { label: Environment }
+        enabled: { label: On }
