@@ -13,3 +13,9 @@ members = [
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/romaninsh/vantage-ui-examples"
+
+# Dev builds are for compiling fast, not for a debugger: no debug info halves a
+# cold build and leaves no codegen objects behind in target/debug/deps.
+# Set CARGO_PROFILE_DEV_DEBUG=true for a session that needs one.
+[profile.dev]
+debug = false
