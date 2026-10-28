@@ -21,23 +21,34 @@ surreal:
   # language=rhai
   rhai: |
     let b = args.get("bakery") ?? "";
-    // `({} = '' OR …)` keeps ONE copy of the correlated sum for both
-    // the filtered and the all-bakeries view.
-    let sold = expr("math::sum((SELECT VALUE lines.quantity FROM (SELECT lines FROM order WHERE ({} = '' OR bakery.name = {}) AND status != 'cancelled' SPLIT lines) WHERE lines.product = $parent.id)) ?? 0", [b, b]);
-    let per_product = select()
+    let orders = surreal::select()
+        .field("lines")
+        .from("order")
+        .where(surreal::ident("status") != "cancelled")
+        .split("lines");
+    if b != "" {
+        orders = orders.where(surreal::ident("bakery")["name"] == b);
+    }
+    // math::sum of no rows is 0, so a product nobody bought still sums.
+    let sold = surreal::sum(
+        surreal::select().value().expression(surreal::ident("lines")["quantity"])
+            .from(orders.subquery())
+            .where(surreal::ident("lines")["product"] == surreal::parent("id"))
+            .subquery());
+    let per_product = surreal::select()
         .from("product")
-        .expression(expr("name").alias("product"))
-        .expression(expr("inventory.stock ?? 0").alias("stock1"))
+        .expression(surreal::ident("name").alias("product"))
+        .expression(surreal::coalesce(surreal::ident("inventory")["stock"], 0).alias("stock1"))
         .expression(sold.alias("sold1"));
     if b != "" {
-        per_product = per_product.where(expr("bakery.name = {}", [b]));
+        per_product = per_product.where(surreal::ident("bakery")["name"] == b);
     }
-    select()
+    surreal::select()
         .from(per_product.subquery())
         .field("product")
-        .expression(sum(ident("stock1")).alias("stock"))
-        .expression(sum(ident("sold1")).alias("sales"))
-        .group_by(ident("product"))
-        .order_by(ident("sales"), "desc")
+        .expression(surreal::sum(surreal::ident("stock1")).alias("stock"))
+        .expression(surreal::sum(surreal::ident("sold1")).alias("sales"))
+        .group_by(surreal::ident("product"))
+        .order_by(surreal::ident("sales"), "desc")
         // Five bars is what fits before the x labels start colliding.
         .limit(5, 0)

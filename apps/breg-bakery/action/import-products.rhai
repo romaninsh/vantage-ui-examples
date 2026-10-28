@@ -3,7 +3,7 @@ step.wait("confirmed");
 let source = wizard.steps.pick.source;
 state.total = source.row_count;
 state.status = "Saving the bakery…";
-let bakery_id = wizard.servos.bakery.save();
+let bakery_id = wizard.servos.bakery.flash();
 step.log(`Bakery ${bakery_id} saved.`);
 state.status = "Importing products…";
 // Values arrive as the CSV read them — `price` is already an int.

@@ -7,12 +7,28 @@ columns:
   - { name: month_key, type: string, flags: [hidden] }
   - { name: member, type: string, flags: [title] }
   - { name: spend, type: float }
-  - { name: total_display, type: string }
-  - { name: share, type: string }
+  - name: total_display
+    type: string
+    lazy: |
+      let c = (row.total_usd / 1e6 * 100.0).round().to_int();
+      let s = (c / 100).to_string();
+      let t = "";
+      while s.len() > 3 { t = "," + s.sub_string(s.len() - 3) + t; s = s.sub_string(0, s.len() - 3); }
+      let f = c % 100;
+      "$" + s + t + "." + (if f < 10 { "0" } else { "" }) + f + "M"
+  - name: share
+    type: string
+    lazy: |
+      if row.share_pct == () { () } else {
+        let t = (row.share_pct * 10.0).round().to_int();
+        (t / 10).to_string() + "." + (t % 10).to_string() + "%"
+      }
   - { name: share_pct, type: float }
+  - { name: total_usd, type: float, flags: [hidden] }
 postgres:
   # Reference: overview.breakdown (GROUPING SETS), one axis per view — pie
   # plus side legend; share divides HERE against the scope total.
+  # total_display and share are lazy columns over total_usd and share_pct.
   # language=rhai
   rhai: |
     let lob = if "lob" in args { args.lob } else { "" };
@@ -27,15 +43,22 @@ postgres:
     if jf != "" { m = "mart_fact_agg"; g += " AND ({} = '' OR job_function = {})"; ga += [jf, jf]; }
     let cor = "(SELECT sum(spend_usd) FROM " + m + " t WHERE " + g + " AND t.month_key = " + m + ".month_key)";
     let tot = "(SELECT sum(spend_usd) FROM " + m + " WHERE " + g + ")";
-    select().from(m)
-        .where(expr(g, ga))
-        .expression(expr("(lob_id) || ':' || coalesce(month_key, {})", ["All months"]).alias("rid"))
-        .expression(expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
-        .expression(expr("max(lob_name)").alias("member"))
-        .expression(expr("round(sum(spend_usd))").alias("spend"))
-        .expression(expr("'$' || to_char(sum(spend_usd) / 1e6, 'FM999,990.00') || 'M'").alias("total_display"))
-        .expression(expr("to_char(round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN " + tot + " ELSE " + cor + " END, 0), 1), 'FM990.0') || '%'", ga + ga).alias("share"))
-        .expression(expr("round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN " + tot + " ELSE " + cor + " END, 0), 1)", ga + ga).alias("share_pct"))
-        .group_by(expr("lob_id"))
-        .group_by(expr("ROLLUP(month_key)"))
-        .order_by(expr("sum(spend_usd)"), "desc")
+    let q = sql::select().from(m);
+    if lob != "" { q = q.where(sql::ident("lob_id") == lob); }
+    if rorg != "" { q = q.where(sql::ident("resource_org") == rorg); }
+    if drv != "" { q = q.where(sql::ident("usage_driver") == drv); }
+    if plat != "" { q = q.where(sql::ident("platform_id") == plat); }
+    if mdl != "" { q = q.where(sql::ident("model_id") == mdl); }
+    if jf != "" { q = q.where(sql::ident("job_function") == jf); }
+    // TODO(no-expr): string concat (||) and a literal in coalesce(x, 'All months') have no sql:: builder
+    q.expression(sql::expr("(lob_id) || ':' || coalesce(month_key, {})", ["All months"]).alias("rid"))
+        // TODO(no-expr): literal argument to coalesce (sql::coalesce takes expressions or identifiers only)
+        .expression(sql::expr("coalesce(month_key, {})", ["All months"]).alias("month_key"))
+        .expression(sql::max(sql::ident("lob_name")).alias("member"))
+        .expression(sql::round(sql::sum(sql::ident("spend_usd")), 0).alias("spend"))
+        .expression(sql::cast(sql::sum(sql::ident("spend_usd")), "double precision").alias("total_usd"))
+        // TODO(no-expr): scalar correlated subqueries with GROUPING(), a literal 100.0 and nullif(x, 0)
+        .expression(sql::cast(sql::expr("round(100.0 * sum(spend_usd) / nullif(CASE WHEN GROUPING(month_key) = 1 THEN " + tot + " ELSE " + cor + " END, 0), 1)", ga + ga), "double precision").alias("share_pct"))
+        .group_by(sql::ident("lob_id"))
+        .group_by(sql::fx("ROLLUP", [sql::ident("month_key")]))
+        .order_by(sql::sum(sql::ident("spend_usd")), "desc")

@@ -4,25 +4,59 @@ title: Apps · consumer mix
 id_column: consumer_lob_id
 columns:
   - { name: consumer_lob_id, type: string, flags: [id, hidden] }
-  - { name: member, type: string, flags: [title] }
-  - { name: total_display, type: string }
-  - { name: share, type: string }
-  - { name: share_pct, type: float }
+  - { name: consumer_lob_name, type: string, flags: [hidden], optional: true }
+  - { name: owns, type: bool, flags: [hidden], optional: true }
+  - { name: spend, type: float, flags: [hidden], optional: true }
+  - { name: scope_total, type: float, flags: [hidden], optional: true }
+  - name: member
+    type: string
+    flags: [title]
+    lazy: |
+      if row.consumer_lob_name == () { () } else { row.consumer_lob_name + (if row.owns == true { " · owns it" } else { "" }) }
+  - name: total_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      fn f2(x) { let c = (x * 100.0).round().to_int(); let f = c % 100; grp(c / 100) + "." + (if f < 10 { "0" } else { "" }) + f }
+      fn usd(x) { if x >= 1000000.0 { "$" + f2(x / 1000000.0) + "M" } else if x >= 1000.0 { "$" + (x / 1000.0).round().to_int() + "K" } else { "$" + grp(x.round().to_int()) } }
+      if row.spend == () { () } else { usd(num(row.spend)) }
+  - name: share
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      if row.spend == () || row.scope_total == () || num(row.scope_total) == 0.0 {
+          ()
+      } else {
+          let c = (1000.0 * num(row.spend) / num(row.scope_total)).round().to_int();
+          (c / 10).to_string() + "." + (c % 10).to_string() + "%"
+      }
+  - name: share_pct
+    type: float
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      if row.spend == () || row.scope_total == () || num(row.scope_total) == 0.0 {
+          ()
+      } else {
+          (1000.0 * num(row.spend) / num(row.scope_total)).round() / 10.0
+      }
 postgres:
   # Reference: apps.consumerMix — grouped by the CONSUMER's line of
-  # business; "· owns it" marks the diagonal (consumer = owner).
+  # business; "· owns it" marks the diagonal (consumer = owner). The share
+  # denominator is a window over the grouped rows: the same rows the old
+  # subquery summed.
   # language=rhai
   rhai: |
     let app = if "app" in args { args.app } else { "" };
     let mo = if "month" in args { args.month } else { "" };
-    select().from("mart_app_month")
-        .where(expr("app_id = {}", [app]))
-        .where(expr("({} = '' OR month_key = {})", [mo, mo]))
-        .expression(expr("consumer_lob_id").alias("consumer_lob_id"))
-        .expression(expr("consumer_lob_name || CASE WHEN bool_or(consumer_lob_id = owner_lob_id) THEN ' · owns it' ELSE '' END").alias("member"))
-        .expression(expr("CASE WHEN sum(spend_usd) >= 1e6 THEN '$' || to_char((sum(spend_usd)) / 1e6, 'FM999,990.00') || 'M' WHEN sum(spend_usd) >= 1e3 THEN '$' || to_char(round((sum(spend_usd)) / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(sum(spend_usd)), 'FM999,990') END").alias("total_display"))
-        .expression(expr("to_char(round(100.0 * sum(spend_usd) / NULLIF((SELECT sum(t.spend_usd) FROM mart_app_month t WHERE t.app_id = {} AND ({} = '' OR t.month_key = {})), 0), 1), 'FM990.0') || '%'", [app, mo, mo]).alias("share"))
-        .expression(expr("round(100.0 * sum(spend_usd) / NULLIF((SELECT sum(t.spend_usd) FROM mart_app_month t WHERE t.app_id = {} AND ({} = '' OR t.month_key = {})), 0), 1)", [app, mo, mo]).alias("share_pct"))
-        .group_by(expr("consumer_lob_id"))
-        .group_by(expr("consumer_lob_name"))
-        .order_by(expr("sum(spend_usd)"), "desc")
+    let q = sql::select().from("mart_app_month")
+        .where(sql::ident("app_id") == app);
+    if mo != "" { q = q.where(sql::ident("month_key") == mo); }
+    q.field("consumer_lob_id")
+        .field("consumer_lob_name")
+        .expression(sql::fx("bool_or", [sql::ident("consumer_lob_id") == sql::ident("owner_lob_id")]).alias("owns"))
+        .expression(sql::sum(sql::ident("spend_usd")).alias("spend"))
+        .expression(sql::window().apply(sql::sum(sql::sum(sql::ident("spend_usd")))).alias("scope_total"))
+        .group_by(sql::ident("consumer_lob_id"))
+        .group_by(sql::ident("consumer_lob_name"))
+        .order_by(sql::sum(sql::ident("spend_usd")), "desc")

@@ -13,23 +13,29 @@ columns:
 surreal:
   # language=rhai
   rhai: |
-    select()
+    let favorites_of_user = surreal::coalesce(
+        surreal::select().value().expression(surreal::count()).from("favorite")
+            .where(surreal::ident("article")["author"] == surreal::parent("id"))
+            .group_all().subquery()[0],
+        0);
+    let leader = surreal::max(surreal::select().value().expression(favorites_of_user).from("user").subquery());
+    surreal::select()
         .from(
-            select()
+            surreal::select()
                 .from("user")
                 .field("id")
                 .field("username")
-                .expression(expr("(SELECT VALUE count() FROM article WHERE author = $parent.id GROUP ALL)[0] ?? 0").alias("articles"))
-                .expression(expr("(SELECT VALUE count() FROM favorite WHERE article.author = $parent.id GROUP ALL)[0] ?? 0").alias("favorites"))
-                .expression(expr("(SELECT VALUE count() FROM follow WHERE author = $parent.id GROUP ALL)[0] ?? 0").alias("followers"))
+                .expression(surreal::coalesce(surreal::select().value().expression(surreal::count()).from("article").where(surreal::ident("author") == surreal::parent("id")).group_all().subquery()[0], 0).alias("articles"))
+                .expression(favorites_of_user.alias("favorites"))
+                .expression(surreal::coalesce(surreal::select().value().expression(surreal::count()).from("follow").where(surreal::ident("author") == surreal::parent("id")).group_all().subquery()[0], 0).alias("followers"))
                 .subquery())
         .field("id")
         .field("username")
         .field("articles")
         .field("favorites")
         .field("followers")
-        .expression(expr("math::round(favorites * 100.0 / math::max((SELECT VALUE (SELECT VALUE count() FROM favorite WHERE article.author = $parent.id GROUP ALL)[0] ?? 0 FROM user)))").alias("bar_pct"))
-        .where(expr("articles > 0"))
-        .order_by(ident("favorites"), "desc")
-        .order_by(ident("articles"), "desc")
+        .expression(surreal::round(surreal::cast(surreal::ident("favorites"), "float") * 100.0 / leader).alias("bar_pct"))
+        .where(surreal::ident("articles") > 0)
+        .order_by(surreal::ident("favorites"), "desc")
+        .order_by(surreal::ident("articles"), "desc")
         .limit(8, 0)

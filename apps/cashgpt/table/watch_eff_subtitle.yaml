@@ -4,13 +4,42 @@ title: Watch · efficiency subtitle
 id_column: rid
 columns:
   - { name: rid, type: string, flags: [id, hidden] }
-  - { name: line, type: string }
+  - { name: median_pu, type: float, flags: [hidden], optional: true }
+  - { name: median_tt, type: float, flags: [hidden], optional: true }
+  - { name: recoverable, type: float, flags: [hidden], optional: true }
+  - { name: l4_total, type: float, flags: [hidden], optional: true }
+  - name: line
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      fn f2(x) { let c = (x * 100.0).round().to_int(); let f = c % 100; grp(c / 100) + "." + (if f < 10 { "0" } else { "" }) + f }
+      fn signed_usd(x) { let a = x.abs(); (if x < 0.0 { "−" } else { "" }) + "$" + (if a >= 1000000.0 { f2(a / 1000000.0) + "M" } else { grp(a.round().to_int()) }) }
+      if row.median_pu == () || row.median_tt == () || row.recoverable == () || row.l4_total == () {
+          ()
+      } else {
+          "median team $" + grp(num(row.median_pu).round().to_int()) + "/user · " +
+              (100.0 * num(row.median_tt)).round().to_int().to_string() + "% top tier · " +
+              signed_usd(num(row.recoverable)) + " recoverable of " + signed_usd(num(row.l4_total))
+      }
 postgres:
-  # Prototype subtitle figures, formatted here: the medians, the signed
-  # L4-level recoverable total, and the total spend it is measured against.
+  # Prototype subtitle figures: the medians, the signed L4-level
+  # recoverable total, and the total spend it is measured against. The
+  # four figures come back raw; the line is assembled in the lazy column.
   # language=rhai
   rhai: |
-    select().from("mart_team_month")
-        .expression(expr("'eff'").alias("rid"))
-        .expression(expr("'median team $' || to_char(round((SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY s / NULLIF(a, 0))::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)), 'FM999,999') || '/user · ' || to_char(round(100.0 * (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)), 'FM990') || '% top tier · ' || CASE WHEN abs((SELECT round(sum(spend * (tt - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10)), 0) FROM (SELECT org_id, sum(spend_usd) AS spend, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 4 GROUP BY org_id) l4)) >= 1e6 THEN (CASE WHEN ((SELECT round(sum(spend * (tt - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10)), 0) FROM (SELECT org_id, sum(spend_usd) AS spend, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 4 GROUP BY org_id) l4)) < 0 THEN '−' ELSE '' END) || '$' || to_char(abs((SELECT round(sum(spend * (tt - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10)), 0) FROM (SELECT org_id, sum(spend_usd) AS spend, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 4 GROUP BY org_id) l4)) / 1e6, 'FM999,990.00') || 'M' ELSE (CASE WHEN ((SELECT round(sum(spend * (tt - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10)), 0) FROM (SELECT org_id, sum(spend_usd) AS spend, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 4 GROUP BY org_id) l4)) < 0 THEN '−' ELSE '' END) || '$' || to_char(round(abs((SELECT round(sum(spend * (tt - (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM (SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf)) * (1 - 0.84 / 6.10)), 0) FROM (SELECT org_id, sum(spend_usd) AS spend, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 4 GROUP BY org_id) l4))), 'FM999,999,999') END || ' recoverable of ' || CASE WHEN abs((SELECT sum(spend_usd) FROM mart_team_month WHERE org_level = 4)) >= 1e6 THEN (CASE WHEN ((SELECT sum(spend_usd) FROM mart_team_month WHERE org_level = 4)) < 0 THEN '−' ELSE '' END) || '$' || to_char(abs((SELECT sum(spend_usd) FROM mart_team_month WHERE org_level = 4)) / 1e6, 'FM999,990.00') || 'M' ELSE (CASE WHEN ((SELECT sum(spend_usd) FROM mart_team_month WHERE org_level = 4)) < 0 THEN '−' ELSE '' END) || '$' || to_char(round(abs((SELECT sum(spend_usd) FROM mart_team_month WHERE org_level = 4))), 'FM999,999,999') END").alias("line"))
+    let lf = "(SELECT org_id, sum(spend_usd) AS s, max(active) AS a, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 6 GROUP BY org_id) lf";
+    let l4 = "(SELECT org_id, sum(spend_usd) AS spend, round(sum(spend_usd * top_tier_share) / NULLIF(sum(spend_usd), 0), 4) AS tt FROM mart_team_month WHERE org_level = 4 GROUP BY org_id) l4";
+    let med_tt = "(SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tt)::numeric FROM " + lf + ")";
+    sql::select().from("mart_team_month")
+        // TODO(no-expr): a string literal as a select expression
+        .expression(sql::expr("'eff'").alias("rid"))
+        // TODO(no-expr): ordered-set aggregate (percentile_cont) over a derived table, as a scalar subquery
+        .expression(sql::expr("(SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY s / NULLIF(a, 0))::numeric FROM " + lf + ")").alias("median_pu"))
+        // TODO(no-expr): ordered-set aggregate (percentile_cont) over a derived table, as a scalar subquery
+        .expression(sql::expr(med_tt).alias("median_tt"))
+        // TODO(no-expr): scalar subquery whose aggregate reads another scalar subquery (the tier median) and a numeric literal
+        .expression(sql::expr("(SELECT round(sum(spend * (tt - " + med_tt + ") * (1 - 0.84 / 6.10)), 0) FROM " + l4 + ")").alias("recoverable"))
+        // TODO(no-expr): scalar subquery
+        .expression(sql::expr("(SELECT sum(spend_usd) FROM mart_team_month WHERE org_level = 4)").alias("l4_total"))
         .limit(1, 0)

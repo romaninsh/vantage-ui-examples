@@ -4,7 +4,11 @@ title: Exec · provider trajectory (chart)
 id_column: month_key
 columns:
   - { name: month_key, type: string, flags: [id, hidden] }
-  - { name: month, type: string }
+  - name: month
+    type: string
+    lazy: |
+      let names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      names[row.month_key.sub_string(5, 2).parse_int() - 1]
   - { name: "Anthropic", type: float }
   - { name: "OpenAI", type: float }
   - { name: "GitHub", type: float }
@@ -16,14 +20,14 @@ postgres:
   # pivoted; slot order (colour) is total-desc per toSeries.
   # language=rhai
   rhai: |
-    select().from("mart_spend_agg")
+    sql::select().from("mart_spend_agg")
             .field("month_key")
-            .expression(expr("to_char(to_date(month_key || '-01', 'YYYY-MM-DD'), 'Mon')").alias("month"))
-            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Anthropic"]).alias("Anthropic"))
-            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["OpenAI"]).alias("OpenAI"))
-            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["GitHub"]).alias("GitHub"))
-            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Other"]).alias("Other"))
-            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Amazon"]).alias("Amazon"))
-            .expression(expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Meta"]).alias("Meta"))
-            .group_by(ident("month_key"))
-            .order_by(ident("month_key"), "asc")
+            // TODO(no-expr): aggregate FILTER (WHERE ..) has no sql:: builder
+            .expression(sql::expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Anthropic"]).alias("Anthropic"))
+            .expression(sql::expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["OpenAI"]).alias("OpenAI"))
+            .expression(sql::expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["GitHub"]).alias("GitHub"))
+            .expression(sql::expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Other"]).alias("Other"))
+            .expression(sql::expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Amazon"]).alias("Amazon"))
+            .expression(sql::expr("coalesce(sum(spend_usd) FILTER (WHERE provider_group = {}), 0)", ["Meta"]).alias("Meta"))
+            .group_by(sql::ident("month_key"))
+            .order_by(sql::ident("month_key"), "asc")

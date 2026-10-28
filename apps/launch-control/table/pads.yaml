@@ -11,6 +11,7 @@ columns:
   - { name: country, type: string }
   - { name: location_id, type: string, flags: [hidden], references: locations }
   - { name: location.name, type: string }
+  - { name: location__id, type: string, flags: [hidden, request_param] }
   - { name: active, type: bool }
   - { name: latitude, type: float }
   - { name: longitude, type: float }

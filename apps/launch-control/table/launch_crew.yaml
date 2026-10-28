@@ -14,3 +14,4 @@ columns:
   - { name: astronaut.name, type: string, flags: [title, searchable] }
   - { name: astronaut.nationality, type: string }
   - { name: role, type: string, flags: [label] }
+  - { name: launch__id, type: string, flags: [hidden, request_param] }

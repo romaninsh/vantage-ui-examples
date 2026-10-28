@@ -6,30 +6,92 @@ columns:
   - { name: rid, type: string, flags: [id, hidden] }
   - { name: month_key, type: string, flags: [hidden] }
   - { name: band, type: string, flags: [title] }
-  - { name: "Coding", type: string }
-  - { name: "Domain", type: string }
-  - { name: "Agent", type: string }
-  - { name: "Assistant", type: string }
-  - { name: "Analysis", type: string }
-  - { name: "Research", type: string }
-  - { name: Total, type: string }
+  - { name: coding_raw, type: float, flags: [hidden] }
+  - { name: domain_raw, type: float, flags: [hidden] }
+  - { name: agent_raw, type: float, flags: [hidden] }
+  - { name: assistant_raw, type: float, flags: [hidden] }
+  - { name: analysis_raw, type: float, flags: [hidden] }
+  - { name: research_raw, type: float, flags: [hidden] }
+  - { name: total_raw, type: float, flags: [hidden] }
+  - name: Coding
+    type: string
+    lazy: |
+      let n = row.coding_raw; let v = if n == () { 0.0 } else { n + 0.0 };
+      let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+      if v >= 1000000.0 { let c = (v / 10000.0).round().to_int(); "$" + g.call(c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "M" }
+      else if v >= 1000.0 { "$" + g.call((v / 1000.0).round().to_int()) + "K" }
+      else { "$" + g.call(v.round().to_int()) }
+  - name: Domain
+    type: string
+    lazy: |
+      let n = row.domain_raw; let v = if n == () { 0.0 } else { n + 0.0 };
+      let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+      if v >= 1000000.0 { let c = (v / 10000.0).round().to_int(); "$" + g.call(c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "M" }
+      else if v >= 1000.0 { "$" + g.call((v / 1000.0).round().to_int()) + "K" }
+      else { "$" + g.call(v.round().to_int()) }
+  - name: Agent
+    type: string
+    lazy: |
+      let n = row.agent_raw; let v = if n == () { 0.0 } else { n + 0.0 };
+      let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+      if v >= 1000000.0 { let c = (v / 10000.0).round().to_int(); "$" + g.call(c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "M" }
+      else if v >= 1000.0 { "$" + g.call((v / 1000.0).round().to_int()) + "K" }
+      else { "$" + g.call(v.round().to_int()) }
+  - name: Assistant
+    type: string
+    lazy: |
+      let n = row.assistant_raw; let v = if n == () { 0.0 } else { n + 0.0 };
+      let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+      if v >= 1000000.0 { let c = (v / 10000.0).round().to_int(); "$" + g.call(c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "M" }
+      else if v >= 1000.0 { "$" + g.call((v / 1000.0).round().to_int()) + "K" }
+      else { "$" + g.call(v.round().to_int()) }
+  - name: Analysis
+    type: string
+    lazy: |
+      let n = row.analysis_raw; let v = if n == () { 0.0 } else { n + 0.0 };
+      let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+      if v >= 1000000.0 { let c = (v / 10000.0).round().to_int(); "$" + g.call(c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "M" }
+      else if v >= 1000.0 { "$" + g.call((v / 1000.0).round().to_int()) + "K" }
+      else { "$" + g.call(v.round().to_int()) }
+  - name: Research
+    type: string
+    lazy: |
+      let n = row.research_raw; let v = if n == () { 0.0 } else { n + 0.0 };
+      let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+      if v >= 1000000.0 { let c = (v / 10000.0).round().to_int(); "$" + g.call(c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "M" }
+      else if v >= 1000.0 { "$" + g.call((v / 1000.0).round().to_int()) + "K" }
+      else { "$" + g.call(v.round().to_int()) }
+  - name: Total
+    type: string
+    lazy: |
+      let n = row.total_raw; let v = if n == () { 0.0 } else { n + 0.0 };
+      let g = |k| { let s = k.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o };
+      if v >= 1000000.0 { let c = (v / 10000.0).round().to_int(); "$" + g.call(c / 100) + "." + (if c % 100 < 10 { "0" } else { "" }) + (c % 100) + "M" }
+      else if v >= 1000.0 { "$" + g.call((v / 1000.0).round().to_int()) + "K" }
+      else { "$" + g.call(v.round().to_int()) }
 postgres:
   # Reference: costOwnershipSql (defined but never registered — the panel
   # renders empty in the reference; this is its documented intent). Band
   # derives from the CONSUMER's LOB; suites pivot to columns.
   # language=rhai
   rhai: |
-    select().from("mart_spend_agg")
-            .expression(expr("(CASE WHEN lob_id IN ('LB-07','LB-08','LB-09') THEN 'Technology' WHEN lob_id IN ('LB-11','LB-12','LB-13') THEN 'Corporate functions' ELSE 'Business lines' END) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))
-            .expression(expr("coalesce(month_key, {})", ["Year to date"]).alias("month_key"))
-            .expression(expr("CASE WHEN lob_id IN ('LB-07','LB-08','LB-09') THEN 'Technology' WHEN lob_id IN ('LB-11','LB-12','LB-13') THEN 'Corporate functions' ELSE 'Business lines' END").alias("band"))
-            .expression(expr("CASE WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Coding')) >= 1e6 THEN '$' || to_char((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Coding')) / 1e6, 'FM999,990.00') || 'M' WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Coding')) >= 1e3 THEN '$' || to_char(round((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Coding')) / 1e3), 'FM999,999') || 'K' ELSE '$' || to_char(round(coalesce((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Coding')), 0)), 'FM999,999') END").alias("Coding"))
-            .expression(expr("CASE WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Domain')) >= 1e6 THEN '$' || to_char((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Domain')) / 1e6, 'FM999,990.00') || 'M' WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Domain')) >= 1e3 THEN '$' || to_char(round((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Domain')) / 1e3), 'FM999,999') || 'K' ELSE '$' || to_char(round(coalesce((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Domain')), 0)), 'FM999,999') END").alias("Domain"))
-            .expression(expr("CASE WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Agent')) >= 1e6 THEN '$' || to_char((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Agent')) / 1e6, 'FM999,990.00') || 'M' WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Agent')) >= 1e3 THEN '$' || to_char(round((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Agent')) / 1e3), 'FM999,999') || 'K' ELSE '$' || to_char(round(coalesce((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Agent')), 0)), 'FM999,999') END").alias("Agent"))
-            .expression(expr("CASE WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Assistant')) >= 1e6 THEN '$' || to_char((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Assistant')) / 1e6, 'FM999,990.00') || 'M' WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Assistant')) >= 1e3 THEN '$' || to_char(round((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Assistant')) / 1e3), 'FM999,999') || 'K' ELSE '$' || to_char(round(coalesce((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Assistant')), 0)), 'FM999,999') END").alias("Assistant"))
-            .expression(expr("CASE WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Analysis')) >= 1e6 THEN '$' || to_char((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Analysis')) / 1e6, 'FM999,990.00') || 'M' WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Analysis')) >= 1e3 THEN '$' || to_char(round((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Analysis')) / 1e3), 'FM999,999') || 'K' ELSE '$' || to_char(round(coalesce((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Analysis')), 0)), 'FM999,999') END").alias("Analysis"))
-            .expression(expr("CASE WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Research')) >= 1e6 THEN '$' || to_char((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Research')) / 1e6, 'FM999,990.00') || 'M' WHEN (sum(spend_usd) FILTER (WHERE initcap(kind) = 'Research')) >= 1e3 THEN '$' || to_char(round((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Research')) / 1e3), 'FM999,999') || 'K' ELSE '$' || to_char(round(coalesce((sum(spend_usd) FILTER (WHERE initcap(kind) = 'Research')), 0)), 'FM999,999') END").alias("Research"))
-            .expression(expr("CASE WHEN (sum(spend_usd)) >= 1e6 THEN '$' || to_char((sum(spend_usd)) / 1e6, 'FM999,990.00') || 'M' WHEN (sum(spend_usd)) >= 1e3 THEN '$' || to_char(round((sum(spend_usd)) / 1e3), 'FM999,999') || 'K' ELSE '$' || to_char(round(coalesce((sum(spend_usd)), 0)), 'FM999,999') END").alias("Total"))
-            .group_by(expr("CASE WHEN lob_id IN ('LB-07','LB-08','LB-09') THEN 'Technology' WHEN lob_id IN ('LB-11','LB-12','LB-13') THEN 'Corporate functions' ELSE 'Business lines' END"))
-            .group_by(expr("ROLLUP(month_key)"))
-            .order_by(expr("sum(spend_usd)"), "desc")
+    sql::select().from("mart_spend_agg")
+            // TODO(no-expr): string concat (||), a string literal in coalesce, and CASE with literal results have no sql:: builder
+            .expression(sql::expr("(CASE WHEN lob_id IN ('LB-07','LB-08','LB-09') THEN 'Technology' WHEN lob_id IN ('LB-11','LB-12','LB-13') THEN 'Corporate functions' ELSE 'Business lines' END) || ':' || coalesce(month_key, {})", ["Year to date"]).alias("rid"))
+            // TODO(no-expr): a string literal in coalesce has no sql:: builder
+            .expression(sql::expr("coalesce(month_key, {})", ["Year to date"]).alias("month_key"))
+            // TODO(no-expr): CASE with literal results and IN (list) have no sql:: builder
+            .expression(sql::expr("CASE WHEN lob_id IN ('LB-07','LB-08','LB-09') THEN 'Technology' WHEN lob_id IN ('LB-11','LB-12','LB-13') THEN 'Corporate functions' ELSE 'Business lines' END").alias("band"))
+            // TODO(no-expr): aggregate FILTER (WHERE ..) has no sql:: builder
+            .expression(sql::cast(sql::expr("sum(spend_usd) FILTER (WHERE initcap(kind) = {})", ["Coding"]), "double precision").alias("coding_raw"))
+            .expression(sql::cast(sql::expr("sum(spend_usd) FILTER (WHERE initcap(kind) = {})", ["Domain"]), "double precision").alias("domain_raw"))
+            .expression(sql::cast(sql::expr("sum(spend_usd) FILTER (WHERE initcap(kind) = {})", ["Agent"]), "double precision").alias("agent_raw"))
+            .expression(sql::cast(sql::expr("sum(spend_usd) FILTER (WHERE initcap(kind) = {})", ["Assistant"]), "double precision").alias("assistant_raw"))
+            .expression(sql::cast(sql::expr("sum(spend_usd) FILTER (WHERE initcap(kind) = {})", ["Analysis"]), "double precision").alias("analysis_raw"))
+            .expression(sql::cast(sql::expr("sum(spend_usd) FILTER (WHERE initcap(kind) = {})", ["Research"]), "double precision").alias("research_raw"))
+            .expression(sql::cast(sql::sum(sql::ident("spend_usd")), "double precision").alias("total_raw"))
+            // TODO(no-expr): CASE with literal results and IN (list) have no sql:: builder
+            .group_by(sql::expr("CASE WHEN lob_id IN ('LB-07','LB-08','LB-09') THEN 'Technology' WHEN lob_id IN ('LB-11','LB-12','LB-13') THEN 'Corporate functions' ELSE 'Business lines' END"))
+            // TODO(no-expr): ROLLUP has no sql:: builder
+            .group_by(sql::expr("ROLLUP(month_key)"))
+            .order_by(sql::sum(sql::ident("spend_usd")), "desc")

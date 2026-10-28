@@ -29,19 +29,19 @@ body:
           when: 'row.email_status == "unverified"'
           action: |
             row.email_verified_at = now();
-            row.save();
+            row.flash();
         - label: "Mark email unverified"
           icon: CircleX
           when: 'row.email_status == "verified"'
           action: |
             row.email_verified_at = ();
-            row.save();
+            row.flash();
         - label: "Set password…"
           icon: Key
           action: |
             let r = actions.set_password(row);
             row.password = r.password;
-            row.save();
+            row.flash();
         - label: "Copy email"
           icon: Copy
           copy: email

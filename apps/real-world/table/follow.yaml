@@ -8,5 +8,5 @@ columns:
   follower.username: { type: string, label: Follower, flags: [title] }
   author: { type: string, flags: [mandatory], references: { table: user, kind: has_one, name: author } }
   author.username: { type: string, label: Follows }
-  since_ago: { type: string, label: Since, expr: 'expr("fn::ago(created_at)")' }
+  since_ago: { type: string, label: Since, expr: 'surreal::fx("fn::ago", [surreal::ident("created_at")])' }
   created_at: { type: timestamp, label: Following since, time_precision: minutes }

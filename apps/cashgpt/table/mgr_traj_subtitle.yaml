@@ -4,17 +4,34 @@ title: Manager · trajectory subtitle
 id_column: rid
 columns:
   - { name: rid, type: string, flags: [id, hidden] }
-  - { name: line, type: string }
+  - { name: spend, type: float, flags: [hidden], optional: true }
+  - { name: org_name, type: string, flags: [hidden], optional: true }
+  - name: line
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      fn f2(x) { let c = (x * 100.0).round().to_int(); let f = c % 100; grp(c / 100) + "." + (if f < 10 { "0" } else { "" }) + f }
+      fn usd(x) { if x >= 1000000.0 { "$" + f2(x / 1000000.0) + "M" } else if x >= 1000.0 { "$" + (x / 1000.0).round().to_int() + "K" } else { "$" + grp(x.round().to_int()) } }
+      if row.spend == () || row.org_name == () { () } else { usd(num(row.spend)) + " across " + row.org_name }
 postgres:
   # Reference subtitle: "$X across {org}" — the scope grand total beside
   # the section's name (adaptive usd; the reference's usdMillions would
-  # print $0.00M at this scale).
+  # print $0.00M at this scale). The name rides a left join on the
+  # picked org: one row, so the total is unchanged.
   # language=rhai
   rhai: |
     let org = if "org" in args { args.org } else { "" };
     let mo = if "month" in args { args.month } else { "" };
-    select().from_as("mart_employee_month", "e")
-        .where(expr("(e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%')", [org, org]))
-        .where(expr("({} = '' OR e.month_key = {})", [mo, mo]))
-        .expression(expr("'sub'").alias("rid"))
-        .expression(expr("CASE WHEN sum(e.spend_usd) >= 1e6 THEN '$' || to_char((sum(e.spend_usd)) / 1e6, 'FM999,990.00') || 'M' WHEN sum(e.spend_usd) >= 1e3 THEN '$' || to_char(round((sum(e.spend_usd)) / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(sum(e.spend_usd)), 'FM999,990') END || ' across ' || (SELECT org_name FROM dim_org_unit WHERE org_id = {})", [org]).alias("line"))
+    let e = sql::ident("e");
+    let ou = sql::ident("ou");
+    // TODO(no-expr): OR / LIKE / scalar subquery / string concat for the org_path prefix scope
+    let scope = sql::expr("(e.org_path = (SELECT org_path FROM dim_org_unit WHERE org_id = {}) OR e.org_path LIKE (SELECT org_path FROM dim_org_unit WHERE org_id = {}) || '/%')", [org, org]);
+    let q = sql::select().from_as("mart_employee_month", "e")
+        .left_join("dim_org_unit", "ou", ou["org_id"] == org)
+        .where(scope);
+    if mo != "" { q = q.where(e["month_key"] == mo); }
+    // TODO(no-expr): a string literal as a select expression
+    q.expression(sql::expr("'sub'").alias("rid"))
+        .expression(sql::sum(e["spend_usd"]).alias("spend"))
+        .expression(sql::max(ou["org_name"]).alias("org_name"))

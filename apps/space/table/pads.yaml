@@ -26,6 +26,7 @@ columns:
   - { name: total_launch_count, type: int }
   - { name: orbital_launch_attempt_count, type: int }
   - { name: fastest_turnaround, type: string }
+  - { name: location__id, type: string, flags: [hidden, request_param] }
 
 references:
   launches:

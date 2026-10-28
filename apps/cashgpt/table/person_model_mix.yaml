@@ -4,23 +4,40 @@ title: Person · model mix
 id_column: model_name
 columns:
   - { name: model_name, type: string, flags: [id, title] }
-  - { name: meta, type: string }
-  - { name: total_display, type: string }
+  - name: meta
+    type: string
+    lazy: 'row.provider_group + " · " + row.model_tier'
+  - name: total_display
+    type: string
+    lazy: |
+      let c = (row.total_usd * 100.0).round().to_int();
+      let s = (c / 100).to_string();
+      let t = "";
+      while s.len() > 3 { t = "," + s.sub_string(s.len() - 3) + t; s = s.sub_string(0, s.len() - 3); }
+      let f = c % 100;
+      "$" + s + t + "." + (if f < 10 { "0" } else { "" }) + f
   - { name: share_pct, type: float }
+  - { name: provider_group, type: string, flags: [hidden] }
+  - { name: model_tier, type: string, flags: [hidden] }
+  - { name: total_usd, type: float, flags: [hidden] }
 postgres:
   # Reference: individual.modelMix — every model the person touched,
   # provider · tier as the meta line, spend to the cent.
+  # meta and total_display are lazy columns over provider_group / model_tier
+  # and total_usd.
   # language=rhai
   rhai: |
     let person = if "person" in args { args.person } else { "" };
-    select().from_as("fct_usage", "u")
-        .inner_join("dim_model", "m", expr("m.model_id = u.model_id"))
-        .where(expr("u.employee_id = {}", [person]))
-        .expression(expr("m.model_name").alias("model_name"))
-        .expression(expr("m.provider_group || ' · ' || m.model_tier").alias("meta"))
-        .expression(expr("'$' || to_char(sum(u.spend_usd), 'FM999,999,990.00')").alias("total_display"))
-        .expression(expr("round(100.0 * sum(u.spend_usd) / NULLIF((SELECT sum(t.spend_usd) FROM fct_usage t WHERE t.employee_id = {}), 0), 1)", [person]).alias("share_pct"))
-        .group_by(expr("m.model_name"))
-        .group_by(expr("m.provider_group"))
-        .group_by(expr("m.model_tier"))
-        .order_by(expr("sum(u.spend_usd)"), "desc")
+    sql::select().from_as("fct_usage", "u")
+        .inner_join("dim_model", "m", sql::ident("m")["model_id"] == sql::ident("u")["model_id"])
+        .where(sql::ident("u")["employee_id"] == person)
+        .expression(sql::ident("m")["model_name"].alias("model_name"))
+        .expression(sql::ident("m")["provider_group"].alias("provider_group"))
+        .expression(sql::ident("m")["model_tier"].alias("model_tier"))
+        .expression(sql::sum(sql::ident("u")["spend_usd"]).alias("total_usd"))
+        // TODO(no-expr): scalar subquery (no scalar .subquery() in sql::), literal 100.0 and nullif(x, 0)
+        .expression(sql::expr("round(100.0 * sum(u.spend_usd) / NULLIF((SELECT sum(t.spend_usd) FROM fct_usage t WHERE t.employee_id = {}), 0), 1)", [person]).alias("share_pct"))
+        .group_by(sql::ident("m")["model_name"])
+        .group_by(sql::ident("m")["provider_group"])
+        .group_by(sql::ident("m")["model_tier"])
+        .order_by(sql::sum(sql::ident("u")["spend_usd"]), "desc")

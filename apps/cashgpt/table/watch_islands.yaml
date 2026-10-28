@@ -6,30 +6,106 @@ columns:
   - { name: rid, type: string, flags: [id, hidden] }
   - { name: month_key, type: string, flags: [hidden] }
   - { name: peer_group, type: string, flags: [hidden] }
-  - { name: outlier_display, type: string, optional: true }
-  - { name: outlier_note, type: string, optional: true }
-  - { name: platform_display, type: string, optional: true }
-  - { name: platform_note, type: string, optional: true }
-  - { name: mom_display, type: string, optional: true }
-  - { name: mom_note_static, type: string }
-  - { name: projected_display, type: string, optional: true }
-  - { name: projected_note_static, type: string }
+  - { name: worst_multiple, type: float, flags: [hidden], optional: true }
+  - { name: worst_name, type: string, flags: [hidden], optional: true }
+  - { name: worst_spend, type: float, flags: [hidden], optional: true }
+  - { name: platform_share, type: float, flags: [hidden], optional: true }
+  - { name: platform_top, type: string, flags: [hidden], optional: true }
+  - { name: month_spend, type: float, flags: [hidden], optional: true }
+  - { name: prev_spend, type: float, flags: [hidden], optional: true }
+  - { name: spend_three_back, type: float, flags: [hidden], optional: true }
+  - name: outlier_display
+    type: string
+    optional: true
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      if row.worst_multiple == () { "—" } else { grp(num(row.worst_multiple).round().to_int()) + "×" }
+  - name: outlier_note
+    type: string
+    optional: true
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      if row.worst_name == () {
+          "no outliers in scope"
+      } else if row.worst_spend == () {
+          ()
+      } else {
+          row.worst_name + " · $" + grp(num(row.worst_spend).round().to_int())
+      }
+  - name: platform_display
+    type: string
+    optional: true
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      if row.platform_share == () { "—" } else { num(row.platform_share).round().to_int().to_string() + "%" }
+  - name: platform_note
+    type: string
+    optional: true
+    lazy: |
+      if row.platform_top == () { "no outliers in scope" } else { row.platform_top + ", across the outliers" }
+  - name: mom_display
+    type: string
+    optional: true
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      if row.prev_spend == () || num(row.prev_spend) == 0.0 {
+          "—"
+      } else if row.month_spend == () {
+          ()
+      } else {
+          let p = 100.0 * (num(row.month_spend) / num(row.prev_spend) - 1.0);
+          let c = (p.abs() * 10.0).round().to_int();
+          (if p < 0.0 && c > 0 { "-" } else { "" }) + (c / 10).to_string() + "." + (c % 10).to_string() + "%"
+      }
+  - name: mom_note_static
+    type: string
+    lazy: |
+      "bank-wide, versus the previous month"
+  - name: projected_display
+    type: string
+    optional: true
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      fn f2(x) { let c = (x * 100.0).round().to_int(); let f = c % 100; grp(c / 100) + "." + (if f < 10 { "0" } else { "" }) + f }
+      if row.spend_three_back == () || num(row.spend_three_back) == 0.0 || row.month_spend == () {
+          ()
+      } else {
+          let ms = num(row.month_spend);
+          let ratio = ms / num(row.spend_three_back);
+          let proj = ms * ((if ratio > 0.25 { ratio } else { 0.25 }) ** (1.0 / 3.0));
+          if (proj * 100.0).round() / 100.0 >= 1000000.0 {
+              "$" + f2(proj / 1000000.0) + "M"
+          } else {
+              "$" + grp((proj / 1000.0).round().to_int()) + "K"
+          }
+      }
+  - name: projected_note_static
+    type: string
+    lazy: |
+      "latest month at the trailing three-month rate"
 postgres:
   # Reference: watch islands over mart_watch_month. Islands 3/4 are month
   # totals so they do not vary with the peer-group tab, exactly as the
   # reference behaves. Projection is NULL (a dash) when no 3-month history
   # exists — the reference formula fabricated 0.63x month_spend there.
+  # Everything shown is formatted in the lazy columns from the raw figures.
   # language=rhai
   rhai: |
-    select().from("mart_watch_month")
-        .expression(expr("month_key || ':' || peer_group").alias("rid"))
+    // TODO(no-expr): string concat for the row id
+    sql::select().from("mart_watch_month")
+        .expression(sql::expr("month_key || ':' || peer_group").alias("rid"))
         .field("month_key")
         .field("peer_group")
-        .expression(expr("CASE WHEN worst_multiple IS NULL THEN '—' ELSE to_char(round(worst_multiple), 'FM999,999') || '×' END").alias("outlier_display"))
-        .expression(expr("CASE WHEN worst_name IS NULL THEN 'no outliers in scope' ELSE worst_name || ' · $' || to_char(round(worst_spend), 'FM999,999,999') END").alias("outlier_note"))
-        .expression(expr("coalesce(to_char((SELECT round(100.0 * max(s) / nullif(sum(s), 0), 0) FROM ( SELECT b.top_platform_id, sum(b.spend_usd) AS s FROM mart_peer_benchmark b WHERE b.month_key = mart_watch_month.month_key AND (CASE mart_watch_month.peer_group WHEN 'function' THEN b.func_sigma WHEN 'grade' THEN b.grade_sigma ELSE b.team_sigma END) >= 3 GROUP BY 1) x), 'FM990') || '%', '—')").alias("platform_display"))
-        .expression(expr("coalesce((SELECT p.platform_name FROM ( SELECT b.top_platform_id, sum(b.spend_usd) AS s FROM mart_peer_benchmark b WHERE b.month_key = mart_watch_month.month_key AND (CASE mart_watch_month.peer_group WHEN 'function' THEN b.func_sigma WHEN 'grade' THEN b.grade_sigma ELSE b.team_sigma END) >= 3 GROUP BY 1 ORDER BY 2 DESC LIMIT 1) w JOIN silver.dim_platform p ON p.platform_id = w.top_platform_id) || ', across the outliers', 'no outliers in scope')").alias("platform_note"))
-        .expression(expr("CASE WHEN prev_spend IS NULL OR prev_spend = 0 THEN '—' ELSE to_char(round(100.0 * (month_spend / prev_spend - 1), 1), 'FM990.0') || '%' END").alias("mom_display"))
-        .expression(expr("'bank-wide, versus the previous month'").alias("mom_note_static"))
-        .expression(expr("'latest month at the trailing three-month rate'").alias("projected_note_static"))
-        .expression(expr("CASE WHEN spend_three_back IS NULL OR spend_three_back = 0 THEN NULL WHEN round(month_spend * power(GREATEST(month_spend / spend_three_back, 0.25)::numeric, 1.0 / 3), 2) >= 1e6 THEN '$' || to_char(month_spend * power(GREATEST(month_spend / spend_three_back, 0.25)::numeric, 1.0 / 3) / 1e6, 'FM999,990.00') || 'M' ELSE '$' || to_char(round(month_spend * power(GREATEST(month_spend / spend_three_back, 0.25)::numeric, 1.0 / 3) / 1e3), 'FM999,999') || 'K' END").alias("projected_display"))
+        .field("worst_multiple")
+        .field("worst_name")
+        .field("worst_spend")
+        // TODO(no-expr): correlated scalar subquery over a derived table, with a CASE on the peer group
+        .expression(sql::expr("(SELECT round(100.0 * max(s) / nullif(sum(s), 0), 0) FROM ( SELECT b.top_platform_id, sum(b.spend_usd) AS s FROM mart_peer_benchmark b WHERE b.month_key = mart_watch_month.month_key AND (CASE mart_watch_month.peer_group WHEN 'function' THEN b.func_sigma WHEN 'grade' THEN b.grade_sigma ELSE b.team_sigma END) >= 3 GROUP BY 1) x)").alias("platform_share"))
+        // TODO(no-expr): correlated scalar subquery over a derived table, with a CASE on the peer group
+        .expression(sql::expr("(SELECT p.platform_name FROM ( SELECT b.top_platform_id, sum(b.spend_usd) AS s FROM mart_peer_benchmark b WHERE b.month_key = mart_watch_month.month_key AND (CASE mart_watch_month.peer_group WHEN 'function' THEN b.func_sigma WHEN 'grade' THEN b.grade_sigma ELSE b.team_sigma END) >= 3 GROUP BY 1 ORDER BY 2 DESC LIMIT 1) w JOIN silver.dim_platform p ON p.platform_id = w.top_platform_id)").alias("platform_top"))
+        .field("month_spend")
+        .field("prev_spend")
+        .field("spend_three_back")

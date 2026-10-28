@@ -18,7 +18,7 @@ body:
           # language=rhai
           action: |
             row.status = "done";
-            row.save();
+            row.flash();
             #{ key: row.key, title: row.title, status: row.status }
       columns:
         key: { label: Key, pin: true, width: 110 }

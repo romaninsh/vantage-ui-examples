@@ -27,3 +27,4 @@ columns:
   - { name: docking, type: datetime }
   - { name: departure, type: datetime }
   - { name: flight_vehicle_chaser.name, type: string }
+  - { name: docking_location__id, type: string, flags: [hidden, request_param] }

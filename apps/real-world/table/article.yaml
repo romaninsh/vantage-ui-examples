@@ -5,21 +5,38 @@ columns:
   id: { type: string, flags: [id] }
   title: { type: string, flags: [mandatory, title, searchable] }
   # Pill beside the title: new this week, or edited after publishing.
-  freshness: { type: string, label: Status, flags: [label], expr: 'expr("IF created_at > time::now() - 7d THEN ''new'' ELSE IF updated_at > created_at + 1h THEN ''edited'' ELSE '''' END")' }
+  # Durations are built with duration::from_*(type::int(n)): fx takes no bare numbers.
+  freshness:
+    type: string
+    label: Status
+    flags: [label]
+    expr: |-
+      surreal::case_when()
+          .when(surreal::ident("created_at") > (surreal::time_now() - surreal::fx("duration::from_days", [surreal::cast(7, "int")])), "new")
+          .when(surreal::ident("updated_at") > surreal::add(surreal::ident("created_at"), surreal::fx("duration::from_hours", [surreal::cast(1, "int")])), "edited")
+          .else_("")
+          .expr()
   slug: { type: string, flags: [searchable] }
   author:
     type: string
     flags: [mandatory]
     references: { table: user, kind: has_one, name: author }
   author.username: { type: string, label: Author }
-  author_name: { type: string, flags: [hidden], expr: 'expr("author.username")' }
+  author_name: { type: string, flags: [hidden], expr: 'surreal::ident("author")["username"]' }
   description: { type: string, flags: [mandatory] }
   body: { type: string, flags: [mandatory, hidden] }
-  tags: { type: string, expr: 'expr("array::join(array::sort((SELECT VALUE tag.name FROM article_tag WHERE article = $parent.id)), '', '')")' }
-  favorites_count: { type: int, label: Favorites, expr: 'expr("(SELECT VALUE count() FROM favorite WHERE article = $parent.id GROUP ALL)[0] ?? 0")' }
-  comments_count: { type: int, label: Comments, expr: 'expr("(SELECT VALUE count() FROM comment WHERE article = $parent.id GROUP ALL)[0] ?? 0")' }
-  published_ago: { type: string, label: Published, expr: 'expr("fn::ago(created_at)")' }
-  updated_ago: { type: string, label: Updated, expr: 'expr("fn::ago(updated_at)")' }
+  # The separator goes through type::string(..): fx takes no bare strings.
+  tags:
+    type: string
+    expr: |-
+      surreal::fx("array::join", [
+          surreal::fx("array::sort", [surreal::select().value().expression(surreal::ident("tag")["name"]).from("article_tag").where(surreal::ident("article") == surreal::parent("id")).subquery()]),
+          surreal::cast(", ", "string")
+      ])
+  favorites_count: { type: int, label: Favorites, expr: 'surreal::coalesce(surreal::select().value().expression(surreal::count()).from("favorite").where(surreal::ident("article") == surreal::parent("id")).group_all().subquery()[0], 0)' }
+  comments_count: { type: int, label: Comments, expr: 'surreal::coalesce(surreal::select().value().expression(surreal::count()).from("comment").where(surreal::ident("article") == surreal::parent("id")).group_all().subquery()[0], 0)' }
+  published_ago: { type: string, label: Published, expr: 'surreal::fx("fn::ago", [surreal::ident("created_at")])' }
+  updated_ago: { type: string, label: Updated, expr: 'surreal::fx("fn::ago", [surreal::ident("updated_at")])' }
   created_at: { type: timestamp, label: Published on, time_precision: minutes }
   updated_at: { type: timestamp, label: Updated on, time_precision: minutes }
 references:

@@ -44,4 +44,4 @@ body:
             let pwd = generate_password(12);
             actions.send_password_reset(row.email, row.name, pwd);
             row.password_hash = hash_password(pwd);
-            row.save();
+            row.flash();

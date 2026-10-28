@@ -12,34 +12,37 @@ columns:
   product: { type: string }
   # Pence, so the sort is exact. `total_display` is what a tile shows.
   total: { type: int }
-  total_display: { type: string }
+  # Integer pounds and pence, not a float: casting a float to string
+  # in SurrealDB yields "357.9f" — the suffix and the lost trailing
+  # zero are both wrong on a price.
+  total_display:
+    type: string
+    lazy: |
+      let total = row.total.to_int();
+      let pence = total % 100;
+      "£" + (total / 100) + "." + (if pence < 10 { "0" } else { "" }) + pence
   # Branch name, filled only on the unfiltered read (see client_balances).
   branch: { type: string }
 
 surreal:
-  # Two nested SELECTs: the inner folds each order's lines into a pence
-  # total (and reads the client/product names while it still has the
-  # row), the outer formats it. Sorted latest-first: the app runs in
-  # real time, so this tile is a ticker of what just happened.
+  # One SELECT folds each order's lines into a pence total and reads the
+  # client/product names while it still has the row; `total_display` is
+  # built from `total` after the read. Sorted latest-first: the app runs
+  # in real time, so this tile is a ticker of what just happened.
   # language=rhai
   rhai: |
     let b = args.get("bakery") ?? "";
-    let branch = if b == "" { expr("bakery.name") } else { expr("''") };
-    let per_order = select()
+    let q = surreal::select()
         .field("id").field("created_at")
-        .expression(expr("client.name").alias("client"))
-        .expression(expr("lines[0].product.name").alias("product"))
-        .expression(ident("lines").fold(0, |acc, l| acc + l["quantity"] * l["price"]).alias("total"))
-        .expression(branch.alias("branch"))
+        .expression(surreal::ident("client")["name"].alias("client"))
+        .expression(surreal::first(surreal::ident("lines"))["product"]["name"].alias("product"))
+        .expression(surreal::ident("lines").fold(0, |acc, l| acc + l["quantity"] * l["price"]).alias("total"))
         .from("order");
-    if b != "" {
-        per_order = per_order.where(expr("bakery.name = {}", [b]));
+    if b == "" {
+        q = q.expression(surreal::ident("bakery")["name"].alias("branch"));
+    } else {
+        q = q
+            .expression(surreal::cast("", "string").alias("branch"))
+            .where(surreal::ident("bakery")["name"] == b);
     }
-    select()
-        .from(per_order.subquery())
-        .field("id").field("created_at").field("client").field("product").field("total").field("branch")
-        // Integer pounds and pence, not a float: casting a float to string
-        // in SurrealDB yields "357.9f" — the suffix and the lost trailing
-        // zero are both wrong on a price.
-        .expression(expr("string::concat('£', total / 100, '.', IF total % 100 < 10 THEN '0' ELSE '' END, total % 100)").alias("total_display"))
-        .order_by(ident("created_at"), "desc")
+    q.order_by(surreal::ident("created_at"), "desc")

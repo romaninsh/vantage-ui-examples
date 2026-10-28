@@ -6,33 +6,50 @@ columns:
   - { name: app_id, type: string, flags: [id, hidden] }
   - { name: app_name, type: string, flags: [title] }
   - { name: owner_lob_name, type: string }
-  - { name: spend_display, type: string }
+  - { name: spend, type: float, flags: [hidden], optional: true }
+  - name: spend_display
+    type: string
+    lazy: |
+      fn num(v) { if type_of(v) == "string" { parse_float(v) } else { v + 0.0 } }
+      fn grp(i) { let s = i.to_string(); let o = ""; while s.len() > 3 { o = "," + s.sub_string(s.len() - 3, 3) + o; s = s.sub_string(0, s.len() - 3); } s + o }
+      fn f2(x) { let c = (x * 100.0).round().to_int(); let f = c % 100; grp(c / 100) + "." + (if f < 10 { "0" } else { "" }) + f }
+      fn usd(x) { if x >= 1000000.0 { "$" + f2(x / 1000000.0) + "M" } else if x >= 1000.0 { "$" + (x / 1000.0).round().to_int() + "K" } else { "$" + grp(x.round().to_int()) } }
+      usd(if row.spend == () { 0.0 } else { num(row.spend) })
   - { name: status, type: string }
   - { name: kind, type: string }
   - { name: audience, type: string }
 postgres:
   # Reference: apps.list — the picker with its status and audience tabs;
-  # month guard rides the JOIN (an app with no spend in scope still lists).
+  # month guard rides the spend (an app with no spend in scope still lists,
+  # at zero). The join keeps every month of the app; only the picked
+  # month's spend is summed. No spend sorts as zero: the count of summed
+  # rows stands in for coalesce(sum, 0), as 0 cannot be written as a
+  # builder argument.
   # language=rhai
   rhai: |
     let mo = if "month" in args { args.month } else { "" };
     let st = if "status" in args { args.status } else { "" };
     let au = if "audience" in args { args.audience } else { "" };
-    select().from_as("dim_app", "a")
-        .left_join("mart_app_month", "m", expr("m.app_id = a.app_id AND ({} = '' OR m.month_key = {})", [mo, mo]))
-        .where(expr("({} = '' OR a.status = {})", [st, st]))
-        .where(expr("({} = '' OR a.audience = {})", [au, au]))
-        .expression(expr("a.app_id").alias("app_id"))
-        .expression(expr("a.app_name").alias("app_name"))
-        .expression(expr("a.owner_lob_name").alias("owner_lob_name"))
-        .expression(expr("CASE WHEN coalesce(sum(m.spend_usd), 0) >= 1e6 THEN '$' || to_char((coalesce(sum(m.spend_usd), 0)) / 1e6, 'FM999,990.00') || 'M' WHEN coalesce(sum(m.spend_usd), 0) >= 1e3 THEN '$' || to_char(round((coalesce(sum(m.spend_usd), 0)) / 1e3), 'FM999999') || 'K' ELSE '$' || to_char(round(coalesce(sum(m.spend_usd), 0)), 'FM999,990') END").alias("spend_display"))
-        .expression(expr("a.status").alias("status"))
-        .expression(expr("a.kind").alias("kind"))
-        .expression(expr("a.audience").alias("audience"))
-        .group_by(expr("a.app_id"))
-        .group_by(expr("a.app_name"))
-        .group_by(expr("a.owner_lob_name"))
-        .group_by(expr("a.status"))
-        .group_by(expr("a.kind"))
-        .group_by(expr("a.audience"))
-        .order_by(expr("coalesce(sum(m.spend_usd), 0)"), "desc")
+    let a = sql::ident("a");
+    let m = sql::ident("m");
+    // CASE branches take expressions, not bare idents; coalesce(x, x) is the identity
+    let spend = sql::coalesce(m["spend_usd"], m["spend_usd"]);
+    let in_scope = if mo == "" { spend } else { sql::case_when().when(m["month_key"] == mo, spend).expr() };
+    let q = sql::select().from_as("dim_app", "a")
+        .left_join("mart_app_month", "m", m["app_id"] == a["app_id"]);
+    if st != "" { q = q.where(a["status"] == st); }
+    if au != "" { q = q.where(a["audience"] == au); }
+    q.expression(a["app_id"].alias("app_id"))
+        .expression(a["app_name"].alias("app_name"))
+        .expression(a["owner_lob_name"].alias("owner_lob_name"))
+        .expression(sql::sum(in_scope).alias("spend"))
+        .expression(a["status"].alias("status"))
+        .expression(a["kind"].alias("kind"))
+        .expression(a["audience"].alias("audience"))
+        .group_by(a["app_id"])
+        .group_by(a["app_name"])
+        .group_by(a["owner_lob_name"])
+        .group_by(a["status"])
+        .group_by(a["kind"])
+        .group_by(a["audience"])
+        .order_by(sql::coalesce(sql::sum(in_scope), sql::count(in_scope)), "desc")

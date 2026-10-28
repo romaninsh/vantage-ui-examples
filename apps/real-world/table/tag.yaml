@@ -4,8 +4,17 @@ title: Tag
 columns:
   id: { type: string, flags: [id] }
   name: { type: string, flags: [mandatory, title, searchable] }
-  article_count: { type: int, label: Articles, expr: 'expr("(SELECT VALUE count() FROM article_tag WHERE tag = $parent.id GROUP ALL)[0] ?? 0")' }
-  usage: { type: string, label: Usage, flags: [label], expr: 'expr("IF ((SELECT VALUE count() FROM article_tag WHERE tag = $parent.id GROUP ALL)[0] ?? 0) = 0 THEN ''unused'' ELSE IF (SELECT VALUE count() FROM article_tag WHERE tag = $parent.id GROUP ALL)[0] >= 6 THEN ''popular'' ELSE '''' END")' }
+  article_count: { type: int, label: Articles, expr: 'surreal::coalesce(surreal::select().value().expression(surreal::count()).from("article_tag").where(surreal::ident("tag") == surreal::parent("id")).group_all().subquery()[0], 0)' }
+  usage:
+    type: string
+    label: Usage
+    flags: [label]
+    expr: |-
+      surreal::case_when()
+          .when(surreal::coalesce(surreal::select().value().expression(surreal::count()).from("article_tag").where(surreal::ident("tag") == surreal::parent("id")).group_all().subquery()[0], 0) == 0, "unused")
+          .when(surreal::select().value().expression(surreal::count()).from("article_tag").where(surreal::ident("tag") == surreal::parent("id")).group_all().subquery()[0] >= 6, "popular")
+          .else_("")
+          .expr()
   created_at: { type: timestamp, label: Created, date_precision: day }
   updated_at: { type: timestamp, label: Updated, time_precision: minutes }
 references:

@@ -17,4 +17,4 @@ columns:
   # grid can show and sort it — the restock oven writes it live.
   stock:
     type: int
-    expr: 'expr("inventory.stock")'
+    expr: 'surreal::ident("inventory")["stock"]'

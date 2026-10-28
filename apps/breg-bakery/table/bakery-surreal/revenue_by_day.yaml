@@ -24,26 +24,37 @@ surreal:
   # language=rhai
   rhai: |
     let b = args.get("bakery") ?? "";
-    // One expression for both views — `({} = '' OR bakery.name = {})`
-    // is a no-op when no bakery is picked, so the hardest query in the
-    // app exists once instead of a filtered near-copy. Prices are
-    // pence, so /100 for pounds. Divided here, not in the client: the
-    // y-axis should read what the database said.
-    let revenue = expr("math::fixed(<float>math::sum((SELECT VALUE lines.fold(0, |$a, $v| $a + $v.quantity * $v.price) FROM order WHERE ({} = '' OR bakery.name = {}) AND status != 'cancelled' AND created_at >= $parent.bucket AND created_at < $parent.bucket + 30s)) / 100, 2)", [b, b]);
+    // The bakery filter is added only when a bakery is picked, so the
+    // hardest query in the app exists once. Prices are pence, so /100
+    // for pounds. Divided here, not in the client: the y-axis should
+    // read what the database said.
+    let orders = surreal::select().value()
+        .expression(surreal::ident("lines").fold(0, |acc, l| acc + l["quantity"] * l["price"]))
+        .from("order")
+        .where(surreal::ident("status") != "cancelled")
+        .where(surreal::ident("created_at") >= surreal::parent("bucket"))
+        // TODO(no-expr): duration literal (`30s`) has no builder
+        .where(surreal::ident("created_at") < surreal::parent("bucket") + surreal::expr("30s"));
+    if b != "" {
+        orders = orders.where(surreal::ident("bakery")["name"] == b);
+    }
+    let revenue = surreal::round(surreal::cast(surreal::sum(orders.subquery()), "float") / 100, 2);
     // Sorted by the raw datetime, not the HH:MM:SS label — a window
     // that spans midnight would put 00:xx before 23:xx otherwise. The
     // bars keep query order, so this ORDER BY is the timeline.
-    select()
+    surreal::select()
         .from(
-            select()
+            surreal::select()
                 .field("bucket")
-                .expression(expr("time::format(bucket, '%H:%M:%S')").alias("day"))
+                .expression(surreal::date_format(surreal::ident("bucket"), "%H:%M:%S").alias("day"))
                 .expression(revenue.alias("revenue"))
-                .from(expr("array::range(0, 22).map(|$i| { bucket: time::floor(time::now(), 1m) - 10m + duration::from_secs($i * 30) })"))
-                .where(expr("bucket <= time::now()"))
+                // TODO(no-expr): array::range(0, 22), duration literals and duration::from_secs take number args, which fx refuses
+                .from(surreal::expr("array::range(0, 22).map(|$i| { bucket: time::floor(time::now(), 1m) - 10m + duration::from_secs($i * 30) })"))
+                .where(surreal::ident("bucket") <= surreal::time_now())
                 .subquery())
-        .expression(fx("type::record", [expr("'revenue_by_day'"), ident("day")]).alias("id"))
+        // TODO(no-expr): fx refuses the literal table name 'revenue_by_day' (surreal::thing takes two strings, not a column)
+        .expression(surreal::fx("type::record", [surreal::expr("'revenue_by_day'"), surreal::ident("day")]).alias("id"))
         .field("bucket")
         .field("day")
         .field("revenue")
-        .order_by(ident("bucket"), "asc")
+        .order_by(surreal::ident("bucket"), "asc")
