@@ -4,3 +4,5 @@ body:
   - kind: grid
     name: astronauts
     observe: astronauts
+    params:
+      columns: [id, name, status.name, type.name, agency.name, nationality, in_space, age, flights_count, landings_count, spacewalks_count, bio]

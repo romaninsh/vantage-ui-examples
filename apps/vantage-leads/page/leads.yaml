@@ -6,3 +6,5 @@ body:
   - kind: binder
     name: leads
     observe: lead
+    params:
+      columns: [organisation, status, email, phone, created_at, notes]

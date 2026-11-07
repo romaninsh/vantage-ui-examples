@@ -3,15 +3,15 @@ datasource: warehouse
 title: Manager · summary
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: lead_name, type: string, flags: [hidden], optional: true }
-  - { name: org_name, type: string, flags: [hidden], optional: true }
-  - { name: lob_name, type: string, flags: [hidden], optional: true }
-  - { name: lead_city, type: string, flags: [hidden], optional: true }
-  - { name: spend, type: float, flags: [hidden], optional: true }
-  - { name: active, type: int, flags: [hidden], optional: true }
-  - { name: headcount, type: int, flags: [hidden], optional: true }
-  - { name: tier_spend, type: float, flags: [hidden], optional: true }
+  - { name: rid, type: string, flags: [id] }
+  - { name: lead_name, type: string, optional: true }
+  - { name: org_name, type: string, optional: true }
+  - { name: lob_name, type: string, optional: true }
+  - { name: lead_city, type: string, optional: true }
+  - { name: spend, type: float, optional: true }
+  - { name: active, type: int, optional: true }
+  - { name: headcount, type: int, optional: true }
+  - { name: tier_spend, type: float, optional: true }
   - name: who_line
     type: string
     lazy: |

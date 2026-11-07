@@ -5,7 +5,7 @@ title: Customers
 faker:
   count: 30
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: name, label: Customer, type: string, flags: [title, searchable] }
   - { name: email, type: string }
   - { name: plan, type: string, faker: { pick: { values: [Free, Starter, Pro, Enterprise], weights: [4, 3, 2, 1] } } }

@@ -4,3 +4,5 @@ body:
   - kind: grid
     name: landings
     observe: landings
+    params:
+      columns: [id, launch.name, launcher.serial_number, landing_location.name, type.name, success, attempt, description]

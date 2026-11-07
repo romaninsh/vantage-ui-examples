@@ -6,8 +6,8 @@ datasource: logistics
 title: Tracking events
 faker: { count: 0 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
-  - { name: shipment_id, type: string, flags: [hidden] }
+  - { name: id, type: string, flags: [id] }
+  - { name: shipment_id, type: string }
   - { name: shipment_ref, label: Shipment, type: string, flags: [title, searchable] }
   - { name: city, label: Location, type: string }
   - { name: event, type: string }

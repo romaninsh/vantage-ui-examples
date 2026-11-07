@@ -4,7 +4,7 @@ datasource: jiro
 title: Comment
 table: comment
 columns:
-  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: _id, label: ID, type: string, flags: [id] }
   - { name: body, label: Comment, type: string, flags: [title, mandatory, searchable] }
   - { name: issue, label: Issue, type: string, references: { table: issue, kind: has_one, name: issue } }
   - { name: issue_key, label: Issue, type: string, flags: [calculated] }

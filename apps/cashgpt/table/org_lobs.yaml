@@ -3,13 +3,13 @@ datasource: warehouse
 title: Org explorer · LOBs
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
   - { name: org_name, type: string, flags: [title] }
   - { name: headcount, type: int }
   - { name: active, type: int }
-  - { name: spend_usd, type: float, flags: [hidden] }
-  - { name: tier_spend, type: float, flags: [hidden] }
+  - { name: spend_usd, type: float }
+  - { name: tier_spend, type: float }
   - name: spend_display
     type: string
     lazy: |

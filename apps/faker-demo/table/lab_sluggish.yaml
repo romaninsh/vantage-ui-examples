@@ -15,7 +15,7 @@ faker:
       count: 800ms..2500ms
   weirdness: 0.1
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: company, type: string, flags: [title, searchable] }
   - { name: city, type: string }
   - { name: phone, type: string }

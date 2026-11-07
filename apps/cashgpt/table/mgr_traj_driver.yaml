@@ -3,10 +3,10 @@ datasource: warehouse
 title: Manager trajectory (chart)
 id_column: month_key
 columns:
-  - { name: month_key, type: string, flags: [id, hidden] }
-  - { name: raw_productivity, type: float, flags: [hidden], optional: true }
-  - { name: raw_application, type: float, flags: [hidden], optional: true }
-  - { name: raw_developer, type: float, flags: [hidden], optional: true }
+  - { name: month_key, type: string, flags: [id] }
+  - { name: raw_productivity, type: float, optional: true }
+  - { name: raw_application, type: float, optional: true }
+  - { name: raw_developer, type: float, optional: true }
   - name: month
     type: string
     lazy: |

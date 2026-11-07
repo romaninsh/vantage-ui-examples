@@ -4,7 +4,7 @@ datasource: jiro
 title: Project
 table: project
 columns:
-  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: _id, label: ID, type: string, flags: [id] }
   - { name: key, label: Key, type: string, flags: [mandatory, searchable] }
   - { name: name, label: Name, type: string, flags: [title, mandatory, searchable] }
   - { name: client, label: Client, type: string, flags: [searchable] }

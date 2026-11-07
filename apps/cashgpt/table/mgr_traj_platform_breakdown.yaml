@@ -4,11 +4,10 @@ title: Manager trajectory breakdown
 id_column: member
 columns:
   - { name: member, type: string, flags: [id, title] }
-  - { name: spend, type: float, flags: [hidden], optional: true }
-  - { name: scope_total, type: float, flags: [hidden], optional: true }
+  - { name: spend, type: float, optional: true }
+  - { name: scope_total, type: float, optional: true }
   - name: rank
     type: int
-    flags: [hidden]
     lazy: |
       let p = row.member;
       if p == "Azure OpenAI" { 1 } else if p == "Claude" { 2 } else if p == "Google Vertex AI" { 3 } else if p == "Databricks Mosaic AI" { 4 } else if p == "GitHub Copilot" { 5 } else if p == "Amazon Bedrock" { 6 } else { 99 }

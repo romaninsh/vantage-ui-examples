@@ -17,9 +17,8 @@ columns:
     type: string
     flags: [mandatory, title, searchable]
   - name: body
-    type: string
+    type: string # full PR description - shown on the summary view
     optional: true
-    flags: [hidden] # full PR description - shown on the summary view
   - name: author
     type: string
     optional: true
@@ -27,9 +26,8 @@ columns:
     type: string
     flags: [label] # open | closed | merged
   - name: labels
-    type: string
+    type: string # JSON array
     optional: true
-    flags: [hidden] # JSON array
   - name: created_at
     type: datetime
     optional: true
@@ -39,7 +37,6 @@ columns:
   - name: url
     type: string
     optional: true
-    flags: [hidden]
   - name: bumps_version
     type: bool
     flags: [label] # merge commit is a tag commit -> the release PR

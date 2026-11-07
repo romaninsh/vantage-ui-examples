@@ -3,8 +3,8 @@ datasource: warehouse
 title: Apps · unit subtitle
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: primary_unit, type: string, flags: [hidden], optional: true }
+  - { name: rid, type: string, flags: [id] }
+  - { name: primary_unit, type: string, optional: true }
   - name: line
     type: string
     lazy: |

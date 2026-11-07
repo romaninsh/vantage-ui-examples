@@ -4,3 +4,5 @@ body:
   - kind: grid
     name: payload_flights
     observe: payload_flights
+    params:
+      columns: [id, launch.name, payload.name, payload.type.name, payload.mass, destination, amount]

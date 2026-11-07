@@ -3,11 +3,11 @@ datasource: warehouse
 title: Exec · exec_subtitles
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
-  - { name: spend_raw, type: float, flags: [hidden] }
-  - { name: providers_raw, type: int, flags: [hidden] }
-  - { name: lobs_raw, type: int, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
+  - { name: spend_raw, type: float }
+  - { name: providers_raw, type: int }
+  - { name: lobs_raw, type: int }
   - name: prov_sub
     type: string
     lazy: |

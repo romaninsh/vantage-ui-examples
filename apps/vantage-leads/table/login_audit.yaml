@@ -6,9 +6,9 @@ datasource: leads
 title: Login Audit
 
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: email, type: string, flags: [title, searchable] }
   - { name: name, type: string, optional: true, flags: [searchable] }
   - { name: at, type: string, optional: true }
-  - { name: subject, type: string, optional: true, flags: [hidden] }
-  - { name: issuer, type: string, optional: true, flags: [hidden] }
+  - { name: subject, type: string, optional: true }
+  - { name: issuer, type: string, optional: true }

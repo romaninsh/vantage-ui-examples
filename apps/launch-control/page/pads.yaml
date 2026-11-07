@@ -5,3 +5,5 @@ body:
   - kind: binder
     name: pads
     observe: pads
+    params:
+      columns: [id, name, country, location.name, active, latitude, longitude, total_launch_count]

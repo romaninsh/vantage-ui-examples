@@ -6,6 +6,6 @@ datasource: gym-traffic
 title: Arrivals
 faker: { count: 0 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: minute, type: string, flags: [title] }
   - { name: attendees, type: int }

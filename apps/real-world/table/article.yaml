@@ -22,9 +22,9 @@ columns:
     flags: [mandatory]
     references: { table: user, kind: has_one, name: author }
   author.username: { type: string, label: Author }
-  author_name: { type: string, flags: [hidden], expr: 'surreal::ident("author")["username"]' }
+  author_name: { type: string, expr: 'surreal::ident("author")["username"]' }
   description: { type: string, flags: [mandatory] }
-  body: { type: string, flags: [mandatory, hidden] }
+  body: { type: string, flags: [mandatory] }
   # The separator goes through type::string(..): fx takes no bare strings.
   tags:
     type: string

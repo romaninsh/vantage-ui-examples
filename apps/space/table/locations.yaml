@@ -17,7 +17,7 @@ columns:
   - { name: id, type: string, flags: [id] }
   - { name: name, type: string, flags: [title, searchable] }
   - { name: country.name, type: string }
-  - { name: celestial_body.id, type: int, flags: [hidden] }
+  - { name: celestial_body.id, type: int }
   - { name: celestial_body.name, type: string }
   - { name: active, type: bool }
   - { name: description, type: string, flags: [searchable] }

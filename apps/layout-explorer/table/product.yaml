@@ -7,7 +7,7 @@ title: Products
 faker:
   fan_out: { column: category, min: 2, max: 6 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: sku, label: SKU, type: string, flags: [searchable], faker: { pattern: "SKU-??-#####" } }
   - name: brand
     label: Brand

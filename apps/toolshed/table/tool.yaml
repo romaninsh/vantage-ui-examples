@@ -3,7 +3,7 @@ datasource: toolshed
 columns:
   - name: id
     type: int
-    flags: [id, auto, hidden]
+    flags: [id, auto]
   - name: name
     type: string
     flags: [title, mandatory, searchable]

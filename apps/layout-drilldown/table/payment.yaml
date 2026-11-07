@@ -5,7 +5,7 @@ title: Payments
 faker:
   fan_out: { column: visit, min: 1, max: 2 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: visit, label: Visit, type: string, references: visit }
   - { name: reference, label: Reference, type: string, flags: [title, searchable], faker: { pattern: "PAY-??##-####" } }
   - { name: item, label: Item, type: string, faker: { pick: { values: [Class fee, Day pass, Personal training, Towel hire, Smoothie bar, Locker], weights: [4, 2, 2, 3, 3, 1] } } }

@@ -4,7 +4,7 @@ datasource: jiro
 title: Epic progress
 table: epic_progress
 columns:
-  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: _id, type: string, flags: [id] }
   - { name: parent_key, label: Epic, type: string }
   - { name: epic_title, label: Title, type: string, flags: [title, searchable] }
   - { name: project_key, label: Project, type: string }

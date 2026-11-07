@@ -3,13 +3,13 @@ datasource: warehouse
 title: Manager trajectory (chart)
 id_column: month_key
 columns:
-  - { name: month_key, type: string, flags: [id, hidden] }
-  - { name: raw_azure_openai, type: float, flags: [hidden], optional: true }
-  - { name: raw_claude, type: float, flags: [hidden], optional: true }
-  - { name: raw_google_vertex_ai, type: float, flags: [hidden], optional: true }
-  - { name: raw_databricks_mosaic_ai, type: float, flags: [hidden], optional: true }
-  - { name: raw_github_copilot, type: float, flags: [hidden], optional: true }
-  - { name: raw_amazon_bedrock, type: float, flags: [hidden], optional: true }
+  - { name: month_key, type: string, flags: [id] }
+  - { name: raw_azure_openai, type: float, optional: true }
+  - { name: raw_claude, type: float, optional: true }
+  - { name: raw_google_vertex_ai, type: float, optional: true }
+  - { name: raw_databricks_mosaic_ai, type: float, optional: true }
+  - { name: raw_github_copilot, type: float, optional: true }
+  - { name: raw_amazon_bedrock, type: float, optional: true }
   - name: month
     type: string
     lazy: |

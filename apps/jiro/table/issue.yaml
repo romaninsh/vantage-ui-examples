@@ -9,7 +9,7 @@ title: Issue
 table: issue
 # (relations: project, assignee, reporter, parent/children, sprint, fix_version, comments, worklogs, watchers, links)
 columns:
-  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: _id, label: ID, type: string, flags: [id] }
   - { name: key, label: Key, type: string, flags: [searchable] }
   - { name: title, label: Summary, type: string, flags: [title, mandatory, searchable] }
   - { name: description, label: Description, type: string, flags: [searchable] }
@@ -39,7 +39,7 @@ columns:
   - { name: due_date, label: Due, type: date }
   - { name: labels, label: Labels, type: string, flags: [searchable] }
   - { name: component, label: Component, type: string, flags: [searchable] }
-  - { name: rank, label: Rank, type: int, flags: [hidden] }
+  - { name: rank, label: Rank, type: int }
   - { name: created_at, label: Created, type: timestamp, time_precision: minutes }
   - { name: updated_at, label: Updated, type: timestamp, time_precision: minutes }
 references:

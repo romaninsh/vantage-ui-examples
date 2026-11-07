@@ -6,3 +6,4 @@ body:
     observe: mart_people_agg
     params:
       default_sort: { column: month_key, direction: desc }
+      columns: [month_key, lob_id, lob_name, resource_org, job_function, seniority_code, kind, usage_driver, model_tier, tokens, spend_usd]

@@ -6,3 +6,4 @@ body:
     observe: mart_app_month
     params:
       default_sort: { column: month_key, direction: desc }
+      columns: [month_key, app_id, app_name, kind, usage_driver, status, audience, primary_unit, launched_month, owner_lob_id, owner_lob_name, owner_department, consumer_lob_id, consumer_lob_name, users, teams, tokens, spend_usd, rollout_status]

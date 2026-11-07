@@ -3,22 +3,21 @@ datasource: warehouse
 title: Exec · exec_products
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
-  - { name: rank_raw, type: int, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
+  - { name: rank_raw, type: int }
   - name: rank_display
     type: string
-    flags: [hidden]
     lazy: |
       if row.rank_raw == () { () } else { row.rank_raw.to_string() + "." }
   - { name: member, type: string, flags: [title] }
-  - { name: owner_raw, type: string, flags: [hidden] }
-  - { name: consumers_raw, type: int, flags: [hidden] }
+  - { name: owner_raw, type: string }
+  - { name: consumers_raw, type: int }
   - name: meta
     type: string
     lazy: |
       if row.owner_raw == () || row.consumers_raw == () { () } else { row.owner_raw + " · " + row.consumers_raw + " consumers" }
-  - { name: total_raw, type: float, flags: [hidden] }
+  - { name: total_raw, type: float }
   - name: total_display
     type: string
     lazy: |

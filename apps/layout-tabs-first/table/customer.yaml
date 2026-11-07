@@ -6,7 +6,7 @@ title: Customers
 faker:
   count: 24
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: name, label: Customer, type: string, flags: [title, searchable] }
   - { name: email, type: string }
   - { name: company, type: string }

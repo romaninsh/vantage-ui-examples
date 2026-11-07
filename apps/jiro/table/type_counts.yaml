@@ -4,6 +4,6 @@ datasource: jiro
 title: Issues by type
 table: type_counts
 columns:
-  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: _id, type: string, flags: [id] }
   - { name: type, type: string, flags: [title] }
   - { name: issues, type: int }

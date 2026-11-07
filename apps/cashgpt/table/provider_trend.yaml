@@ -4,7 +4,7 @@ title: Exec · provider trend
 id_column: provider
 columns:
   - { name: provider, type: string, flags: [id, title] }
-  - { name: spend_usd, type: float, flags: [hidden] }
+  - { name: spend_usd, type: float }
   - name: total
     type: string
     lazy: |

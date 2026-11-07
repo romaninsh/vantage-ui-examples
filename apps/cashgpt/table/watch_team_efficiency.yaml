@@ -3,14 +3,14 @@ datasource: warehouse
 title: Watch · team efficiency
 id_column: org_id
 columns:
-  - { name: org_id, type: string, flags: [id, hidden] }
-  - { name: level_no, type: int, flags: [hidden], optional: true }
-  - { name: spend, type: float, flags: [hidden], optional: true }
-  - { name: active, type: int, flags: [hidden], optional: true }
-  - { name: top_tier_share, type: float, flags: [hidden], optional: true }
-  - { name: median_pu, type: float, flags: [hidden], optional: true }
-  - { name: median_tt, type: float, flags: [hidden], optional: true }
-  - { name: excess, type: float, flags: [hidden], optional: true }
+  - { name: org_id, type: string, flags: [id] }
+  - { name: level_no, type: int, optional: true }
+  - { name: spend, type: float, optional: true }
+  - { name: active, type: int, optional: true }
+  - { name: top_tier_share, type: float, optional: true }
+  - { name: median_pu, type: float, optional: true }
+  - { name: median_tt, type: float, optional: true }
+  - { name: excess, type: float, optional: true }
   - name: level
     type: string
     lazy: |

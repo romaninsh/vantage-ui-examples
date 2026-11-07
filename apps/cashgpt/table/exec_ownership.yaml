@@ -3,16 +3,16 @@ datasource: warehouse
 title: Exec · exec_ownership
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
   - { name: band, type: string, flags: [title] }
-  - { name: coding_raw, type: float, flags: [hidden] }
-  - { name: domain_raw, type: float, flags: [hidden] }
-  - { name: agent_raw, type: float, flags: [hidden] }
-  - { name: assistant_raw, type: float, flags: [hidden] }
-  - { name: analysis_raw, type: float, flags: [hidden] }
-  - { name: research_raw, type: float, flags: [hidden] }
-  - { name: total_raw, type: float, flags: [hidden] }
+  - { name: coding_raw, type: float }
+  - { name: domain_raw, type: float }
+  - { name: agent_raw, type: float }
+  - { name: assistant_raw, type: float }
+  - { name: analysis_raw, type: float }
+  - { name: research_raw, type: float }
+  - { name: total_raw, type: float }
   - name: Coding
     type: string
     lazy: |

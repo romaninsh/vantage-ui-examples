@@ -5,7 +5,7 @@ title: Staff
 faker:
   count: 40
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: first_name, label: First name, type: string, flags: [title, searchable] }
   - { name: last_name, label: Last name, type: string, flags: [searchable] }
   - { name: role, type: string, faker: { pick: { values: [Doctor, Nurse], weights: [1, 2] } } }

@@ -6,3 +6,4 @@ body:
     observe: mart_spend_agg
     params:
       default_sort: { column: month_key, direction: desc }
+      columns: [month_key, lob_id, lob_name, resource_org, platform_id, platform_name, model_id, model_name, provider_group, model_tier, kind, usage_driver, tokens, spend_usd]

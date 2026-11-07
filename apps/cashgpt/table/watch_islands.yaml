@@ -3,17 +3,17 @@ datasource: warehouse
 title: Watch · islands
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
-  - { name: peer_group, type: string, flags: [hidden] }
-  - { name: worst_multiple, type: float, flags: [hidden], optional: true }
-  - { name: worst_name, type: string, flags: [hidden], optional: true }
-  - { name: worst_spend, type: float, flags: [hidden], optional: true }
-  - { name: platform_share, type: float, flags: [hidden], optional: true }
-  - { name: platform_top, type: string, flags: [hidden], optional: true }
-  - { name: month_spend, type: float, flags: [hidden], optional: true }
-  - { name: prev_spend, type: float, flags: [hidden], optional: true }
-  - { name: spend_three_back, type: float, flags: [hidden], optional: true }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
+  - { name: peer_group, type: string }
+  - { name: worst_multiple, type: float, optional: true }
+  - { name: worst_name, type: string, optional: true }
+  - { name: worst_spend, type: float, optional: true }
+  - { name: platform_share, type: float, optional: true }
+  - { name: platform_top, type: string, optional: true }
+  - { name: month_spend, type: float, optional: true }
+  - { name: prev_spend, type: float, optional: true }
+  - { name: spend_three_back, type: float, optional: true }
   - name: outlier_display
     type: string
     optional: true

@@ -3,16 +3,16 @@ datasource: warehouse
 title: Exec · exec_lob_table
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
   - { name: lob_name, type: string, flags: [title] }
-  - { name: cc_app_raw, type: float, flags: [hidden] }
-  - { name: copilot_raw, type: float, flags: [hidden] }
-  - { name: llm_suite_raw, type: float, flags: [hidden] }
-  - { name: other_raw, type: float, flags: [hidden] }
-  - { name: spend_raw, type: float, flags: [hidden] }
-  - { name: people_raw, type: int, flags: [hidden] }
-  - { name: cost_per_user_raw, type: float, flags: [hidden] }
+  - { name: cc_app_raw, type: float }
+  - { name: copilot_raw, type: float }
+  - { name: llm_suite_raw, type: float }
+  - { name: other_raw, type: float }
+  - { name: spend_raw, type: float }
+  - { name: people_raw, type: int }
+  - { name: cost_per_user_raw, type: float }
   - name: cc_app
     type: string
     lazy: |

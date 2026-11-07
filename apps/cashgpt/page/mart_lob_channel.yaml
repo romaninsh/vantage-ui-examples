@@ -6,3 +6,4 @@ body:
     observe: mart_lob_channel
     params:
       default_sort: { column: month_key, direction: desc }
+      columns: [org_id, org_level, month_key, channel, spend_usd, users]

@@ -5,7 +5,7 @@ datasource: stock_alerts
 title: Stock alerts
 faker: { count: 0 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: sku, label: SKU, type: string, flags: [title, searchable], faker: { pattern: "SKU-??-#####" } }
   - { name: brand, label: Brand, type: string, faker: { pick: { values: [Northwind, Acme, Lumen, Fjord, Kestrel, Oakridge, Polaris, Tidewater] } } }
   - { name: warehouse, label: Warehouse, type: string, faker: { pick: { values: [Leeds, Bristol, Glasgow, Reading, Cardiff] } } }

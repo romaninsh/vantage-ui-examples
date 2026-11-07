@@ -18,7 +18,7 @@ outputs:
   watts_weighted: { label: "Weighted avg power", type: string }
   temp: { label: Temperature, type: string }
   photo_url: { type: string }
-  track_geojson: { type: string, flags: [hidden] }
+  track_geojson: { type: string }
   gear_text: { label: Gear, type: string }
   top_results: { type: string }
   segments_md: { type: string }

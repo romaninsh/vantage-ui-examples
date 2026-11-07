@@ -3,7 +3,7 @@ datasource: warehouse
 title: Exec · provider trajectory (chart)
 id_column: month_key
 columns:
-  - { name: month_key, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string, flags: [id] }
   - name: month
     type: string
     lazy: |

@@ -5,7 +5,7 @@ title: Agents
 faker:
   count: 8
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: name, label: Agent, type: string, flags: [title, searchable] }
   - { name: email, type: string }
   - { name: team, type: string, faker: { pick: { values: ["Tier 1", "Tier 2", Escalations] } } }

@@ -4,7 +4,7 @@ datasource: er_board
 title: ER arrivals
 faker: { count: 0 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: first_name, label: First name, type: string, flags: [title, searchable] }
   - { name: last_name, label: Last name, type: string, flags: [searchable] }
   - { name: complaint, type: string, faker: { sentence: { min_words: 2, max_words: 5 } } }

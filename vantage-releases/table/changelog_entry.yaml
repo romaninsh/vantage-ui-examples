@@ -22,7 +22,6 @@ columns:
     optional: true
   - name: position
     type: int
-    flags: [hidden]
   - name: release.version
     type: string # implicit reference: app release version
   - name: pull_request.number

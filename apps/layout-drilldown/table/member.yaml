@@ -5,7 +5,7 @@ title: Members
 faker:
   fan_out: { column: club, min: 6, max: 12 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: club, label: Club, type: string, references: club }
   - { name: first_name, label: First name, type: string, flags: [title, searchable] }
   - { name: last_name, label: Last name, type: string, flags: [searchable] }

@@ -5,7 +5,7 @@ title: Ships
 references:
   launches: { table: launches, kind: has_many, foreign_key: ship }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: name, type: string, flags: [title, searchable] }
   - { name: type, type: string }
   - { name: home_port, label: Home port, type: string }
@@ -14,4 +14,4 @@ columns:
   - { name: model, type: string }
   - { name: successful_landings, label: Landings, type: int }
   - { name: attempted_landings, label: Attempts, type: int }
-  - { name: url, type: string, flags: [hidden] }
+  - { name: url, type: string }

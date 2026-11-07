@@ -4,12 +4,11 @@ title: Manager trajectory breakdown
 id_column: member
 columns:
   - { name: member, type: string, flags: [id, title] }
-  - { name: driver, type: string, flags: [hidden], optional: true }
-  - { name: spend, type: float, flags: [hidden], optional: true }
-  - { name: scope_total, type: float, flags: [hidden], optional: true }
+  - { name: driver, type: string, optional: true }
+  - { name: spend, type: float, optional: true }
+  - { name: scope_total, type: float, optional: true }
   - name: rank
     type: int
-    flags: [hidden]
     lazy: |
       let d = row.driver;
       if d == "Productivity" { 1 } else if d == "Application" { 2 } else if d == "Developer" { 3 } else { 99 }

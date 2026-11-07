@@ -34,30 +34,30 @@ columns:
   - { name: visibility, type: string }
 
   # Raw figures the pages show through sugar, or not at all.
-  - { name: distance, label: "Distance (m)", type: float, flags: [hidden] }
-  - { name: moving_time, label: "Moving (s)", type: int, flags: [hidden] }
-  - { name: elapsed_time, label: "Elapsed (s)", type: int, flags: [hidden] }
-  - { name: average_speed, label: "Avg speed (m/s)", type: float, flags: [hidden] }
-  - { name: max_speed, label: "Max speed (m/s)", type: float, flags: [hidden] }
-  - { name: elev_high, label: "Highest (m)", type: float, flags: [hidden] }
-  - { name: elev_low, label: "Lowest (m)", type: float, flags: [hidden] }
-  - { name: type, type: string, flags: [hidden] }
-  - { name: workout_type, label: Workout, type: int, flags: [hidden] }
-  - { name: start_date, label: "Started (UTC)", type: timestamp, flags: [hidden] }
-  - { name: timezone, type: string, flags: [hidden] }
-  - { name: utc_offset, label: "UTC offset (s)", type: float, flags: [hidden] }
-  - { name: has_heartrate, label: "Has HR", type: bool, flags: [hidden] }
-  - { name: heartrate_opt_out, label: "HR hidden", type: bool, flags: [hidden] }
-  - { name: device_watts, label: "Power meter", type: bool, flags: [hidden] }
-  - { name: photo_count, label: "Strava photos", type: int, flags: [hidden] }
-  - { name: trainer, label: Indoor, type: bool, flags: [hidden] }
-  - { name: commute, type: bool, flags: [hidden] }
-  - { name: manual, type: bool, flags: [hidden] }
-  - { name: private, type: bool, flags: [hidden] }
-  - { name: flagged, type: bool, flags: [hidden] }
-  - { name: has_kudoed, label: "You kudoed", type: bool, flags: [hidden] }
-  - { name: from_accepted_tag, label: "Tagged in", type: bool, flags: [hidden] }
-  - { name: external_id, label: "Upload file", type: string, flags: [hidden] }
-  - { name: upload_id, label: Upload, type: int, flags: [hidden] }
-  - { name: athlete.id, label: Athlete, type: int, flags: [hidden] }
-  - { name: map.summary_polyline, label: Track, type: string, flags: [hidden] }
+  - { name: distance, label: "Distance (m)", type: float }
+  - { name: moving_time, label: "Moving (s)", type: int }
+  - { name: elapsed_time, label: "Elapsed (s)", type: int }
+  - { name: average_speed, label: "Avg speed (m/s)", type: float }
+  - { name: max_speed, label: "Max speed (m/s)", type: float }
+  - { name: elev_high, label: "Highest (m)", type: float }
+  - { name: elev_low, label: "Lowest (m)", type: float }
+  - { name: type, type: string }
+  - { name: workout_type, label: Workout, type: int }
+  - { name: start_date, label: "Started (UTC)", type: timestamp }
+  - { name: timezone, type: string }
+  - { name: utc_offset, label: "UTC offset (s)", type: float }
+  - { name: has_heartrate, label: "Has HR", type: bool }
+  - { name: heartrate_opt_out, label: "HR hidden", type: bool }
+  - { name: device_watts, label: "Power meter", type: bool }
+  - { name: photo_count, label: "Strava photos", type: int }
+  - { name: trainer, label: Indoor, type: bool }
+  - { name: commute, type: bool }
+  - { name: manual, type: bool }
+  - { name: private, type: bool }
+  - { name: flagged, type: bool }
+  - { name: has_kudoed, label: "You kudoed", type: bool }
+  - { name: from_accepted_tag, label: "Tagged in", type: bool }
+  - { name: external_id, label: "Upload file", type: string }
+  - { name: upload_id, label: Upload, type: int }
+  - { name: athlete.id, label: Athlete, type: int }
+  - { name: map.summary_polyline, label: Track, type: string }

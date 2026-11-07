@@ -7,7 +7,7 @@ title: Conversations
 faker:
   count: 60
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: customer, type: string, references: customer }
   - name: topic
     type: string

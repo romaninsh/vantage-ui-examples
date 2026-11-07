@@ -6,3 +6,4 @@ body:
     observe: mart_peer_benchmark
     params:
       default_sort: { column: month_key, direction: desc }
+      columns: [month_key, employee_id, full_name, spend_usd, tokens, team_org_id, team_name, team_code, job_function, seniority_code, lob_id, lob_name, resource_org, org_path, department_id, section_id, top_platform_id, top_model_id, top_tier_share, had_spike, team_peers, func_peers, grade_peers, team_mean, func_mean, grade_mean, team_multiple, func_multiple, grade_multiple, team_sigma, func_sigma, grade_sigma]

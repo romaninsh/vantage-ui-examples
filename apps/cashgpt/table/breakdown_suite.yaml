@@ -3,8 +3,8 @@ datasource: warehouse
 title: Breakdown · suite
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
   - { name: member, type: string, flags: [title] }
   - { name: spend, type: float }
   - name: total_display
@@ -24,7 +24,7 @@ columns:
         (t / 10).to_string() + "." + (t % 10).to_string() + "%"
       }
   - { name: share_pct, type: float }
-  - { name: total_usd, type: float, flags: [hidden] }
+  - { name: total_usd, type: float }
 postgres:
   # Reference: overview.breakdown (GROUPING SETS), one axis per view — pie
   # plus side legend; share divides HERE against the scope total.

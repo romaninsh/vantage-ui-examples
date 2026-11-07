@@ -3,14 +3,14 @@ datasource: warehouse
 title: Exec · exec_choice_kind
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
   - { name: member, type: string, flags: [title] }
-  - { name: top_raw, type: float, flags: [hidden] }
-  - { name: high_raw, type: float, flags: [hidden] }
-  - { name: base_raw, type: float, flags: [hidden] }
-  - { name: untiered_raw, type: float, flags: [hidden] }
-  - { name: total_raw, type: float, flags: [hidden] }
+  - { name: top_raw, type: float }
+  - { name: high_raw, type: float }
+  - { name: base_raw, type: float }
+  - { name: untiered_raw, type: float }
+  - { name: total_raw, type: float }
   - name: top
     type: string
     lazy: |

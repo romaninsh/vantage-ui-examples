@@ -14,6 +14,6 @@ columns:
   - { name: id, type: int, flags: [id] }
   - { name: name, type: string, flags: [title, searchable] }
   - { name: type.name, type: string }
-  - { name: agency.id, type: int, flags: [hidden], references: agencies }
+  - { name: agency.id, type: int, references: agencies }
   - { name: agency.name, type: string }
   - { name: in_use, type: bool }

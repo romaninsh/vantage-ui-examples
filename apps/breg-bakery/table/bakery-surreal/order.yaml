@@ -19,9 +19,9 @@ columns:
   is_deleted: { type: bool }
   created_at: { type: datetime }
   # `array<object>` of { product, quantity, price }. There is no array column
-  # type, and the raw JSON is unreadable in a cell, so it stays out of the
-  # grid — `order_totals` folds it into a number instead.
-  lines: { type: string, flags: [hidden] }
+  # type, and the raw JSON is unreadable in a cell, so the pages leave it out
+  # of their `columns:` — `order_totals` folds it into a number instead.
+  lines: { type: string }
   # A closed set, and the database asserts it too. Declaring it here is what
   # turns the form field into a dropdown instead of free text.
   status:

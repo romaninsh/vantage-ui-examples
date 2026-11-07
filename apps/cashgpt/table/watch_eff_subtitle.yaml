@@ -3,11 +3,11 @@ datasource: warehouse
 title: Watch · efficiency subtitle
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: median_pu, type: float, flags: [hidden], optional: true }
-  - { name: median_tt, type: float, flags: [hidden], optional: true }
-  - { name: recoverable, type: float, flags: [hidden], optional: true }
-  - { name: l4_total, type: float, flags: [hidden], optional: true }
+  - { name: rid, type: string, flags: [id] }
+  - { name: median_pu, type: float, optional: true }
+  - { name: median_tt, type: float, optional: true }
+  - { name: recoverable, type: float, optional: true }
+  - { name: l4_total, type: float, optional: true }
   - name: line
     type: string
     lazy: |

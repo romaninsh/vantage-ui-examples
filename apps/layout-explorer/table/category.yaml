@@ -13,7 +13,7 @@ title: Categories
 faker:
   count: 70
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: name, label: Category, type: string, flags: [title, searchable], faker: { pattern: "Category ##" } }
   - { name: code, label: Code, type: string, faker: { pattern: "CAT-###" } }
   - { name: parent_id, label: Parent, type: string, faker: { tree: { roots: 5, depth: 5, min_depth: 2 } } }

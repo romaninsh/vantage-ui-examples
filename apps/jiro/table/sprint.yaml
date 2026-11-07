@@ -4,7 +4,7 @@ datasource: jiro
 title: Sprint
 table: sprint
 columns:
-  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: _id, label: ID, type: string, flags: [id] }
   - { name: name, label: Sprint, type: string, flags: [title, mandatory, searchable] }
   - { name: project, label: Project, type: string, references: { table: project, kind: has_one, name: project } }
   - { name: project_key, label: Project, type: string, flags: [calculated] }

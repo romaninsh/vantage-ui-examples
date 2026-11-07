@@ -6,3 +6,4 @@ body:
     observe: mart_employee_month
     params:
       default_sort: { column: month_key, direction: desc }
+      columns: [month_key, employee_id, full_name, job_function, seniority_code, seniority_rank, work_type, location_region, city, lob_id, lob_name, resource_org, team_org_id, team_code, team_name, section_id, department_id, division_id, org_path, tokens, spend_usd, models_used, apps_used, had_spike, top_platform_id, top_model_id, top_tier_share]

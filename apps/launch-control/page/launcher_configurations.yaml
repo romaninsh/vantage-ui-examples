@@ -5,3 +5,5 @@ body:
   - kind: binder
     name: launcher_configurations
     observe: launcher_configurations
+    params:
+      columns: [id, name, full_name, family, variant, manufacturer.name, active, reusable, length, diameter, launch_mass, leo_capacity, gto_capacity, total_launch_count, successful_launches, failed_launches, pending_launches]

@@ -3,18 +3,18 @@ datasource: warehouse
 title: Watch · outliers (function)
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
   - { name: full_name, type: string, flags: [title] }
-  - { name: job_function, type: string, flags: [hidden], optional: true }
-  - { name: team_name, type: string, flags: [hidden], optional: true }
+  - { name: job_function, type: string, optional: true }
+  - { name: team_name, type: string, optional: true }
   - name: role_team
     type: string
     lazy: |
       if row.job_function == () || row.team_name == () { () } else { row.job_function + " · " + row.team_name }
   - { name: manager_name, type: string, optional: true }
-  - { name: peer_mean, type: float, flags: [hidden], optional: true }
-  - { name: multiple, type: float, flags: [hidden], optional: true }
+  - { name: peer_mean, type: float, optional: true }
+  - { name: multiple, type: float, optional: true }
   - name: spend_display
     type: string
     lazy: |
@@ -48,8 +48,8 @@ columns:
           let c = (num(row.sigma).abs() * 10.0).round().to_int();
           (if num(row.sigma) < 0.0 && c > 0 { "-" } else { "" }) + grp(c / 10) + "." + (c % 10).to_string() + "σ"
       }
-  - { name: sigma, type: float, flags: [hidden] }
-  - { name: spend_usd, type: float, flags: [hidden] }
+  - { name: sigma, type: float }
+  - { name: spend_usd, type: float }
   - { name: top_platform, type: string, optional: true }
   - { name: peers, type: int }
 postgres:
