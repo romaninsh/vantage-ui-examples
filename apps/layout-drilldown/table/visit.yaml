@@ -5,7 +5,7 @@ title: Visits
 faker:
   fan_out: { column: member, min: 3, max: 5 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: member, label: Member, type: string, references: member }
   - { name: at, label: Checked in, type: timestamp, faker: { date: { from: "-120d" } } }
   - { name: activity, label: Activity, type: string, flags: [title, searchable], faker: { pick: { values: [Weights, Spin class, Yoga, HIIT, Swim, Pilates, Boxing, Open gym], weights: [5, 3, 2, 3, 2, 2, 1, 4] } } }

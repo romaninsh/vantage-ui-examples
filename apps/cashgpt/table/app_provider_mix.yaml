@@ -4,8 +4,8 @@ title: Apps · provider mix
 id_column: provider_group
 columns:
   - { name: provider_group, type: string, flags: [id, title] }
-  - { name: spend, type: float, flags: [hidden], optional: true }
-  - { name: scope_total, type: float, flags: [hidden], optional: true }
+  - { name: spend, type: float, optional: true }
+  - { name: scope_total, type: float, optional: true }
   - name: total_display
     type: string
     lazy: |

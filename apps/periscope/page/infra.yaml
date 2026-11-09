@@ -12,3 +12,5 @@ body:
     when: '${nodes.selected_id} != ""'
     observe:
       script: scenery("nodes").where("id", "${nodes.selected_id}").ref("pods")
+    params:
+      columns: [id, name, namespace, nodeName, phase, ready, restarts, podIP, age]

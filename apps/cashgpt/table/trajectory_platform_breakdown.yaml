@@ -3,11 +3,10 @@ datasource: warehouse
 title: Trajectory breakdown · platform
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
   - name: rank
     type: int
-    flags: [hidden]
     lazy: |
       let order = ["Azure OpenAI", "Claude", "Google Vertex AI", "Databricks Mosaic AI", "GitHub Copilot", "Amazon Bedrock"];
       let r = 99;
@@ -42,9 +41,9 @@ columns:
         (t / 10).to_string() + "." + (t % 10).to_string() + "%"
       }
   - { name: share_pct, type: float }
-  - { name: total_usd, type: float, flags: [hidden] }
-  - { name: cur_v, type: float, flags: [hidden] }
-  - { name: prev_v, type: float, flags: [hidden] }
+  - { name: total_usd, type: float }
+  - { name: cur_v, type: float }
+  - { name: prev_v, type: float }
 postgres:
   # GROUP BY the RAW column — correlated subqueries may only reference
   # grouping columns, and an expression group (initcap(...)) makes the

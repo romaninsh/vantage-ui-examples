@@ -21,7 +21,7 @@ columns:
   # invoices/payments the roll-ups read. So every writer that changes an
   # account's numbers also stamps this field — the touch emits a live
   # frame, the app re-reads the row, and the roll-ups recompute fresh.
-  deps_last_updated: { type: timestamp, flags: [hidden] }
+  deps_last_updated: { type: timestamp }
 
   # Read-only roll-ups over the account's children, projected by the SELECT.
   # `balance` is what the account still owes: its issued invoices, less what

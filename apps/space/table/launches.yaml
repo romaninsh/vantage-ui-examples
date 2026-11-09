@@ -33,7 +33,6 @@ columns:
   - {
       name: launch_service_provider.id,
       type: string,
-      flags: [hidden],
       references: agencies,
     }
   - { name: launch_service_provider.name, type: string }
@@ -43,7 +42,7 @@ columns:
   - { name: mission.type, type: string }
   - { name: mission.description, type: string, flags: [searchable] }
   - { name: mission.orbit.name, type: string }
-  - { name: pad.id, type: string, flags: [hidden], references: pads }
+  - { name: pad.id, type: string, references: pads }
   - { name: pad.name, type: string }
   - { name: pad.location.name, type: string }
   - { name: orbital_launch_attempt_count, type: int }
@@ -57,14 +56,14 @@ columns:
   - { name: pad_turnaround, type: string }
   # Query params the has-many drills (agencies / launcher_configurations /
   # locations / pads / programs) filter by; sent to the server, never displayed.
-  - { name: lsp__id, type: string, flags: [hidden, request_param] }
-  - { name: location__ids, type: string, flags: [hidden, request_param] }
-  - { name: pad, type: string, flags: [hidden, request_param] }
-  - { name: program, type: string, flags: [hidden, request_param] }
+  - { name: lsp__id, type: string, flags: [request_param] }
+  - { name: location__ids, type: string, flags: [request_param] }
+  - { name: pad, type: string, flags: [request_param] }
+  - { name: program, type: string, flags: [request_param] }
   - {
       name: rocket__configuration__id,
       type: string,
-      flags: [hidden, request_param],
+      flags: [request_param],
     }
 
 references:

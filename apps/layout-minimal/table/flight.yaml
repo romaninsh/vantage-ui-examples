@@ -11,7 +11,7 @@ aggregates:
   cruising: { op: count, where: { phase: Cruising } }
   landed: { op: count, where: { phase: Landed } }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: flight_no, label: Flight, type: string, flags: [title, searchable] }
   - { name: carrier, type: string, flags: [searchable] }
   - { name: aircraft_type, label: Aircraft, type: string }
@@ -38,4 +38,4 @@ columns:
   - { name: seats, type: int }
   - { name: lat, type: float }
   - { name: lon, type: float }
-  - { name: board_order, type: float, flags: [hidden] }
+  - { name: board_order, type: float }

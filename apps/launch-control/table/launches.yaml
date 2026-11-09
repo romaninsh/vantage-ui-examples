@@ -2,8 +2,8 @@
 #
 # Fetched `?mode=detailed` so the belongs-to objects (status, provider, rocket,
 # mission, pad → location) come back nested; their leaves are surfaced as dotted
-# columns. The hidden `*.id` columns carry `references:` so a cell is a drill
-# link into that record's page.
+# columns. The `*.id` columns, which the pages leave out of their `columns:`,
+# carry `references:` so a cell is a drill link into that record's page.
 #
 # `payload_count` / `crew_count` / `total_payload_mass` are computed server-side
 # (vantage aggregate expressions) — not stored. `status.name` is flagged `label`
@@ -34,13 +34,12 @@ columns:
   # belongs-to references are declared on the FLAT FK columns (always present at
   # the response's top level), not the nested `.id` leaves — the REST backend
   # keeps nested objects nested, so a dotted `narrow_via` can't be read back.
-  - { name: lsp_id, type: string, flags: [hidden], references: agencies }
+  - { name: lsp_id, type: string, references: agencies }
   - { name: launch_service_provider.name, type: string }
   - { name: launch_service_provider.type.name, type: string }
   - {
       name: rocket_configuration_id,
       type: string,
-      flags: [hidden],
       references: launcher_configurations,
     }
   - { name: rocket_configuration.name, type: string }
@@ -50,17 +49,17 @@ columns:
   - { name: mission.mission_type, type: string }
   - { name: mission.description, type: string, flags: [searchable] }
   - { name: mission.orbit.name, type: string }
-  - { name: pad_id, type: string, flags: [hidden], references: pads }
+  - { name: pad_id, type: string, references: pads }
   - { name: pad.name, type: string }
   - { name: pad.location.name, type: string }
   # Query params the has-many drills (agencies / launcher_configurations /
   # pads) filter by; sent to the server, never displayed.
-  - { name: lsp__id, type: string, flags: [hidden, request_param] }
-  - { name: pad, type: string, flags: [hidden, request_param] }
+  - { name: lsp__id, type: string, flags: [request_param] }
+  - { name: pad, type: string, flags: [request_param] }
   - {
       name: rocket__configuration__id,
       type: string,
-      flags: [hidden, request_param],
+      flags: [request_param],
     }
   - { name: payload_count, type: int }
   - { name: total_payload_mass, type: float, unit: kg }

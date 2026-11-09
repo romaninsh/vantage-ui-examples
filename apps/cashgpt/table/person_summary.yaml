@@ -3,7 +3,7 @@ datasource: warehouse
 title: Person · summary
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: rid, type: string, flags: [id] }
   - name: who_line
     type: string
     lazy: 'row.full_name + " — " + row.job_function + " · " + row.seniority_code + " · " + row.org_name'
@@ -33,17 +33,17 @@ columns:
         while s.len() > 3 { t = "," + s.sub_string(s.len() - 3) + t; s = s.sub_string(0, s.len() - 3); }
         s + t + "×"
       }
-  - { name: full_name, type: string, flags: [hidden] }
-  - { name: job_function, type: string, flags: [hidden] }
-  - { name: seniority_code, type: string, flags: [hidden] }
-  - { name: org_name, type: string, flags: [hidden] }
-  - { name: city, type: string, flags: [hidden] }
-  - { name: country, type: string, flags: [hidden] }
-  - { name: manager, type: string, flags: [hidden] }
-  - { name: spend_total, type: float, flags: [hidden] }
-  - { name: months, type: int, flags: [hidden] }
-  - { name: profile_code, type: string, flags: [hidden] }
-  - { name: peak_multiple, type: float, flags: [hidden] }
+  - { name: full_name, type: string }
+  - { name: job_function, type: string }
+  - { name: seniority_code, type: string }
+  - { name: org_name, type: string }
+  - { name: city, type: string }
+  - { name: country, type: string }
+  - { name: manager, type: string }
+  - { name: spend_total, type: float }
+  - { name: months, type: int }
+  - { name: profile_code, type: string }
+  - { name: peak_multiple, type: float }
 postgres:
   # Reference: individual.summary — identity from the dims, usage totals
   # from the person-month mart, behaviour profile, and the peak

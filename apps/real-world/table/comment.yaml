@@ -7,14 +7,14 @@ columns:
   article: { type: string, flags: [mandatory], references: article }
   article.title: { type: string, label: Article }
   # Pages filter on this string, never on the `article` link (string ≠ record).
-  article.slug: { type: string, flags: [hidden] }
+  article.slug: { type: string }
   author:
     type: string
     flags: [mandatory]
     references: { table: user, kind: has_one, name: author }
   author.username: { type: string, label: Author }
-  author_name: { type: string, flags: [hidden], expr: 'surreal::ident("author")["username"]' }
-  article_title: { type: string, flags: [hidden], expr: 'surreal::ident("article")["title"]' }
+  author_name: { type: string, expr: 'surreal::ident("author")["username"]' }
+  article_title: { type: string, expr: 'surreal::ident("article")["title"]' }
   # Pill when the article's own author replies.
   reply_kind: { type: string, label: Reply, flags: [label], expr: 'surreal::case_when().when(surreal::ident("author") == surreal::ident("article")["author"], "author reply").else_("").expr()' }
   posted_ago: { type: string, label: Posted, expr: 'surreal::fx("fn::ago", [surreal::ident("created_at")])' }

@@ -21,7 +21,7 @@ columns:
     flags: [mandatory, title, searchable]
   - name: payload
     type: string
-    flags: [mandatory, hidden]
+    flags: [mandatory]
   - name: fetched_at
     type: datetime
   - name: sync_run.script

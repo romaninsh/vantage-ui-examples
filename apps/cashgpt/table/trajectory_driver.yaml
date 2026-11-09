@@ -3,7 +3,7 @@ datasource: warehouse
 title: Trajectory · driver (chart)
 id_column: month_key
 columns:
-  - { name: month_key, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string, flags: [id] }
   - name: month
     type: string
     lazy: |
@@ -18,10 +18,10 @@ columns:
   - name: "Application"
     type: float
     lazy: 'if row.application_sum == () { 0.0 } else { row.application_sum }'
-  - { name: mk, type: string, flags: [hidden] }
-  - { name: developer_sum, type: float, flags: [hidden] }
-  - { name: productivity_sum, type: float, flags: [hidden] }
-  - { name: application_sum, type: float, flags: [hidden] }
+  - { name: mk, type: string }
+  - { name: developer_sum, type: float }
+  - { name: productivity_sum, type: float }
+  - { name: application_sum, type: float }
 postgres:
   # Reference: overview.trajectory — month × member spend, pivoted; series
   # order = the reference slotOrder (first-seen: Jan spend ranking).

@@ -5,7 +5,7 @@ datasource: jiro
 title: Done issues
 table: issue_done
 columns:
-  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: _id, type: string, flags: [id] }
   - { name: key, label: Key, type: string, flags: [searchable] }
   - { name: title, label: Summary, type: string, flags: [title, searchable] }
   - { name: type, label: Type, type: string }

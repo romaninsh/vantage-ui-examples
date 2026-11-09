@@ -3,14 +3,14 @@ datasource: warehouse
 title: Manager · top users
 id_column: employee_id
 columns:
-  - { name: employee_id, type: string, flags: [id, hidden] }
+  - { name: employee_id, type: string, flags: [id] }
   - { name: full_name, type: string, flags: [title] }
-  - { name: job_function, type: string, flags: [hidden], optional: true }
-  - { name: seniority_code, type: string, flags: [hidden], optional: true }
-  - { name: team_name, type: string, flags: [hidden], optional: true }
-  - { name: city, type: string, flags: [hidden], optional: true }
-  - { name: spend, type: float, flags: [hidden], optional: true }
-  - { name: spend_tier, type: float, flags: [hidden], optional: true }
+  - { name: job_function, type: string, optional: true }
+  - { name: seniority_code, type: string, optional: true }
+  - { name: team_name, type: string, optional: true }
+  - { name: city, type: string, optional: true }
+  - { name: spend, type: float, optional: true }
+  - { name: spend_tier, type: float, optional: true }
   - name: role
     type: string
     lazy: |

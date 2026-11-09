@@ -5,7 +5,7 @@
 datasource: airports
 title: Airports
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: iata, label: IATA, type: string, flags: [title, searchable], faker: { pick: { values: [LHR, LGW, MAN, EDI, BHX, GLA, DUB, CDG, AMS, FRA, MAD, BCN, FCO, MUC, ZRH, JFK, ORD, DXB], weights: [10, 6, 6, 4, 4, 3, 5, 8, 8, 8, 5, 5, 4, 5, 4, 6, 4, 6] } } }
   - { name: city, type: string }
   - { name: country, type: string }

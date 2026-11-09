@@ -6,10 +6,10 @@ title: Landpads
 graphql:
   filter: false
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: full_name, label: Name, type: string, flags: [title, searchable] }
   - { name: landing_type, label: Type, type: string, enum: [ASDS, RTLS] }
   - { name: status, type: string, enum: [active, retired, "under construction", lost] }
   - { name: attempted_landings, label: Attempts, type: string }
   - { name: successful_landings, label: Landings, type: string }
-  - { name: wikipedia, type: string, flags: [hidden] }
+  - { name: wikipedia, type: string }

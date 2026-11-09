@@ -8,10 +8,10 @@ graphql:
 references:
   launches: { table: launches, kind: has_many, foreign_key: site_id }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: name, type: string, flags: [title, searchable] }
   - { name: status, type: string, enum: [active, inactive, retired, "under construction", lost] }
   - { name: attempted_launches, label: Attempts, type: int }
   - { name: successful_launches, label: Launches, type: int }
   - { name: details, type: string, flags: [searchable] }
-  - { name: wikipedia, type: string, flags: [hidden] }
+  - { name: wikipedia, type: string }

@@ -5,3 +5,5 @@ body:
   - kind: binder
     name: payloads
     observe: payloads
+    params:
+      columns: [id, name, type.name, manufacturer.name, mass, description]

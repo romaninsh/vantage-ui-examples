@@ -6,7 +6,7 @@ title: Revolving rows
 faker:
   count: 10
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: name, type: string, flags: [title, searchable] }
   - { name: email, type: string }
   - { name: city, type: string }

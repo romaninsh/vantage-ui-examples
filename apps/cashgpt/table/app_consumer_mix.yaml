@@ -3,11 +3,11 @@ datasource: warehouse
 title: Apps · consumer mix
 id_column: consumer_lob_id
 columns:
-  - { name: consumer_lob_id, type: string, flags: [id, hidden] }
-  - { name: consumer_lob_name, type: string, flags: [hidden], optional: true }
-  - { name: owns, type: bool, flags: [hidden], optional: true }
-  - { name: spend, type: float, flags: [hidden], optional: true }
-  - { name: scope_total, type: float, flags: [hidden], optional: true }
+  - { name: consumer_lob_id, type: string, flags: [id] }
+  - { name: consumer_lob_name, type: string, optional: true }
+  - { name: owns, type: bool, optional: true }
+  - { name: spend, type: float, optional: true }
+  - { name: scope_total, type: float, optional: true }
   - name: member
     type: string
     flags: [title]

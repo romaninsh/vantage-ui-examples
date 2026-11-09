@@ -5,3 +5,5 @@ body:
   - kind: binder
     name: replicasets
     observe: replicasets
+    params:
+      columns: [id, name, namespace, replicas, ready, available, age]

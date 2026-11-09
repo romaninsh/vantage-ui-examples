@@ -4,7 +4,7 @@ datasource: jiro
 title: Workload
 table: workload
 columns:
-  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: _id, type: string, flags: [id] }
   - { name: member_name, label: Member, type: string, flags: [title] }
   - { name: open_issues, label: Open issues, type: int }
   - { name: open_points, label: Open points, type: int }

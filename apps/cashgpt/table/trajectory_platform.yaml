@@ -3,7 +3,7 @@ datasource: warehouse
 title: Trajectory · platform (chart)
 id_column: month_key
 columns:
-  - { name: month_key, type: string, flags: [id, hidden] }
+  - { name: month_key, type: string, flags: [id] }
   - name: month
     type: string
     lazy: |
@@ -27,13 +27,13 @@ columns:
   - name: "Amazon Bedrock"
     type: float
     lazy: 'if row.amazon_bedrock_sum == () { 0.0 } else { row.amazon_bedrock_sum }'
-  - { name: mk, type: string, flags: [hidden] }
-  - { name: azure_openai_sum, type: float, flags: [hidden] }
-  - { name: claude_sum, type: float, flags: [hidden] }
-  - { name: google_vertex_ai_sum, type: float, flags: [hidden] }
-  - { name: databricks_mosaic_ai_sum, type: float, flags: [hidden] }
-  - { name: github_copilot_sum, type: float, flags: [hidden] }
-  - { name: amazon_bedrock_sum, type: float, flags: [hidden] }
+  - { name: mk, type: string }
+  - { name: azure_openai_sum, type: float }
+  - { name: claude_sum, type: float }
+  - { name: google_vertex_ai_sum, type: float }
+  - { name: databricks_mosaic_ai_sum, type: float }
+  - { name: github_copilot_sum, type: float }
+  - { name: amazon_bedrock_sum, type: float }
 postgres:
   # Reference: overview.trajectory — month × member spend, pivoted; series
   # order = the reference slotOrder (first-seen: Jan spend ranking).

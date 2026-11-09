@@ -11,3 +11,4 @@ body:
       refresh_interval: 5
       views:
         - pod_summary
+      columns: [id, name, namespace, nodeName, phase, ready, restarts, podIP, age]

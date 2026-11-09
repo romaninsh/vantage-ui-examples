@@ -10,7 +10,7 @@ graphql:
 references:
   launches: { table: launches, kind: has_many, foreign_key: rocket_id }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: name, type: string, flags: [title, searchable] }
   - { name: type, type: string }
   - { name: company, type: string }
@@ -22,4 +22,4 @@ columns:
   - { name: success_rate_pct, label: Success rate %, type: int }
   - { name: first_flight, label: First flight, type: date }
   - { name: description, type: string, flags: [searchable] }
-  - { name: wikipedia, type: string, flags: [hidden] }
+  - { name: wikipedia, type: string }

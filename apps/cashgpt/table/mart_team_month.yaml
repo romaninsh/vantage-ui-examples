@@ -7,7 +7,7 @@ columns:
   # vantage dedupes rows by id — so the id must cover the full grain.
   # (Projected in the query below; column-level `expr:` is not wired for
   # the Postgres driver yet.)
-  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: rid, type: string, flags: [id] }
   - { name: org_id, type: string }
   - { name: org_name, type: string, flags: [title] }
   - { name: org_level, type: int }

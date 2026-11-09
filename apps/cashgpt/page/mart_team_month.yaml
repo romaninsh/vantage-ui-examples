@@ -6,3 +6,4 @@ body:
     observe: mart_team_month
     params:
       default_sort: { column: month_key, direction: desc }
+      columns: [org_id, org_name, org_level, lob_id, lob_name, resource_org, work_type, city, headcount, month_key, active, spend_usd, top_tier_share]

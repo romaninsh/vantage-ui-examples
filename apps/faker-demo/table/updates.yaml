@@ -6,7 +6,7 @@ datasource: gym-traffic
 title: Updates
 faker: { count: 0 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: region, type: string, flags: [title, searchable] }
   - { name: delta, type: int }
   - { name: updated, type: string }

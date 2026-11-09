@@ -3,11 +3,11 @@ datasource: warehouse
 title: Exec · exec_tier
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
-  - { name: rank, type: int, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
+  - { name: rank, type: int }
   - { name: member, type: string, flags: [title] }
-  - { name: total_raw, type: float, flags: [hidden] }
+  - { name: total_raw, type: float }
   - name: total_display
     type: string
     lazy: |

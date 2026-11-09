@@ -3,12 +3,12 @@ datasource: warehouse
 title: Apps · unit volume
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: rid, type: string, flags: [id] }
   - { name: month_key, type: string }
   - { name: consumer_lob_name, type: string }
-  - { name: users, type: float, flags: [hidden], optional: true }
-  - { name: tokens, type: float, flags: [hidden], optional: true }
-  - { name: spend, type: float, flags: [hidden], optional: true }
+  - { name: users, type: float, optional: true }
+  - { name: tokens, type: float, optional: true }
+  - { name: spend, type: float, optional: true }
   - name: users_display
     type: string
     lazy: |

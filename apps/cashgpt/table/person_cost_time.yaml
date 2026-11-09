@@ -3,7 +3,7 @@ datasource: warehouse
 title: Person · cost over time
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
+  - { name: rid, type: string, flags: [id] }
   - name: month
     type: string
     lazy: |
@@ -11,7 +11,7 @@ columns:
       names[parse_int(row.month_key.sub_string(5, 2)) - 1]
   - { name: model_name, type: string }
   - { name: spend, type: float }
-  - { name: month_key, type: string, flags: [hidden] }
+  - { name: month_key, type: string }
 postgres:
   # Reference: individual.costOverTime — one person is a few dozen rows
   # behind an index on employee_id, so this reads the fact directly. One

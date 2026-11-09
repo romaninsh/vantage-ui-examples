@@ -17,9 +17,8 @@ columns:
   - {
       name: spacestation.id,
       type: int,
-      flags: [hidden],
       references: space_stations,
     }
   - { name: spacestation.name, type: string }
-  - { name: expedition.id, type: int, flags: [hidden] }
+  - { name: expedition.id, type: int }
   - { name: expedition.name, type: string }

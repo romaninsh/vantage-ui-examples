@@ -6,7 +6,7 @@ title: Appointments
 faker:
   count: 90
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: confirmation, label: Booking, type: string, flags: [title, searchable], faker: { pattern: "APT-#####" } }
   - { name: patient, type: string, references: patient }
   - { name: staff, type: string, references: staff }

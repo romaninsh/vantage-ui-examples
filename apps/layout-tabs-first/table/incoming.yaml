@@ -5,7 +5,7 @@ datasource: incoming
 title: New tickets
 faker: { count: 0 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: number, label: Number, type: string, faker: { pattern: "TCK-#####" } }
   - { name: subject, type: string, flags: [title, searchable], faker: { sentence: { min_words: 4, max_words: 8 } } }
   - { name: channel, type: string, faker: { pick: { values: [Email, Chat, Phone] } } }

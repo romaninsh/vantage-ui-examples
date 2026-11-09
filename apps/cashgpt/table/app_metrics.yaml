@@ -3,14 +3,14 @@ datasource: warehouse
 title: Apps · metrics
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: spend, type: float, flags: [hidden], optional: true }
-  - { name: peak_users, type: float, flags: [hidden], optional: true }
-  - { name: tokens, type: float, flags: [hidden], optional: true }
-  - { name: lobs, type: int, flags: [hidden], optional: true }
-  - { name: top_model_raw, type: string, flags: [hidden], optional: true }
-  - { name: rollout_raw, type: string, flags: [hidden], optional: true }
-  - { name: mom_pct, type: float, flags: [hidden], optional: true }
+  - { name: rid, type: string, flags: [id] }
+  - { name: spend, type: float, optional: true }
+  - { name: peak_users, type: float, optional: true }
+  - { name: tokens, type: float, optional: true }
+  - { name: lobs, type: int, optional: true }
+  - { name: top_model_raw, type: string, optional: true }
+  - { name: rollout_raw, type: string, optional: true }
+  - { name: mom_pct, type: float, optional: true }
   - name: spend_display
     type: string
     lazy: |

@@ -12,7 +12,7 @@ faker:
       get: 10ms..30ms
       search_extra: 200ms..1500ms
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: first_name, label: First name, type: string, flags: [title, searchable] }
   - { name: last_name, label: Last name, type: string, flags: [searchable] }
   - { name: country, type: string }

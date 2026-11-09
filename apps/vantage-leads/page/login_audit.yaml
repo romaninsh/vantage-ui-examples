@@ -5,3 +5,5 @@ body:
   - kind: binder
     name: login_audit
     observe: login_audit
+    params:
+      columns: [email, name, at]

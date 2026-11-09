@@ -6,7 +6,7 @@ title: Patients
 faker:
   count: 70
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: first_name, label: First name, type: string, flags: [title, searchable] }
   - { name: last_name, label: Last name, type: string, flags: [searchable] }
   - { name: date_of_birth, label: Date of birth, type: date, faker: { date: { from: "1935-01-01", to: "2008-01-01" } } }

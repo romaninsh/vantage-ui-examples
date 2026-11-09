@@ -3,10 +3,10 @@ datasource: warehouse
 title: Apps · catalogue
 id_column: app_id
 columns:
-  - { name: app_id, type: string, flags: [id, hidden] }
+  - { name: app_id, type: string, flags: [id] }
   - { name: app_name, type: string, flags: [title] }
   - { name: owner_lob_name, type: string }
-  - { name: spend, type: float, flags: [hidden], optional: true }
+  - { name: spend, type: float, optional: true }
   - name: spend_display
     type: string
     lazy: |

@@ -5,7 +5,7 @@ title: Admissions
 faker:
   count: 50
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: case_number, label: Case, type: string, flags: [title, searchable], faker: { pattern: "ADM-#####" } }
   - { name: patient, type: string, references: patient }
   - { name: ward, type: string, references: ward }

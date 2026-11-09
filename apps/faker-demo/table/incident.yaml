@@ -5,7 +5,7 @@
 datasource: incidents
 title: Incidents
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: title, type: string, flags: [title, mandatory, searchable] }
   - { name: club, type: string, flags: [searchable] }
   - { name: severity, type: string, enum: [low, medium, high, critical], default: low }

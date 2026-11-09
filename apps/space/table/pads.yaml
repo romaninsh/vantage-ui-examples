@@ -17,7 +17,7 @@ columns:
   - { name: id, type: string, flags: [id] }
   - { name: name, type: string, flags: [title, searchable] }
   - { name: country.name, type: string }
-  - { name: location.id, type: string, flags: [hidden], references: locations }
+  - { name: location.id, type: string, references: locations }
   - { name: location.name, type: string }
   - { name: active, type: bool }
   - { name: description, type: string }
@@ -26,7 +26,7 @@ columns:
   - { name: total_launch_count, type: int }
   - { name: orbital_launch_attempt_count, type: int }
   - { name: fastest_turnaround, type: string }
-  - { name: location__id, type: string, flags: [hidden, request_param] }
+  - { name: location__id, type: string, flags: [request_param] }
 
 references:
   launches:

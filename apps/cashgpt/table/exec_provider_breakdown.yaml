@@ -3,12 +3,12 @@ datasource: warehouse
 title: Exec · exec_provider_breakdown
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
-  - { name: rank, type: int, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
+  - { name: rank, type: int }
   - { name: member, type: string, flags: [title] }
-  - { name: mom_state, type: int, flags: [hidden] }
-  - { name: mom_pct, type: float, flags: [hidden] }
+  - { name: mom_state, type: int }
+  - { name: mom_pct, type: float }
   - name: mom
     type: string
     lazy: |
@@ -18,7 +18,7 @@ columns:
         let c = (row.mom_pct * 10.0).round().to_int();
         (if row.mom_state == 1 { "▲" } else { "▼" }) + (c / 10) + "." + (c % 10) + "%"
       }
-  - { name: total_raw, type: float, flags: [hidden] }
+  - { name: total_raw, type: float }
   - name: total_display
     type: string
     lazy: |

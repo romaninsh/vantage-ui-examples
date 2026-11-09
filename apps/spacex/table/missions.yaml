@@ -7,10 +7,10 @@ title: Missions
 references:
   launches: { table: launches, kind: has_many, foreign_key: mission_id }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: name, type: string, flags: [title, searchable] }
   - { name: manufacturers, type: string }
   - { name: description, type: string, flags: [searchable] }
-  - { name: website, type: string, flags: [hidden] }
-  - { name: twitter, type: string, flags: [hidden] }
-  - { name: wikipedia, type: string, flags: [hidden] }
+  - { name: website, type: string }
+  - { name: twitter, type: string }
+  - { name: wikipedia, type: string }

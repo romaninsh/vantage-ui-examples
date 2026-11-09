@@ -6,3 +6,4 @@ body:
     observe: mart_fact_agg
     params:
       default_sort: { column: month_key, direction: desc }
+      columns: [month_key, lob_id, lob_name, resource_org, job_function, seniority_code, app_id, app_name, kind, usage_driver, platform_id, platform_name, model_id, model_name, provider_group, family, model_tier, tokens, spend_usd, list_spend_usd, fact_rows]

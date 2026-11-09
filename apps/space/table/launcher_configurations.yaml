@@ -25,7 +25,6 @@ columns:
   - {
       name: manufacturer.id,
       type: string,
-      flags: [hidden],
       references: agencies,
     }
   - { name: manufacturer.name, type: string }

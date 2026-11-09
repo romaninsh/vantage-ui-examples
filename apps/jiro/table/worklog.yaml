@@ -5,7 +5,7 @@ datasource: jiro
 title: Worklog
 table: worklog
 columns:
-  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: _id, label: ID, type: string, flags: [id] }
   - { name: issue, label: Issue, type: string, references: { table: issue, kind: has_one, name: issue } }
   - { name: issue_key, label: Issue, type: string, flags: [calculated] }
   - { name: author, label: Logged by, type: string, references: { table: member, kind: has_one, name: author } }

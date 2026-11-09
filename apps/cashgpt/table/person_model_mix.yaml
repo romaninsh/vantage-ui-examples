@@ -17,9 +17,9 @@ columns:
       let f = c % 100;
       "$" + s + t + "." + (if f < 10 { "0" } else { "" }) + f
   - { name: share_pct, type: float }
-  - { name: provider_group, type: string, flags: [hidden] }
-  - { name: model_tier, type: string, flags: [hidden] }
-  - { name: total_usd, type: float, flags: [hidden] }
+  - { name: provider_group, type: string }
+  - { name: model_tier, type: string }
+  - { name: total_usd, type: float }
 postgres:
   # Reference: individual.modelMix — every model the person touched,
   # provider · tier as the meta line, spend to the cent.

@@ -3,12 +3,11 @@ datasource: warehouse
 title: Models · top 20 (list)
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
-  - { name: rank, type: int, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
+  - { name: rank, type: int }
   - name: rank_display
     type: string
-    flags: [hidden]
     lazy: 'if row.member == "Other" { "" } else { row.rank.to_string() + "." }'
   - { name: member, type: string, flags: [title] }
   - name: provider_group
@@ -31,9 +30,9 @@ columns:
         (t / 10).to_string() + "." + (t % 10).to_string() + "%"
       }
   - { name: bar_pct, type: float }
-  - { name: provider_max, type: string, flags: [hidden] }
-  - { name: total_usd, type: float, flags: [hidden] }
-  - { name: share_pct, type: float, flags: [hidden] }
+  - { name: provider_max, type: string }
+  - { name: total_usd, type: float }
+  - { name: share_pct, type: float }
 postgres:
   # Reference: overview.models via topNWithTail — top 20 by spend plus an
   # OTHER row folding the tail (a top-N that drops the tail reads as the

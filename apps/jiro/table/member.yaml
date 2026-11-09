@@ -4,7 +4,7 @@ datasource: jiro
 title: Member
 table: member
 columns:
-  - { name: _id, label: ID, type: string, flags: [id, hidden] }
+  - { name: _id, label: ID, type: string, flags: [id] }
   - { name: name, label: Name, type: string, flags: [title, mandatory, searchable] }
   - { name: initials, label: Initials, type: string }
   - { name: role, label: Role, type: string, flags: [searchable] }

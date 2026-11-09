@@ -6,11 +6,11 @@ title: Dragons
 graphql:
   filter: false
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: name, type: string, flags: [title, searchable] }
   - { name: type, type: string }
   - { name: active, type: bool }
   - { name: first_flight, label: First flight, type: date }
   - { name: crew_capacity, label: Crew, type: int }
   - { name: description, type: string, flags: [searchable] }
-  - { name: wikipedia, type: string, flags: [hidden] }
+  - { name: wikipedia, type: string }

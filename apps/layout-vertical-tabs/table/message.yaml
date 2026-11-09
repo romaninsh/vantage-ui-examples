@@ -6,7 +6,7 @@ title: Messages
 faker:
   fan_out: { column: conversation, min: 2, max: 10 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: conversation, type: string, references: conversation }
   - { name: author, type: string, faker: { pick: { values: [Customer, Agent] } } }
   - { name: body, type: string, flags: [searchable], faker: { sentence: { min_words: 4, max_words: 20 } } }

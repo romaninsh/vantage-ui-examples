@@ -9,13 +9,13 @@ table: "payload_flights/?mode=detailed"
 
 columns:
   - { name: id, type: string, flags: [id] }
-  - { name: launch_id, type: string, flags: [hidden], references: launches }
+  - { name: launch_id, type: string, references: launches }
   - { name: launch.name, type: string }
-  - { name: payload_id, type: string, flags: [hidden], references: payloads }
+  - { name: payload_id, type: string, references: payloads }
   - { name: payload.name, type: string, flags: [title, searchable] }
   - { name: payload.type.name, type: string, flags: [label] }
   - { name: payload.mass, type: float }
   - { name: destination, type: string }
   - { name: amount, type: int }
-  - { name: launch__id, type: string, flags: [hidden, request_param] }
-  - { name: payload__id, type: string, flags: [hidden, request_param] }
+  - { name: launch__id, type: string, flags: [request_param] }
+  - { name: payload__id, type: string, flags: [request_param] }

@@ -3,9 +3,9 @@ datasource: warehouse
 title: Manager · trajectory subtitle
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: spend, type: float, flags: [hidden], optional: true }
-  - { name: org_name, type: string, flags: [hidden], optional: true }
+  - { name: rid, type: string, flags: [id] }
+  - { name: spend, type: float, optional: true }
+  - { name: org_name, type: string, optional: true }
   - name: line
     type: string
     lazy: |

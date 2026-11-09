@@ -14,7 +14,7 @@ faker: { count: 0 }
 aggregates:
   total_value: { op: sum, column: declared_value }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: tracking_no, label: Shipment, type: string, flags: [title, searchable] }
   - { name: customer, type: string }
   - { name: origin_city, label: From, type: string, enum: [Rotterdam, Hamburg, Antwerp, Paris, Lyon, Madrid, Milan, Munich, Warsaw, Prague, Vienna, Copenhagen] }
@@ -32,6 +32,6 @@ columns:
   - { name: lat, type: float }
   - { name: lon, type: float }
   - { name: late, type: bool }
-  - { name: active, type: bool, flags: [hidden] }
-  - { name: trail, type: string, flags: [hidden] }
-  - { name: sim, type: string, flags: [hidden] }
+  - { name: active, type: bool }
+  - { name: trail, type: string }
+  - { name: sim, type: string }

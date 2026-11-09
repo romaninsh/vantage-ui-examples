@@ -4,7 +4,7 @@ datasource: jiro
 title: Open by priority
 table: priority_counts
 columns:
-  - { name: _id, type: string, flags: [id, hidden] }
+  - { name: _id, type: string, flags: [id] }
   - { name: priority, type: string, flags: [title] }
   - { name: issues, type: int }
-  - { name: ord, type: int, flags: [hidden] }
+  - { name: ord, type: int }

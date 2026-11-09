@@ -26,11 +26,9 @@ columns:
   - name: notes
     type: string
     optional: true
-    flags: [hidden]
   - name: url
     type: string
     optional: true
-    flags: [hidden]
   - name: package.name
     type: string # implicit reference: crate name
 references:

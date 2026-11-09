@@ -3,7 +3,7 @@ datasource: warehouse
 title: Manager picker
 id_column: org_id
 columns:
-  - { name: org_id, type: string, flags: [id, hidden] }
+  - { name: org_id, type: string, flags: [id] }
   - { name: full_name, type: string, flags: [title] }
   - { name: org_name, type: string }
   - { name: lob_name, type: string }

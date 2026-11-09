@@ -3,10 +3,10 @@ datasource: warehouse
 title: Exec · exec_code_ai
 id_column: rid
 columns:
-  - { name: rid, type: string, flags: [id, hidden] }
-  - { name: month_key, type: string, flags: [hidden] }
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
   - { name: member, type: string, flags: [title] }
-  - { name: total_raw, type: float, flags: [hidden] }
+  - { name: total_raw, type: float }
   - name: total_display
     type: string
     lazy: |

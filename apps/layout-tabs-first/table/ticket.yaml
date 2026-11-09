@@ -9,7 +9,7 @@ title: Tickets
 faker:
   fan_out: { column: customer, min: 1, max: 8 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: number, label: Number, type: string, flags: [searchable], faker: { pattern: "TCK-#####" } }
   - { name: subject, type: string, flags: [title, searchable], faker: { sentence: { min_words: 4, max_words: 8 } } }
   - { name: customer, type: string, references: customer }

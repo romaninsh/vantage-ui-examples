@@ -5,7 +5,7 @@ title: Clubs
 faker:
   fan_out: { column: region, min: 3, max: 6 }
 columns:
-  - { name: id, type: string, flags: [id, hidden] }
+  - { name: id, type: string, flags: [id] }
   - { name: region, label: Region, type: string, references: region }
   - name: name
     label: Club

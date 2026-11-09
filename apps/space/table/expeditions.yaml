@@ -16,7 +16,6 @@ columns:
   - {
       name: spacestation.id,
       type: int,
-      flags: [hidden],
       references: space_stations,
     }
   - { name: spacestation.name, type: string }
