@@ -1,0 +1,6 @@
+type: faker
+description: Harbour log in a squall — every write lands, but its reply is lost
+seed: 15
+count: 6
+shape:
+  faults: { lost_reply_rate: 1.0 }

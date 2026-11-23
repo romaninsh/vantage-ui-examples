@@ -1,0 +1,16 @@
+title: Gale
+body:
+  - kind: markdown
+    text: |
+      Nothing gets through. The app keeps retrying a save for up to three minutes, then gives up and puts the row back.
+
+      **Try:** edit a berth and save. The form shows **Retrying…**; the status bar shows **retrying 1…**. After three minutes the save fails with an error and the old value returns.
+  - kind: binder
+    name: arrivals
+    observe: gale_arrival
+    params:
+      columns:
+        vessel: { label: Vessel, pin: true }
+        cargo: { label: Cargo }
+        berth: { label: Berth }
+        tonnage: { label: Tonnage }

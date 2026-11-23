@@ -1,0 +1,6 @@
+type: faker
+description: Harbour log in fog — every write takes three seconds
+seed: 12
+count: 6
+shape:
+  latency: { write: 3s }

@@ -1,0 +1,6 @@
+type: faker
+description: Harbour log under embargo — every write is refused
+seed: 17
+count: 6
+shape:
+  faults: { refuse: conflict }

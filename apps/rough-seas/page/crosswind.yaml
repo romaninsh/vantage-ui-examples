@@ -1,0 +1,16 @@
+title: Crosswind
+body:
+  - kind: markdown
+    text: |
+      Gusty. Half of all writes don't get through the first time; the app retries them.
+
+      **Try:** add or edit a few rows. Some saves settle at once, others show **Retrying…** for a moment, then settle.
+  - kind: binder
+    name: arrivals
+    observe: crosswind_arrival
+    params:
+      columns:
+        vessel: { label: Vessel, pin: true }
+        cargo: { label: Cargo }
+        berth: { label: Berth }
+        tonnage: { label: Tonnage }
