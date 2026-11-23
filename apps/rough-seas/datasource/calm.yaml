@@ -1,0 +1,4 @@
+type: faker
+description: Harbour log at a calm port — every write lands at once
+seed: 11
+count: 6

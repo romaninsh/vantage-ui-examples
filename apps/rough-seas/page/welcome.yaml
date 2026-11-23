@@ -1,0 +1,21 @@
+title: Rough Seas
+body:
+  - kind: markdown
+    text: |
+      # Rough Seas
+
+      A harbour log kept at seven ports, each with its own weather. The data is generated, and
+      every port's backend misbehaves in one fixed way, so you can see how the app copes with
+      each kind of trouble when you save.
+
+      | Port | Weather | What happens to a save |
+      |---|---|---|
+      | Calm | clear | lands at once |
+      | Fogbank | fog | takes three seconds |
+      | Crosswind | gusts | half of them fail and are retried |
+      | Gale | storm | never gets through; retried for three minutes, then fails |
+      | Squall | squall | lands, but the reply is lost; the retry finds it stored |
+      | Doldrums | no wind | queued; appears fifteen seconds later |
+      | Embargo | port closed | refused at once |
+
+      Pick a port on the left, then add, edit or delete an arrival.

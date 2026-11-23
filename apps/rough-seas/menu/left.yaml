@@ -1,0 +1,28 @@
+title: Rough Seas
+items:
+  - page: welcome
+    label: Welcome
+    icon: BookOpen
+  - section: Ports
+    children:
+      - page: calm
+        label: Calm
+        icon: Sun
+      - page: fogbank
+        label: Fogbank
+        icon: Cloud
+      - page: crosswind
+        label: Crosswind
+        icon: Wind
+      - page: gale
+        label: Gale
+        icon: CloudLightning
+      - page: squall
+        label: Squall
+        icon: CloudRain
+      - page: doldrums
+        label: Doldrums
+        icon: Hourglass
+      - page: embargo
+        label: Embargo
+        icon: Ban

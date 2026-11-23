@@ -1,0 +1,16 @@
+title: Doldrums
+body:
+  - kind: markdown
+    text: |
+      No wind. New arrivals are queued at the harbour master and only appear in the log fifteen seconds later.
+
+      **Try:** add an arrival. It shows at once marked **Queued** (the status bar says **1 queued**); after fifteen seconds a refresh confirms it.
+  - kind: binder
+    name: arrivals
+    observe: doldrums_arrival
+    params:
+      columns:
+        vessel: { label: Vessel, pin: true }
+        cargo: { label: Cargo }
+        berth: { label: Berth }
+        tonnage: { label: Tonnage }

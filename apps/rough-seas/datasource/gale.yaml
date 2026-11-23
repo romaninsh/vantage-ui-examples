@@ -1,0 +1,6 @@
+type: faker
+description: Harbour log in a gale — no write gets through; the app retries, then gives up
+seed: 14
+count: 6
+shape:
+  faults: { write_error_rate: 1.0 }

@@ -1,0 +1,16 @@
+title: Squall
+body:
+  - kind: markdown
+    text: |
+      Every write reaches the harbour master, but the reply is lost on the way back. The app retries, and the retry finds the entry already there.
+
+      **Try:** add an arrival with the same vessel twice in a row. It shows **Retrying…**, then saves once: no duplicate appears.
+  - kind: binder
+    name: arrivals
+    observe: squall_arrival
+    params:
+      columns:
+        vessel: { label: Vessel, pin: true }
+        cargo: { label: Cargo }
+        berth: { label: Berth }
+        tonnage: { label: Tonnage }

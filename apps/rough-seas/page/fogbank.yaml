@@ -1,0 +1,16 @@
+title: Fogbank
+body:
+  - kind: markdown
+    text: |
+      Thick fog. Every write takes three seconds to reach the harbour master.
+
+      **Try:** edit a berth and save. The form shows **Saving…** and, after two seconds, **Retrying…**, then settles.
+  - kind: binder
+    name: arrivals
+    observe: fogbank_arrival
+    params:
+      columns:
+        vessel: { label: Vessel, pin: true }
+        cargo: { label: Cargo }
+        berth: { label: Berth }
+        tonnage: { label: Tonnage }

@@ -1,0 +1,16 @@
+title: Embargo
+body:
+  - kind: markdown
+    text: |
+      The port is closed. Every write is refused.
+
+      **Try:** edit or add a row. The save is refused at once with an error, and nothing changes.
+  - kind: binder
+    name: arrivals
+    observe: embargo_arrival
+    params:
+      columns:
+        vessel: { label: Vessel, pin: true }
+        cargo: { label: Cargo }
+        berth: { label: Berth }
+        tonnage: { label: Tonnage }

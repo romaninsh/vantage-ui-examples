@@ -1,0 +1,6 @@
+type: faker
+description: Harbour log in the doldrums — new entries are queued and land 15 seconds later
+seed: 16
+count: 6
+shape:
+  faults: { queue: 15s }

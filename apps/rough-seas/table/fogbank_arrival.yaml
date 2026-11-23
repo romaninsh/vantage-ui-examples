@@ -1,0 +1,17 @@
+datasource: fogbank
+title: Fogbank — arrivals
+columns:
+  - { name: id, type: string, flags: [id] }
+  - name: vessel
+    type: string
+    flags: [title, searchable]
+    faker: { pick: { values: [Northern Star, Sea Lark, Ostrava, Maribel, Kestrel, Saltire, Halcyon, Bluefin] } }
+  - name: cargo
+    type: string
+    faker: { pick: { values: [Timber, Grain, Containers, Coal, Fish, Steel coils, Fertiliser] } }
+  - name: berth
+    type: string
+    faker: { pick: { values: [A1, A2, B1, B4, C3, D2] } }
+  - name: tonnage
+    type: int
+    faker: { range: { min: 800, max: 42000 } }

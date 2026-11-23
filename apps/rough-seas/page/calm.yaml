@@ -1,0 +1,16 @@
+title: Calm
+body:
+  - kind: markdown
+    text: |
+      Clear skies. Every write lands at once; this is the baseline to compare the other ports with.
+
+      **Try:** add an arrival, edit a berth, delete a row. Each change shows and saves straight away.
+  - kind: binder
+    name: arrivals
+    observe: calm_arrival
+    params:
+      columns:
+        vessel: { label: Vessel, pin: true }
+        cargo: { label: Cargo }
+        berth: { label: Berth }
+        tonnage: { label: Tonnage }

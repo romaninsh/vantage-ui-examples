@@ -1,0 +1,6 @@
+type: faker
+description: Harbour log in a crosswind — half of all writes fail and are retried
+seed: 13
+count: 6
+shape:
+  faults: { write_error_rate: 0.5 }
