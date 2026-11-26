@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Zoom · org units
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id] }
+  - { name: org_id, type: string }
+  - { name: parent_org_id, type: string, optional: true }
+  - { name: org_name, type: string, flags: [title] }
+  - { name: org_level, type: int }
+  - { name: lob_id, type: string, optional: true }
+  - { name: month_key, type: string }
+  - { name: headcount, type: int }
+  - { name: active, type: int }
+  - { name: spend_usd, type: float }
+postgres:
+  # Lines of business down to sections (levels 2 to 5; 6,600 units), per
+  # month and for all months ('*'). The web FacetChart loads one parent's
+  # children at a time: where parent_org_id and month_key. Headcount and
+  # active users are the month's, or the highest month's for '*'.
+  # language=rhai
+  rhai: |
+    sql::select().from("mart_org_month")
+        .where(sql::expr("org_level BETWEEN 2 AND 5"))
+        .expression(sql::expr("org_id || ':' || coalesce(month_key, '*')").alias("rid"))
+        .expression(sql::ident("org_id").alias("org_id"))
+        .expression(sql::ident("parent_org_id").alias("parent_org_id"))
+        .expression(sql::ident("org_name").alias("org_name"))
+        .expression(sql::expr("org_level::int").alias("org_level"))
+        .expression(sql::ident("lob_id").alias("lob_id"))
+        .expression(sql::expr("coalesce(month_key, '*')").alias("month_key"))
+        .expression(sql::expr("max(headcount)::int").alias("headcount"))
+        .expression(sql::expr("max(active)::int").alias("active"))
+        .expression(sql::expr("sum(spend_usd)::float8").alias("spend_usd"))
+        .group_by(sql::expr("org_id, parent_org_id, org_name, org_level, lob_id, GROUPING SETS ((month_key), ())"))
+        .order_by(sql::expr("sum(spend_usd)"), "desc")

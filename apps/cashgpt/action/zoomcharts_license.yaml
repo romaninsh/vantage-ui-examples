@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./action-schema-1.json
+# The ZoomCharts licence for the web frontend (web/zoom/). ZoomCharts checks
+# the licence in the browser, so the key reaches the page either way; it lives
+# in the profile's env file (SECRET_ZOOMCHARTS_LICENSE, _KEY) rather than in
+# the code or the repo, and the page asks for it at start.
+kind: script
+label: ZoomCharts licence
+rate_limit: { per_second: 1, burst: 5 }
+body: |
+  #{
+    license: secrets.get("zoomcharts_license") ?? "",
+    key: secrets.get("zoomcharts_license_key") ?? ""
+  }

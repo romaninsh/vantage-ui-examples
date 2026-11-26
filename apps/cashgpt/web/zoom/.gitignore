@@ -1,0 +1,4 @@
+dist
+node_modules
+schema.json
+.schema.json.*.tmp

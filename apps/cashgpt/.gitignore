@@ -8,11 +8,17 @@
 /AGENTS.md
 
 # Machine-local, not content: the install record an app keeps so it
-# can update itself, the row caches, the credentials file, and the
-# local data files the connect wizard placed (CSV, SQLite).
+# can update itself, the row caches, the credentials files (each
+# profile's, like `.env.prod`; `.env.example` lists their names and is
+# committed), and the local data files the connect wizard placed (CSV,
+# SQLite), and third-party reference material copied in for the agent
+# (`refs/`).
 manifest.yaml
 .cache/
 .env
+.env.*
+!.env.example
 data/
+/refs/
 .DS_Store
 # --- end managed by Vantage

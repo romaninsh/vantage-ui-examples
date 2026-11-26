@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=./api-schema-1.json
+# The Spend Explorer web frontend (web/zoom/, ZoomCharts). Read-only: every
+# entity is a query table over the gold marts, shaped to one chart each.
+# The marts only change when the warehouse is rebuilt, so collections
+# re-read every 15 minutes rather than the query-table default of 10 s.
+title: Spend Explorer
+description: ZoomCharts dashboard over the cashgpt warehouse.
+entities:
+  - name: kpi
+    observe: zc_kpi
+    read_only: true
+    params:
+      columns: [lob_id, month_key, spend_usd, users, cost_per_user]
+      filter: [lob_id]
+      default_sort: month_key
+    api: { refresh: 900 }
+  - name: trend
+    observe: zc_trend
+    read_only: true
+    params:
+      columns: [lob_id, month_key, provider, spend_usd, tokens]
+      filter: [lob_id, provider]
+      default_sort: month_key
+    api: { refresh: 900 }
+  # Not `models`: the generated client already has a `Models` type and
+  # `db.models` isn't the entity's collection (FEEDBACK.md).
+  - name: model_spend
+    observe: zc_models
+    read_only: true
+    params:
+      columns: [lob_id, month_key, provider, family, model_id, model_name, spend_usd]
+      filter: [lob_id, month_key, provider, family]
+      default_sort: -spend_usd
+    api: { refresh: 900 }
+  - name: org
+    observe: zc_org
+    read_only: true
+    params:
+      columns: [org_id, parent_org_id, org_name, org_level, lob_id, month_key, headcount, active, spend_usd]
+      filter: [parent_org_id, org_level, lob_id, month_key]
+      default_sort: -spend_usd
+    api: { refresh: 900 }
+  - name: app_models
+    observe: zc_net
+    read_only: true
+    params:
+      columns: [month_key, app_id, app_name, model_id, model_name, provider, spend_usd, rk]
+      filter: [app_id, rk, month_key, provider]
+      default_sort: -spend_usd
+    api: { refresh: 900 }
+  - name: offices
+    observe: zc_geo
+    read_only: true
+    params:
+      columns: [lob_id, month_key, city, region, lat, lon, headcount, spend_usd]
+      filter: [lob_id, month_key]
+      default_sort: -spend_usd
+    api: { refresh: 900 }
+
+actions: [zoomcharts_license]
+
+auth:
+  local: none
