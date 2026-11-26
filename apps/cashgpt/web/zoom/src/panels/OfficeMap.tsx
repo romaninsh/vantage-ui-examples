@@ -17,6 +17,7 @@ export const OfficeMap = observer(({ lob, month }: { lob: string; month: string 
         id: r.id,
         loaded: true,
         coordinates: [r.lon, r.lat],
+        extra: { city: r.city, region: r.region, spend: r.spend_usd, headcount: r.headcount },
         style: {
           // Only the bigger offices carry a label; the rest show theirs on hover.
           label: (r.spend_usd ?? 0) >= max * 0.4 ? `${r.city} · ${usd(r.spend_usd)}` : "",
@@ -39,7 +40,20 @@ export const OfficeMap = observer(({ lob, month }: { lob: string; month: string 
     layers: [{ id: "locations", type: "items", data: { id: "offices" }, enabled: true, layout: { mode: "static" }, aggregation: { enabled: false } }],
     navigation: { initialLat: 35, initialLng: 25, initialZoom: 2 },
     interaction: { mode: "select", resizing: { enabled: false }, panning: { enabled: true }, zooming: { wheel: true, fingers: true, zoomInOnDoubleClick: true }, selection: { enabled: true, nodesSelectable: true, linksSelectable: false } },
-    info: { enabled: true, showLabelByDefault: false },
+    // Every office shows its figures on hover, labelled on the map or not. Built
+    // as DOM text, so a city name can't inject markup.
+    info: {
+      enabled: true,
+      nodeContentsFunction: (node: { extra?: { city?: string; region?: string; spend?: number; headcount?: number } }) => {
+        const x = node.extra ?? {};
+        const el = document.createElement("div");
+        const b = document.createElement("strong");
+        b.textContent = x.city ?? "";
+        el.append(b, document.createElement("br"),
+          `${usd(x.spend)} · ${x.headcount?.toLocaleString("en-GB") ?? "—"} people · ${x.region ?? ""}`);
+        return el;
+      },
+    },
     toolbar: toolbar(["export", "fullscreen"]),
   }), data);
 

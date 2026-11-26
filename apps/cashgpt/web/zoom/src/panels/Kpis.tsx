@@ -10,8 +10,11 @@ export const Kpis = observer(({ lob, month }: { lob: string; month: string }) =>
   const db = useDb();
   const { items, error } = useCollection(db.kpi.where({ lob_id: lob }).sort("month_key", "asc"));
   if (error) return <p role="alert" className="card">{error}</p>;
-  let at = items.length - 1;
+  let at = month === "*" ? items.length - 1 : -1;
   if (month !== "*") items.forEach((m, i) => { if (m.month_key === month) at = i; });
+  if (month !== "*" && at < 0 && items.length > 0) {
+    return <p className="card empty">No spend recorded for this line of business in {monthLabel(month)}.</p>;
+  }
   const cur = items[at];
   const prev = at > 0 ? items[at - 1] : undefined;
   let ytd = 0;

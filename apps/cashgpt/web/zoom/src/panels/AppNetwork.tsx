@@ -17,7 +17,6 @@ export const AppNetwork = observer(({ month, provider, onProvider }: Props) => {
     ? db.app_models.where({ month_key: month, rk: { lte: TOP } })
     : db.app_models.where({ month_key: month, provider });
   const rows = useCollection(q.sort("spend_usd", "desc"));
-  const providerOf = new Map<string, string>();
 
   const data = useLive(() => {
     if (rows.loadState !== "complete") return null;
@@ -40,12 +39,10 @@ export const AppNetwork = observer(({ month, provider, onProvider }: Props) => {
     return { data: [{ preloaded: { nodes: [...nodes.values()], links } }] };
   }, [rows.loadState, rows.items]);
 
-  rows.items.forEach((r) => providerOf.set(`m:${r.model_id}`, r.provider ?? "Other"));
-
   const onCreate = (c: Chart) => {
+    // The provider rides on the clicked node itself, so it stays right after a data refresh.
     c.on("click", (_e, args) => {
-      const id: string | undefined = args?.clickNode?.id;
-      const p = id ? providerOf.get(id) : undefined;
+      const p: string | undefined = args?.clickNode?.data?.extra?.provider;
       if (p) onProvider(p);
     });
   };
