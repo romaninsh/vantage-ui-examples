@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Zoom · spend by office
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id] }
+  - { name: lob_id, type: string }
+  - { name: month_key, type: string }
+  - { name: city, type: string, flags: [title] }
+  - { name: region, type: string }
+  - { name: lat, type: float }
+  - { name: lon, type: float }
+  - { name: headcount, type: int }
+  - { name: spend_usd, type: float }
+postgres:
+  # Year-to-date spend of the teams in each office city, per line of
+  # business and for the whole bank (lob_id '*'). The warehouse has no
+  # coordinates, so each of the 38 cities carries its own here; a city
+  # missing from the map reads NULL and the web map leaves it out.
+  # Headcount: the teams' monthly headcount, averaged over the months.
+  # language=rhai
+  rhai: |
+    let at = #{
+      "London": [51.5072, -0.1276], "Gurugram": [28.4595, 77.0266], "Pune": [18.5204, 73.8567],
+      "Leeds": [53.8008, -1.5491], "Krakow": [50.0647, 19.945], "Singapore": [1.3521, 103.8198],
+      "Manchester": [53.4808, -2.2426], "Edinburgh": [55.9533, -3.1883], "Bengaluru": [12.9716, 77.5946],
+      "Mumbai": [19.076, 72.8777], "Birmingham": [52.4862, -1.8904], "Bristol": [51.4545, -2.5879],
+      "Hong Kong": [22.3193, 114.1694], "New York": [40.7128, -74.006], "Charlotte": [35.2271, -80.8431],
+      "Glasgow": [55.8642, -4.2518], "Hyderabad": [17.385, 78.4867], "Chennai": [13.0827, 80.2707],
+      "Belfast": [54.5973, -5.9301], "Kuala Lumpur": [3.139, 101.6869], "Zurich": [47.3769, 8.5417],
+      "Lisbon": [38.7223, -9.1393], "Frankfurt": [50.1109, 8.6821], "Dublin": [53.3498, -6.2603],
+      "Dubai": [25.2048, 55.2708], "Amsterdam": [52.3676, 4.9041], "Jersey City": [40.7178, -74.0431],
+      "Milan": [45.4642, 9.19], "Luxembourg": [49.6116, 6.1319], "Madrid": [40.4168, -3.7038],
+      "Chicago": [41.8781, -87.6298], "Toronto": [43.6532, -79.3832], "Paris": [48.8566, 2.3522],
+      "Tokyo": [35.6762, 139.6503], "Shanghai": [31.2304, 121.4737], "Sao Paulo": [-23.5505, -46.6333],
+      "Johannesburg": [-26.2041, 28.0473], "Sydney": [-33.8688, 151.2093]
+    };
+    let lat = "CASE city";
+    let lon = "CASE city";
+    for c in at.keys() {
+      lat += " WHEN '" + c + "' THEN " + at[c][0];
+      lon += " WHEN '" + c + "' THEN " + at[c][1];
+    }
+    lat += " END";
+    lon += " END";
+    sql::select().from("mart_org_month")
+        .where(sql::expr("org_level = 6"))
+        .expression(sql::expr("coalesce(lob_id, '*') || ':' || coalesce(month_key, '*') || ':' || city").alias("rid"))
+        .expression(sql::expr("coalesce(lob_id, '*')").alias("lob_id"))
+        .expression(sql::expr("coalesce(month_key, '*')").alias("month_key"))
+        .expression(sql::ident("city").alias("city"))
+        .expression(sql::expr("max(location_region)").alias("region"))
+        .expression(sql::expr("(" + lat + ")::float8").alias("lat"))
+        .expression(sql::expr("(" + lon + ")::float8").alias("lon"))
+        .expression(sql::expr("(sum(headcount) / count(DISTINCT month_key))::int").alias("headcount"))
+        .expression(sql::expr("sum(spend_usd)::float8").alias("spend_usd"))
+        .group_by(sql::expr("GROUPING SETS ((lob_id, month_key, city), (lob_id, city), (month_key, city), (city))"))
+        .order_by(sql::expr("sum(spend_usd)"), "desc")

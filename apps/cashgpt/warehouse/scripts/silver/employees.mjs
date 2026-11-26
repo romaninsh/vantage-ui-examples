@@ -20,7 +20,7 @@
  *
  *   node scripts/silver/employees.mjs
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { closeSync, mkdirSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import YAML from 'yaml'
@@ -329,8 +329,15 @@ if (fail.length) { console.error('GENERATION FAILED\n  ' + fail.slice(0, 10).joi
 mkdirSync(resolve(ROOT, 'data/silver'), { recursive: true })
 const COLS = Object.keys(rows[0])
 const esc = v => (/[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v))
-writeFileSync(resolve(ROOT, 'data/silver/dim_employee.csv'),
-  COLS.join(',') + '\n' + rows.map(r => COLS.map(c => esc(r[c])).join(',')).join('\n') + '\n')
+// Written in chunks: 500,000 rows joined into one string, on top of the rows
+// themselves, is enough to get the generator OOM-killed on a 4 GB VM.
+const fd = openSync(resolve(ROOT, 'data/silver/dim_employee.csv'), 'w')
+// writeFileSync on a descriptor appends and loops until every byte is written.
+writeFileSync(fd, COLS.join(',') + '\n')
+for (let i = 0; i < rows.length; i += 10000) {
+  writeFileSync(fd, rows.slice(i, i + 10000).map(r => COLS.map(c => esc(r[c])).join(',')).join('\n') + '\n')
+}
+closeSync(fd)
 
 // ---------------------------------------------------------------- report
 const pad = (s, n) => String(s).padStart(n)

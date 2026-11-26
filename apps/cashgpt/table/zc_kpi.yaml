@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Zoom · monthly totals
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id] }
+  - { name: lob_id, type: string }
+  - { name: month_key, type: string, flags: [title] }
+  - { name: spend_usd, type: float }
+  - { name: users, type: int }
+  - { name: cost_per_user, type: float }
+postgres:
+  # Spend and active people per month, per line of business and for the
+  # whole bank (lob_id '*'). Each person sits in one cell of the mart, so
+  # summing users within a month counts each person once.
+  # language=rhai
+  rhai: |
+    sql::select().from("mart_active_month")
+        .expression(sql::expr("coalesce(lob_id, '*') || ':' || month_key").alias("rid"))
+        .expression(sql::expr("coalesce(lob_id, '*')").alias("lob_id"))
+        .expression(sql::ident("month_key").alias("month_key"))
+        .expression(sql::expr("sum(spend_usd)::float8").alias("spend_usd"))
+        .expression(sql::expr("sum(users)::int").alias("users"))
+        .expression(sql::expr("(sum(spend_usd) / nullif(sum(users), 0))::float8").alias("cost_per_user"))
+        .group_by(sql::expr("GROUPING SETS ((lob_id, month_key), (month_key))"))
+        .order_by(sql::ident("month_key"), "asc")

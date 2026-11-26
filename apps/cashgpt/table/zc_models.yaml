@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Zoom · spend by model
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id] }
+  - { name: lob_id, type: string }
+  - { name: month_key, type: string }
+  - { name: provider, type: string }
+  - { name: family, type: string }
+  - { name: model_id, type: string }
+  - { name: model_name, type: string, flags: [title] }
+  - { name: spend_usd, type: float }
+postgres:
+  # Spend per model with its provider and family, the three levels of the
+  # web PieChart's drill-down. One row per line of business and month, with
+  # '*' rows for the whole bank and for all months, so every pick in the web
+  # page is a `where` on the server.
+  # language=rhai
+  rhai: |
+    let m = "s.provider_group, d.family, s.model_id, s.model_name";
+    sql::select().from_as("mart_spend_agg", "s")
+        .inner_join("dim_model", "d", sql::expr("d.model_id = s.model_id"))
+        .expression(sql::expr("coalesce(s.lob_id, '*') || ':' || coalesce(s.month_key, '*') || ':' || s.model_id").alias("rid"))
+        .expression(sql::expr("coalesce(s.lob_id, '*')").alias("lob_id"))
+        .expression(sql::expr("coalesce(s.month_key, '*')").alias("month_key"))
+        .expression(sql::expr("s.provider_group").alias("provider"))
+        .expression(sql::expr("d.family").alias("family"))
+        .expression(sql::expr("s.model_id").alias("model_id"))
+        .expression(sql::expr("s.model_name").alias("model_name"))
+        .expression(sql::expr("sum(s.spend_usd)::float8").alias("spend_usd"))
+        .group_by(sql::expr("GROUPING SETS ((s.lob_id, s.month_key, " + m + "), (s.lob_id, " + m + "), (s.month_key, " + m + "), (" + m + "))"))
+        .order_by(sql::expr("sum(s.spend_usd)"), "desc")

@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Zoom · spend by month and provider
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id] }
+  - { name: lob_id, type: string }
+  - { name: month_key, type: string, flags: [title] }
+  - { name: provider, type: string }
+  - { name: spend_usd, type: float }
+  - { name: tokens, type: float }
+postgres:
+  # One row per month and provider, for each line of business and once more
+  # for the whole bank (lob_id '*'), so the web TimeChart narrows by lob_id
+  # on the server instead of summing rows itself.
+  # language=rhai
+  rhai: |
+    sql::select().from("mart_spend_agg")
+        .expression(sql::expr("coalesce(lob_id, '*') || ':' || month_key || ':' || provider_group").alias("rid"))
+        .expression(sql::expr("coalesce(lob_id, '*')").alias("lob_id"))
+        .expression(sql::ident("month_key").alias("month_key"))
+        .expression(sql::ident("provider_group").alias("provider"))
+        .expression(sql::expr("sum(spend_usd)::float8").alias("spend_usd"))
+        .expression(sql::expr("sum(tokens)::float8").alias("tokens"))
+        .group_by(sql::expr("GROUPING SETS ((lob_id, month_key, provider_group), (month_key, provider_group))"))
+        .order_by(sql::ident("month_key"), "asc")

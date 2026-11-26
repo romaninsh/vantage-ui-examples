@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=./table-schema-1.json
+datasource: warehouse
+title: Zoom · apps and their models
+id_column: rid
+columns:
+  - { name: rid, type: string, flags: [id] }
+  - { name: month_key, type: string }
+  - { name: app_id, type: string }
+  - { name: app_name, type: string, flags: [title] }
+  - { name: model_id, type: string }
+  - { name: model_name, type: string }
+  - { name: provider, type: string }
+  - { name: spend_usd, type: float }
+  - { name: rk, type: int }
+postgres:
+  # One row per app and model it calls, per month and for all months ('*'),
+  # with the model's rank within the app for that month, so the web
+  # NetChart can keep each app's top few links (where rk lte N).
+  # language=rhai
+  rhai: |
+    sql::select().from_as("mart_app_model_month", "m")
+        .inner_join("dim_app", "a", sql::expr("a.app_id = m.app_id"))
+        .expression(sql::expr("m.app_id || ':' || m.model_id || ':' || coalesce(m.month_key, '*')").alias("rid"))
+        .expression(sql::expr("coalesce(m.month_key, '*')").alias("month_key"))
+        .expression(sql::expr("m.app_id").alias("app_id"))
+        .expression(sql::expr("a.app_name").alias("app_name"))
+        .expression(sql::expr("m.model_id").alias("model_id"))
+        .expression(sql::expr("max(m.model_name)").alias("model_name"))
+        .expression(sql::expr("max(m.provider_group)").alias("provider"))
+        .expression(sql::expr("sum(m.spend_usd)::float8").alias("spend_usd"))
+        .expression(sql::expr("(rank() OVER (PARTITION BY m.app_id, coalesce(m.month_key, '*') ORDER BY sum(m.spend_usd) DESC))::int").alias("rk"))
+        .group_by(sql::expr("m.app_id, a.app_name, m.model_id, GROUPING SETS ((m.month_key), ())"))
+        .order_by(sql::expr("sum(m.spend_usd)"), "desc")
