@@ -1,6 +1,6 @@
 import { observer, useCollection, useLive } from "@vantage-ui/client/react";
 import { useDb } from "../db";
-import { toolbar, useZoomChart, usd } from "../zoomcharts";
+import { toolbar, useZoomChart } from "../zoomcharts";
 
 /** GeoChart: one bubble per office city, area proportional to spend, for the line of business and month. */
 export const OfficeMap = observer(({ lob, month }: { lob: string; month: string }) => {
@@ -17,11 +17,8 @@ export const OfficeMap = observer(({ lob, month }: { lob: string; month: string 
         id: r.id,
         loaded: true,
         coordinates: [r.lon, r.lat],
-        extra: { city: r.city, region: r.region, spend: r.spend_usd, headcount: r.headcount },
         style: {
-          // Only the bigger offices carry a label, and only the city's name; the
-          // figures are in the hover popup.
-          label: (r.spend_usd ?? 0) >= max * 0.4 ? r.city ?? "" : "",
+          label: (r.spend_usd ?? 0) >= max * 0.4 ? r.city ?? "" : "", // name the bigger offices
           radius: 4 + 26 * Math.sqrt((r.spend_usd ?? 0) / max),
           fillColor: "rgba(47, 111, 219, 0.55)",
           lineColor: "#1D4FA8",
@@ -41,27 +38,7 @@ export const OfficeMap = observer(({ lob, month }: { lob: string; month: string 
     layers: [{ id: "locations", type: "items", data: { id: "offices" }, enabled: true, layout: { mode: "static" }, aggregation: { enabled: false } }],
     navigation: { initialLat: 35, initialLng: 25, initialZoom: 2 },
     interaction: { mode: "select", resizing: { enabled: false }, panning: { enabled: true }, zooming: { wheel: true, fingers: true, zoomInOnDoubleClick: true }, selection: { enabled: true, nodesSelectable: true, linksSelectable: false } },
-    // Every office shows its figures on hover, labelled on the map or not. Built
-    // as DOM text, so a city name can't inject markup.
-    info: {
-      enabled: true,
-      nodeContentsFunction: (node: { extra?: { city?: string; region?: string; spend?: number; headcount?: number } }) => {
-        const x = node.extra ?? {};
-        const line = (text: string, css: string) => {
-          const d = document.createElement("div");
-          d.textContent = text;
-          d.style.cssText = css;
-          return d;
-        };
-        const el = document.createElement("div");
-        el.style.cssText = "padding:8px 12px;background:#fff;font:13px/1.45 system-ui,sans-serif;color:#1b2330;white-space:nowrap";
-        el.append(
-          line(x.city ?? "", "font-weight:600"),
-          line(`${usd(x.spend)} · ${x.headcount?.toLocaleString("en-GB") ?? "—"} people · ${x.region ?? ""}`, "color:#667085"),
-        );
-        return el;
-      },
-    },
+    info: { enabled: true, showLabelByDefault: false },
     toolbar: toolbar(["export", "fullscreen"]),
   }), data);
 

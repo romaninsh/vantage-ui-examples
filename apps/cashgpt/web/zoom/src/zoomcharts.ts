@@ -38,29 +38,18 @@ const base = {
 export function useZoomChart(kind: ChartKind, settings: () => object, data: object | null, onCreate?: (c: Chart) => void) {
   const ref = useRef<HTMLDivElement>(null);
   const chart = useRef<Chart | null>(null);
-  const host = useRef<HTMLDivElement | null>(null); // the element `chart` draws in
-  const applied = useRef<object | null>(null); // the data `chart` last got
 
-  // After every render: a panel that showed an error in place of its div and
-  // then recovered has a new host, so the old chart goes and a new one is
-  // drawn there; otherwise new data is applied to the chart in place.
   useEffect(() => {
     const ZC = window.ZoomCharts;
-    const el = ref.current;
-    if (chart.current && host.current !== el) {
-      chart.current.remove();
-      chart.current = null;
-    }
-    if (!el || !ZC || !data) return;
+    if (!ref.current || !ZC || !data) return;
     if (chart.current) {
-      if (applied.current !== data) chart.current.replaceSettings(data);
-    } else {
-      chart.current = new ZC[kind]({ ...base, ...settings(), ...data, container: el });
-      host.current = el;
-      onCreate?.(chart.current);
+      chart.current.replaceSettings(data);
+      return;
     }
-    applied.current = data;
-  });
+    chart.current = new ZC[kind]({ ...base, ...settings(), ...data, container: ref.current });
+    onCreate?.(chart.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, data]);
 
   useEffect(
     () => () => {
