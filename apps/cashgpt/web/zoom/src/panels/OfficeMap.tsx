@@ -47,11 +47,18 @@ export const OfficeMap = observer(({ lob, month }: { lob: string; month: string 
       enabled: true,
       nodeContentsFunction: (node: { extra?: { city?: string; region?: string; spend?: number; headcount?: number } }) => {
         const x = node.extra ?? {};
+        const line = (text: string, css: string) => {
+          const d = document.createElement("div");
+          d.textContent = text;
+          d.style.cssText = css;
+          return d;
+        };
         const el = document.createElement("div");
-        const b = document.createElement("strong");
-        b.textContent = x.city ?? "";
-        el.append(b, document.createElement("br"),
-          `${usd(x.spend)} · ${x.headcount?.toLocaleString("en-GB") ?? "—"} people · ${x.region ?? ""}`);
+        el.style.cssText = "padding:8px 12px;background:#fff;font:13px/1.45 system-ui,sans-serif;color:#1b2330;white-space:nowrap";
+        el.append(
+          line(x.city ?? "", "font-weight:600"),
+          line(`${usd(x.spend)} · ${x.headcount?.toLocaleString("en-GB") ?? "—"} people · ${x.region ?? ""}`, "color:#667085"),
+        );
         return el;
       },
     },
