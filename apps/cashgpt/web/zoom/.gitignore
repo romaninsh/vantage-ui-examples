@@ -1,4 +1,6 @@
 dist
 node_modules
 schema.json
+# Generated from schema.json by the dev container (`npm run gen`); rebuilt on every API change.
+src/vantage.gen.ts
 .schema.json.*.tmp

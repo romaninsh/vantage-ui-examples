@@ -3,6 +3,8 @@
 # entity is a query table over the gold marts, shaped to one chart each.
 # The marts only change when the warehouse is rebuilt, so collections
 # re-read every 15 minutes rather than the query-table default of 10 s.
+# The page's bindings (web/zoom/src/vantage.gen.ts) are generated from this
+# file's schema by the dev container and not committed.
 title: Spend Explorer
 description: ZoomCharts dashboard over the cashgpt warehouse.
 entities:
