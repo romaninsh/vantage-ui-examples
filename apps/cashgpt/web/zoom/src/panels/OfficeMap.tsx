@@ -19,8 +19,9 @@ export const OfficeMap = observer(({ lob, month }: { lob: string; month: string 
         coordinates: [r.lon, r.lat],
         extra: { city: r.city, region: r.region, spend: r.spend_usd, headcount: r.headcount },
         style: {
-          // Only the bigger offices carry a label; the rest show theirs on hover.
-          label: (r.spend_usd ?? 0) >= max * 0.4 ? `${r.city} · ${usd(r.spend_usd)}` : "",
+          // Only the bigger offices carry a label, and only the city's name; the
+          // figures are in the hover popup.
+          label: (r.spend_usd ?? 0) >= max * 0.4 ? r.city ?? "" : "",
           radius: 4 + 26 * Math.sqrt((r.spend_usd ?? 0) / max),
           fillColor: "rgba(47, 111, 219, 0.55)",
           lineColor: "#1D4FA8",
